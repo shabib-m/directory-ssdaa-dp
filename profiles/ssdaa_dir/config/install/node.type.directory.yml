@@ -1,0 +1,17 @@
+langcode: ar
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus:
+      - main
+    parent: 'main:'
+name: 'دليل مواقع'
+type: directory
+description: ''
+help: 'استخدموا هذا النوع للمحتوى لاضافة المواقع والتحكم بها مع العلم انها افتراضيا مسموح للزوار باضافة المواقع من خلالها '
+new_revision: false
+preview_mode: 1
+display_submitted: false

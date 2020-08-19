@@ -1,0 +1,12 @@
+name: Fivestar widget provider
+type: module
+description: 'Support module for testing hook_fivestar_widgets().'
+package: Voting
+core_version_requirement: ^8.7.7 || ^9
+dependencies:
+  - fivestar:fivestar
+
+# Information added by Drupal.org packaging script on 2020-07-02
+version: '8.x-1.0-alpha2'
+project: 'fivestar'
+datestamp: 1593667997

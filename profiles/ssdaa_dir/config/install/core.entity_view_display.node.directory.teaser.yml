@@ -1,0 +1,38 @@
+langcode: ar
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.directory.body
+    - field.field.node.directory.field_aldwlh
+    - field.field.node.directory.field_image
+    - field.field.node.directory.field_tqyym_almwq_
+    - field.field.node.directory.field_url_website
+    - node.type.directory
+  module:
+    - text
+    - user
+id: node.directory.teaser
+targetEntityType: node
+bundle: directory
+mode: teaser
+content:
+  body:
+    label: hidden
+    type: text_summary_or_trimmed
+    weight: 101
+    settings:
+      trim_length: 600
+    third_party_settings: {  }
+    region: content
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_aldwlh: true
+  field_image: true
+  field_tqyym_almwq_: true
+  field_url_website: true
+  langcode: true

@@ -1,0 +1,147 @@
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "المملكة العربية السعودية"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "الامارات العربية المتحده"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "البحرين"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "الكويت"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "عمان"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "مصر"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "مالي"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "ليبيا"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "لبنان"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "قطر"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "جيبوتي"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "سوريا"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "تونس"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "المغرب"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "العراق"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "السودان"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "الجزائر"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "الاردن"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "اليمن"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "فلسطين"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "الصومال"
+
+- entity: "taxonomy_term"
+  vid: "country"
+  name: "جزر القمر"
+
+ # taxonomy main
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "مواقع إسلامية"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "المجلات والتسجيلات الإسلاميه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إسلامية"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "الكتب الإسلامية"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إسلامية"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "العلماء والدعاة"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إسلامية"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "القرآن الكريم"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إسلامية"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "الصوتيات الإسلامية"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إسلامية"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "أناشيد إسلاميه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إسلامية"

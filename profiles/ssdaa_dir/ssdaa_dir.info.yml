@@ -1,0 +1,53 @@
+name: دليل صدى للمواقع دروبال 8
+type: profile
+description: 'دليل مواقع للمواقع الشخصية والشركات'
+# version: VERSION
+core: 8.x
+install:
+  - node
+  - history
+  - block
+  - breakpoint
+  - ckeditor
+  - color
+  - config
+  - comment
+  - contextual
+  - contact
+  - menu_link_content
+  - datetime
+  - block_content
+  - quickedit
+  - editor
+  - help
+  - image
+  - menu_ui
+  - options
+  - path
+  - page_cache
+  - dynamic_page_cache
+  - big_pipe
+  - taxonomy
+  - dblog
+  - search
+  - shortcut
+  - toolbar
+  - field_ui
+  - file
+  - rdf
+  - views
+  - views_ui
+  - tour
+  - automated_cron
+  - admin_toolbar:admin_toolbar_tools
+  - admin_toolbar:admin_toolbar_links_access_filter
+  - fivestar
+  - yaml_content
+
+themes:
+  - bartik
+  - seven
+
+distribution:
+  name: دليل صدى للمواقع دروبال 8
+  langcode: ar

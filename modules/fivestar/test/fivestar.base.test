@@ -1,0 +1,79 @@
+<?php
+
+/**
+ * @file
+ * Based test file for the Fivestar module.
+ */
+
+/**
+ *
+ */
+class FivestarBaseTestCase extends AJAXTestCase {
+  // Using testing profile.
+  /**
+   * @see http://groups.drupal.org/node/217189
+   */
+  protected $profile = 'testing';
+
+  /**
+   * Set up our basic users.
+   */
+  protected $admin_user;
+  protected $voter;
+
+  /**
+   *
+   */
+  public function setUp() {
+    parent::setUp(['fivestar', 'dblog']);
+
+    $type = $this->drupalCreateContentType(['type' => 'test_node_type', 'name' => 'test_node_type']);
+    $this->admin_user = $this->drupalCreateUser(['create test_node_type content', 'rate content']);
+    $this->voter_user = $this->drupalCreateUser(['rate content']);
+  }
+
+  /**
+   * Add a fivestar field to a content type.
+   *
+   * @param $options
+   *   An associative array of options for the field and instance.
+   */
+  public function createFivestarField($options = []) {
+    $options = $options + [
+      'content_type' => 'test_node_type',
+      'widget_type' => 'stars',
+      'display' => [],
+    ];
+    $field = [
+      'field_name' => 'fivestar_test',
+      'type' => 'fivestar',
+      'cardinality' => 1,
+      'settings' => [
+        'axis' => 'vote',
+      ],
+    ];
+    $instance = [
+      'entity_type' => 'node',
+      'field_name' => 'fivestar_test',
+      'label' => 'Fivestar test field',
+      'bundle' => $options['content_type'],
+      'widget' => [
+        'type' => $options['widget_type'],
+        'settings' => [
+          'widget' => [
+            'fivestar_widget' => 'default',
+          ],
+        ],
+      ],
+      'settings' => [
+        'axis' => 'vote',
+        'stars' => '5',
+      ],
+      'display' => $options['display'],
+    ];
+
+    field_create_field($field);
+    field_create_instance($instance);
+  }
+
+}
