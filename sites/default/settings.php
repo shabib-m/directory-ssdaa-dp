@@ -290,7 +290,7 @@ $databases = [];
  *   $settings['hash_salt'] = file_get_contents('/home/example/salt.txt');
  * @endcode
  */
-$settings['hash_salt'] = 'Xddl2A5CLXYPw3Y8td1LSvwj2mCpfM4r1yjZXoNefG2WfItA-ypG3wXAFJBD1pX7FEXwrOlW3g';
+$settings['hash_salt'] = 'aOw7Q31jA493QoY33e-FOLFbgOUYAGlznAHHdH8_eIaF6qhed3KkY99Ppufbr0CIYLlMfA_szQ';
 
 /**
  * Deployment identifier.
@@ -781,10 +781,13 @@ $settings['migrate_node_migrate_type_classic'] = FALSE;
 /**
  * Load local development override configuration, if available.
  *
- * Use settings.local.php to override variables on secondary (staging,
- * development, etc) installations of this site. Typically used to disable
- * caching, JavaScript/CSS compression, re-routing of outgoing emails, and
- * other things that should not happen on development and testing sites.
+ * Create a settings.local.php file to override variables on secondary (staging,
+ * development, etc.) installations of this site.
+ *
+ * Typical uses of settings.local.php include:
+ * - Disabling caching.
+ * - Disabling JavaScript/CSS compression.
+ * - Rerouting outgoing emails.
  *
  * Keep this code block at the end of this file to take full effect.
  */
@@ -793,7 +796,7 @@ $settings['migrate_node_migrate_type_classic'] = FALSE;
 #   include $app_root . '/' . $site_path . '/settings.local.php';
 # }
 $databases['default']['default'] = array (
-  'database' => 'backdrop-dir1',
+  'database' => 'directory-ssdaa-d8',
   'username' => 'root',
   'password' => '',
   'prefix' => '',
@@ -802,4 +805,4 @@ $databases['default']['default'] = array (
   'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
   'driver' => 'mysql',
 );
-$settings['config_sync_directory'] = 'sites/default/files/config_-ZGlCHkrI-WpxEHZGi0FvQeK17NYbfpY8YYZCRJQ5cVqXcftFLdzIBDAIzNv9HVAb-KMF11G-A/sync';
+$settings['config_sync_directory'] = 'sites/default/files/config_4wLfoM3phESf1F6R5m7Ks8gdMIMZfWoUgYXTBzDBQ9mGBSTKFrgQyg0BwU-qvv0xyRZGDayXqQ/sync';
