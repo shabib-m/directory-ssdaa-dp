@@ -1,0 +1,37 @@
+langcode: ar
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field__lm_aldwlt
+    - taxonomy.vocabulary.country
+  module:
+    - image
+id: taxonomy_term.country.field__lm_aldwlt
+field_name: field__lm_aldwlt
+entity_type: taxonomy_term
+bundle: country
+label: 'علم الدولة'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  file_directory: 'term-country/[date:custom:Y]-[date:custom:m]'
+  file_extensions: 'png gif jpg jpeg'
+  max_filesize: ''
+  max_resolution: ''
+  min_resolution: ''
+  alt_field: true
+  alt_field_required: false
+  title_field: false
+  title_field_required: false
+  default_image:
+    uuid: ''
+    alt: ''
+    title: ''
+    width: null
+    height: null
+  handler: 'default:file'
+  handler_settings: {  }
+field_type: image
