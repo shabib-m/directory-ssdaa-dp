@@ -23,7 +23,7 @@ content:
       rows: 5
     third_party_settings: {  }
   field__lm_aldwlt:
-    weight: 1
+    weight: 6
     settings:
       progress_indicator: throbber
       preview_image_style: thumbnail

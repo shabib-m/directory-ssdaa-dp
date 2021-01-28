@@ -1,13 +1,13 @@
 # Demonstration content for interrelated imports.
 ---
-
 - entity: "node"
   type: "directory"
   title: "ﻣﻮﻗﻊ ﺍﻟﺸﻴﺦ ﺻﺎﻟﺢ ﺑﻦ ﻓﻮﺯﺍﻥ ﺍﻟﻔﻮﺯﺍﻥ"
   status: 1
+  promote: 1
   # Assumes Pathauto is installed.
   path:
-    - pathauto: 0
+    - pathauto: 1
       alias: '/website/alfawzan'
   # Rich text fields contain multiple keys that must be provided.
   body:
@@ -29,6 +29,18 @@
           # Each property filter maps directly to an EntityQuery condition.
           - vid: 'country'
             name: 'المملكة العربية السعودية'
+  field_image:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'alfawzan.png'
 # Articles may also be more complex and include referenced content like tags.
 - entity: "node"
   type: "article"

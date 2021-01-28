@@ -20,13 +20,13 @@ content:
     settings: {  }
     third_party_settings: {  }
   field__lm_aldwlt:
+    type: image
     weight: 1
-    label: above
+    region: content
+    label: hidden
     settings:
       image_style: ''
-      image_link: ''
+      image_link: content
     third_party_settings: {  }
-    type: image
-    region: content
 hidden:
   langcode: true
