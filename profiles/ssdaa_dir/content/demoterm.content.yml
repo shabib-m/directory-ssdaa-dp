@@ -16,87 +16,318 @@
 - entity: "taxonomy_term"
   vid: "country"
   name: "الامارات العربية المتحده"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'AE.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "البحرين"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'BH.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "الكويت"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'KW.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "عمان"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'OM.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "مصر"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'EG.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "مالي"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'ML.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "ليبيا"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'LY.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "لبنان"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'LB.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "قطر"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'QA.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "جيبوتي"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'DJ.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "سوريا"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'SY.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "تونس"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'TN.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "المغرب"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'MA.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "العراق"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'IQ.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "السودان"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'SD.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "الجزائر"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'DZ.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "الاردن"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'JO.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "اليمن"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'YE.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "فلسطين"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'PS.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "الصومال"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'SO.png'
 - entity: "taxonomy_term"
   vid: "country"
   name: "جزر القمر"
-
+  field__lm_aldwlt:
+    # To lookup and add files we'll need to use a different callback function.
+    - '#process':
+        # In this case we're looking up a file, so we'll use the `file` callback.
+        callback: 'file'
+        args:
+          # Our first argument is, again, the bundle of the entity type.
+          - 'image'
+          # For this callback our additional arguments are telling what file we want.
+          # By default, images are searched for within an `images` directory beside the
+          # `content` directory containing our content files.
+          - filename: 'KM.png'
  # taxonomy main
 
 - entity: "taxonomy_term"

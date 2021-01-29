@@ -111,4 +111,4 @@
           # For this callback our additional arguments are telling what file we want.
           # By default, images are searched for within an `images` directory beside the
           # `content` directory containing our content files.
-          - filename: 'demo-image.jpg'
+          - filename: 'alfawzan.png'
