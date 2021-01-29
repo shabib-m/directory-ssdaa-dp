@@ -1,0 +1,5 @@
+# Schema for the configuration files of the Bootstrap Barrio Subtheme.
+
+directory_ssdaa.settings:
+  type: theme_settings
+  label: 'اعدادات قالب دليل صدى'
