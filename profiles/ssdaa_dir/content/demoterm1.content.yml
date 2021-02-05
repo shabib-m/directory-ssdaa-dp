@@ -1,0 +1,362 @@
+ # taxonomy main
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "مواقع إسلامية"
+  weight: -18
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "المجلات والتسجيلات الإسلاميه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إسلامية"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "الكتب الإسلامية"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إسلامية"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "العلماء والدعاة"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إسلامية"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "القرآن الكريم"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إسلامية"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "الصوتيات الإسلامية"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إسلامية"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "أناشيد إسلاميه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إسلامية"
+
+# مواقع اخباريه
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "مواقع إخباريه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "الصحف المصريه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إخباريه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "الصحف السعوديه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إخباريه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "الصحف العربيه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إخباريه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "الصحف الكويتيه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إخباريه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "الصحف الإماراتيه والقطريه والعمانيه والبحرينيه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إخباريه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "وكالات الأنباء"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إخباريه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "مواقع الأخبار العربيه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إخباريه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "صحف أخرى"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع إخباريه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "منتديات"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "منتديات إسلاميه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "منتديات"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "منتديات أسريه وترفيهيه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "منتديات"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "منتديات اقتصاديه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "منتديات"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "منتديات البرمجه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "منتديات"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "منتديات تطوير مواقع"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "منتديات"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "منتديات رياضيه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "منتديات"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "منتديات سياسيه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "منتديات"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "منتديات طبيه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "منتديات"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "منتديات عامه ومنوعه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "منتديات"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "منتديات كمبيوتر وانترنت"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "منتديات"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "منتديات أدبيه"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "منتديات"
+
+# مواقع طبيه
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "مواقع طبيه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "طب الأسنان"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع طبيه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "أمراض نفسية"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع طبيه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "نساء وولادة"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع طبيه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "تجميل"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع طبيه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "مواقع طبيه أخرى"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع طبيه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "كمبيوتر وبرامج"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "مواقع كمبيوتر عامة"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "كمبيوتر وبرامج"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "البرامج وانظمة التشغيل"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "كمبيوتر وبرامج"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "الرسم والتصميم - الجرافيكس"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "كمبيوتر وبرامج"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "الرسم والتصميم - الجرافيكس"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "كمبيوتر وبرامج"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "مواقع الترفيه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "مواقع الأطفال"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع الترفيه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "مواقع الالعاب"
+
+  parent:
+     - entity: "taxonomy_term"
+       vid: "main"
+       name: "مواقع الترفيه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "مواقع تعليميه"
+
+- entity: "taxonomy_term"
+  vid: "main"
+  name: "أخرى ومنوعه"
+
+

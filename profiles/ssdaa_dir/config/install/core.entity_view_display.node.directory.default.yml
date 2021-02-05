@@ -59,6 +59,8 @@ content:
     label: above
     settings:
       trim_length: 80
+      rel: nofollow
+      target: _blank
       url_only: false
       url_plain: false
       rel: ''
