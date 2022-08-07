@@ -17,9 +17,8 @@ read CUSTOM_BARRIO_NAME
 if [[ ! -e ../../custom ]]; then
     mkdir ../../custom
 fi
-cd ../../custom
-cp -r ../contrib/bootstrap_barrio/subtheme $CUSTOM_BARRIO
-cd $CUSTOM_BARRIO
+cp -r subtheme ../../custom/$CUSTOM_BARRIO
+cd ../../custom/$CUSTOM_BARRIO
 for file in *bootstrap_barrio_subtheme.*; do mv $file ${file//bootstrap_barrio_subtheme/$CUSTOM_BARRIO}; done
 for file in config/*/*bootstrap_barrio_subtheme.*; do mv $file ${file//bootstrap_barrio_subtheme/$CUSTOM_BARRIO}; done
 mv {_,}$CUSTOM_BARRIO.theme
