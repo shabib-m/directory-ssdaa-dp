@@ -4,6 +4,7 @@ namespace Drupal\fivestar\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Security\TrustedCallbackInterface;
 
 /**
  * Plugin implementation of the 'fivestar_stars' formatter.
@@ -17,7 +18,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   weight = 1
  * )
  */
-class StarsFormatter extends FivestarFormatterBase {
+class StarsFormatter extends FivestarFormatterBase implements TrustedCallbackInterface {
 
   /**
    * {@inheritdoc}
@@ -50,7 +51,10 @@ class StarsFormatter extends FivestarFormatterBase {
         [$this, 'previewsExpand'],
       ],
       '#attached' => [
-        'library' => ['fivestar/fivestar.admin'],
+        'library' => [
+          'fivestar/fivestar.admin',
+          'fivestar/fivestar.base',
+        ],
       ],
     ];
 
@@ -74,6 +78,13 @@ class StarsFormatter extends FivestarFormatterBase {
     ];
 
     return $elements;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks() {
+    return ['previewsExpand'];
   }
 
   /**

@@ -3,13 +3,14 @@ type: module
 description: 'Gathers and displays syndicated content (RSS, RDF, and Atom feeds) from external sources.'
 package: Core
 # version: VERSION
-core: 8.x
+lifecycle: deprecated
+lifecycle_link: https://www.drupal.org/node/3223395#s-aggregator
 configure: aggregator.admin_settings
 dependencies:
   - drupal:file
   - drupal:options
 
-# Information added by Drupal.org packaging script on 2021-01-20
-version: '8.9.13'
+# Information added by Drupal.org packaging script on 2022-08-03
+version: '9.4.5'
 project: 'drupal'
-datestamp: 1611162326
+datestamp: 1659545524

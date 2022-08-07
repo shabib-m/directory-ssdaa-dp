@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Template\Attribute;
 
 /**
  * Implements hook_help().
@@ -53,37 +54,22 @@ function fivestar_microdata_suggestions() {
  */
 function fivestar_theme() {
   return [
-    'fivestar' => [
-      'function' => 'theme_fivestar',
-      'render element' => 'element',
-      'file' => 'includes/fivestar.theme.inc',
-    ],
-    'fivestar_select' => [
-      'function' => 'theme_fivestar_select',
-      'render element' => 'element',
-      'file' => 'includes/fivestar.theme.inc',
-    ],
     'fivestar_static' => [
-      'function' => 'theme_fivestar_static',
       'variables' => [
         'rating' => NULL,
         'stars' => 5,
         'vote_type' => 'vote',
         'widget' => ['name' => 'default', 'css' => ''],
       ],
-      'file' => 'includes/fivestar.theme.inc',
     ],
     'fivestar_static_element' => [
-      'function' => 'theme_fivestar_static_element',
       'variables' => [
         'star_display' => NULL,
         'title' => NULL,
         'description' => NULL,
       ],
-      'file' => 'includes/fivestar.theme.inc',
     ],
     'fivestar_summary' => [
-      'function' => 'theme_fivestar_summary',
       'variables' => [
         'user_rating' => NULL,
         'average_rating' => NULL,
@@ -91,35 +77,18 @@ function fivestar_theme() {
         'stars' => 5,
         'microdata' => [],
       ],
-      'file' => 'includes/fivestar.theme.inc',
     ],
-    'fivestar_preview' => [
-      'function' => 'theme_fivestar_preview',
-      'variables' => [
-        'style' => NULL,
-        'text' => NULL,
-        'stars' => NULL,
-        'unvote' => NULL,
-        'title' => NULL,
-      ],
-      'file' => 'includes/fivestar.theme.inc',
-    ],
-    'fivestar_preview_widget' => [
-      'function' => 'theme_fivestar_preview_widget',
-      'variables' => ['css' => NULL, 'name' => NULL],
-      'file' => 'includes/fivestar.theme.inc',
-    ],
-    'fivestar_preview_wrapper' => [
-      'function' => 'theme_fivestar_preview_wrapper',
-      'variables' => ['content' => NULL, 'type' => 'direct'],
-      'file' => 'includes/fivestar.theme.inc',
-    ],
-    // Field formatters.
-    'fivestar_formatter_default' => [
-      'function' => 'theme_fivestar_formatter_default',
-      'render element' => 'element',
-      'file' => 'includes/fivestar.theme.inc',
-    ],
+    // 'fivestar_preview' => [
+    //   'function' => 'theme_fivestar_preview',
+    //   'variables' => [
+    //     'style' => NULL,
+    //     'text' => NULL,
+    //     'stars' => NULL,
+    //     'unvote' => NULL,
+    //     'title' => NULL,
+    //   ],
+    //   'file' => 'includes/fivestar.theme.inc',
+    // ],
     'fivestar_formatter_rating' => [
       'render element' => 'element',
     ],
@@ -285,4 +254,101 @@ function template_preprocess_fivestar_formatter_percentage(array &$variables) {
 
   // Set average variable.
   $variables['average'] = round($average, 1);
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for the Fivestar static output.
+ */
+function template_preprocess_fivestar_static(array &$variables) {
+  // Get the total number of allowed stars. Defaults to 5.
+  $variables['stars'] = !empty($variables['stars']) ? $variables['stars'] : 5;
+
+  // Get number of selected stars.
+  $variables['numeric_rating'] = $variables['rating'] / (100 / $variables['stars']);
+
+  // Prepare stars data.
+  $stars_data = [];
+  for ($i = 1; $i <= $variables['stars']; $i++) {
+    $star_value = ceil((100 / $variables['stars']) * $i);
+    $prev_star_value = ceil((100 / $variables['stars']) * ($i - 1));
+
+    $stars_data[$i] = [
+      'star_value' => $star_value,
+      'percent' => NULL,
+    ];
+
+    if ($variables['rating'] < $star_value && $variables['rating'] > $prev_star_value) {
+      $stars_data[$i]['percent'] = (($variables['rating'] - $prev_star_value) / ($star_value - $prev_star_value)) * 100;
+    }
+  }
+
+  $variables['stars_data'] = $stars_data;
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for the Fivestar static element.
+ *
+ * Displays a static fivestar value with a title and description.
+ */
+function template_preprocess_fivestar_static_element(array &$variables) {
+  $variables['content'] = [
+    '#type' => 'item',
+    '#title' => $variables['title'],
+    '#description' => $variables['description'],
+    '#description_display' => 'after',
+    '#children' => $variables['star_display'],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for the Fivestar summary output.
+ */
+function template_preprocess_fivestar_summary(array &$variables) {
+  $votes = $variables['votes'];
+  $stars_number = $variables['stars'];
+  $user_rating = $variables['user_rating'];
+  $average_rating = $variables['average_rating'];
+
+  $show_votes = $votes !== NULL;
+  $show_user_rating = $user_rating !== NULL;
+  $show_average_rating = $average_rating !== NULL;
+
+  $variables['average_rating_microdata'] = '';
+  $variables['rating_count_microdata'] = '';
+
+  if ($show_user_rating) {
+    $output_type = $show_votes ? 'user-count' : 'user';
+    if ($user_rating > 0) {
+      $variables['user_stars'] = round(($user_rating * $stars_number) / 100, 1);
+    }
+    else {
+      $variables['user_stars'] = t('None');
+    }
+  }
+
+  if ($show_average_rating) {
+    if ($show_user_rating) {
+      $output_type = 'combo';
+    }
+    else {
+      $output_type = $show_votes ? 'average-count' : 'average';
+    }
+
+    $variables['average_stars'] = round(($average_rating * $stars_number) / 100, 1);
+    if (!empty($variables['microdata']['average_rating']['#attributes'])) {
+      $variables['average_rating_microdata'] = new Attribute($variables['microdata']['average_rating']['#attributes']);
+    }
+  }
+
+  if ($show_votes) {
+    if (!$show_user_rating && !$show_average_rating) {
+      $output_type = 'count';
+    }
+    if ($votes > 0) {
+      if (!empty($variables['microdata']['rating_count']['#attributes'])) {
+        $variables['rating_count_microdata'] = new Attribute($variables['microdata']['rating_count']['#attributes']);
+      }
+    }
+  }
+  $variables['output_type'] = $output_type ?? '';
 }

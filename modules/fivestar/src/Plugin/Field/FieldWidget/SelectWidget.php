@@ -39,6 +39,7 @@ class SelectWidget extends FivestarWidgetBase {
 
     $element['rating'] = [
       '#type' => 'select',
+      '#title' => $element['#title'],
       '#empty_option' => $this->t('Select rating:'),
       '#empty_value' => '-',
       '#options' => $options,

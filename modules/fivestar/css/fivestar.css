@@ -14,10 +14,6 @@ form.fivestar-widget input {
   margin-right: 40px; /* LTR */
   margin-left: 40px; /* LTR */
 }
-.fivestar-combo-stars .fivestar-static-item {
-  float: left; /* LTR */
-  margin-right: 40px; /* LTR */
-}
 
 .fivestar-combo-stars .fivestar-form-item {
   float: left; /* LTR */

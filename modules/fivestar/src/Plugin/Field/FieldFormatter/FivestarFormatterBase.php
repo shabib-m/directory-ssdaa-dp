@@ -5,6 +5,7 @@ namespace Drupal\fivestar\Plugin\Field\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\fivestar\WidgetManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -19,6 +20,13 @@ abstract class FivestarFormatterBase extends FormatterBase {
    * @var \Drupal\fivestar\WidgetManager
    */
   protected $widgetManager;
+
+  /**
+   * The renderer.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
 
   /**
    * Constructs a FivestarFormatterBase object.
@@ -39,10 +47,13 @@ abstract class FivestarFormatterBase extends FormatterBase {
    *   Any third party settings.
    * @param \Drupal\fivestar\WidgetManager $widget_manager
    *   The widget manager.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer.
    */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, WidgetManager $widget_manager) {
+  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, WidgetManager $widget_manager, RendererInterface $renderer) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->widgetManager = $widget_manager;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -57,7 +68,8 @@ abstract class FivestarFormatterBase extends FormatterBase {
       $configuration['label'],
       $configuration['view_mode'],
       $configuration['third_party_settings'],
-      $container->get('fivestar.widget_manager')
+      $container->get('fivestar.widget_manager'),
+      $container->get('renderer')
     );
   }
 
@@ -73,13 +85,15 @@ abstract class FivestarFormatterBase extends FormatterBase {
    * @see ::formElement()
    */
   public function previewsExpand(array $element) {
-    foreach (Element::children($element) as $css) {
-      $vars = [
-        '#theme' => 'fivestar_preview_widget',
-        '#css' => $css,
-        '#name' => mb_strtolower($element[$css]['#title']),
+    foreach (Element::children($element) as $widget_name) {
+      $static_preview = [
+        '#theme' => 'fivestar_static',
+        '#widget' => ['name' => $widget_name],
+        '#attached'=> [
+          'library' => [$this->widgetManager->getWidgetLibrary($widget_name)],
+        ]
       ];
-      $element[$css]['#description'] = \Drupal::service('renderer')->render($vars);
+      $element[$widget_name]['#description'] = $this->renderer->render($static_preview);
     }
 
     return $element;

@@ -63,6 +63,7 @@ class FivestarTest extends BrowserTestBase {
     // Create users with different permissions.
     $this->adminUser = $this->createUser([
       'create test_node_type content',
+      'edit any test_node_type content',
       'rate content',
     ]);
     $this->voterUser = $this->createUser([
@@ -99,7 +100,8 @@ class FivestarTest extends BrowserTestBase {
       // Equals a rating of 2 stars.
       'fivestar_test[0][rating]' => '40',
     ];
-    $this->drupalPostForm('node/add/test_node_type', $edit, 'Save');
+    $this->drupalGet('node/add/test_node_type');
+    $this->submitForm($edit, 'Save');
 
     // Make sure the two-star rating shows on the node view.
     $elements = $this->xpath("//div[contains(@class, 'field--name-fivestar-test')]//div[contains(@class,'star-first')]/span");
@@ -142,6 +144,13 @@ class FivestarTest extends BrowserTestBase {
     $this->drupalGet('node/' . $node->id());
     $this->assertRaw('No votes yet', 'Fivestar field has no votes.');
     $this->assertEmpty($this->xpath("//form[contains(@class, 'fivestar-widget')]"));
+
+    // Check if node with attached fivestar field can be save.
+    $edit = ['title[0][value]' => $this->randomMachineName()];
+    $this->drupalLogin($this->adminUser);
+    $this->drupalGet('node/' . $node->id() . '/edit');
+    $this->submitForm($edit, 'Save');
+    $this->assertSession()->pageTextContains('has been updated.');
   }
 
 }

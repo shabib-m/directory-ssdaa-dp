@@ -68,6 +68,7 @@ class FivestarForm extends FormBase {
       '#allow_clear' => $field_settings['allow_clear'],
       '#allow_revote' => $field_settings['allow_revote'],
       '#allow_ownvote' => $field_settings['allow_ownvote'],
+      '#vote_type' => $field_settings['vote_type'],
       '#widget' => $context['display_settings'],
       '#default_value' => $entity->get($field_name)->rating,
       '#values' => $this->resultManager->getResultsByVoteType($entity, $field_settings['vote_type']),
@@ -90,7 +91,7 @@ class FivestarForm extends FormBase {
         'effect' => 'fade',
       ],
       '#attributes' => [
-        'style' => 'display:none',
+        'class' => ['js-hide'],
       ],
     ];
 

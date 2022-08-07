@@ -5,6 +5,7 @@ namespace Drupal\fivestar\Plugin\Field\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Security\TrustedCallbackInterface;
 
 /**
  * Plugin implementation of the 'fivestar_stars' widget.
@@ -17,7 +18,7 @@ use Drupal\Core\Render\Element;
  *   }
  * )
  */
-class StarsWidget extends FivestarWidgetBase {
+class StarsWidget extends FivestarWidgetBase implements TrustedCallbackInterface  {
 
   /**
    * {@inheritdoc}
@@ -41,11 +42,23 @@ class StarsWidget extends FivestarWidgetBase {
       '#options' => $this->widgetManager->getWidgetsOptionSet(),
       '#default_value' => $this->getSelectedWidgetKey(),
       '#attributes' => ['class' => ['fivestar-widgets', 'clearfix']],
-      // '#pre_render' => [[$this, 'previewsExpand']], // the theme function in here doesn't do anything
-      '#attached' => ['library' => ['fivestar/fivestar.admin']],
+      '#pre_render' => [[$this, 'previewsExpand']],
+      '#attached' => [
+        'library' => [
+          'fivestar/fivestar.admin',
+          'fivestar/fivestar.base',
+        ],
+      ],
     ];
 
     return $elements;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks() {
+    return ['previewsExpand'];
   }
 
   /**
@@ -75,20 +88,15 @@ class StarsWidget extends FivestarWidgetBase {
    * @see ::formElement()
    */
   public function previewsExpand(array $element) {
-    $widgets = $this->widgetManager->getWidgets();
-
-    foreach (Element::children($element) as $widget_key) {
-      $vars = [
-        '#theme' => 'fivestar_preview_widget',
-        // '#css' => ''
-        '#attached' => [
-          'library' => [
-            $widgets[$widget_key]['library'],
-          ],
-        ],
-        '#name' => $widgets[$widget_key]['label'],
+    foreach (Element::children($element) as $widget_name) {
+      $static_preview = [
+        '#theme' => 'fivestar_static',
+        '#widget' => ['name' => $widget_name],
+        '#attached'=> [
+          'library' => [$this->widgetManager->getWidgetLibrary($widget_name)],
+        ]
       ];
-      $element[$widget_key]['#description'] = \Drupal::service('renderer')->render($vars);
+      $element[$widget_name]['#description'] = $this->renderer->render($static_preview);
     }
 
     return $element;
@@ -110,10 +118,12 @@ class StarsWidget extends FivestarWidgetBase {
 
     $element['rating'] = [
       '#type' => 'fivestar',
+      '#title' => $element['#title'],
       '#stars' => $settings['stars'],
       '#allow_clear' => $settings['allow_clear'],
       '#allow_revote' => $settings['allow_revote'],
       '#allow_ownvote' => $settings['allow_ownvote'],
+      '#vote_type' => $settings['vote_type'],
       '#default_value' => isset($items[$delta]->rating) ? $items[$delta]->rating : 0,
       '#widget' => $display_settings,
       '#settings' => $display_settings,

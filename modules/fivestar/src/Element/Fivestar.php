@@ -51,7 +51,6 @@ class Fivestar extends FormElement {
    * Process callback: process fivestar element.
    */
   public static function process(array &$element, FormStateInterface $form_state, &$complete_form) {
-    $user_can_vote = self::userCanVote($element);
     $settings = $element['#settings'];
     $values = $element['#values'];
     $class[] = 'clearfix';
@@ -83,23 +82,45 @@ class Fivestar extends FormElement {
       $options[0] = t('Cancel rating');
     }
 
-    $element['vote'] = [
-      '#type' => 'select',
-      '#options' => $options,
-      '#rating' => $values['vote_average'],
-      '#required' => $element['#required'],
-      '#attributes' => $element['#attributes'],
-      '#theme' => $user_can_vote ? 'select' : 'fivestar_static',
-      '#default_value' => self::getElementDefaultValue($element),
-      '#weight' => -2,
-      '#ajax' => $element['#ajax'],
-    ];
-
-    if (isset($element['#parents'])) {
-      $element['vote']['#parents'] = $element['#parents'];
+    if (self::userCanVote($element)) {
+      $element['vote'] = [
+        '#type' => 'select',
+        '#description' => self::getElementDescription($element),
+        '#options' => $options,
+        '#rating' => $values['vote_average'],
+        '#required' => $element['#required'],
+        '#attributes' => $element['#attributes'],
+        '#default_value' => self::getElementDefaultValue($element),
+        '#weight' => -2,
+        '#ajax' => $element['#ajax'],
+        '#parents' => isset($element['#parents']) ? $element['#parents'] : [],
+      ];
     }
 
-    $element['vote']['#description'] = self::getElementDescription($element);
+    // Show static rating output.
+    else {
+      $renderer = \Drupal::service('renderer');
+      $static_stars = [
+        '#theme' => 'fivestar_static',
+        '#rating' => self::getElementDefaultValue($element),
+        '#stars' => $element['#stars'],
+        '#vote_type' => $element['#vote_type'],
+        '#widget' => $element['#widget'],
+      ];
+
+      $element_static = [
+        '#theme' => 'fivestar_static_element',
+        '#star_display' => $renderer->render($static_stars),
+        '#title' => '',
+        '#description' => self::getElementDescription($element),
+      ];
+
+      $element['vote_statistic'] = [
+        '#type' => 'markup',
+        '#markup' => $renderer->render($element_static),
+      ];
+    }
+
     $class[] = "fivestar-{$settings['text_format']}-text";
 
     switch ($settings['display_format']) {
@@ -162,32 +183,6 @@ class Fivestar extends FormElement {
 
     $element['#prefix'] = '<div ' . new Attribute(['class' => $class]) . '>';
     $element['#suffix'] = '</div>';
-
-    if ($element['#show_static_result']) {
-      // Dirty trick for omit error during rating save when voting is disabled.
-      $element['vote']['#type'] = 'hidden';
-      unset($element['vote']['#theme']);
-
-      $static_stars = [
-        '#theme' => 'fivestar_static',
-        '#rating' => $element['vote']['#default_value'],
-        '#stars' => $element['#stars'],
-        '#vote_type' => isset($settings['vote_type']) ? $settings['vote_type'] : NULL,
-        '#widget' => isset($settings['widget']) ? $settings['widget'] : NULL,
-      ];
-
-      $element_static = [
-        '#theme' => 'fivestar_static_element',
-        '#star_display' => \Drupal::service('renderer')->render($static_stars),
-        '#title' => '',
-        '#description' => $element['vote']['#description'],
-      ];
-
-      $element['vote_statistic'] = [
-        '#type' => 'markup',
-        '#markup' => \Drupal::service('renderer')->render($element_static),
-      ];
-    }
 
     $element['#attached']['library'][] = 'fivestar/fivestar.base';
 
@@ -257,6 +252,9 @@ class Fivestar extends FormElement {
    * @return bool
    */
   public static function userCanVote(array $element) {
+    if ($element['#show_static_result']) {
+      return FALSE;
+    }
     if ($element['#allow_revote']) {
       return TRUE;
     }

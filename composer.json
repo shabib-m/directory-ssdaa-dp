@@ -1,6 +1,6 @@
 {
     "name": "drupal/legacy-project",
-    "description": "Project template for Drupal 8 projects with composer following drupal/drupal layout",
+    "description": "Project template for Drupal 9 projects with composer following drupal/drupal layout",
     "type": "project",
     "license": "GPL-2.0-or-later",
     "homepage": "https://www.drupal.org/project/drupal",
@@ -15,18 +15,25 @@
         }
     ],
     "require": {
-        "composer/installers": "^1.2",
-        "drupal/core-composer-scaffold": "^8.8",
-        "drupal/core-project-message": "^8.8",
-        "drupal/core-recommended": "^8.8",
-        "drupal/core-vendor-hardening": "^8.8"
+        "composer/installers": "^1.9",
+        "drupal/core-composer-scaffold": "^9.4",
+        "drupal/core-project-message": "^9.4",
+        "drupal/core-recommended": "^9.4",
+        "drupal/core-vendor-hardening": "^9.4"
     },
     "conflict": {
         "drupal/drupal": "*"
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true,
     "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "drupal/core-composer-scaffold": true,
+            "drupal/core-project-message": true,
+            "drupal/core-vendor-hardening": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
         "sort-packages": true
     },
     "extra": {
@@ -56,6 +63,9 @@
             ],
             "modules/custom/{$name}": [
                 "type:drupal-custom-module"
+            ],
+            "profiles/custom/{$name}": [
+                "type:drupal-custom-profile"
             ],
             "themes/custom/{$name}": [
                 "type:drupal-custom-theme"

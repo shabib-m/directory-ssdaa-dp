@@ -104,7 +104,7 @@ class FivestarItem extends FieldItemBase {
         '%vote_types_link' => $vote_types_link,
       ]),
       '#default_value' => $this->getSetting('vote_type'),
-      '#show_static_result' => $has_data,
+      '#disabled' => $has_data,
     ];
 
     return $element;
