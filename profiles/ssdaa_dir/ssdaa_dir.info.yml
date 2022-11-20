@@ -1,4 +1,4 @@
-name: دليل صدى دروبال 9
+name: دليل صدى
 type: profile
 description: 'دليل مواقع للمواقع الشخصية والشركات'
 # version: VERSION
@@ -10,7 +10,6 @@ install:
   - block
   - breakpoint
   - ckeditor
-  - color
   - config
   - comment
   - contextual
@@ -46,9 +45,10 @@ install:
   - yaml_content
 
 themes:
-  - bartik
+  - bootstrap_barrio
+  - directory_ssdaa
   - seven
 
 distribution:
-  name: دليل صدى دروبال 
+  name: دليل صدى 
   langcode: ar
