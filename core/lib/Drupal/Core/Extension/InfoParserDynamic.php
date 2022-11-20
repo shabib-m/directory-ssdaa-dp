@@ -63,7 +63,7 @@ class InfoParserDynamic implements InfoParserInterface {
           // modules are allowed to provide these for testing purposes.
           $parsed_info['core_version_requirement'] = \Drupal::VERSION;
         }
-        elseif (isset($parsed_info['package']) && $parsed_info['package'] === 'Testing' && !isset($parsed_info['core'])) {
+        elseif (isset($parsed_info['package']) && $parsed_info['package'] === 'Testing') {
           // Modules in the testing package are exempt as well. This makes it
           // easier for contrib to use test modules.
           $parsed_info['core_version_requirement'] = \Drupal::VERSION;

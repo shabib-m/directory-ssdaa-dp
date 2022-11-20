@@ -15,7 +15,7 @@ libraries-extend:
   theme_test/another_deprecated_library:
     - test_legacy_theme/library
 
-# Information added by Drupal.org packaging script on 2022-08-03
-version: '9.4.5'
+# Information added by Drupal.org packaging script on 2022-10-06
+version: '9.4.8'
 project: 'drupal'
-datestamp: 1659545523
+datestamp: 1665072456
