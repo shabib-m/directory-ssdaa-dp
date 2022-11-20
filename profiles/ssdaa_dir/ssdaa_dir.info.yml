@@ -1,8 +1,9 @@
-name: دليل صدى للمواقع دروبال 8
+name: دليل صدى دروبال 9
 type: profile
 description: 'دليل مواقع للمواقع الشخصية والشركات'
 # version: VERSION
-core: 8.x
+# core: 9.x
+core_version_requirement: ^9
 install:
   - node
   - history
@@ -49,5 +50,5 @@ themes:
   - seven
 
 distribution:
-  name: دليل صدى للمواقع دروبال 8
+  name: دليل صدى دروبال 
   langcode: ar

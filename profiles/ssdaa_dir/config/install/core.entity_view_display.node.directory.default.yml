@@ -55,18 +55,16 @@ content:
     type: fivestar_stars
     region: content
   field_url_website:
-    weight: 102
+    type: link
     label: above
     settings:
       trim_length: 80
-      rel: nofollow
-      target: _blank
       url_only: false
       url_plain: false
       rel: ''
       target: ''
     third_party_settings: {  }
-    type: link
+    weight: 111
     region: content
   links:
     weight: 100
