@@ -1,0 +1,5 @@
+entity.custom_breadcrumbs.add_form:
+  route_name: 'entity.custom_breadcrumbs.add_form'
+  title: 'Add custom breadcrumbs'
+  appears_on:
+    - entity.custom_breadcrumbs.collection

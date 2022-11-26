@@ -1,0 +1,29 @@
+{
+    "name": "drupal/custom_breadcrumbs",
+    "type": "drupal-module",
+    "description": "Custom breadcrumbs helps the user to create and manage breadcrumbs menu on all content entity pages and other like views, page manager, controllers.",
+    "keywords": [
+        "Drupal"
+    ],
+    "license": "GPL-2.0+",
+    "homepage": "https://www.drupal.org/project/custom_breadcrumbs",
+    "authors": [
+        {
+            "name": "Szczepan Musial (lamp5)",
+            "homepage": "https://www.drupal.org/u/lamp5",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Contributors",
+            "homepage": "https://www.drupal.org/node/98576/committers",
+            "role": "Contributors"
+        }
+    ],
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/custom_breadcrumbs",
+        "source": "http://cgit.drupalcode.org/custom_breadcrumbs"
+    },
+    "require": {
+        "drupal/token": "^1.0"
+    }
+}

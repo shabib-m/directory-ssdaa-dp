@@ -1,0 +1,47 @@
+entity.custom_breadcrumbs.collection:
+  path: '/admin/structure/custom-breadcrumbs'
+  defaults:
+    _entity_list: 'custom_breadcrumbs'
+    _title: 'Custom breadcrumbs configuration'
+  requirements:
+    _permission: 'administer custom_breadcrumbs'
+
+entity.custom_breadcrumbs.add_form:
+  path: '/admin/structure/custom_breadcrumbs/add'
+  defaults:
+    _entity_form: 'custom_breadcrumbs.add'
+    _title: 'Add a custom breadcrumb'
+  requirements:
+    _permission: 'administer custom_breadcrumbs'
+
+entity.custom_breadcrumbs.edit_form:
+  path: '/admin/structure/custom-breadcrumbs/{custom_breadcrumbs}'
+  defaults:
+    _entity_form: 'custom_breadcrumbs.edit'
+    _title: 'Edit a custom breadcrumb'
+  requirements:
+    _permission: 'administer custom_breadcrumbs'
+
+entity.custom_breadcrumbs.delete_form:
+  path: '/admin/structure/custom-breadcrumbs/{custom_breadcrumbs}/delete'
+  defaults:
+    _entity_form: 'custom_breadcrumbs.delete'
+    _title: 'Delete a custom breadcrumb'
+  requirements:
+    _permission: 'administer custom_breadcrumbs'
+
+entity.custom_breadcrumbs.status_form:
+  path: '/admin/structure/custom-breadcrumbs/{custom_breadcrumbs}/status_form'
+  defaults:
+    _entity_form: 'custom_breadcrumbs.status'
+    _title: 'Change the custom breadcrumb status'
+  requirements:
+    _permission: 'administer custom_breadcrumbs'
+
+custom_breadcrumbs.config:
+  path: '/admin/config/user-interface/custom-breadcrumbs'
+  defaults:
+    _form: '\Drupal\custom_breadcrumbs\Form\CustomBreadcrumbsSettingsForm'
+    _title: 'Custom breadcrumb settings'
+  requirements:
+    _permission: 'administer custom_breadcrumbs'

@@ -1,0 +1,86 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for Custom breadcrumbs module.
+ *
+ * @DCG
+ * This file is no longer required in Drupal 8.
+ * @see https://www.drupal.org/node/2217931
+ */
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Routing\RouteMatch;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function custom_breadcrumbs_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.custom_breadcrumbs':
+      $text = file_get_contents(dirname(__FILE__) . '/README.md');
+      if (!\Drupal::moduleHandler()->moduleExists('markdown')) {
+        return '<pre>' . $text . '</pre>';
+      }
+      else {
+        // Use the Markdown filter to render the README.
+        $filter_manager = \Drupal::service('plugin.manager.filter');
+        $settings = \Drupal::configFactory()
+          ->get('markdown.settings')
+          ->getRawData();
+        $config = ['settings' => $settings];
+        $filter = $filter_manager->createInstance('markdown', $config);
+        return $filter->process($text, 'en');
+      }
+  }
+  return NULL;
+}
+
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function custom_breadcrumbs_entity_extra_field_info() {
+  $extra = [];
+  $entity_types = \Drupal::entityTypeManager()->getDefinitions();
+  $entityBundleInfo = \Drupal::service('entity_type.bundle.info');
+
+  foreach ($entity_types as $key => $type) {
+    foreach ($entityBundleInfo->getBundleInfo($key) as $bundle_key => $bundle_name) {
+      $extra[$key][$bundle_key]['display']['breadcrumbs'] = [
+        'label' => t('Breadcrumbs'),
+        'description' => t('Breadcrumbs'),
+        'weight' => 100,
+        'visible' => FALSE,
+      ];
+    }
+  }
+
+  return $extra;
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function custom_breadcrumbs_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($display->getComponent('breadcrumbs')) {
+    $url = $entity->toUrl();
+    $router = \Drupal::service('router.no_access_checks');
+    $result = $router->match($url->toString());
+    $paramsObj = [];
+
+    foreach ($result as $key => $val) {
+      if (isset($url->getRouteParameters()[$key])) {
+        $paramsObj[$key] = $val;
+      }
+    }
+
+    $route_match = new RouteMatch($url->getRouteName(), $result['_route_object'], $paramsObj, $url->getRouteParameters());
+    $build['breadcrumbs'] = \Drupal::service('breadcrumb')
+      ->build($route_match)
+      ->toRenderable();
+
+  }
+}

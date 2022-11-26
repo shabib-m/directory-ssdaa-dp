@@ -1,0 +1,13 @@
+name: Custom breadcrumbs
+type: module
+description: 'Provides a custom breadcrumbs configuration entity.'
+package: Custom
+core_version_requirement: ^8.8 || ^9
+configure: custom_breadcrumbs.config
+dependencies:
+  - token:token
+
+# Information added by Drupal.org packaging script on 2022-01-25
+version: '1.0.1'
+project: 'custom_breadcrumbs'
+datestamp: 1643111773

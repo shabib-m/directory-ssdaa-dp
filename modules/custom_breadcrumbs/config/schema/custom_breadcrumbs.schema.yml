@@ -1,0 +1,51 @@
+custom_breadcrumbs.custom_breadcrumbs.*:
+  type: config_entity
+  label: Custom breadcrumbs
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Label
+    uuid:
+      type: string
+    description:
+      type: string
+    entityType:
+      type: string
+    entityBundle:
+      type: string
+    language:
+      type: string
+    breadcrumbPaths:
+      type: string
+    breadcrumbTitles:
+      type: string
+    type:
+      type: string
+    pathPattern:
+      type: string
+
+custom_breadcrumbs.settings:
+  type: config_object
+  label: 'Custom breadcrumbs settings'
+  mapping:
+    home:
+      label: 'Home'
+      type: boolean
+    home_link:
+      label: 'Home link'
+      type: label
+    current_page:
+      label: 'Current page'
+      type: boolean
+    current_page_link:
+      label: 'Current page link'
+      type: boolean
+    trim_title:
+      label: 'Trim title'
+      type: integer
+    admin_pages_disable:
+      label: 'Disable on admin pages'
+      type: boolean

@@ -1,0 +1,5 @@
+custom_breadcrumbs.config:
+  title: 'Custom breadcrumb settings'
+  base_route_name: custom_breadcrumbs.config
+  names:
+    - custom_breadcrumbs.settings
