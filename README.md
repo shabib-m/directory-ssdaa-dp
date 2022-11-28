@@ -1,75 +1,30 @@
-<img alt="Drupal Logo" src="https://www.drupal.org/files/Wordmark_blue_RGB.png" height="60px">
+دليل صدى مبني على افضل نظام ادارة محتوى دروبال وايضا اقدم نظام ادارة محتوى يمتلك الخبره الكبيره والمجتمع المبدع وسهولة التعامل معه مع السهوله الكبيرة في تطويره وتطويعه الى تخصصات ثاني مثل الوظائف والشركات والمطاعم وغيرها بكل يسر
 
-Drupal is an open source content management platform supporting a variety of
-websites ranging from personal weblogs to large community-driven websites. For
-more information, visit the Drupal website, [Drupal.org][Drupal.org], and join
-the [Drupal community][Drupal community].
+اسباب طرح الدليل =
 
-## Contributing
+نشر ثقافة المصادر المفتوحة في الويب العربي بشكل صحيح
 
-Drupal is developed on [Drupal.org][Drupal.org], the home of the international
-Drupal community since 2001!
+العمل على اطر البرمجة مفيد للمبرمج والمصمم وصاحب الموقع
 
-[Drupal.org][Drupal.org] hosts Drupal's [GitLab repository][GitLab repository],
-its [issue queue][issue queue], and its [documentation][documentation]. Before
-you start working on code, be sure to search the [issue queue][issue queue] and
-create an issue if your aren't able to find an existing issue.
+تختصر الوقت بشكل كبير للمبرمج والمصمم نظرا لوجود الوثائق الخاصه بكل تخصص ان كان برمجة او تصميم وادوات مميزة لهم
 
-Every issue on Drupal.org automatically creates a new community-accessible fork
-that you can contribute to. Learn more about the code contribution process on
-the [Issue forks & merge requests page][issue forks].
+ضمان التطوير المستمر بعد مشيئة الله سبحانه للسكربت وهذي اهم نقطة المفروض يبحث عنها اي صاحب موقع محترف
 
-## Usage
+ترقيع الثغرات في وقت قياسي واحيانا قبل انتشار الثغرة التنبيه يوصلك في لوحة التحكم والبريد الاكتروني
 
-For a brief introduction, see [USAGE.txt](/core/USAGE.txt). You can also find
-guides, API references, and more by visiting Drupal's [documentation
-page][documentation].
+استمرارية البقاء كبيرة للسكربت بعد توفيق الله لانه ما يعتمد على شخص واحد وبالامكان بعد توقفي لاي سبب تطويره من المبدعين في الويب العربي
 
-You can quickly extend Drupal's core feature set by installing any of its
-[thousands of free and open source modules][modules]. With Drupal and its
-module ecosystem, you can often build most or all of what your project needs
-before writing a single line of code.
+السكربت مبني على افضل سكربت ادارة محتوى حاليا دروبال ويوصف انه اطار عمل لادارة المحتوى
 
-## Changelog
+المجتمع الخاص بالسكربت ابداعي الى ابعد الحدود يكفي معرفة انتاجه واضافاتهم المميزة للسكربت حتى نقيس مدى ابداعهم
 
-Drupal keeps detailed [change records][changelog]. You can search Drupal's
-changes for a record of every notable breaking change and new feature since
-2011.
+التصميم في السكربت مبني على اطار التصميم المعروف bootstrap لتسهيل عملية التصميم على المصممين وحتى يبدعون فيه متوافق مع جميع المتصفحات
 
-## Security
+اقدم سكربت ادارة محتوى وافضل سكربت ادارة محتوى حاليا بفارق كبير بينه وبين غيره من السكربتات الموجوده تقنيا
 
-For a list of security announcements, see the [Security advisories
-page][Security advisories] (available as [an RSS feed][security RSS]). This
-page also describes how to subscribe to these announcements via email.
+ادارة مشروع السكربت اكثر من ممتازة تحترم رخصة الاستخدام المجانية وهذا اللي يميز السكربت عن غيره من السكربتات بالامكان مشاهدة الوحدات الضخمة الموجوده في الدليل للحكم عليها ومقارنتها بسكربتات اخرى ان وجد بالمجانية ومفتوحة المصدر مثلها
 
-For information about the Drupal security process, or to find out how to report
-a potential security issue to the Drupal security team, see the [Security team
-page][security team].
+لا يتطلب خبرة برمجية حتى تبدعون فيه كل اللي تحتاجونه معرفة في تصميم المواقع html+css فقط
 
-## Need a helping hand?
+المرونة في التطوير وهذي من النقاط اللي معروفة عن السكربت ومشهور بها بالامكان تطبيق اي فكرة باكثر من طريقة
 
-Visit the [Support page][support] or browse [over a thousand Drupal
-providers][service providers] offering design, strategy, development, and
-hosting services.
-
-## Legal matters
-
-Know your rights when using Drupal by reading Drupal core's
-[license](/core/LICENSE.txt).
-
-Learn about the [Drupal trademark and logo policy here][trademark].
-
-[Drupal.org]: https://www.drupal.org
-[Drupal community]: https://www.drupal.org/community
-[GitLab repository]: https://git.drupalcode.org/project/drupal
-[issue queue]: https://www.drupal.org/project/issues/drupal
-[issue forks]: https://www.drupal.org/drupalorg/docs/gitlab-integration/issue-forks-merge-requests
-[documentation]: https://www.drupal.org/documentation
-[changelog]: https://www.drupal.org/list-changes/drupal
-[modules]: https://www.drupal.org/project/project_module
-[security advisories]: https://www.drupal.org/security
-[security RSS]: https://www.drupal.org/security/rss.xml
-[security team]: https://www.drupal.org/drupal-security-team
-[service providers]: https://www.drupal.org/drupal-services
-[support]: https://www.drupal.org/support
-[trademark]: https://www.drupal.com/trademark
