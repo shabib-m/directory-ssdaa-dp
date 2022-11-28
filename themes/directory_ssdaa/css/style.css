@@ -184,9 +184,79 @@
 	padding: 35px 0 0 !important;
 }
 
+/**
+ * taxonomy.
+ */
+.taxonomy-page {
+	margin: 20px 0;
+} 
+.taxonomy-page a {
+	text-decoration: none;
+	color: #027777;
+}
+.taxonomy-page .view-header {
+	margin: 3px 0 5px;
+}
+.taxonomy-page-teaser {
+	border: 1px #d7d7d7 solid;
+	margin: 10px;
+	border-radius: 5px;
+	padding: 0 !important;
+}
+.field--name-title {
+	margin: 20px 0;
+	padding: 14px 5px;
+	display: block;
+	border-bottom: 1px #acacac solid;
+	font-weight: bold;
+	color: #027777;
+}
+.field--name-body {
+	padding: 14px 5px;
+}
 
 
+.field--name-field-aldwlh, .field--name-field-tqyym-almwq- {
+	margin-left: 10px;
+	float: right;
+	border-left: 1px #ccc solid;
+	padding-left: 10px;
+	height: 27px;
+}
+.field--name-field-url-website a {
+	text-decoration: none;	
+}
+.field--name-field-url-website a::before {
+	font-family: "FontAwesome";
+	content: "\f0c1";
+	position: relative;
+	margin-right: 8px;
+}
+.field--name-field-aldwl .field--name-name {
+    float: right;
+}
+.field--name-field-aldwlh a {
+    text-decoration: none;
+}
+.field--name-field-aldwlh a::before {
+	font-family: "FontAwesome";
+	content: "\f022";
+	float: right;
+	margin: 0 5px;
+}
+.field--name-field-aldwlh .field--name-name {
+	margin-right: 10px;
+	line-height: 0;
+	display: contents;
+}
+.node--type-directory .node--view-mode-full .field--name-field-image img {
+	border-radius: 10px;
+	border: 5px #d3d5d5 solid;
+}
 
+
+.inline__links {
+}
 /**
  * fix rtl CSS.
  */
@@ -198,4 +268,7 @@
 }
 [dir="rtl"] .breadcrumb-item + .breadcrumb-item::before {
 	padding-left: var(--bs-breadcrumb-item-padding-x);
+}
+[dir="rtl"] div.fivestar-widget .cancel, div.fivestar-widget .star {
+	float: right;
 }
