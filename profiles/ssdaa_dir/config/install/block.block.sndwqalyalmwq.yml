@@ -1,0 +1,24 @@
+langcode: ar
+status: true
+dependencies:
+  content:
+    - 'block_content:basic:004446b5-1248-4016-aa77-670d9255f651'
+  module:
+    - block_content
+  theme:
+    - directory_ssdaa
+id: sndwqalyalmwq
+theme: directory_ssdaa
+region: header_bottom
+weight: -5
+provider: null
+plugin: 'block_content:004446b5-1248-4016-aa77-670d9255f651'
+settings:
+  id: 'block_content:004446b5-1248-4016-aa77-670d9255f651'
+  label: 'صندوق اعلى الموقع'
+  label_display: '0'
+  provider: block_content
+  status: true
+  info: ''
+  view_mode: full
+visibility: {  }

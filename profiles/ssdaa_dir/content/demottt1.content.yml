@@ -379,3 +379,17 @@
           # By default, images are searched for within an `images` directory beside the
           # `content` directory containing our content files.
           - filename: 'neom.jpg'
+
+
+- entity: "block_content"
+  # The machine name of the Custom Block type.
+  type: "basic"
+    # The UUID might be needed in order to assign it via configuration.
+  uuid: 004446b5-1248-4016-aa77-670d9255f651
+  # The admin title.
+  info: "Footer message"
+  body:
+    - format: "full_html"
+      summary: ""
+      value: | 
+        <h1>قالب دليل صدى</h1><h3>مرحبا بكم في الدليل</h3>
