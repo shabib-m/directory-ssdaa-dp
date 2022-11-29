@@ -1,0 +1,18 @@
+langcode: ar
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_ayqwnt_alqsm
+    - taxonomy.vocabulary.main
+id: taxonomy_term.main.field_ayqwnt_alqsm
+field_name: field_ayqwnt_alqsm
+entity_type: taxonomy_term
+bundle: main
+label: 'ايقونة القسم'
+description: 'هذا الحقل مخصص لوضع الايقونات الخاصه بمكتبة font awesome يكفي وضع اسم الايقونه مثال fa fa-graduation-cap'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

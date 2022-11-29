@@ -1,0 +1,23 @@
+uuid: 77603d73-8123-48b6-abe4-d040da553d31
+langcode: ar
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_sndwq_alaqsam
+    - taxonomy.vocabulary.main
+id: taxonomy_term.main.field_sndwq_alaqsam
+field_name: field_sndwq_alaqsam
+entity_type: taxonomy_term
+bundle: main
+label: 'صندوق الاقسام'
+description: 'ظهور القسم في صندوق الاقسام في الصفحة الرئيسية'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: في
+  off_label: إيقاف
+field_type: boolean

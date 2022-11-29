@@ -1,0 +1,67 @@
+langcode: ar
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.main.field_ayqwnt_alqsm
+    - field.field.taxonomy_term.main.field_sndwq_alaqsam
+    - taxonomy.vocabulary.main
+  module:
+    - path
+    - text
+id: taxonomy_term.main.default
+targetEntityType: taxonomy_term
+bundle: main
+mode: default
+content:
+  description:
+    type: text_textarea
+    weight: 2
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_ayqwnt_alqsm:
+    type: string_textfield
+    weight: 3
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_sndwq_alaqsam:
+    type: boolean_checkbox
+    weight: 1
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  langcode:
+    type: language_select
+    weight: 4
+    region: content
+    settings:
+      include_locked: true
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 5
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    weight: 6
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+hidden: {  }

@@ -63,6 +63,12 @@
 - entity: "taxonomy_term"
   vid: "main"
   name: "مواقع إخباريه"
+  field_ayqwnt_alqsm:
+    value: |
+       fa fa-newspaper-o
+  field_sndwq_alaqsam:
+    value: |
+      1
 
 - entity: "taxonomy_term"
   vid: "main"
@@ -72,7 +78,7 @@
      - entity: "taxonomy_term"
        vid: "main"
        name: "مواقع إخباريه"
-
+       
 - entity: "taxonomy_term"
   vid: "main"
   name: "الصحف السعوديه"
@@ -139,6 +145,12 @@
 - entity: "taxonomy_term"
   vid: "main"
   name: "منتديات"
+  field_ayqwnt_alqsm:
+    value: |
+       fa fa-comments-o
+  field_sndwq_alaqsam:
+    value: |
+      1
 
 - entity: "taxonomy_term"
   vid: "main"
@@ -243,6 +255,12 @@
 - entity: "taxonomy_term"
   vid: "main"
   name: "مواقع طبيه"
+  field_ayqwnt_alqsm:
+    value: |
+       fa fa-heartbeat
+  field_sndwq_alaqsam:
+    value: |
+      1
 
 - entity: "taxonomy_term"
   vid: "main"
@@ -292,6 +310,12 @@
 - entity: "taxonomy_term"
   vid: "main"
   name: "كمبيوتر وبرامج"
+  field_ayqwnt_alqsm:
+    value: |
+       fa fa-laptop
+  field_sndwq_alaqsam:
+    value: |
+      1
 
 - entity: "taxonomy_term"
   vid: "main"
@@ -332,6 +356,12 @@
 - entity: "taxonomy_term"
   vid: "main"
   name: "مواقع الترفيه"
+  field_ayqwnt_alqsm:
+    value: |
+       fa fa-connectdevelop
+  field_sndwq_alaqsam:
+    value: |
+      1
 
 - entity: "taxonomy_term"
   vid: "main"
@@ -354,6 +384,12 @@
 - entity: "taxonomy_term"
   vid: "main"
   name: "مواقع تعليميه"
+  field_ayqwnt_alqsm:
+    value: |
+       fa fa-graduation-cap
+  field_sndwq_alaqsam:
+    value: |
+      1
 
 - entity: "taxonomy_term"
   vid: "main"
