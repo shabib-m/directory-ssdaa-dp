@@ -47,6 +47,7 @@ install:
 themes:
   - bootstrap_barrio
   - directory_ssdaa
+  - bartik
   - seven
 
 distribution:
