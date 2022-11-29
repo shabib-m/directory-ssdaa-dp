@@ -4,55 +4,230 @@ dependencies:
   config:
     - field.field.node.directory.body
     - field.field.node.directory.field_aldwlh
+    - field.field.node.directory.field_alqsm
     - field.field.node.directory.field_image
     - field.field.node.directory.field_tqyym_almwq_
     - field.field.node.directory.field_url_website
+    - image.style.large
     - node.type.directory
   module:
     - fivestar
     - image
+    - layout_builder
+    - layout_discovery
     - link
     - text
     - user
+third_party_settings:
+  layout_builder:
+    enabled: true
+    allow_custom: false
+    sections:
+      -
+        layout_id: layout_twocol_section
+        layout_settings:
+          label: ''
+          context_mapping: {  }
+          column_widths: 50-50
+        components:
+          77f9437a-27f6-49b8-afeb-43667398dbb2:
+            uuid: 77f9437a-27f6-49b8-afeb-43667398dbb2
+            region: first
+            configuration:
+              id: 'field_block:node:directory:field_image'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: image
+                label: hidden
+                settings:
+                  image_link: ''
+                  image_style: large
+                  image_loading:
+                    attribute: lazy
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
+          b73c9b23-14cd-4c44-a3f8-df79233ce8db:
+            uuid: b73c9b23-14cd-4c44-a3f8-df79233ce8db
+            region: second
+            configuration:
+              id: 'field_block:node:directory:body'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: text_default
+                label: hidden
+                settings: {  }
+                third_party_settings: {  }
+            weight: 3
+            additional: {  }
+          6487f52a-21a4-4614-a53c-11be30b662d7:
+            uuid: 6487f52a-21a4-4614-a53c-11be30b662d7
+            region: second
+            configuration:
+              id: 'field_block:node:directory:title'
+              label: العنوان
+              label_display: '0'
+              provider: layout_builder
+              context_mapping:
+                entity: layout_builder.entity
+                view_mode: view_mode
+              formatter:
+                type: string
+                label: hidden
+                settings:
+                  link_to_entity: false
+                third_party_settings: {  }
+            weight: 1
+            additional: {  }
+          eeb3d848-5576-4e08-96d8-4077da5eeb24:
+            uuid: eeb3d848-5576-4e08-96d8-4077da5eeb24
+            region: second
+            configuration:
+              id: 'field_block:node:directory:field_alqsm'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: entity_reference_label
+                label: above
+                settings:
+                  link: true
+                third_party_settings: {  }
+            weight: 6
+            additional: {  }
+          1c7671c6-ec86-46e5-965c-1a77af3fe491:
+            uuid: 1c7671c6-ec86-46e5-965c-1a77af3fe491
+            region: second
+            configuration:
+              id: 'extra_field_block:node:directory:links'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+            weight: 9
+            additional: {  }
+          f4a189df-c269-4155-90ed-9c548fec79a3:
+            uuid: f4a189df-c269-4155-90ed-9c548fec79a3
+            region: second
+            configuration:
+              id: 'field_block:node:directory:field_aldwlh'
+              label: الدوله
+              label_display: '0'
+              provider: layout_builder
+              context_mapping:
+                entity: layout_builder.entity
+                view_mode: view_mode
+              formatter:
+                type: entity_reference_entity_view
+                label: hidden
+                settings:
+                  view_mode: full
+                third_party_settings: {  }
+            weight: 5
+            additional: {  }
+          e67634d4-6735-41f0-a8ce-668ccefa60e4:
+            uuid: e67634d4-6735-41f0-a8ce-668ccefa60e4
+            region: second
+            configuration:
+              id: 'field_block:node:directory:field_url_website'
+              label: 'رابط الموقع'
+              label_display: '0'
+              provider: layout_builder
+              context_mapping:
+                entity: layout_builder.entity
+                view_mode: view_mode
+              formatter:
+                type: link
+                label: hidden
+                settings:
+                  trim_length: 80
+                  url_only: false
+                  url_plain: false
+                  rel: nofollow
+                  target: _blank
+                third_party_settings: {  }
+            weight: 8
+            additional: {  }
+          c09abff5-ac6c-4949-a3d3-dda8d21b37b8:
+            uuid: c09abff5-ac6c-4949-a3d3-dda8d21b37b8
+            region: second
+            configuration:
+              id: 'field_block:node:directory:field_tqyym_almwq_'
+              label: 'تقييم الموقع'
+              label_display: '0'
+              provider: layout_builder
+              context_mapping:
+                entity: layout_builder.entity
+                view_mode: view_mode
+              formatter:
+                type: fivestar_stars
+                label: hidden
+                settings:
+                  text_format: none
+                  display_format: average
+                  fivestar_widget: flames
+                third_party_settings: {  }
+            weight: 7
+            additional: {  }
+        third_party_settings: {  }
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: ''
+        components: {  }
+        third_party_settings: {  }
 id: node.directory.default
 targetEntityType: node
 bundle: directory
 mode: default
 content:
   body:
-    label: hidden
     type: text_default
-    weight: 101
+    label: hidden
     settings: {  }
     third_party_settings: {  }
+    weight: 2
     region: content
   field_aldwlh:
-    weight: 103
+    type: entity_reference_entity_view
     label: hidden
     settings:
-      link: true
       view_mode: default
+      link: true
     third_party_settings: {  }
-    type: entity_reference_entity_view
+    weight: 4
     region: content
-  field_image:
-    weight: 104
+  field_alqsm:
+    type: entity_reference_label
     label: above
     settings:
-      image_style: ''
-      image_link: ''
+      link: true
     third_party_settings: {  }
+    weight: 7
+    region: content
+  field_image:
     type: image
+    label: hidden
+    settings:
+      image_link: ''
+      image_style: large
+      image_loading:
+        attribute: lazy
+    third_party_settings: {  }
+    weight: 0
     region: content
   field_tqyym_almwq_:
-    weight: 105
+    type: fivestar_stars
     label: above
     settings:
       text_format: average
       display_format: average
       fivestar_widget: basic
     third_party_settings: {  }
-    type: fivestar_stars
+    weight: 3
     region: content
   field_url_website:
     type: link
@@ -61,15 +236,16 @@ content:
       trim_length: 80
       url_only: false
       url_plain: false
-      rel: ''
-      target: ''
+      rel: nofollow
+      target: _blank
     third_party_settings: {  }
-    weight: 111
+    weight: 5
     region: content
   links:
-    weight: 100
-    region: content
     settings: {  }
     third_party_settings: {  }
+    weight: 6
+    region: content
 hidden:
+  breadcrumbs: true
   langcode: true

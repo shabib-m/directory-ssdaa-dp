@@ -5,33 +5,94 @@ dependencies:
     - core.entity_view_mode.node.teaser
     - field.field.node.directory.body
     - field.field.node.directory.field_aldwlh
+    - field.field.node.directory.field_alqsm
     - field.field.node.directory.field_image
     - field.field.node.directory.field_tqyym_almwq_
     - field.field.node.directory.field_url_website
     - node.type.directory
   module:
+    - layout_builder
+    - layout_discovery
     - text
     - user
+third_party_settings:
+  layout_builder:
+    enabled: true
+    allow_custom: false
+    sections:
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: ''
+        components:
+          8515660f-938c-4685-82a8-62fce6ac0f80:
+            uuid: 8515660f-938c-4685-82a8-62fce6ac0f80
+            region: content
+            configuration:
+              id: 'field_block:node:directory:body'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: text_summary_or_trimmed
+                label: hidden
+                settings:
+                  trim_length: 600
+                third_party_settings: {  }
+            weight: 1
+            additional: {  }
+          d07c7b38-039f-42f4-81f3-97144bcacc03:
+            uuid: d07c7b38-039f-42f4-81f3-97144bcacc03
+            region: content
+            configuration:
+              id: 'extra_field_block:node:directory:links'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+            weight: 2
+            additional: {  }
+          9706ed27-9fb3-40bc-a4d5-6ce16976c2e1:
+            uuid: 9706ed27-9fb3-40bc-a4d5-6ce16976c2e1
+            region: content
+            configuration:
+              id: 'field_block:node:directory:title'
+              label: العنوان
+              label_display: '0'
+              provider: layout_builder
+              context_mapping:
+                entity: layout_builder.entity
+                view_mode: view_mode
+              formatter:
+                type: string
+                label: hidden
+                settings:
+                  link_to_entity: true
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
+        third_party_settings: {  }
 id: node.directory.teaser
 targetEntityType: node
 bundle: directory
 mode: teaser
 content:
   body:
-    label: hidden
     type: text_summary_or_trimmed
-    weight: 101
+    label: hidden
     settings:
       trim_length: 600
     third_party_settings: {  }
+    weight: 0
     region: content
   links:
-    weight: 100
     settings: {  }
     third_party_settings: {  }
+    weight: 1
     region: content
 hidden:
+  breadcrumbs: true
   field_aldwlh: true
+  field_alqsm: true
   field_image: true
   field_tqyym_almwq_: true
   field_url_website: true
