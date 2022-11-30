@@ -1,6 +1,9 @@
 - entity: "taxonomy_term"
   vid: "country"
   name: "المملكة العربية السعودية"
+  field_sndwq_aldwl:
+    value: |
+      1
   field__lm_aldwlt:
     # To lookup and add files we'll need to use a different callback function.
     - '#process':
@@ -16,6 +19,9 @@
 - entity: "taxonomy_term"
   vid: "country"
   name: "الامارات العربية المتحده"
+  field_sndwq_aldwl:
+    value: |
+      1
   field__lm_aldwlt:
     # To lookup and add files we'll need to use a different callback function.
     - '#process':
@@ -31,6 +37,9 @@
 - entity: "taxonomy_term"
   vid: "country"
   name: "البحرين"
+  field_sndwq_aldwl:
+    value: |
+      1      
   field__lm_aldwlt:
     # To lookup and add files we'll need to use a different callback function.
     - '#process':
@@ -46,6 +55,9 @@
 - entity: "taxonomy_term"
   vid: "country"
   name: "الكويت"
+  field_sndwq_aldwl:
+    value: |
+      1
   field__lm_aldwlt:
     # To lookup and add files we'll need to use a different callback function.
     - '#process':
@@ -61,6 +73,9 @@
 - entity: "taxonomy_term"
   vid: "country"
   name: "عمان"
+  field_sndwq_aldwl:
+    value: |
+      1
   field__lm_aldwlt:
     # To lookup and add files we'll need to use a different callback function.
     - '#process':
@@ -76,6 +91,9 @@
 - entity: "taxonomy_term"
   vid: "country"
   name: "مصر"
+  field_sndwq_aldwl:
+    value: |
+      1
   field__lm_aldwlt:
     # To lookup and add files we'll need to use a different callback function.
     - '#process':
@@ -91,6 +109,9 @@
 - entity: "taxonomy_term"
   vid: "country"
   name: "مالي"
+  field_sndwq_aldwl:
+    value: |
+      1
   field__lm_aldwlt:
     # To lookup and add files we'll need to use a different callback function.
     - '#process':
@@ -241,6 +262,9 @@
 - entity: "taxonomy_term"
   vid: "country"
   name: "الجزائر"
+  field_sndwq_aldwl:
+    value: |
+      1
   field__lm_aldwlt:
     # To lookup and add files we'll need to use a different callback function.
     - '#process':

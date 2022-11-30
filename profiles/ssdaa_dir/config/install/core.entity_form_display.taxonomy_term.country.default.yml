@@ -3,6 +3,7 @@ status: true
 dependencies:
   config:
     - field.field.taxonomy_term.country.field__lm_aldwlt
+    - field.field.taxonomy_term.country.field_sndwq_aldwl
     - image.style.thumbnail
     - taxonomy.vocabulary.country
   module:
@@ -19,17 +20,24 @@ content:
     weight: 2
     region: content
     settings:
-      placeholder: ''
       rows: 5
+      placeholder: ''
     third_party_settings: {  }
   field__lm_aldwlt:
+    type: image_image
     weight: 6
+    region: content
     settings:
       progress_indicator: throbber
       preview_image_style: thumbnail
     third_party_settings: {  }
-    type: image_image
+  field_sndwq_aldwl:
+    type: boolean_checkbox
+    weight: 7
     region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
   langcode:
     type: language_select
     weight: 3
@@ -53,9 +61,9 @@ content:
     third_party_settings: {  }
   status:
     type: boolean_checkbox
-    settings:
-      display_label: true
     weight: 5
     region: content
+    settings:
+      display_label: true
     third_party_settings: {  }
 hidden: {  }

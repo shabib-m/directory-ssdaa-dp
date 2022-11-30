@@ -3,6 +3,8 @@ status: true
 dependencies:
   config:
     - field.field.taxonomy_term.country.field__lm_aldwlt
+    - field.field.taxonomy_term.country.field_sndwq_aldwl
+    - image.style.medium
     - taxonomy.vocabulary.country
   module:
     - image
@@ -13,20 +15,24 @@ bundle: country
 mode: default
 content:
   description:
-    label: hidden
     type: text_default
-    weight: 0
-    region: content
+    label: hidden
     settings: {  }
     third_party_settings: {  }
+    weight: 0
+    region: content
   field__lm_aldwlt:
     type: image
-    weight: 1
-    region: content
     label: hidden
     settings:
-      image_style: ''
       image_link: content
+      image_style: medium
+      image_loading:
+        attribute: lazy
     third_party_settings: {  }
+    weight: 1
+    region: content
 hidden:
+  breadcrumbs: true
+  field_sndwq_aldwl: true
   langcode: true

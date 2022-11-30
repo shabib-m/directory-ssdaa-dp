@@ -1,0 +1,19 @@
+langcode: ar
+status: true
+dependencies:
+  module:
+    - help
+  theme:
+    - directory_ssdaa
+id: directory_ssdaa_help
+theme: directory_ssdaa
+region: content
+weight: -4
+provider: null
+plugin: help_block
+settings:
+  id: help_block
+  label: المساعدة
+  label_display: '0'
+  provider: help
+visibility: {  }

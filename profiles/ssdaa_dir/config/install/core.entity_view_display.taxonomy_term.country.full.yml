@@ -1,0 +1,32 @@
+langcode: ar
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.taxonomy_term.full
+    - field.field.taxonomy_term.country.field__lm_aldwlt
+    - field.field.taxonomy_term.country.field_sndwq_aldwl
+    - taxonomy.vocabulary.country
+  module:
+    - layout_builder
+    - text
+third_party_settings:
+  layout_builder:
+    enabled: false
+    allow_custom: false
+id: taxonomy_term.country.full
+targetEntityType: taxonomy_term
+bundle: country
+mode: full
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  breadcrumbs: true
+  field__lm_aldwlt: true
+  field_sndwq_aldwl: true
+  langcode: true

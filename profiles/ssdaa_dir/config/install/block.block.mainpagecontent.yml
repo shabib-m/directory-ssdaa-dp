@@ -1,0 +1,23 @@
+langcode: ar
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - directory_ssdaa
+id: mainpagecontent
+theme: directory_ssdaa
+region: content
+weight: 0
+provider: null
+plugin: system_main_block
+settings:
+  id: system_main_block
+  label: 'Main page content'
+  label_display: '0'
+  provider: system
+visibility:
+  request_path:
+    id: request_path
+    negate: true
+    pages: '<front>'

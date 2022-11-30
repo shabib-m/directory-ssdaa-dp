@@ -1,0 +1,31 @@
+langcode: ar
+status: true
+dependencies:
+  module:
+    - node
+    - system
+  theme:
+    - directory_ssdaa
+id: directory_ssdaa_page_title
+theme: directory_ssdaa
+region: content
+weight: -6
+provider: null
+plugin: page_title_block
+settings:
+  id: page_title_block
+  label: 'عنوان الصفحة'
+  label_display: '0'
+  provider: core
+visibility:
+  request_path:
+    id: request_path
+    negate: true
+    pages: '<front>'
+  'entity_bundle:node':
+    id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'
+    bundles:
+      article: article

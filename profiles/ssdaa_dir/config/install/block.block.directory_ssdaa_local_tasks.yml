@@ -1,0 +1,19 @@
+langcode: ar
+status: true
+dependencies:
+  theme:
+    - directory_ssdaa
+id: directory_ssdaa_local_tasks
+theme: directory_ssdaa
+region: content
+weight: -5
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: 'علامات التبويب'
+  label_display: '0'
+  provider: core
+  primary: true
+  secondary: true
+visibility: {  }

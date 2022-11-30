@@ -1,0 +1,19 @@
+langcode: ar
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - directory_ssdaa
+id: directory_ssdaa_breadcrumbs
+theme: directory_ssdaa
+region: breadcrumb
+weight: 0
+provider: null
+plugin: system_breadcrumb_block
+settings:
+  id: system_breadcrumb_block
+  label: Breadcrumbs
+  label_display: '0'
+  provider: system
+visibility: {  }

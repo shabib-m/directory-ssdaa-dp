@@ -1,0 +1,22 @@
+langcode: ar
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_sndwq_aldwl
+    - taxonomy.vocabulary.country
+id: taxonomy_term.country.field_sndwq_aldwl
+field_name: field_sndwq_aldwl
+entity_type: taxonomy_term
+bundle: country
+label: 'صندوق الدول'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: في
+  off_label: إيقاف
+field_type: boolean
