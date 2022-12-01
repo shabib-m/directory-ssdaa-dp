@@ -19,4 +19,7 @@
 [طريقة التركيب](https://github.com/shabib-m/directory-ssdaa-dp/wiki/%D8%B7%D8%B1%D9%8A%D9%82%D8%A9-%D8%A7%D9%84%D8%AA%D8%B1%D9%83%D9%8A%D8%A8)
 
 
+<img src="https://user-images.githubusercontent.com/66571723/205012058-a84ed691-19bd-41fa-9be7-5c173e76d3cf.png" width=600px height=550px>
+
+
 
