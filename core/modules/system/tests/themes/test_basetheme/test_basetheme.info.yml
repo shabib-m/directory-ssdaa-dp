@@ -11,20 +11,19 @@ libraries-override:
   core/drupal.dialog:
     js:
       misc/dialog/dialog.js: false
-  core/jquery.farbtastic:
-    css:
-      component:
-        assets/vendor/farbtastic/farbtastic.css: css/farbtastic.css
+  core/loadjs:
+    js:
+      assets/vendor/loadjs/loadjs.min.js: js/loadjs.min.js
   theme_test/theme_stylesheets_override_and_remove_test:
     css:
       base:
         css/base-remove.css: false
 
 libraries-extend:
-  classy/base:
+  starterkit_theme/base:
     - test_basetheme/global-styling
 
-# Information added by Drupal.org packaging script on 2022-12-07
-version: '9.4.9'
+# Information added by Drupal.org packaging script on 2023-01-04
+version: '9.5.1'
 project: 'drupal'
-datestamp: 1670421160
+datestamp: 1672849127

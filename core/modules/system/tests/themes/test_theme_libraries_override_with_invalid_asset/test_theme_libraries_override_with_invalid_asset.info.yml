@@ -2,14 +2,14 @@ name: 'Test theme libraries-override'
 type: theme
 description: 'Theme with invalid libraries-override asset spec.'
 # version: VERSION
-base theme: classy
+base theme: starterkit_theme
 libraries-override:
   # A malformed library asset name. Should throw a
   # \Drupal\Core\Asset\Exception\InvalidLibrariesOverrideSpecificationException.
   core/drupal.dialog:
     css: false
 
-# Information added by Drupal.org packaging script on 2022-12-07
-version: '9.4.9'
+# Information added by Drupal.org packaging script on 2023-01-04
+version: '9.5.1'
 project: 'drupal'
-datestamp: 1670421160
+datestamp: 1672849127

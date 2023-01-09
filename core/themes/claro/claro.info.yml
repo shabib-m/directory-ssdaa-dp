@@ -105,7 +105,7 @@ libraries-override:
   views_ui/admin.styling:
     css:
       component:
-          css/views_ui.admin.css: css/components/views_ui.admin.css
+        css/views_ui.admin.css: css/components/views_ui.admin.css
       theme:
         css/views_ui.admin.theme.css: css/theme/views_ui.admin.theme.css
 
@@ -188,7 +188,7 @@ regions:
 regions_hidden:
   - sidebar_first
 
-# Information added by Drupal.org packaging script on 2022-12-07
-version: '9.4.9'
+# Information added by Drupal.org packaging script on 2023-01-04
+version: '9.5.1'
 project: 'drupal'
-datestamp: 1670421160
+datestamp: 1672849127

@@ -2,7 +2,7 @@ name: Test Theme with a Base Theme Depending on Modules
 type: theme
 base theme: test_theme_depending_on_modules
 
-# Information added by Drupal.org packaging script on 2022-12-07
-version: '9.4.9'
+# Information added by Drupal.org packaging script on 2023-01-04
+version: '9.5.1'
 project: 'drupal'
-datestamp: 1670421160
+datestamp: 1672849127

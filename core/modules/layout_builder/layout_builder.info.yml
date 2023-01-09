@@ -6,12 +6,10 @@ package: Core
 dependencies:
   - drupal:layout_discovery
   - drupal:contextual
-  # @todo Discuss removing in https://www.drupal.org/project/drupal/issues/2935999.
-  - drupal:field_ui
   # @todo Discuss removing in https://www.drupal.org/project/drupal/issues/3003610.
   - drupal:block
 
-# Information added by Drupal.org packaging script on 2022-12-07
-version: '9.4.9'
+# Information added by Drupal.org packaging script on 2023-01-04
+version: '9.5.1'
 project: 'drupal'
-datestamp: 1670421160
+datestamp: 1672849127

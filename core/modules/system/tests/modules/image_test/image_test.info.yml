@@ -4,7 +4,7 @@ description: 'Support module for image toolkit tests.'
 package: Testing
 # version: VERSION
 
-# Information added by Drupal.org packaging script on 2022-12-07
-version: '9.4.9'
+# Information added by Drupal.org packaging script on 2023-01-04
+version: '9.5.1'
 project: 'drupal'
-datestamp: 1670421160
+datestamp: 1672849127
