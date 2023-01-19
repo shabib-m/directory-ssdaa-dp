@@ -2,7 +2,6 @@ global-styling:
   version: VERSION
   js:
     js/barrio.js: {}
-    js/affix.js: {}
   css:
     component:
       css/components/affix.css: {}
@@ -41,8 +40,6 @@ global-styling:
     theme:
       css/print.css: { media: print }
   dependencies:
-    - core/jquery
-    - core/jquery.once
     - core/drupal
 
 affix:
@@ -52,6 +49,8 @@ affix:
   css:
     component:
       css/components/affix.css: {}
+  dependencies:
+    - core/jquery
 alerts:
   version: VERSION
   css:
@@ -350,7 +349,6 @@ mdb:
     theme:
       //mdbootstrap.com/mdbcdn/mdb.min.css: { type: external, minified: true }
   dependencies:
-    - core/jquery
     - bootstrap_barrio/material_design_icons
 
 views.ajax:

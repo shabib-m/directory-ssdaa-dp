@@ -106,7 +106,7 @@ function bootstrap_barrio_form_system_theme_settings_alter(&$form, FormStateInte
     '#title' => t('Fluid container'),
     '#default_value' => theme_get_setting('bootstrap_barrio_fluid_container'),
     '#description' => t('Use <code>.container-fluid</code> class. See @bootstrap_fluid_containers_link.', [
-      '@bootstrap_fluid_containers_link' => Link::fromTextAndUrl('Containers in the Bootstrap 4 documentation', Url::fromUri('https://getbootstrap.com/docs/4.3/layout/overview/', ['absolute' => TRUE, 'fragment' => 'containers']))->toString(),
+      '@bootstrap_fluid_containers_link' => Link::fromTextAndUrl('Containers in the Bootstrap 5 documentation', Url::fromUri('https://getbootstrap.com/docs/5.2/layout/overview/', ['absolute' => TRUE, 'fragment' => 'containers']))->toString(),
     ]),
   ];
 
@@ -289,6 +289,15 @@ function bootstrap_barrio_form_system_theme_settings_alter(&$form, FormStateInte
     '#default_value' => theme_get_setting('bootstrap_barrio_button'),
     '#description' => t('There is a known issue where Ajax exposed filters do not if this setting is enabled.'),
   ];
+  $form['components']['buttons']['bootstrap_barrio_button_type'] = [
+    '#type' => 'select',
+    '#title' => t('Default button type'),
+    '#default_value' => theme_get_setting('bootstrap_barrio_button_type'),
+    '#options' => [
+      'primary' => t('Primary'),
+      'secondary' => t('Secondary'),
+    ],
+  ];
   $form['components']['buttons']['bootstrap_barrio_button_size'] = [
     '#type' => 'select',
     '#title' => t('Default button size'),
@@ -304,7 +313,7 @@ function bootstrap_barrio_form_system_theme_settings_alter(&$form, FormStateInte
     '#title' => t('Button with outline format'),
     '#default_value' => theme_get_setting('bootstrap_barrio_button_outline'),
     '#description' => t('Use <code>.btn-default-outline</code> class. See @bootstrap_outline_buttons_link.', [
-      '@bootstrap_outline_buttons_link' => Link::fromTextAndUrl('Outline buttons in the Bootstrap 4 documentation', Url::fromUri('https://getbootstrap.com/docs/4.3/components/buttons/', ['absolute' => TRUE, 'fragment' => 'outline-buttons']))->toString(),
+      '@bootstrap_outline_buttons_link' => Link::fromTextAndUrl('Outline buttons in the Bootstrap 4 documentation', Url::fromUri('https://getbootstrap.com/docs/5.2/components/buttons/', ['absolute' => TRUE, 'fragment' => 'outline-buttons']))->toString(),
     ]),
   ];
 
@@ -503,6 +512,19 @@ function bootstrap_barrio_form_system_theme_settings_alter(&$form, FormStateInte
       'alerts' => t('Alerts bottom'),
       'toasts' => t('Toasts'),
     ],
+  ];
+
+  // Form.
+  $form['components']['form'] = [
+    '#type' => 'details',
+    '#title' => t('Form Elements'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  ];
+  $form['components']['form']['bootstrap_barrio_float_label'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Float Labels'),
+    '#default_value' => theme_get_setting('bootstrap_barrio_float_label'),
   ];
 
   // Affix.

@@ -20,7 +20,7 @@ fi
 cp -r subtheme ../../custom/$CUSTOM_BARRIO
 cd ../../custom/$CUSTOM_BARRIO
 for file in *bootstrap_barrio_subtheme.*; do mv $file ${file//bootstrap_barrio_subtheme/$CUSTOM_BARRIO}; done
-for file in config/*/*bootstrap_barrio_subtheme.*; do mv $file ${file//bootstrap_barrio_subtheme/$CUSTOM_BARRIO}; done
+for file in config/*/*bootstrap_barrio_subtheme*.*; do mv $file ${file//bootstrap_barrio_subtheme/$CUSTOM_BARRIO}; done
 mv {_,}$CUSTOM_BARRIO.theme
 grep -Rl bootstrap_barrio_subtheme .|xargs sed -i '' -e "s/bootstrap_barrio_subtheme/$CUSTOM_BARRIO/"
 sed -i -e "s/Bootstrap Barrio Subtheme/$CUSTOM_BARRIO_NAME/" $CUSTOM_BARRIO.info.yml

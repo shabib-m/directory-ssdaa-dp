@@ -127,7 +127,7 @@
     {% endif %}
   </div>
 {% else %}
-  <div{{ attributes.addClass(classes, 'mb-3') }}>
+  <div{{ attributes.addClass(classes, 'mb-3', float_label ? 'form-floating') }}>
     {% if label_display in ['before', 'invisible'] %}
       {{ label }}
     {% endif %}

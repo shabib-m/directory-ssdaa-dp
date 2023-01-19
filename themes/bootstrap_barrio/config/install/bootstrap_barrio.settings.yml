@@ -18,6 +18,7 @@ bootstrap_barrio_fluid_container: 0
 # ----------------------------
 bootstrap_barrio_button: 1
 bootstrap_barrio_button_size: ''
+bootstrap_barrio_button_type: 'primary'
 bootstrap_barrio_button_outline: 0
 
 # Navbar.

@@ -1,8 +1,7 @@
 name: Bootstrap Barrio
 type: theme
 description: 'A flexible Booststrap based theme, with many regions and a responsive, mobile-first layout.'
-core: 8.x
-core_version_requirement: ^8 || ^9|| ^10
+core_version_requirement: ^9.4 || ^10
 base theme: false
 
 libraries:
@@ -13,13 +12,12 @@ libraries-extend:
     - bootstrap_barrio/dropbutton
   file/drupal.file:
     - bootstrap_barrio/file
-  views/views.ajax:
-    - bootstrap_barrio/views.ajax
   node/drupal.node.preview:
     - bootstrap_barrio/drupal.node.preview
 
 ckeditor_stylesheets:
   - css/components/table.css
+ckeditor5-stylesheets: false
 
 regions:
   top_header: 'Top header'
@@ -45,7 +43,7 @@ regions:
   footer_fourth: 'Footer fourth'
   footer_fifth: 'Footer fifth'
 
-# Information added by Drupal.org packaging script on 2022-08-17
-version: '5.5.6'
+# Information added by Drupal.org packaging script on 2023-01-10
+version: '5.5.8'
 project: 'bootstrap_barrio'
-datestamp: 1660747465
+datestamp: 1673362014

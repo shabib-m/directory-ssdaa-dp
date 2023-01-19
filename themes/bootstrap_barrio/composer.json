@@ -1,6 +1,6 @@
 {
   "name": "drupal/bootstrap_barrio",
-  "description": "Bootstrap 4 base theme.",
+  "description": "Bootstrap 5 base theme.",
   "type": "drupal-theme",
   "license": "GPL-2.0-or-later",
   "homepage": "https://www.drupal.org/project/bootstrap_barrio",

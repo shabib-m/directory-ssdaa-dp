@@ -16,7 +16,7 @@
   ]
 %}
 
-{% spaceless %}
+{% apply spaceless %}
   <select{{ attributes.addClass(classes) }}>
     {% for option in options %}
       {% if option.type == 'optgroup' %}
@@ -30,4 +30,4 @@
       {% endif %}
     {% endfor %}
   </select>
-{% endspaceless %}
+{% endapply %}

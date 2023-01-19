@@ -1,6 +1,6 @@
 /**
  * @file
- * Affix for Bootstrap 4.
+ * Affix for Bootstrap 5.
  * https://www.codeply.com/users/skelly
  *
  */
