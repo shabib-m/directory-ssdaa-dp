@@ -7,7 +7,7 @@ dependencies:
   - drupal:file
 configure: entity.image_style.collection
 
-# Information added by Drupal.org packaging script on 2023-01-18
-version: '9.5.2'
+# Information added by Drupal.org packaging script on 2023-04-19
+version: '9.5.8'
 project: 'drupal'
-datestamp: 1674066184
+datestamp: 1681922719

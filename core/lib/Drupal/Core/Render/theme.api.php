@@ -606,7 +606,26 @@ function hook_preprocess_HOOK(&$variables) {
  * must otherwise make sure that the hook implementation is available at
  * any given time.
  *
- * @todo Add @code sample.
+ * Suggestions must begin with the value of HOOK, followed by two underscores to be discoverable.
+ *
+ * In the following example, we provide suggestions to
+ * node templates based bundle, id, and view mode.
+ *
+ * @code
+ * function node_theme_suggestions_node(array $variables) {
+ *   $suggestions = [];
+ *   $node = $variables['elements']['#node'];
+ *   $sanitized_view_mode = strtr($variables['elements']['#view_mode'], '.', '_');
+ *   $suggestions[] = 'node__' . $sanitized_view_mode;
+ *   $suggestions[] = 'node__' . $node->bundle();
+ *   $suggestions[] = 'node__' . $node->bundle() . '__' . $sanitized_view_mode;
+ *   $suggestions[] = 'node__' . $node->id();
+ *   $suggestions[] = 'node__' . $node->id() . '__' . $sanitized_view_mode;
+ *
+ *   return $suggestions;
+ * }
+ *
+ * @endcode
  *
  * @param array $variables
  *   An array of variables passed to the theme hook. Note that this hook is
@@ -1132,10 +1151,10 @@ function hook_page_bottom(array &$page_bottom) {
  *   - file: The file the implementation resides in. This file will be included
  *     prior to the theme being rendered, to make sure that the preprocess
  *     functions in this file are actually loaded.
- *   - path: Override the path of the file to be used. Ordinarily the module or
- *     theme path will be used, but if the file will not be in the default
- *     path, include it here. This path should be relative to the Drupal root
- *     directory.
+ *   - path: If specified, overrides the path to the directory that contains the
+ *     file to be used. This path should be relative to the Drupal root
+ *     directory. If not provided, the path will be set to the module or theme's
+ *     templates directory.
  *   - template: If specified, this is the template name. Do not add 'html.twig'
  *     on the end of the template name. The extension will be added
  *     automatically by the default rendering engine (which is Twig.) If 'path'

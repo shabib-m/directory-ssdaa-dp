@@ -120,6 +120,27 @@
         if ($refreshRows.length) {
           $refreshRows[0].value = rowNames.join(' ');
         }
+        once('edit-refresh', 'input[data-drupal-selector="edit-refresh"]').forEach(function (input) {
+          var returnFocus = {
+            drupalSelector: null,
+            scrollY: null
+          };
+          $(input).on('mousedown', function () {
+            returnFocus = {
+              drupalSelector: document.activeElement.getAttribute('data-drupal-selector'),
+              scrollY: window.scrollY
+            };
+          });
+          input.addEventListener('focus', function () {
+            if (returnFocus.drupalSelector) {
+              document.querySelector("[data-drupal-selector=\"".concat(returnFocus.drupalSelector, "\"]")).focus();
+              window.scrollTo({
+                top: returnFocus.scrollY
+              });
+              returnFocus = {};
+            }
+          });
+        });
         $('input[data-drupal-selector="edit-refresh"]').trigger('mousedown');
         $(ajaxElements).prop('disabled', true);
       }
@@ -150,7 +171,8 @@
         this.$regionSelect[0].value = region;
       }
       if (this.region === 'hidden') {
-        var value = typeof this.defaultPlugin !== 'undefined' ? this.defaultPlugin : this.$pluginSelect.find('option')[0].value;
+        var pluginSelect = typeof this.$pluginSelect.find('option')[0] !== 'undefined' ? this.$pluginSelect.find('option')[0].value : undefined;
+        var value = typeof this.defaultPlugin !== 'undefined' ? this.defaultPlugin : pluginSelect;
         if (typeof value !== 'undefined') {
           if (this.$pluginSelect.length) {
             this.$pluginSelect[0].value = value;
