@@ -78,17 +78,17 @@ function fivestar_theme() {
         'microdata' => [],
       ],
     ],
-    // 'fivestar_preview' => [
-    //   'function' => 'theme_fivestar_preview',
-    //   'variables' => [
-    //     'style' => NULL,
-    //     'text' => NULL,
-    //     'stars' => NULL,
-    //     'unvote' => NULL,
-    //     'title' => NULL,
-    //   ],
-    //   'file' => 'includes/fivestar.theme.inc',
-    // ],
+    'fivestar_preview' => [
+      'function' => 'theme_fivestar_preview',
+      'variables' => [
+        'style' => NULL,
+        'text' => NULL,
+        'stars' => NULL,
+        'unvote' => NULL,
+        'title' => NULL,
+      ],
+      'file' => 'includes/fivestar.theme.inc',
+    ],
     'fivestar_formatter_rating' => [
       'render element' => 'element',
     ],
