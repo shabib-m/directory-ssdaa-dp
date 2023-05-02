@@ -75,7 +75,7 @@
       {% endif %}
       {# Print next item if we are not on the last page. #}
       {% if items.next %}
-        <li class="pager__item--next">
+        <li class="page-item">
           <a href="{{ items.next.href }}" title="{{ 'Go to next page'|t }}" rel="next"{{ items.next.attributes|without('href', 'title', 'rel') }} class="page-link">
             <span aria-hidden="true">{{ items.next.text|default('›'|t) }}</span>
             <span class="visually-hidden">{{ 'Next page'|t }}</span>

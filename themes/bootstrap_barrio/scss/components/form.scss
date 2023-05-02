@@ -7,25 +7,16 @@
   content: '';
   vertical-align: super;
   display: inline-block;
-  background-image: url(../images/required.svg);
+  background-image: url(#{$barrio_path_images}required.svg);
   background-repeat: no-repeat;
   background-size: calc($input-height * 0.5) calc($input-height * 0.5);
-  width: calc($input-height * 0.5 );
-  height: calc($input-height * 0.5 );
+  width: calc($input-height * 0.5);
+  height: calc($input-height * 0.5);
   margin: 0 0.3em;
 }
 
 form {
-  .row>fieldset,
-  .row>div {
-    padding-right: 5px;
-    padding-left: 5px;
-    flex: 0 1 auto;
-    width: auto;
-    max-width: none;
-  }
-
-  .row .form-actions {
+  .form-actions {
     align-self: flex-end;
   }
 

@@ -437,7 +437,10 @@ function bootstrap_barrio_preprocess_form_element(&$variables) {
   if (theme_get_setting('bootstrap_barrio_float_label') && 
         $variables['element']['#type'] != 'radio' &&
         $variables['element']['#type'] != 'checkbox' &&
+        $variables['element']['#type'] != 'date' &&
+        $variables['element']['#type'] != 'time' &&
         $variables['element']['#type'] != 'search' &&
+        $variables['element']['#type'] != 'textarea' &&
         $variables['element']['#type'] != 'managed_file') {
     $variables['float_label'] = theme_get_setting('bootstrap_barrio_float_label');
     $variables['label_display'] = 'after';
@@ -754,12 +757,15 @@ function bootstrap_barrio_preprocess_input(&$variables) {
     $variables['safe_value_label'] = Xss::filter($variables['attributes']['value']);
   }
   if ($variables['element']['#type'] != 'radio' && 
-        $variables['element']['#type'] != 'checkbox' &&
-        $variables['element']['#type'] != 'managed_file' &&
-        $variables['element']['#type'] != 'search' &&
-        theme_get_setting('bootstrap_barrio_float_label') && 
-        !isset($variables['attributes']['placeholder'])) {
-    $variables['attributes']['placeholder'] = $variables['element']['#title'];
+    $variables['element']['#type'] != 'checkbox' &&
+    $variables['element']['#type'] != 'date' &&
+    $variables['element']['#type'] != 'time' &&
+    $variables['element']['#type'] != 'managed_file' &&
+    $variables['element']['#type'] != 'search' &&
+    $variables['element']['#type'] != 'textarea' &&
+    theme_get_setting('bootstrap_barrio_float_label') && 
+    !isset($variables['attributes']['placeholder'])) {
+      $variables['attributes']['placeholder'] = isset($variables['element']['#title']) ? $variables['element']['#title'] : '';
   }
 }
 

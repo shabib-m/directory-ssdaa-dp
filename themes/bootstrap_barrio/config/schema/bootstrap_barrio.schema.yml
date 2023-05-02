@@ -199,6 +199,9 @@ bootstrap_barrio.settings:
     bootstrap_barrio_button_size:
       type: string
       label: 'Default button size'
+    bootstrap_barrio_button_type:
+      type: string
+      label: 'Default button type'
     bootstrap_barrio_button_outline:
       type: integer
       label: 'Button with outline format'
