@@ -19,6 +19,9 @@ bootstrap_barrio.settings:
     bootstrap_barrio_fluid_container:
       type: integer
       label: 'Fluid container'
+    bootstrap_barrio_container:
+      type: string
+      label: 'Container'
 
     # Region.
     # ----------------------------
@@ -191,6 +194,12 @@ bootstrap_barrio.settings:
       type: integer
       label: 'Hide node label'
 
+    # Breadcrumb
+    # ----------------------------
+    bootstrap_barrio_breadcrumb_divider:
+      type: string
+      label: 'Breadcrumb Divider'
+
     # Buttons.
     # ----------------------------
     bootstrap_barrio_button:
@@ -259,21 +268,12 @@ bootstrap_barrio.settings:
 
     # Form.
     # ----------------------------
-    bootstrap_barrio_radio:
-      type: string
-      label: 'Radio widget'
-    bootstrap_barrio_checkbox:
-      type: string
-      label: 'Checkbox widget'
-    bootstrap_barrio_select:
-      type: string
-      label: 'Select widget'
-    bootstrap_barrio_file:
-      type: string
-      label: 'File widget'
     bootstrap_barrio_float_label:
       type: string
       label: 'Float Labels'
+    bootstrap_barrio_checkbox:
+      type: string
+      label: 'Checkbox & Radio Style'
 
     # Affix.
     # ----------------------------
@@ -340,3 +340,33 @@ bootstrap_barrio.settings:
     bootstrap_barrio_tabs_style:
       type: string
       label: 'Tabs style'
+
+    # Colors.
+    # ----------------------------
+    bootstrap_barrio_enable_color:
+      type: boolean
+      label: 'Enable color Sheme'
+    bootstrap_barrio_color_scheme:
+      type: string
+      label: 'Barrio Color Scheme'
+    bootstrap_barrio_base_primary_color:
+      type: string
+      label: 'Primary base color'
+    bootstrap_barrio_base_secondary_color:
+      type: string
+      label: 'Secondary base color'
+    bootstrap_barrio_body_color:
+      type: string
+      label: 'Body color'
+    bootstrap_barrio_body_bg_color:
+      type: string
+      label: 'Body Background Color'
+    bootstrap_barrio_h1_color:
+      type: string
+      label: 'H1 color'
+    bootstrap_barrio_h2_color:
+      type: string
+      label: 'H2 color'
+    bootstrap_barrio_h3_color:
+      type: string
+      label: 'H3 color'

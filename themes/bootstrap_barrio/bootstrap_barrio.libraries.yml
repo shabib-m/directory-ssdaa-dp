@@ -4,6 +4,7 @@ global-styling:
     js/barrio.js: {}
   css:
     component:
+      css/components/variables: { weight: -20 }
       css/components/affix.css: {}
       css/components/book.css: {}
       css/components/contextual.css: {}
@@ -51,6 +52,7 @@ affix:
       css/components/affix.css: {}
   dependencies:
     - core/jquery
+    - core/once
 alerts:
   version: VERSION
   css:
@@ -73,6 +75,24 @@ breadcrumb:
   css:
     component:
       css/components/breadcrumb.css: {}
+
+color-picker:
+  version: VERSION
+  css:
+    component:
+      css/components/color-picker.css: {}
+  js:
+    js/color-picker.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - core/drupal.announce
+
+colors:
+  version: VERSION
+  css:
+    component:
+      css/colors/colors.css: { weight: 10 }
 
 comments:
   css:
@@ -359,12 +379,10 @@ views.ajax:
 
 bootstrap:
   js:
-    /libraries/bootstrap/dist/js/bootstrap.min.js: {}
+    /libraries/bootstrap/dist/js/bootstrap.bundle.min.js: { minified: true }
   css:
     component:
       /libraries/bootstrap/dist/css/bootstrap.min.css: {}
-  dependencies:
-    - core/popperjs
 bootstrap_cdn:
   js:
     //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
@@ -375,128 +393,128 @@ bootstrap_cdn:
 # Bootswatch
 
 bootswatch_cerulean:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/cerulean/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_cosmo:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/cosmo/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_cyborg:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/cyborg/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_darkly:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/darkly/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_flatly:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/flatly/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_journal:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/journal/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_litera:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/litera/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_lumen:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/lumen/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_lux:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/lux/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_materia:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/materia/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_minty:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/minty/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_pulse:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/pulse/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_sandstone:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/sandstone/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_simplex:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/simplex/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_sketchy:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/sketchy/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_slate:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/slate/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_solar:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/solar/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_spacelab:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/spacelab/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_superhero:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/superhero/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_united:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/united/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn
 bootswatch_yeti:
+  js:
+    //cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js: { type: external, minified: true }
   css:
     component:
       //cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.0/yeti/bootstrap.min.css: { type: external, minified: true }
-  dependencies:
-    - bootstrap_barrio/bootstrap_cdn

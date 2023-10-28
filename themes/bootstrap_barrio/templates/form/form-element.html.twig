@@ -50,15 +50,15 @@
 %}
 
 {% if type == 'checkbox' %}
-  {% set wrapperclass = "form-check" %}
-  {% set labelclass = "form-check-label" %}
-  {% set inputclass = "form-check-input" %}
+  {% set wrapperclass = checkbox_style != 'form-button' ? "form-check" %}
+  {% set labelclass = checkbox_style == 'form-button' ? 'btn btn-outline-primary' : "form-check-label"  %}
+  {% set inputclass = checkbox_style == 'form-button' ? 'btn-check' : "form-check-input" %}
 {% endif %}
 
 {% if type == 'radio' %}
-  {% set wrapperclass = "form-check" %}
-  {% set labelclass = "form-check-label" %}
-  {% set inputclass = "form-check-input" %}
+  {% set wrapperclass = checkbox_style != 'form-button' ? "form-check" %}
+  {% set labelclass = checkbox_style == 'form-button' ? 'btn btn-outline-primary' : "form-check-label"  %}
+  {% set inputclass = checkbox_style == 'form-button' ? 'btn-check' : "form-check-input" %}
 {% endif %}
 
 {%
@@ -67,6 +67,7 @@
     'js-form-type-' ~ type|clean_class,
     type in ['checkbox', 'radio'] ? type|clean_class : 'form-type-' ~ type|clean_class,
     type in ['checkbox', 'radio'] ? wrapperclass,
+    checkbox_style == 'form-switch' ? 'form-switch' : '',
     type in ['checkbox'] ? 'mb-3',
     'js-form-item-' ~ name|clean_class,
     'form-item-' ~ name|clean_class,
@@ -106,7 +107,11 @@
         {{ input_title | raw }}
       </label>
     {% endif %}
-    <input{{ input_attributes.addClass(inputclass) }}>
+    {% if checkbox_style == 'form-button' %}
+      <input{{ input_attributes.addClass(inputclass).setAttribute('autocomplete', 'off') }}>
+    {% else %}
+      <input{{ input_attributes.addClass(inputclass) }}>
+    {% endif %}
     {% if label_display == 'after' %}
       <label {{ label_attributes.addClass(labelclass).setAttribute('for', input_attributes.id) }}>
         {{ input_title | raw }}
@@ -116,7 +121,7 @@
       <span class="field-suffix">{{ suffix }}</span>
     {% endif %}
     {% if errors %}
-      <div class="invalid-feedback">
+      <div class="invalid-feedback form-item--error-message">
         {{ errors }}
       </div>
     {% endif %}
@@ -157,7 +162,7 @@
       {{ label }}
     {% endif %}
     {% if errors %}
-      <div class="invalid-feedback">
+      <div class="invalid-feedback form-item--error-message">
         {{ errors }}
       </div>
     {% endif %}

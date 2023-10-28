@@ -31,3 +31,11 @@ form {
     margin-bottom: 0;
   }
 }
+
+// link-edit-summary css
+.link-edit-summary {
+  border: 0;
+  background: none;
+  text-decoration: underline;
+  color: var(--bs-link-color);
+}
