@@ -6,7 +6,7 @@ lifecycle_link: https://www.drupal.org/node/3223395#s-color
 package: Core
 # version: VERSION
 
-# Information added by Drupal.org packaging script on 2023-04-19
-version: '9.5.8'
+# Information added by Drupal.org packaging script on 2023-09-20
+version: '9.5.11'
 project: 'drupal'
-datestamp: 1681922719
+datestamp: 1695228127

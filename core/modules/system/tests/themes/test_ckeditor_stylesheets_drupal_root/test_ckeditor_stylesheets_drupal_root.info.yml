@@ -10,7 +10,7 @@ ckeditor_stylesheets:
 ckeditor5-stylesheets:
   - /core/modules/system/tests/themes/test_ckeditor_stylesheets_drupal_root/css/yokotsoko.css
 
-# Information added by Drupal.org packaging script on 2023-04-19
-version: '9.5.8'
+# Information added by Drupal.org packaging script on 2023-09-20
+version: '9.5.11'
 project: 'drupal'
-datestamp: 1681922719
+datestamp: 1695228127
