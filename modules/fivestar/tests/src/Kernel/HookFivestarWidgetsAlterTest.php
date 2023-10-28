@@ -30,7 +30,7 @@ class HookFivestarWidgetsAlterTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->widgetManager = $this->container->get('fivestar.widget_manager');
@@ -39,7 +39,7 @@ class HookFivestarWidgetsAlterTest extends KernelTestBase {
   /**
    * Tests that fivestar_widget_provider_fivestar_widgets_alter() was called.
    */
-  public function testWidgetAlter() {
+  public function testWidgetAlter(): void {
     // Invoke the hook and collect all defined and altered widgets.
     $widgets = $this->widgetManager->getWidgets();
 

@@ -61,7 +61,7 @@ class WidgetManager {
    */
   public function getWidgetInfo($widget_key) {
     $widgets_info = $this->getWidgets();
-    return isset($widgets_info[$widget_key]) ? $widgets_info[$widget_key] : [];
+    return $widgets_info[$widget_key] ?? [];
   }
 
   /**

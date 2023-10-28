@@ -3,16 +3,19 @@
  * @file
  * Default theme implementation for the Fivestar static(view-only) output.
  *
- * Available variables
- * - rating: The desired rating to display out of 100 (i.e. 80 is 4 out of 5 stars).
- * - stars: The total number of stars this rating is out of.
+ * Available variables:
+ * - rating: The desired rating to display on a scale of 1 to 100. For example,
+ *   a rating of 80 corresponds to 4 out of 5 stars.
+ * - stars: The total number of stars used for this rating.
  * - vote_type: The type of vote.
  * - widget: Base widget data.
  * - numeric_rating: Number of selected stars.
- * - stars_data: An array keyed by star number and each item contain next parameters:
- *     - star_value: The value of star. For example, a total number of stars 5, selected 4 stars then the second star
- *       will have value 40.
- *     - percent: Used in the case when need to display rating element as partly selected.
+ * - stars_data: An array keyed by star number. Each item contains the
+ *   following parameters:
+ *   - star_value: The value of star. For example, a total number of stars 5,
+ *     selected 4 stars then the second star will have value 40.
+ *   - percent: Used in the case when need to display rating element as partly
+ *     selected.
  *
  * @see template_preprocess_fivestar_static()
  *

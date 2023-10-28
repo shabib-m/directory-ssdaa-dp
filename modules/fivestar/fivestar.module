@@ -78,6 +78,7 @@ function fivestar_theme() {
         'microdata' => [],
       ],
     ],
+    // This is dead code in Drupal 10.
     'fivestar_preview' => [
       'function' => 'theme_fivestar_preview',
       'variables' => [

@@ -16,12 +16,16 @@ abstract class FivestarAjaxTestBase extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['node', 'fivestar', 'votingapi'];
+  protected static $modules = [
+    'node',
+    'fivestar',
+    'votingapi',
+  ];
 
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * The entity display repository.
@@ -47,7 +51,7 @@ abstract class FivestarAjaxTestBase extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create content type for testing.
@@ -62,6 +66,7 @@ abstract class FivestarAjaxTestBase extends WebDriverTestBase {
     // Create users with different permissions.
     $this->adminUser = $this->createUser([
       'create test_node_type content',
+      'edit any test_node_type content',
       'rate content',
     ]);
     $this->voterUser = $this->createUser([

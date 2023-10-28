@@ -2,6 +2,7 @@
 
 namespace Drupal\fivestar\Plugin\Field\FieldType;
 
+use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -271,13 +272,23 @@ class FivestarItem extends FieldItemBase {
 
     // Add new vote.
     $vote_manager->addVote($entity, $vote_rating, $field_settings['vote_type'], $owner->id());
-    if (!empty($target_entity) && $entity->isPublished()) {
-      $vote_manager->addVote(
-        $target_entity,
-        $vote_rating,
-        $field_settings['vote_type'],
-        $owner->id()
-      );
+
+    // Check to see if there is a target entity. If so, add the vote to that
+    // entity as well.
+    if (!empty($target_entity)) {
+      if ($entity instanceof EntityPublishedInterface && !$entity->isPublished()) {
+        // Don't add vote to the target entity if the voted entity is both
+        // publishable and unpublished.
+      }
+      else {
+        // Add vote to the target entity.
+        $vote_manager->addVote(
+          $target_entity,
+          $vote_rating,
+          $field_settings['vote_type'],
+          $owner->id()
+        );
+      }
     }
 
     // No changes made to the Fivestar field item in this method.

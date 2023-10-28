@@ -5,6 +5,7 @@ namespace Drupal\fivestar\Plugin\Field\FieldFormatter;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\fivestar\Form\FivestarForm;
 
 /**
  * Plugin implementation of the 'fivestar_stars' formatter.
@@ -112,6 +113,8 @@ class StarsFormatter extends FivestarFormatterBase implements TrustedCallbackInt
     $widget_active_key = $this->getSelectedWidgetKey();
     $display_settings = [
       'name' => $this->widgetManager->getWidgetInfo($widget_active_key) ? $widget_active_key : 'default',
+      'entity_type_id' => $items->getEntity()->getEntityTypeId(),
+      'entity_id' => $items->getEntity()->id(),
     ] + $this->getSettings();
 
     if (!$items->isEmpty()) {
@@ -124,7 +127,7 @@ class StarsFormatter extends FivestarFormatterBase implements TrustedCallbackInt
         ];
 
         $elements[$delta] = $form_builder->getForm(
-          '\Drupal\fivestar\Form\FivestarForm', $context
+          FivestarForm::class, $context
         );
       }
     }
@@ -140,7 +143,7 @@ class StarsFormatter extends FivestarFormatterBase implements TrustedCallbackInt
       ];
 
       $elements[] = $form_builder->getForm(
-        '\Drupal\fivestar\Form\FivestarForm', $context
+        FivestarForm::class, $context
       );
     }
 

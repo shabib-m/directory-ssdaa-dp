@@ -89,9 +89,9 @@ abstract class FivestarFormatterBase extends FormatterBase {
       $static_preview = [
         '#theme' => 'fivestar_static',
         '#widget' => ['name' => $widget_name],
-        '#attached'=> [
+        '#attached' => [
           'library' => [$this->widgetManager->getWidgetLibrary($widget_name)],
-        ]
+        ],
       ];
       $element[$widget_name]['#description'] = $this->renderer->render($static_preview);
     }

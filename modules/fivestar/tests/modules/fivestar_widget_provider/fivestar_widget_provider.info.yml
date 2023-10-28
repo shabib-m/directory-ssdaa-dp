@@ -5,7 +5,7 @@ package: Testing
 dependencies:
   - fivestar:fivestar
 
-# Information added by Drupal.org packaging script on 2023-02-28
-version: '8.x-1.0-alpha3'
+# Information added by Drupal.org packaging script on 2023-10-03
+version: '8.x-1.0-alpha5'
 project: 'fivestar'
-datestamp: 1677614679
+datestamp: 1696366147

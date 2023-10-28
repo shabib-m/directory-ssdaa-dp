@@ -9,7 +9,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\RenderElement;
 
 /**
- *
+ * This is dead code in Drupal 10.
  */
 function theme_fivestar_preview($variables) {
   extract($variables, EXTR_SKIP);

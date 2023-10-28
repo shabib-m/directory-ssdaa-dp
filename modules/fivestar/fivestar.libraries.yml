@@ -7,9 +7,9 @@ fivestar.base:
     js/fivestar.js: {}
 
   dependencies:
-    - core/jquery
     - core/drupal
-    - core/jquery.once
+    - core/jquery
+    - core/once
     - core/drupal.ajax
 
 fivestar.admin:
@@ -17,15 +17,6 @@ fivestar.admin:
   css:
     component:
       css/fivestar-admin.css: {}
-
-fivestar.ajax:
-  version: VERSION
-  js:
-    js/fivestar.ajax.js: {}
-  dependencies:
-    - core/jquery
-    - core/drupal
-    - core/jquery.once
 
 # Widgets
 # Right now does not include RTL handling

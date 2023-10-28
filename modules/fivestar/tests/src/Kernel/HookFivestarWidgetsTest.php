@@ -30,7 +30,7 @@ class HookFivestarWidgetsTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->widgetManager = $this->container->get('fivestar.widget_manager');
@@ -39,7 +39,7 @@ class HookFivestarWidgetsTest extends KernelTestBase {
   /**
    * Tests finding widgets defined by hook_fivestar_widgets().
    */
-  public function testWidgetDiscovery() {
+  public function testWidgetDiscovery(): void {
     $expected = [
       // Awesome Stars is defined in the fivestar_widget_provider module.
       'awesome' => [

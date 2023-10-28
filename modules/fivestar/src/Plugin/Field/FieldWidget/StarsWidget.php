@@ -18,7 +18,7 @@ use Drupal\Core\Security\TrustedCallbackInterface;
  *   }
  * )
  */
-class StarsWidget extends FivestarWidgetBase implements TrustedCallbackInterface  {
+class StarsWidget extends FivestarWidgetBase implements TrustedCallbackInterface {
 
   /**
    * {@inheritdoc}
@@ -92,9 +92,9 @@ class StarsWidget extends FivestarWidgetBase implements TrustedCallbackInterface
       $static_preview = [
         '#theme' => 'fivestar_static',
         '#widget' => ['name' => $widget_name],
-        '#attached'=> [
+        '#attached' => [
           'library' => [$this->widgetManager->getWidgetLibrary($widget_name)],
-        ]
+        ],
       ];
       $element[$widget_name]['#description'] = $this->renderer->render($static_preview);
     }
@@ -112,6 +112,8 @@ class StarsWidget extends FivestarWidgetBase implements TrustedCallbackInterface
     ] + $this->getSettings();
     $settings = $items[$delta]->getFieldDefinition()->getSettings();
     $display_settings += $settings;
+    $display_settings['entity_type_id'] = $items->getEntity()->getEntityTypeId();
+    $display_settings['entity_id'] = $items->getEntity()->id();
 
     $is_field_config_form = ($form_state->getBuildInfo()['form_id'] == 'field_config_edit_form');
     $voting_is_allowed = (bool) ($settings['rated_while'] == 'editing') || $is_field_config_form;
@@ -124,7 +126,7 @@ class StarsWidget extends FivestarWidgetBase implements TrustedCallbackInterface
       '#allow_revote' => $settings['allow_revote'],
       '#allow_ownvote' => $settings['allow_ownvote'],
       '#vote_type' => $settings['vote_type'],
-      '#default_value' => isset($items[$delta]->rating) ? $items[$delta]->rating : 0,
+      '#default_value' => $items[$delta]->rating ?? 0,
       '#widget' => $display_settings,
       '#settings' => $display_settings,
       '#show_static_result' => !$voting_is_allowed,
