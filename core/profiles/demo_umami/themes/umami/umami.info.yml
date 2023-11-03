@@ -2,12 +2,13 @@ name: Umami
 type: theme
 base theme: false
 description: 'The theme used for the Umami food magazine demonstration site.'
-version: VERSION
+# version: VERSION
 libraries:
   - umami/classy.base
   - core/normalize
   - umami/global
-  - umami/messages
+dependencies:
+  - drupal:sdc
 
 libraries-override:
   layout_builder/twocol_section:
@@ -24,6 +25,8 @@ libraries-override:
         layouts/fourcol_section/fourcol_section.css: layouts/fourcol_section/fourcol_section.css
 
 libraries-extend:
+  core/drupal.message:
+    - umami/messages
   tour/tour-styling:
     - umami/demo-umami-tour
   core/drupal.dialog:
@@ -64,3 +67,8 @@ regions:
   bottom: Bottom
   page_top: 'Page top' # Needed by Drupal Core
   page_bottom: 'Page bottom' # Needed by Drupal Core
+
+# Information added by Drupal.org packaging script on 2023-11-01
+version: '10.1.6'
+project: 'drupal'
+datestamp: 1698841355

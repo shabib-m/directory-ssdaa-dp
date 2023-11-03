@@ -2,4 +2,9 @@ name: 'FieldItem normalization test support'
 type: module
 description: 'Provides test support for fieldItem normalization test support.'
 package: Testing
-version: VERSION
+# version: VERSION
+
+# Information added by Drupal.org packaging script on 2023-11-01
+version: '10.1.6'
+project: 'drupal'
+datestamp: 1698841355

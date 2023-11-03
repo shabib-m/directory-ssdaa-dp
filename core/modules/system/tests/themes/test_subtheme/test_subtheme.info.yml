@@ -1,7 +1,7 @@
 name: 'Theme test subtheme'
 type: theme
 description: 'Test theme which uses test_basetheme as the base theme.'
-version: VERSION
+# version: VERSION
 base theme: test_basetheme
 libraries:
   - test_subtheme/global-styling
@@ -17,3 +17,8 @@ libraries-override:
 libraries-extend:
   starterkit_theme/base:
     - test_subtheme/global-styling
+
+# Information added by Drupal.org packaging script on 2023-11-01
+version: '10.1.6'
+project: 'drupal'
+datestamp: 1698841355

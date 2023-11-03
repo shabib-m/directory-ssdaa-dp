@@ -34,7 +34,7 @@ class BlockForm extends EntityForm {
   /**
    * The block storage.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface
    */
   protected $storage;
 
@@ -237,15 +237,6 @@ class BlockForm extends EntityForm {
         continue;
       }
 
-      // Don't display the deprecated node type condition unless it has existing
-      // settings.
-      // @todo Make this more generic in
-      //   https://www.drupal.org/project/drupal/issues/2922451. Also remove
-      //   the node_type specific logic below.
-      if ($condition_id == 'node_type' && !isset($visibility[$condition_id])) {
-        continue;
-      }
-
       /** @var \Drupal\Core\Condition\ConditionInterface $condition */
       $condition = $this->manager->createInstance($condition_id, $visibility[$condition_id] ?? []);
       $form_state->set(['conditions', $condition_id], $condition);
@@ -256,13 +247,6 @@ class BlockForm extends EntityForm {
       $form[$condition_id] = $condition_form;
     }
 
-    if (isset($form['node_type'])) {
-      $form['node_type']['#title'] = $this->t('Content types (deprecated)');
-      $form['node_type']['bundles']['#title'] = $this->t('Content types');
-      $form['node_type']['negate']['#type'] = 'value';
-      $form['node_type']['negate']['#title_display'] = 'invisible';
-      $form['node_type']['negate']['#value'] = $form['node_type']['negate']['#default_value'];
-    }
     if (isset($form['entity_bundle:node'])) {
       $form['entity_bundle:node']['negate']['#type'] = 'value';
       $form['entity_bundle:node']['negate']['#title_display'] = 'invisible';
@@ -325,13 +309,6 @@ class BlockForm extends EntityForm {
   protected function validateVisibility(array $form, FormStateInterface $form_state) {
     // Validate visibility condition settings.
     foreach ($form_state->getValue('visibility') as $condition_id => $values) {
-      // All condition plugins use 'negate' as a Boolean in their schema.
-      // However, certain form elements may return it as 0/1. Cast here to
-      // ensure the data is in the expected type.
-      if (array_key_exists('negate', $values)) {
-        $form_state->setValue(['visibility', $condition_id, 'negate'], (bool) $values['negate']);
-      }
-
       // Allow the condition to validate the form.
       $condition = $form_state->get(['conditions', $condition_id]);
       $condition->validateConfigurationForm($form['visibility'][$condition_id], SubformState::createForSubform($form['visibility'][$condition_id], $form, $form_state));
@@ -358,9 +335,13 @@ class BlockForm extends EntityForm {
     }
 
     $this->submitVisibility($form, $form_state);
+  }
 
-    // Save the settings of the plugin.
-    $entity->save();
+  /**
+   * {@inheritdoc}
+   */
+  public function save(array $form, FormStateInterface $form_state) {
+    $value = parent::save($form, $form_state);
 
     $this->messenger()->addStatus($this->t('The block configuration has been saved.'));
     $form_state->setRedirect(
@@ -370,6 +351,8 @@ class BlockForm extends EntityForm {
       ],
       ['query' => ['block-placement' => Html::getClass($this->entity->id())]]
     );
+
+    return $value;
   }
 
   /**
@@ -403,6 +386,9 @@ class BlockForm extends EntityForm {
    */
   public function getUniqueMachineName(BlockInterface $block) {
     $suggestion = $block->getPlugin()->getMachineNameSuggestion();
+    if ($block->getTheme()) {
+      $suggestion = $block->getTheme() . '_' . $suggestion;
+    }
 
     // Get all the blocks which starts with the suggested machine name.
     $query = $this->storage->getQuery();

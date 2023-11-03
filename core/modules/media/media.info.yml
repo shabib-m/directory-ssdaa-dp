@@ -2,9 +2,14 @@ name: Media
 description: 'Manages the creation, configuration, and display of media items.'
 type: module
 package: Core
-version: VERSION
+# version: VERSION
 dependencies:
   - drupal:file
   - drupal:image
   - drupal:user
 configure: media.settings
+
+# Information added by Drupal.org packaging script on 2023-11-01
+version: '10.1.6'
+project: 'drupal'
+datestamp: 1698841355

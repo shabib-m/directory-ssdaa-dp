@@ -147,12 +147,12 @@ abstract class BuildTestBase extends TestCase {
    *
    * @var \Symfony\Component\Process\PhpExecutableFinder
    */
-  private $phpFinder;
+  private PhpExecutableFinder $phpFinder;
 
   /**
    * {@inheritdoc}
    */
-  public static function setUpBeforeClass() {
+  public static function setUpBeforeClass(): void {
     parent::setUpBeforeClass();
     static::checkClassCommandRequirements();
   }
@@ -160,7 +160,7 @@ abstract class BuildTestBase extends TestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     static::checkMethodCommandRequirements($this->getName());
     $this->phpFinder = new PhpExecutableFinder();
@@ -176,7 +176,7 @@ abstract class BuildTestBase extends TestCase {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     parent::tearDown();
 
     $this->stopServer();
@@ -546,9 +546,8 @@ abstract class BuildTestBase extends TestCase {
    * Use this method to copy the current codebase, including any patched
    * changes, into the workspace.
    *
-   * By default, the copy will exclude sites/default/settings.php,
-   * sites/default/files, and vendor/. Use the $iterator parameter to override
-   * this behavior.
+   * By default, the copy will exclude site-specific and build-related files and
+   * directories. Use the $iterator parameter to override this behavior.
    *
    * @param \Iterator|null $iterator
    *   (optional) An iterator of all the files to copy. Default behavior is to
@@ -589,6 +588,7 @@ abstract class BuildTestBase extends TestCase {
       ->notPath('#^sites/default/files#')
       ->notPath('#^sites/simpletest#')
       ->notPath('#^vendor#')
+      ->notPath('#^core/node_modules#')
       ->notPath('#^sites/default/settings\..*php#')
       ->ignoreDotFiles(FALSE)
       ->ignoreVCS(FALSE);

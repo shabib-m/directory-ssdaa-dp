@@ -6,3 +6,8 @@ features:
   - node_user_picture
   - comment_user_picture
   - comment_user_verification
+
+# Information added by Drupal.org packaging script on 2023-11-01
+version: '10.1.6'
+project: 'drupal'
+datestamp: 1698841355

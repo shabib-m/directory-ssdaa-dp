@@ -1,6 +1,11 @@
 name: 'Update Manager'
 type: module
-description: 'Checks for available updates, and can securely install or update modules and themes via a web interface.'
-version: VERSION
+description: 'Checks for updates and allows users to manage them through a user interface.'
+# version: VERSION
 package: Core
 configure: update.settings
+
+# Information added by Drupal.org packaging script on 2023-11-01
+version: '10.1.6'
+project: 'drupal'
+datestamp: 1698841355

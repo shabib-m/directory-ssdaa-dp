@@ -4,4 +4,9 @@ description: 'Module in the experimental package to test experimental functional
 package: Core (Experimental)
 lifecycle: experimental
 lifecycle_link: https://example.com/experimental
-version: 8.y.x-unstable
+# version: 8.y.x-unstable
+
+# Information added by Drupal.org packaging script on 2023-11-01
+version: '10.1.6'
+project: 'drupal'
+datestamp: 1698841355

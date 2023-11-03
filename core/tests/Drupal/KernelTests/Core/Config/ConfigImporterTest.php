@@ -4,6 +4,7 @@ namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Config\ConfigImporterException;
 use Drupal\KernelTests\KernelTestBase;
@@ -25,7 +26,7 @@ class ConfigImporterTest extends KernelTestBase {
    *
    * @var array
    */
-  protected static $modules = ['config_test', 'system', 'config_import_test'];
+  protected static $modules = ['config_test', 'system', 'config_import_test', 'config_events_test'];
 
   /**
    * {@inheritdoc}
@@ -682,7 +683,7 @@ class ConfigImporterTest extends KernelTestBase {
     catch (ConfigImporterException $e) {
       $this->assertStringContainsString('There were errors validating the config synchronization.', $e->getMessage());
       $error_log = $config_importer->getErrors();
-      $this->assertEquals('Unable to uninstall the <em class="placeholder">System</em> module because: The System module is required.', $error_log[0]);
+      $this->assertEquals('Unable to uninstall the System module because: The System module is required.', $error_log[0]);
     }
   }
 
@@ -740,7 +741,7 @@ class ConfigImporterTest extends KernelTestBase {
       $this->assertEquals($expected, $e->getMessage(), 'There were errors validating the config synchronization.');
       $error_log = $config_importer->getErrors();
       // Install profiles should not even be scanned at this point.
-      $this->assertEquals(['Unable to install the <em class="placeholder">standard</em> module since it does not exist.'], $error_log);
+      $this->assertEquals(['Unable to install the standard module since it does not exist.'], $error_log);
     }
   }
 
@@ -770,7 +771,7 @@ class ConfigImporterTest extends KernelTestBase {
       // does not use an install profile. This situation should be impossible
       // to get in but site's can removed the install profile setting from
       // settings.php so the test is valid.
-      $this->assertEquals(['Cannot change the install profile from <em class="placeholder"></em> to <em class="placeholder">this_will_not_work</em> once Drupal is installed.'], $error_log);
+      $this->assertEquals(['Cannot change the install profile from  to this_will_not_work once Drupal is installed.'], $error_log);
     }
   }
 
@@ -852,7 +853,7 @@ class ConfigImporterTest extends KernelTestBase {
   public function testCustomStep() {
     $this->assertFalse(\Drupal::isConfigSyncing(), 'Before an import \Drupal::isConfigSyncing() returns FALSE');
     $context = [];
-    $this->configImporter()->doSyncStep(\Closure::fromCallable([self::class, 'customStep']), $context);
+    $this->configImporter()->doSyncStep(self::customStep(...), $context);
     $this->assertTrue($context['is_syncing'], 'Inside a custom step \Drupal::isConfigSyncing() returns TRUE');
     $this->assertFalse(\Drupal::isConfigSyncing(), 'After an valid custom step \Drupal::isConfigSyncing() returns FALSE');
   }
@@ -897,6 +898,26 @@ class ConfigImporterTest extends KernelTestBase {
     \Drupal::configFactory()->reset($cronName);
     $this->assertEquals('Foo', $this->config($systemSiteName)->get('name'));
     $this->assertEquals(0, $this->config($cronName)->get('logging'));
+  }
+
+  /**
+   * Tests config events during config import.
+   */
+  public function testConfigEvents(): void {
+    $this->installConfig(['config_events_test']);
+    $this->config('config_events_test.test')->set('key', 'bar')->save();
+    $this->copyConfig($this->container->get('config.storage'), $this->container->get('config.storage.sync'));
+    $this->config('config_events_test.test')->set('key', 'foo')->save();
+    \Drupal::state()->set('config_events_test.event', []);
+
+    // Import the configuration. This results in a save event with the value
+    // changing from foo to bar.
+    $this->configImporter()->import();
+    $event = \Drupal::state()->get('config_events_test.event', []);
+    $this->assertSame(ConfigEvents::SAVE, $event['event_name']);
+    $this->assertSame(['key' => 'bar'], $event['current_config_data']);
+    $this->assertSame(['key' => 'bar'], $event['raw_config_data']);
+    $this->assertSame(['key' => 'foo'], $event['original_config_data']);
   }
 
   /**

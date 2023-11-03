@@ -4,3 +4,8 @@ description: "Provides infrastructure for testing CKEditor 5 external links auto
 package: Testing
 dependencies:
   - ckeditor5:ckeditor5
+
+# Information added by Drupal.org packaging script on 2023-11-01
+version: '10.1.6'
+project: 'drupal'
+datestamp: 1698841355

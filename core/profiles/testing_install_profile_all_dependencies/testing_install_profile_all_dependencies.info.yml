@@ -1,7 +1,7 @@
 name: 'Testing install profile all dependencies'
 type: profile
 description: 'Profile for testing that install profiles can require a module.'
-version: VERSION
+# version: VERSION
 hidden: true
 dependencies:
   - drupal:ban
@@ -9,3 +9,8 @@ dependencies:
 install: []
 themes:
   - starterkit_theme
+
+# Information added by Drupal.org packaging script on 2023-11-01
+version: '10.1.6'
+project: 'drupal'
+datestamp: 1698841355

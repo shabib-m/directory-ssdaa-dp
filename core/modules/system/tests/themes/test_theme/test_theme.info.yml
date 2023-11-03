@@ -11,7 +11,7 @@
 name: '<strong>Test theme</strong>'
 type: theme
 description: 'Theme for testing the theme system'
-version: VERSION
+# version: VERSION
 base theme: starterkit_theme
 logo: images/logo2.svg
 libraries:
@@ -26,7 +26,6 @@ libraries-override:
     css:
       component:
         css/components/button.css: css/my-button.css
-        css/components/collapse-processed.css: css/my-collapse-processed.css
         css/components/container-inline.css: /themes/my_theme/css/my-container-inline.css
         css/components/details.css: /themes/my_theme/css/my-details.css
   # Remove particular library assets.
@@ -65,3 +64,8 @@ regions:
   content: Content
   left: Left
   right: Right
+
+# Information added by Drupal.org packaging script on 2023-11-01
+version: '10.1.6'
+project: 'drupal'
+datestamp: 1698841355
