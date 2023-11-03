@@ -2,37 +2,36 @@ name: SEO Checklist Optional Modules
 type: module
 description: Installs the optional modules recommended by the SEO Checklist.
 package: SEO
-core: 8.x
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^8.8 || ^9 || ^10
 dependencies:
-  - drupal:addtoany
-  - drupal:admin_toolbar
-  - drupal:advagg
-  # Not currently installable on Drupal 9 due to Composer requirements conflicts.
-  # - drupal:amp
-  - drupal:cloudflare
-  - drupal:coffee
-  - drupal:diff
-  - drupal:easy_breadcrumb
-  - drupal:editor_advanced_link
-  - drupal:filefield_paths
-  - drupal:google_tag
-  - drupal:honeypot
-  - drupal:hreflang
-  - drupal:metatag
-  - drupal:pathauto
-  - drupal:redirect
-  - drupal:robotstxt
-  - drupal:scheduler
-  - drupal:search404
-  - drupal:security_review
-  - drupal:seo_checklist
-  - drupal:sitemap
-  - drupal:xmlsitemap
-  - drupal:yoast_seo
+  - addtoany:addtoany
+  - admin_toolbar:admin_toolbar
+  - advagg:advagg
+  # Not currently installable due to Composer requirements conflicts.
+  # - amp:amp
+  - cloudflare:cloudflare
+  - coffee:coffee
+  - diff:diff
+  - easy_breadcrumb:easy_breadcrumb
+  - editor_advanced_link:editor_advanced_link
+  - filefield_paths:filefield_paths
+  - google_tag:google_tag
+  - honeypot:honeypot
+  - hreflang:hreflang
+  - metatag:metatag
+  - pathauto:pathauto
+  - redirect:redirect
+  - robotstxt:robotstxt
+  - scheduler:scheduler
+  - search404:search404
+  - security_review:security_review
+  - seo_checklist:seo_checklist
+  - sitemap:sitemap
+  - xmlsitemap:xmlsitemap
+  - yoast_seo:yoast_seo
 configure: checklistapi.checklists.seo_checklist
 
-# Information added by Drupal.org packaging script on 2021-08-25
-version: '5.1.0'
+# Information added by Drupal.org packaging script on 2023-06-22
+version: '5.2.0'
 project: 'seo_checklist'
-datestamp: 1629912906
+datestamp: 1687450937
