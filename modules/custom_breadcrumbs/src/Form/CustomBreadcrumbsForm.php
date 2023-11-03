@@ -173,7 +173,14 @@ class CustomBreadcrumbsForm extends EntityForm {
       '#title' => $this->t('Breadcrumb paths'),
       '#default_value' => $this->entity->get('breadcrumbPaths'),
       '#required' => TRUE,
-      '#description' => $this->t('One url per line, you can use <a href="@token">Token</a> module. Url must start from "/". Use @nolink_key if you don\'t want to set a link for the respective title.', ['@token' => 'https://www.drupal.org/project/token', '@nolink_key' => '<nolink>']),
+      '#description' => $this->t(
+        'One url per line, you can use <a href="@token">Token</a> module. Url must start from "/". ' .
+        'Use @nolink_key if you don\'t want to set a link for the respective title.',
+        [
+          '@token' => 'https://www.drupal.org/project/token',
+          '@nolink_key' => '<nolink>',
+        ]
+      ),
     ];
 
     $form['breadcrumbTitles'] = [
@@ -243,7 +250,6 @@ class CustomBreadcrumbsForm extends EntityForm {
 
     $pages = $values['breadcrumbPaths'];
 
-    $urlList = [];
     $urlList = explode(PHP_EOL, $pages);
 
     foreach ($urlList as $url) {
@@ -251,7 +257,7 @@ class CustomBreadcrumbsForm extends EntityForm {
       $trimUrl = trim($url);
 
       // Validate Slash.
-      if ($trimUrl !== '<front>' && $trimUrl !== '<nolink>' && $trimUrl[0] !== '/' && $trimUrl[0] !== '[') {
+      if ($trimUrl !== '<front>' && $trimUrl !== '<nolink>' && $trimUrl[0] !== '/' && $trimUrl[0] !== '[' && !str_contains($trimUrl, '<term_hierarchy:')) {
         $form_state->setErrorByName('pages', $this->t("@url needs to start with a slash if it is a URL or with a square bracket if it is a token.", ['@url' => $trimUrl]));
       }
     }

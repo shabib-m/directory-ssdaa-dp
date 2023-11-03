@@ -26,6 +26,8 @@ custom_breadcrumbs.custom_breadcrumbs.*:
       type: string
     pathPattern:
       type: string
+    extraCacheContexts:
+      type: string
 
 custom_breadcrumbs.settings:
   type: config_object

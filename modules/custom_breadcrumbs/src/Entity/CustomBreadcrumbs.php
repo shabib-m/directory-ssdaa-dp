@@ -155,8 +155,8 @@ class CustomBreadcrumbs extends ConfigEntityBase implements CustomBreadcrumbsInt
    * @return array|false|string[]
    *   Values form field.
    */
-  public function getMultiValues($field) {
-    return preg_split('/\r\n|\r|\n/', $this->get($field));
+  public function getMultiValues(string $field) {
+    return preg_split('/\r\n|\r|\n/', $this->get($field) ?? '');
   }
 
 }

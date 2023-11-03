@@ -2,7 +2,8 @@
 
 namespace Drupal\custom_breadcrumbs;
 
-use Drupal\path_alias\AliasManagerInterface;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -10,19 +11,19 @@ use Drupal\Core\Controller\TitleResolverInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Path\PathMatcherInterface;
+use Drupal\Core\Routing\AdminContext;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\Token;
-use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\Xss;
 use Drupal\custom_breadcrumbs\Entity\CustomBreadcrumbs;
 use Drupal\custom_breadcrumbs\Form\CustomBreadcrumbsForm;
+use Drupal\path_alias\AliasManagerInterface;
 use Drupal\taxonomy\TermInterface;
-use Drupal\Core\Routing\AdminContext;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -84,7 +85,7 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
   /**
    * Alias Manager.
    *
-   * @var \Drupal\Core\Path\AliasManagerInterface
+   * @var \Drupal\path_alias\AliasManagerInterface
    */
   protected $aliasManager;
 
@@ -101,6 +102,13 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
    * @var \Drupal\Core\Routing\AdminContext
    */
   protected $routerAdminContext;
+
+  /**
+   * FileUrlGenerator.
+   *
+   * @var \Drupal\Core\File\FileUrlGeneratorInterface
+   */
+  protected $fileUrlGenerator;
 
   /**
    * BreadcrumbBuilder constructor.
@@ -121,8 +129,10 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
    *   Alias manager.
    * @param \Drupal\Core\Path\PathMatcherInterface $pathMatcher
    *   Path matcher.
-   * @param Drupal\Core\Routing\AdminContext $routerAdminContext
+   * @param \Drupal\Core\Routing\AdminContext $routerAdminContext
    *   Router admin context.
+   * @param \Drupal\Core\File\FileUrlGeneratorInterface|NULL $fileUrlGenerator
+   *   FileUrlGenerator service.
    */
   public function __construct(ConfigFactoryInterface $configFactory,
                               EntityTypeManagerInterface $entityTypeManager,
@@ -132,7 +142,8 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
                               Token $token,
                               AliasManagerInterface $aliasManager,
                               PathMatcherInterface $pathMatcher,
-                              AdminContext $routerAdminContext) {
+                              AdminContext $routerAdminContext,
+                              FileUrlGeneratorInterface $fileUrlGenerator = NULL) {
     $this->entityTypeManager = $entityTypeManager;
     $this->languageManager = $languageManager;
     $this->token = $token;
@@ -143,6 +154,11 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
     $this->aliasManager = $aliasManager;
     $this->pathMatcher = $pathMatcher;
     $this->routerAdminContext = $routerAdminContext;
+    if (!$fileUrlGenerator) {
+      @trigger_error('Calling BreadcrumbBuilder::__construct() without the $fileUrlGenerator argument is deprecated in custom_breadcrumbs:1.1.0 and will be required in a future release of custom_breadcrumbs. See https://www.drupal.org/project/custom_breadcrumbs/issues/3392155.', E_USER_DEPRECATED);
+      $fileUrlGenerator = \Drupal::service('file_url_generator');
+    }
+    $this->fileUrlGenerator = $fileUrlGenerator;
   }
 
   /**
@@ -153,6 +169,10 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
     if ((isset($this->customBreadcrumbsSettings['admin_pages_disable']) && $this->customBreadcrumbsSettings['admin_pages_disable'] == TRUE)
       && (!empty($route) && $this->routerAdminContext->isAdminRoute($route))) {
+      return FALSE;
+    }
+
+    if (!$this->matchPaths($route_match) && !$this->matchEntity($route_match)) {
       return FALSE;
     }
 
@@ -174,7 +194,7 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
     // Prepare all route parameters.
     $params = $route_match->getParameters()->all();
 
-    // Check breadcrumbs by patch.
+    // Check breadcrumbs by path.
     if ($breadcrumbSetting = $this->matchPaths($route_match)) {
       $this->applyBreadcrumb($breadcrumb, $breadcrumbSetting, NULL);
     }
@@ -216,6 +236,7 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
     }
 
     $breadcrumb->addCacheContexts(['url.path']);
+    $breadcrumb->addCacheTags(['config:custom_breadcrumbs.settings']);
 
     return $breadcrumb;
   }
@@ -237,7 +258,7 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
     $entityTypeIds = array_keys($params);
     $entityTypeId = reset($entityTypeIds);
-    $entity = isset($params[$entityTypeId]) ? $params[$entityTypeId] : NULL;
+    $entity = $params[$entityTypeId] ?? NULL;
 
     $breadcrumbSettings = $this->entityTypeManager->getStorage('custom_breadcrumbs')
       ->loadByProperties([
@@ -281,7 +302,7 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
     foreach ($paths as $key => $path) {
       if (isset($titles[$key])) {
-        $href = file_url_transform_relative($this->token->replace($path, $token_vars, ['clear' => TRUE]));
+        $href = $this->fileUrlGenerator->transformRelative($this->token->replace($path, $token_vars, ['clear' => TRUE]));
         $link_title = $this->token->replace($titles[$key], $token_vars, ['clear' => TRUE]);
         $link_title = Html::decodeEntities($link_title);
 
@@ -426,6 +447,7 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
   protected function matchPaths(RouteMatchInterface $route_match) {
     $breadcrumbSettingsIDs = $this->entityTypeManager->getStorage('custom_breadcrumbs')
       ->getQuery()
+      ->accessCheck(FALSE)
       ->condition('pathPattern', '', '<>')
       ->condition('status', TRUE)
       ->execute();
@@ -441,6 +463,9 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
       $aliases[] = '/' . $url->getInternalPath();
       $pattern = $breadcrumbSetting->get('pathPattern');
 
+      // Replace any tokens in Path.
+      $pattern = $this->token->replace($pattern);
+
       foreach ($aliases as $alias) {
         if ($this->pathMatcher->matchPath($alias, $pattern)) {
           return $breadcrumbSetting;
@@ -449,6 +474,37 @@ class BreadcrumbBuilder implements BreadcrumbBuilderInterface {
     }
 
     return FALSE;
+  }
+
+  /**
+   * Check breadcrumbs by entity.
+   *
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   Route match.
+   *
+   * @return bool
+   *   True if a match was found, false otherwise.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  protected function matchEntity(RouteMatchInterface $route_match) {
+    $params = $route_match->getParameters()->all();
+
+    $entityTypeIds = array_keys($params);
+    $entityTypeId = reset($entityTypeIds);
+
+    $breadcrumbSettings = $this->entityTypeManager->getStorage('custom_breadcrumbs')
+      ->loadByProperties([
+        'entityType' => $entityTypeId,
+        'status' => TRUE,
+        'type' => 1,
+      ]);
+
+    $this->filterPerBundle($breadcrumbSettings, $route_match);
+    $this->filterPerLanguage($breadcrumbSettings);
+
+    return !empty($breadcrumbSettings);
   }
 
   /**

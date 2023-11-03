@@ -38,7 +38,6 @@ function custom_breadcrumbs_help($route_name, RouteMatchInterface $route_match) 
   return NULL;
 }
 
-
 /**
  * Implements hook_entity_extra_field_info().
  */

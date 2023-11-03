@@ -18,7 +18,7 @@ class CustomBreadcrumbsTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'block',
     'node',
     'custom_breadcrumbs',
@@ -27,12 +27,12 @@ class CustomBreadcrumbsTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $web_user = $this->drupalCreateUser([
@@ -117,6 +117,96 @@ class CustomBreadcrumbsTest extends BrowserTestBase {
       $home_path => 'Home',
       'foo2' => 'Foo2',
       'bar2' => 'Bar2',
+    ]);
+  }
+
+  /**
+   * Tests custom breadcrumbs settings.
+   */
+  public function testCustomBreadcrumbsSettings() {
+    // Add a custom breadcrumbs to the Article.
+    $edit = [
+      'label' => 'Article breadcrumbs',
+      'id' => 'article_breadcrumbs',
+      'status' => 1,
+      'breadcrumbPaths' => "/foo\n/bar",
+      'breadcrumbTitles' => "Foo\nBar",
+      'entityType' => 'node',
+    ];
+    $this->drupalGet('admin/structure/custom_breadcrumbs/add');
+    $this->submitForm($edit, 'Save');
+    $edit = [
+      'entityBundle' => 'article',
+    ];
+    $this->drupalGet('admin/structure/custom-breadcrumbs/article_breadcrumbs');
+    $this->submitForm($edit, 'Save');
+
+    $this->config('custom_breadcrumbs.settings')
+      ->set('home', TRUE)
+      ->set('home_link', 'Home')
+      ->set('current_page', FALSE)
+      ->set('current_page_link', FALSE)
+      ->set('trim_title', 0)
+      ->set('admin_pages_disable', FALSE)
+      ->save();
+
+    $label = 'Test article';
+    $article = $this->drupalCreateNode([
+      'title' => $label,
+      'type' => 'article',
+    ]);
+
+    $home_path = Url::fromRoute('<front>')->toString();
+
+    $this->assertBreadcrumb('node/' . $article->id(), [
+      $home_path => 'Home',
+      'foo' => 'Foo',
+      'bar' => 'Bar',
+    ]);
+
+    $this->config('custom_breadcrumbs.settings')
+      ->set('home_link', 'Home Page')
+      ->save();
+    $this->drupalGet('node/' . $article->id());
+
+    $this->drupalGet('node/' . $article->id());
+
+    $this->assertBreadcrumb('node/' . $article->id(), [
+      $home_path => 'Home Page',
+      'foo' => 'Foo',
+      'bar' => 'Bar',
+    ]);
+
+    $this->config('custom_breadcrumbs.settings')
+      ->set('home', FALSE)
+      ->save();
+
+    $this->assertBreadcrumb('node/' . $article->id(), [
+      'foo' => 'Foo',
+      'bar' => 'Bar',
+    ]);
+
+    $this->config('custom_breadcrumbs.settings')
+      ->set('current_page', TRUE)
+      ->set('current_page_link', TRUE)
+      ->save();
+
+    $this->assertBreadcrumb('node/' . $article->id(), [
+      'foo' => 'Foo',
+      'bar' => 'Bar',
+      $article->toUrl()->toString() => 'Test article',
+    ]);
+
+    $length = 10;
+
+    $this->config('custom_breadcrumbs.settings')
+      ->set('trim_title', $length)
+      ->save();
+
+    $this->assertBreadcrumb('node/' . $article->id(), [
+      'foo' => 'Foo',
+      'bar' => 'Bar',
+      $article->toUrl()->toString() => substr('Test article', 0, $length) . '...',
     ]);
   }
 
