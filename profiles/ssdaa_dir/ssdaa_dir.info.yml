@@ -43,6 +43,7 @@ install:
   - admin_toolbar:admin_toolbar_links_access_filter
   - fivestar
   - yaml_content
+  - update
 
 themes:
   - bootstrap_barrio
