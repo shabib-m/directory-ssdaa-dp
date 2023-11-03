@@ -47,8 +47,8 @@ install:
 themes:
   - bootstrap_barrio
   - directory_ssdaa
-  - bartik
-  - seven
+  - olivero
+  - claro
 
 distribution:
   name: دليل صدى 
