@@ -1,7 +1,7 @@
 name: 'Theme test base theme'
 type: theme
 description: 'Test theme which acts as a base theme for other test subthemes.'
-# version: VERSION
+version: VERSION
 base theme: false
 hidden: true
 
@@ -22,8 +22,3 @@ libraries-override:
 libraries-extend:
   starterkit_theme/base:
     - test_basetheme/global-styling
-
-# Information added by Drupal.org packaging script on 2023-09-20
-version: '9.5.11'
-project: 'drupal'
-datestamp: 1695228127

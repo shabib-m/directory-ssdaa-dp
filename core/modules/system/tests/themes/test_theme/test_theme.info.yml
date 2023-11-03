@@ -11,7 +11,7 @@
 name: '<strong>Test theme</strong>'
 type: theme
 description: 'Theme for testing the theme system'
-# version: VERSION
+version: VERSION
 base theme: starterkit_theme
 logo: images/logo2.svg
 libraries:
@@ -65,8 +65,3 @@ regions:
   content: Content
   left: Left
   right: Right
-
-# Information added by Drupal.org packaging script on 2023-09-20
-version: '9.5.11'
-project: 'drupal'
-datestamp: 1695228127

@@ -1,7 +1,7 @@
 name: Standard
 type: profile
 description: 'Install with commonly used features pre-configured.'
-# version: VERSION
+version: VERSION
 install:
   - node
   - history
@@ -38,8 +38,3 @@ install:
 themes:
   - olivero
   - claro
-
-# Information added by Drupal.org packaging script on 2023-09-20
-version: '9.5.11'
-project: 'drupal'
-datestamp: 1695228127

@@ -3,7 +3,7 @@
         'name' => 'drupal/legacy-project',
         'pretty_version' => 'dev-directory-ssdaa-dev',
         'version' => 'dev-directory-ssdaa-dev',
-        'reference' => '63a8234ff9a1b96c484d6d9fcba965e299694d47',
+        'reference' => '4376c75d47352d0d1ac06940d08085af93fb9b4d',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -262,7 +262,7 @@
         'drupal/legacy-project' => array(
             'pretty_version' => 'dev-directory-ssdaa-dev',
             'version' => 'dev-directory-ssdaa-dev',
-            'reference' => '63a8234ff9a1b96c484d6d9fcba965e299694d47',
+            'reference' => '4376c75d47352d0d1ac06940d08085af93fb9b4d',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
