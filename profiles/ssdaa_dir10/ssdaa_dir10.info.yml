@@ -1,0 +1,52 @@
+name: دليل صدى 10
+type: profile
+description: 'دليل صدى مع دروبال 10.'
+core_version_requirement: ^10
+install:
+  - node
+  - history
+  - block
+  - breakpoint
+  - ckeditor5
+  - config
+  - comment
+  - contextual
+  - contact
+  - menu_link_content
+  - datetime
+  - block_content
+  - editor
+  - help
+  - image
+  - menu_ui
+  - options
+  - path
+  - page_cache
+  - dynamic_page_cache
+  - big_pipe
+  - taxonomy
+  - dblog
+  - search
+  - shortcut
+  - toolbar
+  - field_ui
+  - file
+  - views
+  - views_ui
+  - tour
+  - layout_builder
+  - layout_discovery
+  - automated_cron
+  - admin_toolbar:admin_toolbar_tools
+  - admin_toolbar:admin_toolbar_links_access_filter
+  - fivestar
+  - yaml_content  
+themes:
+  - bootstrap_barrio
+  - directory_ssdaa
+  - olivero
+  - claro
+
+distribution:
+  name: دليل صدى 
+  langcode: ar
