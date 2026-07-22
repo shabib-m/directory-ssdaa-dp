@@ -1,0 +1,37 @@
+{#
+/**
+ * @file
+ * Shared "featured bottom" and footer regions rendered below main content.
+ *
+ * Included by page.html.twig and page--front.html.twig.
+ *
+ * @see page.html.twig
+ * @see page--front.html.twig
+ */
+#}
+{% if page.featured_bottom_first or page.featured_bottom_second or page.featured_bottom_third %}
+  <div class="featured-bottom">
+    <aside class="{{ container }} clearfix" role="complementary">
+      {{ page.featured_bottom_first }}
+      {{ page.featured_bottom_second }}
+      {{ page.featured_bottom_third }}
+    </aside>
+  </div>
+{% endif %}
+<footer class="site-footer">
+  <div class="{{ container }}">
+    {% if page.footer_first or page.footer_second or page.footer_third or page.footer_fourth %}
+      <div class="site-footer__top clearfix">
+        {{ page.footer_first }}
+        {{ page.footer_second }}
+        {{ page.footer_third }}
+        {{ page.footer_fourth }}
+      </div>
+    {% endif %}
+    {% if page.footer_fifth %}
+      <div class="site-footer__bottom">
+        {{ page.footer_fifth }}
+      </div>
+    {% endif %}
+  </div>
+</footer>

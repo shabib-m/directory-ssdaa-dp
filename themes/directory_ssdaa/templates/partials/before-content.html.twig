@@ -1,0 +1,25 @@
+{#
+/**
+ * @file
+ * Shared "highlighted" and "featured top" regions rendered above main content.
+ *
+ * Included by page.html.twig and page--front.html.twig.
+ *
+ * @see page.html.twig
+ * @see page--front.html.twig
+ */
+#}
+{% if page.highlighted %}
+  <div class="highlighted">
+    <aside class="{{ container }} section clearfix" role="complementary">
+      {{ page.highlighted }}
+    </aside>
+  </div>
+{% endif %}
+{% if page.featured_top %}
+  <div class="featured-top">
+    <aside class="featured-top__inner section {{ container }} clearfix" role="complementary">
+      {{ page.featured_top }}
+    </aside>
+  </div>
+{% endif %}
