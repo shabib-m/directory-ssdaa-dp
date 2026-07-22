@@ -28,6 +28,18 @@ sites/*/private
 # Ignore SimpleTest multi-site environment.
 sites/simpletest
 
+# Ignore database dumps and backups. These frequently contain user data,
+# password hashes and secrets (e.g. system.private_key, cron key) and must
+# never be committed to version control.
+*.sql
+*.sql.gz
+*.sql.bz2
+*.sql.zip
+*.mysql
+*.dump
+*.bak
+db/
+
 # If you prefer to store your .gitignore file in the sites/ folder, comment
 # or delete the previous settings and uncomment the following ones, instead.
 
