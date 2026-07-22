@@ -18,6 +18,13 @@ use Drupal\shortcut\Entity\Shortcut;
 function ssdaa_dir_install() {
   // Assign user 1 the "administrator" role.
   $user = User::load(1);
+  if (!$user instanceof User) {
+    // User 1 is created by the standard install process before profile
+    // install tasks run, so its absence indicates a broken installation.
+    // Fail loudly with a clear message instead of triggering an opaque
+    // "call to a member function on null" fatal further down.
+    throw new \RuntimeException('The ssdaa_dir installation profile could not load user 1 to assign the "administrator" role.');
+  }
   $user->roles[] = 'administrator';
   $user->save();
 
