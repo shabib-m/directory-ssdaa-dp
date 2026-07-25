@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel\Migrate\d6;
 
 use Drupal\comment\Entity\CommentType;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the migration of comment types from Drupal 6.
- *
- * @group comment
- * @group migrate_drupal_6
  */
+#[Group('comment')]
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateCommentTypeTest extends MigrateDrupal6TestBase {
 
   /**
@@ -38,7 +43,7 @@ class MigrateCommentTypeTest extends MigrateDrupal6TestBase {
   /**
    * Tests the migrated comment types.
    */
-  public function testMigration() {
+  public function testMigration(): void {
     $this->installConfig(['comment']);
     $this->executeMigration('d6_comment_type');
 
@@ -69,10 +74,9 @@ class MigrateCommentTypeTest extends MigrateDrupal6TestBase {
    * @param string[][] $expected_messages
    *   List of the expected migration messages, keyed by the message type.
    *   Message type should be "status" "warning" or "error".
-   *
-   * @dataProvider providerTestNoCommentTypeMigration
    */
-  public function testNoCommentTypeMigration(array $disabled_source_modules, array $expected_messages) {
+  #[DataProvider('providerTestNoCommentTypeMigration')]
+  public function testNoCommentTypeMigration(array $disabled_source_modules, array $expected_messages): void {
     if (!empty($disabled_source_modules)) {
       $this->sourceDatabase->update('system')
         ->condition('name', $disabled_source_modules, 'IN')
@@ -113,27 +117,27 @@ class MigrateCommentTypeTest extends MigrateDrupal6TestBase {
   /**
    * Provides test cases for ::testNoCommentTypeMigration().
    */
-  public function providerTestNoCommentTypeMigration() {
+  public static function providerTestNoCommentTypeMigration() {
     return [
       'Node module is disabled in source' => [
-        'Disabled source modules' => ['node'],
-        'Expected messages' => [
+        'disabled_source_modules' => ['node'],
+        'expected_messages' => [
           'error' => [
             'Migration d6_comment_type did not meet the requirements. The node module is not enabled in the source site.',
           ],
         ],
       ],
       'Comment module is disabled in source' => [
-        'Disabled source modules' => ['comment'],
-        'Expected messages' => [
+        'disabled_source_modules' => ['comment'],
+        'expected_messages' => [
           'error' => [
             'Migration d6_comment_type did not meet the requirements. The module comment is not enabled in the source site.',
           ],
         ],
       ],
       'Node and comment modules are disabled in source' => [
-        'Disabled source modules' => ['comment', 'node'],
-        'Expected messages' => [
+        'disabled_source_modules' => ['comment', 'node'],
+        'expected_messages' => [
           'error' => [
             'Migration d6_comment_type did not meet the requirements. The module comment is not enabled in the source site.',
           ],

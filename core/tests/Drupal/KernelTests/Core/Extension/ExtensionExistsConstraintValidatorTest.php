@@ -1,24 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Extension;
 
+use Drupal\Core\Extension\Plugin\Validation\Constraint\ExtensionExistsConstraint;
+use Drupal\Core\Extension\Plugin\Validation\Constraint\ExtensionExistsConstraintValidator;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the ExtensionExists constraint validator.
- *
- * @group Validation
- *
- * @covers \Drupal\Core\Extension\Plugin\Validation\Constraint\ExtensionExistsConstraint
- * @covers \Drupal\Core\Extension\Plugin\Validation\Constraint\ExtensionExistsConstraintValidator
  */
+#[Group('Validation')]
+#[CoversClass(ExtensionExistsConstraint::class)]
+#[CoversClass(ExtensionExistsConstraintValidator::class)]
+#[RunTestsInSeparateProcesses]
 class ExtensionExistsConstraintValidatorTest extends KernelTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = ['system'];
 
   /**
    * Tests the ExtensionExists constraint validator.
@@ -27,20 +28,30 @@ class ExtensionExistsConstraintValidatorTest extends KernelTestBase {
     // Create a data definition that specifies the value must be a string with
     // the name of an installed module.
     $definition = DataDefinition::create('string')
-      ->addConstraint('ExtensionExists', 'module');
+      ->addConstraint('ExtensionExists', ['type' => 'module']);
 
     /** @var \Drupal\Core\TypedData\TypedDataManagerInterface $typed_data */
     $typed_data = $this->container->get('typed_data_manager');
-    $data = $typed_data->create($definition, 'user');
 
+    // `core` provides many plugins without the need to install a module.
+    $data = $typed_data->create($definition, 'core');
+    $violations = $data->validate();
+    $this->assertCount(0, $violations);
+
+    $data->setValue('user');
     $violations = $data->validate();
     $this->assertCount(1, $violations);
     $this->assertSame("Module 'user' is not installed.", (string) $violations->get(0)->getMessage());
 
     $this->enableModules(['user']);
+    $data = $typed_data->create($definition, 'core');
     $this->assertCount(0, $data->validate());
 
-    $definition->setConstraints(['ExtensionExists' => 'theme']);
+    // NULL should not trigger a validation error: a value may be nullable.
+    $data->setValue(NULL);
+    $this->assertCount(0, $data->validate());
+
+    $definition->setConstraints(['ExtensionExists' => ['type' => 'theme']]);
     $data = $typed_data->create($definition, 'stark');
 
     $violations = $data->validate();
@@ -56,8 +67,19 @@ class ExtensionExistsConstraintValidatorTest extends KernelTestBase {
       ->create($definition, 'stark');
     $this->assertCount(0, $data->validate());
 
+    // `core` provides many plugins without the need to install a module, but it
+    // does not work for themes.
+    $data = $typed_data->create($definition, 'core');
+    $violations = $data->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame("Theme 'core' is not installed.", (string) $violations->get(0)->getMessage());
+
+    // NULL should not trigger a validation error: a value may be nullable.
+    $data->setValue(NULL);
+    $this->assertCount(0, $data->validate());
+
     // Anything but a module or theme should raise an exception.
-    $definition->setConstraints(['ExtensionExists' => 'profile']);
+    $definition->setConstraints(['ExtensionExists' => ['type' => 'profile']]);
     $this->expectExceptionMessage("Unknown extension type: 'profile'");
     $data->validate();
   }

@@ -1,0 +1,11 @@
+uuid: 4331cd46-6417-4984-8b2f-636237d3ec2d
+langcode: ar
+status: true
+dependencies: {  }
+name: 'الصفحة الأساسية'
+type: page
+description: "استخدم <em>الصفحات الأساسية</em> للمحتوى الثابت، مثل صفحة 'عن الموقع'."
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: false

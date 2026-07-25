@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Plugin;
 
 use Drupal\Component\Plugin\PluginManagerBase;
@@ -9,18 +11,22 @@ use Drupal\Core\Plugin\FilteredPluginManagerInterface;
 use Drupal\Core\Plugin\FilteredPluginManagerTrait;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Plugin\FilteredPluginManagerTrait
- * @group Plugin
+ * Tests Drupal\Core\Plugin\FilteredPluginManagerTrait.
  */
+#[CoversClass(FilteredPluginManagerTrait::class)]
+#[Group('Plugin')]
 class FilteredPluginManagerTraitTest extends UnitTestCase {
 
   /**
-   * @covers ::getFilteredDefinitions
-   * @dataProvider providerTestGetFilteredDefinitions
+   * Tests get filtered definitions.
    */
-  public function testGetFilteredDefinitions($contexts, $expected) {
+  #[DataProvider('providerTestGetFilteredDefinitions')]
+  public function testGetFilteredDefinitions($contexts, $expected): void {
     // Start with two plugins.
     $definitions = [];
     $definitions['plugin1'] = ['id' => 'plugin1'];
@@ -54,7 +60,7 @@ class FilteredPluginManagerTraitTest extends UnitTestCase {
   /**
    * Provides test data for ::testGetFilteredDefinitions().
    */
-  public function providerTestGetFilteredDefinitions() {
+  public static function providerTestGetFilteredDefinitions(): array {
     $data = [];
     $data['populated context'] = [
       ['context1' => 'fake context'],
@@ -83,12 +89,32 @@ class TestFilteredPluginManager extends PluginManagerBase implements FilteredPlu
 
   use FilteredPluginManagerTrait;
 
+  /**
+   * An array of plugin definitions.
+   *
+   * @var array
+   */
   protected $definitions = [];
 
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
   protected $moduleHandler;
 
+  /**
+   * The theme manager.
+   *
+   * @var \Drupal\Core\Theme\ThemeManagerInterface
+   */
   protected $themeManager;
 
+  /**
+   * The context handler.
+   *
+   * @var \Drupal\Core\Plugin\Context\ContextHandlerInterface
+   */
   protected $contextHandler;
 
   public function __construct(array $definitions, ModuleHandlerInterface $module_handler, ThemeManagerInterface $theme_manager, ContextHandlerInterface $context_handler) {
@@ -110,7 +136,7 @@ class TestFilteredPluginManager extends PluginManagerBase implements FilteredPlu
     return $this->themeManager;
   }
 
-  protected function getType() {
+  protected function getType(): string {
     return 'the_type';
   }
 

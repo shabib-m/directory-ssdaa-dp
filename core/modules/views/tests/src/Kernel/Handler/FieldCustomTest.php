@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Component\Utility\Xss;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the core Drupal\views\Plugin\views\field\Custom handler.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldCustomTest extends ViewsKernelTestBase {
 
   /**
@@ -32,7 +36,7 @@ class FieldCustomTest extends ViewsKernelTestBase {
   /**
    * Ensure that custom fields work and doesn't escape unnecessary markup.
    */
-  public function testFieldCustom() {
+  public function testFieldCustom(): void {
     $view = Views::getView('test_view');
     $view->setDisplay();
 
@@ -58,7 +62,7 @@ class FieldCustomTest extends ViewsKernelTestBase {
   /**
    * Ensure that custom fields can use tokens.
    */
-  public function testFieldCustomTokens() {
+  public function testFieldCustomTokens(): void {
     $view = Views::getView('test_view');
     $view->setDisplay();
 
@@ -92,7 +96,7 @@ class FieldCustomTest extends ViewsKernelTestBase {
   /**
    * Ensure that custom field content is XSS filtered.
    */
-  public function testCustomFieldXss() {
+  public function testCustomFieldXss(): void {
     $view = Views::getView('test_view');
     $view->setDisplay();
 

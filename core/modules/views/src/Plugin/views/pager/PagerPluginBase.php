@@ -15,7 +15,7 @@ use Drupal\views\Plugin\views\PluginBase;
  * and setting up the pager.
  *
  * Pager plugins extend \Drupal\views\Plugin\views\pager\PagerPluginBase. They
- * must be annotated with \Drupal\views\Annotation\ViewsPager annotation,
+ * must be attributed with \Drupal\views\Annotation\ViewsPager attribute,
  * and they must be in namespace directory Plugin\views\pager.
  *
  * @ingroup views_plugins
@@ -27,14 +27,38 @@ use Drupal\views\Plugin\views\PluginBase;
  */
 abstract class PagerPluginBase extends PluginBase {
 
+  /**
+   * The current page.
+   *
+   * @phpcs:ignore Drupal.Commenting.VariableComment.MissingVar
+   */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public $current_page = NULL;
 
+  /**
+   * The total number of lines.
+   *
+   * @phpcs:ignore Drupal.Commenting.VariableComment.MissingVar
+   */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public $total_items = 0;
 
   /**
    * {@inheritdoc}
    */
   protected $usesOptions = TRUE;
+
+  /**
+   * Options available for setting pagination headers.
+   */
+  protected array $headingOptions = [
+    'h1' => 'H1',
+    'h2' => 'H2',
+    'h3' => 'H3',
+    'h4' => 'H4',
+    'h5' => 'H5',
+    'h6' => 'H6',
+  ];
 
   /**
    * Get how many items per page this pager will display.
@@ -73,6 +97,23 @@ abstract class PagerPluginBase extends PluginBase {
   }
 
   /**
+   * Get the pager heading tag.
+   *
+   * @return string
+   *   Heading level for the pager.
+   */
+  public function getHeadingLevel(): string {
+    return $this->options['pagination_heading_level'] ?? 'h4';
+  }
+
+  /**
+   * Set the pager heading.
+   */
+  public function setHeadingLevel($headingLevel): void {
+    $this->options['pagination_heading_level'] = $headingLevel;
+  }
+
+  /**
    * Get the current page.
    *
    * If NULL, we do not know what the current page is.
@@ -84,7 +125,7 @@ abstract class PagerPluginBase extends PluginBase {
   /**
    * Set the current page.
    *
-   * @param $number
+   * @param mixed $number
    *   If provided, the page number will be set to this. If NOT provided,
    *   the page number will be set from the global page array.
    */
@@ -199,7 +240,7 @@ abstract class PagerPluginBase extends PluginBase {
    *
    * Called during the view render process.
    *
-   * @param $input
+   * @param array $input
    *   Any extra GET parameters that should be retained, such as exposed
    *   input.
    */
@@ -215,20 +256,38 @@ abstract class PagerPluginBase extends PluginBase {
       && $this->total_items > (intval($this->current_page) + 1) * $this->getItemsPerPage();
   }
 
+  /**
+   * Allows the exposed form to be altered.
+   */
   public function exposedFormAlter(&$form, FormStateInterface $form_state) {}
 
+  /**
+   * Allows the exposed form to be validated.
+   */
   public function exposedFormValidate(&$form, FormStateInterface $form_state) {}
 
+  /**
+   * Handles submission of the exposed form.
+   */
   public function exposedFormSubmit(&$form, FormStateInterface $form_state, &$exclude) {}
 
+  /**
+   * Indicates whether this pager uses exposed filters.
+   */
   public function usesExposed() {
     return FALSE;
   }
 
+  /**
+   * Returns whether the items per page is exposed.
+   */
   protected function itemsPerPageExposed() {
     return FALSE;
   }
 
+  /**
+   * Returns whether the offset is exposed.
+   */
   protected function isOffsetExposed() {
     return FALSE;
   }

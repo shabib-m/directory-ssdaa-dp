@@ -2,17 +2,17 @@
 
 namespace Drupal\views\Plugin\views\relationship;
 
+use Drupal\views\Attribute\ViewsRelationship;
 use Drupal\views\Plugin\ViewsHandlerManager;
 use Drupal\views\Views;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * A relationship handlers which reverse entity references.
  *
  * @ingroup views_relationship_handlers
- *
- * @ViewsRelationship("entity_reverse")
  */
+#[ViewsRelationship("entity_reverse")]
 class EntityReverse extends RelationshipPluginBase {
 
   /**
@@ -23,6 +23,7 @@ class EntityReverse extends RelationshipPluginBase {
   /**
    * The alias for the left table.
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public string $first_alias;
 
   /**
@@ -31,27 +32,21 @@ class EntityReverse extends RelationshipPluginBase {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param array $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\views\Plugin\ViewsHandlerManager $join_manager
    *   The views plugin join manager.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ViewsHandlerManager $join_manager) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    #[Autowire(service: 'plugin.manager.views.join')]
+    ViewsHandlerManager $join_manager,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->joinManager = $join_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('plugin.manager.views.join')
-    );
   }
 
   /**
@@ -63,6 +58,7 @@ class EntityReverse extends RelationshipPluginBase {
     // field, using the base table's id field to the field's column.
     $views_data = Views::viewsData()->get($this->table);
     $left_field = $views_data['table']['base']['field'];
+    $id = !empty($this->definition['join_id']) ? $this->definition['join_id'] : 'standard';
 
     $first = [
       'left_table' => $this->tableAlias,
@@ -97,10 +93,10 @@ class EntityReverse extends RelationshipPluginBase {
       $second['type'] = 'INNER';
     }
 
-    $second_join = $this->joinManager->createInstance('standard', $second);
+    $second_join = $this->joinManager->createInstance($id, $second);
     $second_join->adjusted = TRUE;
 
-    // use a short alias for this:
+    // Use a short alias for this:
     $alias = $this->definition['field_name'] . '_' . $this->table;
 
     $this->alias = $this->query->addRelationship($alias, $second_join, $this->definition['base'], $this->relationship);

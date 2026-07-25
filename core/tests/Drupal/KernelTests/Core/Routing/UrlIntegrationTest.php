@@ -1,30 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Routing;
 
 use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the URL object integration into the access system.
- *
- * @group Url
  */
+#[Group('Url')]
+#[RunTestsInSeparateProcesses]
 class UrlIntegrationTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['user', 'router_test', 'system'];
 
   /**
    * Ensures that the access() method on \Drupal\Core\Url objects works.
    */
-  public function testAccess() {
+  public function testAccess(): void {
     /** @var \Drupal\user\RoleInterface $role_with_access */
     $role_with_access = Role::create(['id' => 'role_with_access', 'label' => 'With access']);
     $role_with_access->grantPermission('administer users');

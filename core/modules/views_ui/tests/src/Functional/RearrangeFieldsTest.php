@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the reordering of fields via AJAX.
  *
- * @group views_ui
  * @see \Drupal\views_ui\Form\Ajax\Rearrange
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class RearrangeFieldsTest extends UITestBase {
 
   /**
@@ -27,7 +32,7 @@ class RearrangeFieldsTest extends UITestBase {
   /**
    * Gets the fields from the View.
    */
-  protected function getViewFields($view_name = 'test_view', $display_id = 'default') {
+  protected function getViewFields($view_name = 'test_view', $display_id = 'default'): array {
     $view = Views::getView($view_name);
     $view->setDisplay($display_id);
     $fields = [];
@@ -58,7 +63,7 @@ class RearrangeFieldsTest extends UITestBase {
   /**
    * Tests field sorting.
    */
-  public function testRearrangeFields() {
+  public function testRearrangeFields(): void {
     $view_name = 'test_view';
 
     // Checks that the order on the rearrange form matches the creation order.

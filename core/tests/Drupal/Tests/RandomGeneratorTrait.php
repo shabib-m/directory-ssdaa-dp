@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests;
 
+use Drupal\Component\Utility\Random as RandomUtility;
 use Drupal\TestTools\Random;
 
 /**
@@ -27,29 +30,14 @@ trait RandomGeneratorTrait {
    *
    * @see \Drupal\Component\Utility\Random::string()
    */
-  public function randomString($length = 8) {
+  public function randomString($length = 8): string {
     return Random::string($length);
-  }
-
-  /**
-   * Callback for random string validation.
-   *
-   * @see \Drupal\Component\Utility\Random::string()
-   *
-   * @param string $string
-   *   The random string to validate.
-   *
-   * @return bool
-   *   TRUE if the random string is valid, FALSE if not.
-   */
-  public function randomStringValidate($string) {
-    return Random::stringValidate($string);
   }
 
   /**
    * Generates a unique random string containing letters and numbers.
    *
-   * Do not use this method when testing unvalidated user input. Instead, use
+   * Do not use this method when testing non validated user input. Instead, use
    * \Drupal\Tests\RandomGeneratorTrait::randomString().
    *
    * @param int $length
@@ -60,7 +48,7 @@ trait RandomGeneratorTrait {
    *
    * @see \Drupal\Component\Utility\Random::name()
    */
-  protected function randomMachineName($length = 8) {
+  protected function randomMachineName($length = 8): string {
     return Random::machineName($length);
   }
 
@@ -76,7 +64,7 @@ trait RandomGeneratorTrait {
    *
    * @see \Drupal\Component\Utility\Random::object()
    */
-  public function randomObject($size = 4) {
+  public function randomObject($size = 4): \stdClass {
     return Random::object($size);
   }
 
@@ -86,7 +74,7 @@ trait RandomGeneratorTrait {
    * @return \Drupal\Component\Utility\Random
    *   The random generator.
    */
-  protected function getRandomGenerator() {
+  protected function getRandomGenerator(): RandomUtility {
     return Random::getGenerator();
   }
 

@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Functional\Views;
 
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests block_content field filters with translations.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentFieldFilterTest extends BlockContentTestBase {
 
   /**
@@ -60,7 +64,12 @@ class BlockContentFieldFilterTest extends BlockContentTestBase {
     ];
 
     // Create block_content with translations.
-    $block_content = $this->createBlockContent(['info' => $this->blockContentInfos['en'], 'langcode' => 'en', 'type' => 'basic', 'body' => [['value' => $this->blockContentInfos['en']]]]);
+    $block_content = $this->createBlockContent([
+      'info' => $this->blockContentInfos['en'],
+      'langcode' => 'en',
+      'type' => 'basic',
+      'body' => [['value' => $this->blockContentInfos['en']]],
+    ]);
     foreach (['es', 'fr'] as $langcode) {
       $translation = $block_content->addTranslation($langcode, ['info' => $this->blockContentInfos[$langcode]]);
       $translation->body->value = $this->blockContentInfos[$langcode];
@@ -71,7 +80,7 @@ class BlockContentFieldFilterTest extends BlockContentTestBase {
   /**
    * Tests body and info filters.
    */
-  public function testFilters() {
+  public function testFilters(): void {
     // Test the info filter page, which filters for info contains 'Comida'.
     // Should show just the Spanish translation, once.
     $this->assertPageCounts('test-info-filter', ['es' => 1, 'fr' => 0, 'en' => 0], 'Comida info filter');

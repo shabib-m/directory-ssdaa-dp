@@ -27,26 +27,22 @@ class UserRolesCacheContext extends UserCacheContextBase implements CalculatedCa
    * {@inheritdoc}
    */
   public function getContext($role = NULL) {
-    // User 1 does not actually have any special behavior for roles; this is
-    // added as additional security and backwards compatibility protection for
-    // SA-CORE-2015-002.
-    // @todo Remove in Drupal 9.0.0.
-    if ($this->user->id() == 1) {
-      return 'is-super-user';
-    }
     if ($role === NULL) {
       return implode(',', $this->user->getRoles());
     }
-    else {
-      return (in_array($role, $this->user->getRoles()) ? '0' : '1');
-    }
+
+    return in_array($role, $this->user->getRoles(), TRUE) ? 'true' : 'false';
   }
 
   /**
    * {@inheritdoc}
    */
   public function getCacheableMetadata($role = NULL) {
-    return (new CacheableMetadata())->setCacheTags(['user:' . $this->user->id()]);
+    // The list of roles for the anonymous user can never change.
+    if ($this->user->isAuthenticated()) {
+      return (new CacheableMetadata())->setCacheTags(['user:' . $this->user->id()]);
+    }
+    return new CacheableMetadata();
   }
 
 }

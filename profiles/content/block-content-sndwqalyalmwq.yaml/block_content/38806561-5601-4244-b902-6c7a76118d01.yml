@@ -1,0 +1,23 @@
+_meta:
+  version: '1.0'
+  entity_type: block_content
+  uuid: 38806561-5601-4244-b902-6c7a76118d01
+  bundle: basic
+  default_langcode: ar
+default:
+  status:
+    -
+      value: true
+  info:
+    -
+      value: 'صندوق اعلى الموقع'
+  reusable:
+    -
+      value: true
+  revision_translation_affected:
+    -
+      value: true
+  body:
+    -
+      value: '<h1>قالب دليل صدى</h1><h3>مرحبا بكم في الدليل</h3>'
+      format: full_html

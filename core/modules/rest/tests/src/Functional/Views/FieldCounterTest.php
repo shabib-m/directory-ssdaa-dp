@@ -1,18 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\rest\Functional\Views;
 
 use Drupal\node\Entity\Node;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the display of counter field.
  *
- * @group rest
  * @see \Drupal\rest\Plugin\views\display\RestExport
  * @see \Drupal\rest\Plugin\views\row\DataFieldRow
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class FieldCounterTest extends ViewTestBase {
 
   /**
@@ -67,7 +72,7 @@ class FieldCounterTest extends ViewTestBase {
   /**
    * Tests the display of an excluded title field when used as a token.
    */
-  public function testExcludedTitleTokenDisplay() {
+  public function testExcludedTitleTokenDisplay(): void {
     $actual_json = $this->drupalGet($this->view->getPath(), ['query' => ['_format' => 'json']]);
     $this->assertSession()->statusCodeEquals(200);
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
@@ -12,13 +14,16 @@ use Drupal\node\Entity\NodeType;
 use Drupal\Tests\TestFileCreationTrait;
 use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that the fragment link points to CKEditor 5.
  *
- * @group ckeditor5
  * @internal
  */
+#[Group('ckeditor5')]
+#[RunTestsInSeparateProcesses]
 class CKEditor5FragmentLinkTest extends WebDriverTestBase {
 
   use TestFileCreationTrait;
@@ -55,6 +60,9 @@ class CKEditor5FragmentLinkTest extends WebDriverTestBase {
     Editor::create([
       'format' => 'ckeditor5',
       'editor' => 'ckeditor5',
+      'image_upload' => [
+        'status' => FALSE,
+      ],
     ])->save();
 
     // Create a node type for testing.
@@ -67,7 +75,7 @@ class CKEditor5FragmentLinkTest extends WebDriverTestBase {
       'field_storage' => $field_storage,
       'bundle' => 'page',
       'label' => 'Body',
-      'settings' => ['display_summary' => TRUE],
+      'settings' => [],
       'required' => TRUE,
     ])->save();
 
@@ -77,7 +85,7 @@ class CKEditor5FragmentLinkTest extends WebDriverTestBase {
       'bundle' => 'page',
       'mode' => 'default',
       'status' => TRUE,
-    ])->setComponent('body', ['type' => 'text_textarea_with_summary'])
+    ])->setComponent('body', ['type' => 'text_textarea'])
       ->save();
 
     $this->account = $this->drupalCreateUser([
@@ -90,15 +98,13 @@ class CKEditor5FragmentLinkTest extends WebDriverTestBase {
   /**
    * Tests if the fragment link to a textarea works with CKEditor 5 enabled.
    */
-  public function testFragmentLink() {
+  public function testFragmentLink(): void {
     $session = $this->getSession();
     $web_assert = $this->assertSession();
     $ckeditor_class = '.ck-editor';
     $ckeditor_id = '#cke_edit-body-0-value';
 
     $this->drupalGet('node/add/page');
-
-    $session->getPage();
 
     // Add a bottom margin to the title field to be sure the body field is not
     // visible.

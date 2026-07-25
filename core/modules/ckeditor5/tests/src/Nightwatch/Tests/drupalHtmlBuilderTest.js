@@ -1,6 +1,7 @@
-const assert = require('assert');
-const fs = require('fs');
-const path = require('path');
+// cspell:ignore drupalhtmlbuilder
+const assert = require('node:assert');
+const fs = require('node:fs');
+const path = require('node:path');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { JSDOM } = require('jsdom');
 
@@ -72,6 +73,37 @@ module.exports = {
         'foo bar<p>foo</p><div>bar</div>',
       );
     },
+  'should return correct HTML scripts and styles': function () {
+    const drupalHtmlBuilder = new DrupalHtmlBuilder();
+    const fragment = document.createDocumentFragment();
+    const script = document.createElement('script');
+    script.textContent = `let x = 10;
+let y = 5;
+if (y < x) {
+console.log('is smaller')
+}`;
+    const style = document.createElement('style');
+    style.setAttribute('type', 'text/css');
+    style.appendChild(
+      document.createTextNode(':root .sections > h2 { background: red}'),
+    );
+
+    fragment.appendChild(style);
+    fragment.appendChild(document.createTextNode('\n'));
+    fragment.appendChild(script);
+
+    drupalHtmlBuilder.appendNode(fragment);
+
+    assert.equal(
+      drupalHtmlBuilder.build(),
+      `<style type="text/css">:root .sections > h2 { background: red}</style>
+<script>let x = 10;
+let y = 5;
+if (y < x) {
+console.log('is smaller')
+}</script>`,
+    );
+  },
   'should return correct HTML from fragment with comment': function () {
     const drupalHtmlBuilder = new DrupalHtmlBuilder();
     const fragment = document.createDocumentFragment();
@@ -84,7 +116,7 @@ module.exports = {
 
     drupalHtmlBuilder.appendNode(fragment);
 
-    assert.equal(drupalHtmlBuilder.build(), '<div>bar</div>');
+    assert.equal(drupalHtmlBuilder.build(), '<div>bar</div><!--bar-->');
   },
   'should return correct HTML from fragment with attributes': function () {
     const drupalHtmlBuilder = new DrupalHtmlBuilder();

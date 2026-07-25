@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\announcements_feed\FunctionalJavascript;
 
-use Drupal\Tests\system\FunctionalJavascript\OffCanvasTestBase;
 use Drupal\announce_feed_test\AnnounceTestHttpClientMiddleware;
+use Drupal\Tests\system\FunctionalJavascript\OffCanvasTestBase;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test the access announcement according to json feed changes.
- *
- * @group announcements_feed
  */
+#[Group('announcements_feed')]
+#[RunTestsInSeparateProcesses]
 class AlertsJsonFeedTest extends OffCanvasTestBase {
 
   /**
@@ -39,6 +43,10 @@ class AlertsJsonFeedTest extends OffCanvasTestBase {
    * {@inheritdoc}
    */
   public function setUp():void {
+    if ($this->name() === 'testAnnounceFeedUpdatedAndRemoved') {
+      $this->markTestSkipped('Skipped due to major version-specific logic. See https://www.drupal.org/project/drupal/issues/3359322');
+    }
+
     parent::setUp();
 
     $this->user = $this->drupalCreateUser(
@@ -54,7 +62,7 @@ class AlertsJsonFeedTest extends OffCanvasTestBase {
   /**
    * Check the status of the announcements when the feed is updated and removed.
    */
-  public function testAnnounceFeedUpdatedAndRemoved() {
+  public function testAnnounceFeedUpdatedAndRemoved(): void {
     $this->drupalLogin($this->user);
     $this->drupalGet('<front>');
     $this->clickLink('Announcements');
@@ -85,7 +93,7 @@ class AlertsJsonFeedTest extends OffCanvasTestBase {
   /**
    * Check with an empty JSON feed.
    */
-  public function testAnnounceFeedEmpty() {
+  public function testAnnounceFeedEmpty(): void {
     // Change the feed url and reset temp storage.
     AnnounceTestHttpClientMiddleware::setAnnounceTestEndpoint('/announce-feed-json/empty');
 

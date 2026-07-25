@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 1f494d1e-d7b1-4d09-82fa-5dcc0bdfbfb0
+  bundle: country
+  default_langcode: ar
+  depends:
+    69e16ff0-446f-400e-bb7d-f27b949048ee: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'الامارات العربية المتحده'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 69e16ff0-446f-400e-bb7d-f27b949048ee
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: true

@@ -1,18 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\File;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group File
+ * Tests File System Requirements.
  */
+#[Group('File')]
+#[RunTestsInSeparateProcesses]
 class FileSystemRequirementsTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system'];
 
@@ -32,7 +36,7 @@ class FileSystemRequirementsTest extends KernelTestBase {
   /**
    * Tests if settings are set, there are not warnings.
    */
-  public function testSettingsExist() {
+  public function testSettingsExist(): void {
     $this->setSetting('file_temp_path', $this->randomMachineName());
     $requirements = $this->checkSystemRequirements();
     $this->assertArrayNotHasKey('temp_directory', $requirements);
@@ -45,8 +49,14 @@ class FileSystemRequirementsTest extends KernelTestBase {
    *   An array of system requirements.
    */
   protected function checkSystemRequirements() {
+    // This loadInclude() is to ensure that the install API is available.
+    // Since we're loading an include of type 'install', this will also
+    // include core/includes/install.inc for us, which is where
+    // drupal_verify_install_file() is currently defined.
+    // @todo Remove this once the function lives in a better place.
+    // @see https://www.drupal.org/project/drupal/issues/3526388
     $this->container->get('module_handler')->loadInclude('system', 'install');
-    return system_requirements('runtime');
+    return \Drupal::moduleHandler()->invoke('system', 'runtime_requirements');
   }
 
 }

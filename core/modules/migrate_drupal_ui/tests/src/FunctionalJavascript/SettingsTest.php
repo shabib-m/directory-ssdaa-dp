@@ -1,14 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal_ui\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore drupalmysqldriverdatabasemysql
 /**
  * Tests migrate upgrade credential form with settings in settings.php.
- *
- * @group migrate_drupal_ui
  */
+#[Group('migrate_drupal_ui')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class SettingsTest extends WebDriverTestBase {
 
   /**
@@ -51,10 +59,9 @@ class SettingsTest extends WebDriverTestBase {
    *
    * @throws \Behat\Mink\Exception\ElementNotFoundException
    * @throws \Behat\Mink\Exception\ExpectationException
-   *
-   * @dataProvider providerTestCredentialForm
    */
-  public function testCredentialForm($source_connection, $version, array $manual, array $databases, $expected_source_connection) {
+  #[DataProvider('providerTestCredentialForm')]
+  public function testCredentialForm($source_connection, $version, array $manual, array $databases, $expected_source_connection): void {
     // Write settings.
     $migrate_file_public_path = '/var/www/drupal7/sites/default/files';
     $migrate_file_private_path = '/var/www/drupal7/sites/default/files/private';
@@ -86,7 +93,7 @@ class SettingsTest extends WebDriverTestBase {
     // Enter the values manually if provided.
     if (!empty($manual)) {
       $edit = [];
-      $driver = 'mysql';
+      $driver = 'Drupal\\mysql\\Driver\\Database\\mysql';
       $edit[$driver]['host'] = $manual['host'];
       $edit[$driver]['database'] = $manual['database'];
       $edit[$driver]['username'] = $manual['username'];
@@ -123,9 +130,9 @@ class SettingsTest extends WebDriverTestBase {
       $session->fieldValueEquals('source_connection', $expected_source_connection);
     }
     else {
-      $session->fieldValueEquals('mysql[host]', $manual['host']);
-      $session->fieldValueEquals('mysql[database]', $manual['database']);
-      $session->fieldValueEquals('mysql[username]', $manual['username']);
+      $session->fieldValueEquals('edit-drupalmysqldriverdatabasemysql-host', $manual['host']);
+      $session->fieldValueEquals('edit-drupalmysqldriverdatabasemysql-database', $manual['database']);
+      $session->fieldValueEquals('edit-drupalmysqldriverdatabasemysql-username', $manual['username']);
     }
 
     // Confirm the file paths are correct.
@@ -137,7 +144,7 @@ class SettingsTest extends WebDriverTestBase {
   /**
    * Data provider for testCredentialForm.
    */
-  public function providerTestCredentialForm() {
+  public static function providerTestCredentialForm() {
     return [
       'no values in settings.php' => [
         'source_connection' => "",
@@ -164,7 +171,7 @@ class SettingsTest extends WebDriverTestBase {
               'prefix' => 'test',
               'host' => '172.18.0.3',
               'port' => '3307',
-              'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+              'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
               'driver' => 'mysql',
             ],
           ],
@@ -184,7 +191,7 @@ class SettingsTest extends WebDriverTestBase {
               'prefix' => 'test',
               'host' => '172.18.0.3',
               'port' => '3307',
-              'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+              'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
               'driver' => 'mysql',
             ],
           ],
@@ -204,7 +211,7 @@ class SettingsTest extends WebDriverTestBase {
               'prefix' => 'test',
               'host' => '172.18.0.6',
               'port' => '3307',
-              'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+              'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
               'driver' => 'mysql',
             ],
           ],
@@ -224,7 +231,7 @@ class SettingsTest extends WebDriverTestBase {
               'prefix' => 'test',
               'host' => '172.18.0.3',
               'port' => '3307',
-              'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+              'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
               'driver' => 'mysql',
             ],
           ],
@@ -236,7 +243,7 @@ class SettingsTest extends WebDriverTestBase {
               'prefix' => 'test',
               'host' => '172.18.0.2',
               'port' => '3307',
-              'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+              'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
               'driver' => 'mysql',
             ],
           ],
@@ -261,7 +268,7 @@ class SettingsTest extends WebDriverTestBase {
               'prefix' => 'test',
               'host' => '172.18.0.2',
               'port' => '3307',
-              'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+              'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
               'driver' => 'mysql',
             ],
           ],

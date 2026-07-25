@@ -1,4 +1,9 @@
+parameters:
+  workflows.skip_procedural_hook_scan: true
+
 services:
+  _defaults:
+    autoconfigure: true
   plugin.manager.workflows.type:
     class: Drupal\workflows\WorkflowTypeManager
     parent: default_plugin_manager

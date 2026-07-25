@@ -1,24 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ajax_forms_test\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides an AJAX form block.
- *
- * @Block(
- *   id = "ajax_forms_test_block",
- *   admin_label = @Translation("AJAX test form"),
- *   category = @Translation("Forms")
- * )
  */
+#[Block(
+  id: "ajax_forms_test_block",
+  admin_label: new TranslatableMarkup("AJAX test form"),
+  category: new TranslatableMarkup("Forms")
+)]
 class AjaxFormBlock extends BlockBase implements FormInterface, ContainerFactoryPluginInterface {
 
   /**
@@ -53,19 +55,6 @@ class AjaxFormBlock extends BlockBase implements FormInterface, ContainerFactory
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->formBuilder = $form_builder;
     $this->messenger = $messenger;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('form_builder'),
-      $container->get('messenger')
-    );
   }
 
   /**

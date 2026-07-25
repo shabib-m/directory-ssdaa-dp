@@ -3,6 +3,7 @@
 namespace Drupal\views_ui;
 
 use Drupal\Component\Plugin\PluginManagerInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -10,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 
 /**
@@ -154,8 +156,10 @@ class ViewListBuilder extends ConfigEntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOperations(EntityInterface $entity) {
-    $operations = parent::getDefaultOperations($entity);
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $args = func_get_args();
+    $cacheability = $args[1] ?? new CacheableMetadata();
+    $operations = parent::getDefaultOperations($entity, $cacheability);
     // Remove destination redirect for Edit operation.
     $operations['edit']['url'] = $entity->toUrl('edit-form');
 
@@ -261,14 +265,14 @@ class ViewListBuilder extends ConfigEntityListBuilder {
           $path = $display->getPath();
           if ($view->status() && !str_contains($path, '%')) {
             // Wrap this in a try/catch as trying to generate links to some
-            // routes may throw a NotAcceptableHttpException if they do not
+            // routes may throw an exception, for example if they do not
             // respond to HTML, such as RESTExports.
             try {
               // @todo Views should expect and store a leading /. See:
               //   https://www.drupal.org/node/2423913
               $rendered_path = Link::fromTextAndUrl('/' . $path, Url::fromUserInput('/' . $path))->toString();
             }
-            catch (NotAcceptableHttpException $e) {
+            catch (BadRequestException | NotAcceptableHttpException) {
               $rendered_path = '/' . $path;
             }
           }

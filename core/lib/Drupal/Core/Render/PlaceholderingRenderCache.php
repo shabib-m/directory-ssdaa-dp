@@ -2,8 +2,8 @@
 
 namespace Drupal\Core\Render;
 
-use Drupal\Core\Cache\CacheFactoryInterface;
 use Drupal\Core\Cache\Context\CacheContextsManager;
+use Drupal\Core\Cache\VariationCacheFactoryInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -40,13 +40,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class PlaceholderingRenderCache extends RenderCache {
 
   /**
-   * The placeholder generator.
-   *
-   * @var \Drupal\Core\Render\PlaceholderGeneratorInterface
-   */
-  protected $placeholderGenerator;
-
-  /**
    * Stores rendered results for automatically placeholdered elements.
    *
    * This allows us to avoid talking to the cache twice per auto-placeholdered
@@ -60,7 +53,8 @@ class PlaceholderingRenderCache extends RenderCache {
    * 1. when rendering, cache write, but auto-placeholdered
    * 2. when rendering placeholders, cache read
    *
-   * Scenario C. The double rendering for an uncacheable element would happen because:
+   * Scenario C. The double rendering for an uncacheable element would happen
+   * because:
    * 1. when rendering, not cacheable, but auto-placeholdered
    * 2. when rendering placeholders, rendered again
    *
@@ -74,28 +68,28 @@ class PlaceholderingRenderCache extends RenderCache {
   /**
    * Constructs a new PlaceholderingRenderCache object.
    *
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
-   * @param \Drupal\Core\Cache\CacheFactoryInterface $cache_factory
-   *   The cache factory.
-   * @param \Drupal\Core\Cache\Context\CacheContextsManager $cache_contexts_manager
+   * @param \Drupal\Core\Cache\VariationCacheFactoryInterface $cacheFactory
+   *   The variation cache factory.
+   * @param \Drupal\Core\Cache\Context\CacheContextsManager $cacheContextsManager
    *   The cache contexts manager.
-   * @param \Drupal\Core\Render\PlaceholderGeneratorInterface $placeholder_generator
+   * @param \Drupal\Core\Render\PlaceholderGeneratorInterface $placeholderGenerator
    *   The placeholder generator.
    */
-  public function __construct(RequestStack $request_stack, CacheFactoryInterface $cache_factory, CacheContextsManager $cache_contexts_manager, PlaceholderGeneratorInterface $placeholder_generator) {
-    parent::__construct($request_stack, $cache_factory, $cache_contexts_manager);
-    $this->placeholderGenerator = $placeholder_generator;
+  public function __construct(
+    RequestStack $requestStack,
+    VariationCacheFactoryInterface $cacheFactory,
+    CacheContextsManager $cacheContextsManager,
+    protected PlaceholderGeneratorInterface $placeholderGenerator,
+  ) {
+    parent::__construct($requestStack, $cacheFactory, $cacheContextsManager);
   }
 
   /**
    * {@inheritdoc}
    */
   public function get(array $elements) {
-    // @todo remove this check when https://www.drupal.org/node/2367555 lands.
-    if (!$this->requestStack->getCurrentRequest()->isMethodCacheable()) {
-      return FALSE;
-    }
 
     // When rendering placeholders, special case auto-placeholdered elements:
     // avoid retrieving them from cache again, or rendering them again.
@@ -126,7 +120,9 @@ class PlaceholderingRenderCache extends RenderCache {
   public function set(array &$elements, array $pre_bubbling_elements) {
     $result = parent::set($elements, $pre_bubbling_elements);
 
-    // @todo remove this check when https://www.drupal.org/node/2367555 lands.
+    // Writes to the render cache are disabled on uncacheable HTTP requests, to
+    // prevent very low hit rate items from being written. If we're not writing
+    // to the cache, there's also no benefit to placeholdering either.
     if (!$this->requestStack->getCurrentRequest()->isMethodCacheable()) {
       return FALSE;
     }

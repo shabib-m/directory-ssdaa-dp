@@ -27,10 +27,14 @@ interface ConfigInstallerInterface {
    *   The extension type; e.g., 'module' or 'theme'.
    * @param string $name
    *   The name of the module or theme to install default configuration for.
+   * @param \Drupal\Core\Config\DefaultConfigMode $mode
+   *   The default value DefaultConfigMode::All means create install, optional
+   *   and site optional configuration. The other modes create a single type
+   *   config.
    *
    * @see \Drupal\Core\Config\ExtensionInstallStorage
    */
-  public function installDefaultConfig($type, $name);
+  public function installDefaultConfig($type, $name, DefaultConfigMode $mode = DefaultConfigMode::All);
 
   /**
    * Installs optional configuration.
@@ -40,7 +44,7 @@ interface ConfigInstallerInterface {
    * - it's a configuration entity.
    * - its dependencies can be met.
    *
-   * @param \Drupal\Core\Config\StorageInterface $storage
+   * @param \Drupal\Core\Config\StorageInterface|null $storage
    *   (optional) The configuration storage to search for optional
    *   configuration. If not provided, all enabled extension's optional
    *   configuration directories including the install profile's will be
@@ -49,9 +53,9 @@ interface ConfigInstallerInterface {
    *   (optional) If set, ensures that the configuration being installed has
    *   this dependency. The format is dependency type as the key ('module',
    *   'theme', or 'config') and the dependency name as the value
-   *   ('book', 'olivero', 'views.view.frontpage').
+   *   ('node', 'olivero', 'views.view.frontpage').
    */
-  public function installOptionalConfig(StorageInterface $storage = NULL, $dependency = []);
+  public function installOptionalConfig(?StorageInterface $storage = NULL, $dependency = []);
 
   /**
    * Installs all default configuration in the specified collection.
@@ -108,8 +112,8 @@ interface ConfigInstallerInterface {
    *
    * @param string $type
    *   Type of extension to install.
-   * @param string $name
-   *   Name of extension to install.
+   * @param string|array $name
+   *   Name or names of extensions to install.
    *
    * @throws \Drupal\Core\Config\UnmetDependenciesException
    * @throws \Drupal\Core\Config\PreExistingConfigException

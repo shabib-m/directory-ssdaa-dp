@@ -2,7 +2,9 @@
 
 namespace Drupal\Core\Installer;
 
+use Drupal\Component\Datetime\Time;
 use Drupal\Core\Cache\MemoryBackendFactory;
+use Drupal\Core\Cache\NullBackendFactory;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderInterface;
 use Drupal\Core\Lock\NullLockBackend;
@@ -11,6 +13,7 @@ use Symfony\Component\DependencyInjection\Compiler\InlineServiceDefinitionsPass;
 use Symfony\Component\DependencyInjection\Compiler\RemoveUnusedDefinitionsPass;
 use Symfony\Component\DependencyInjection\Compiler\ReplaceAliasByActualDefinitionPass;
 use Symfony\Component\DependencyInjection\Compiler\ResolveHotPathPass;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
 /**
@@ -32,13 +35,33 @@ class NormalInstallerServiceProvider implements ServiceProviderInterface {
    * {@inheritdoc}
    */
   public function register(ContainerBuilder $container) {
+    global $install_state;
+
+    // During the installer user 1 is a superuser.
+    $container->setDefinition(InstallerAccessPolicy::class, (new Definition())->addTag('access_policy')->setPublic(FALSE));
+
     // Replace cache services with in-memory implementations. The results in
     // less queries to set caches which will only be cleared on the next module
     // install.
     $definition = $container->getDefinition('cache_factory');
     $definition->setClass(MemoryBackendFactory::class);
-    $definition->setArguments([]);
+    $definition->setArguments([new Time()]);
     $definition->setMethodCalls([]);
+
+    // When installing from existing config, disabling the config cache entirely
+    // yields much faster install times.
+    // Without this, MemoryBackend::invalidateTags must iterate over a very
+    // large set of cached entries on every entity save — especially when
+    // the site to install contains lots of languages.
+    /* @see \Drupal\Core\Entity\EntityBase::postSave */
+    /* @see \Drupal\Core\Cache\MemoryBackend::invalidateTags */
+    if (!empty($install_state['config_install_path'])) {
+      $cache_config_definition = $container->getDefinition('cache.config');
+      $cache_config_definition->setFactory([new Reference('cache.backend.null'), 'get']);
+      if (!$container->hasDefinition('cache.backend.null')) {
+        $container->register('cache.backend.null', NullBackendFactory::class);
+      }
+    }
 
     // Replace lock service with no-op implementation as Drupal installation can
     // only occur in a single thread and the site should not be publicly

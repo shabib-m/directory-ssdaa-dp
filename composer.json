@@ -1,5 +1,6 @@
 {
     "name": "drupal/legacy-project",
+    "abandoned": "drupal/recommended-project",
     "description": "Project template for Drupal projects with composer following drupal/drupal layout",
     "type": "project",
     "license": "GPL-2.0-or-later",
@@ -15,11 +16,13 @@
         }
     ],
     "require": {
-        "composer/installers": "^2.0",
-        "drupal/core-composer-scaffold": "^10.1",
-        "drupal/core-project-message": "^10.1",
-        "drupal/core-recommended": "^10.1",
-        "drupal/core-vendor-hardening": "^10.1"
+        "composer/installers": "^2.3",
+        "drupal/core-composer-scaffold": "^11.4",
+        "drupal/core-project-message": "^11.4",
+        "drupal/core-recipe-unpack": "^11.4",
+        "drupal/core-recommended": "^11.4",
+        "drupal/core-vendor-hardening": "^11.4",
+        "drush/drush": "^13.7"
     },
     "conflict": {
         "drupal/drupal": "*"
@@ -30,10 +33,14 @@
         "allow-plugins": {
             "composer/installers": true,
             "drupal/core-composer-scaffold": true,
+            "drupal/core-recipe-unpack": true,
             "drupal/core-project-message": true,
             "drupal/core-vendor-hardening": true,
             "phpstan/extension-installer": true,
-            "dealerdirect/phpcodesniffer-composer-installer": true
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "php-http/discovery": true,
+            "php-tuf/composer-integration": true,
+            "symfony/runtime": true
         },
         "sort-packages": true
     },

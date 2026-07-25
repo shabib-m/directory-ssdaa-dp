@@ -1,0 +1,21 @@
+name: Nightwatch A11y Testing
+type: profile
+description: 'Minimal profile for running A11y Nightwatch tests. Includes absolutely required modules only.'
+# version: VERSION
+hidden: true
+install:
+  - block
+  - comment
+  - image
+  - node
+  - path
+  - taxonomy
+  - nightwatch_theme_install_utility
+themes:
+  - claro
+  - olivero
+
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
+project: 'drupal'
+datestamp: 1784141321

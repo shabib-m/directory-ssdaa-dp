@@ -8,7 +8,7 @@ use Drupal\Core\Config\ConfigEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * A subscriber invalidating the 'rendered' cache tag when saving redirect settings.
+ * Invalidates the 'rendered' cache tag when saving redirect settings.
  */
 class RedirectSettingsCacheTag implements EventSubscriberInterface {
 
@@ -46,7 +46,7 @@ class RedirectSettingsCacheTag implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[ConfigEvents::SAVE][] = ['onSave'];
     return $events;
   }

@@ -1,17 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workspaces\Functional;
 
-use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\workspaces\Entity\Workspace;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests workspace integration for custom menu links.
- *
- * @group workspaces
- * @group menu_link_content
  */
+#[Group('workspaces')]
+#[Group('menu_link_content')]
+#[RunTestsInSeparateProcesses]
 class WorkspaceMenuLinkContentIntegrationTest extends BrowserTestBase {
 
   use WorkspaceTestUtilities;
@@ -29,8 +31,10 @@ class WorkspaceMenuLinkContentIntegrationTest extends BrowserTestBase {
   protected static $modules = [
     'block',
     'menu_link_content',
+    'menu_ui',
     'node',
     'workspaces',
+    'workspaces_ui',
   ];
 
   /**
@@ -46,6 +50,7 @@ class WorkspaceMenuLinkContentIntegrationTest extends BrowserTestBase {
 
     $permissions = [
       'access administration pages',
+      'administer menu',
       'administer site configuration',
       'administer workspaces',
     ];
@@ -56,26 +61,36 @@ class WorkspaceMenuLinkContentIntegrationTest extends BrowserTestBase {
   /**
    * Tests custom menu links in non-default workspaces.
    */
-  public function testWorkspacesWithCustomMenuLinks() {
-    $stage = Workspace::load('stage');
+  public function testWorkspacesWithCustomMenuLinks(): void {
+    $stage = $this->createWorkspaceThroughUi('Stage', 'stage');
 
     $this->setupWorkspaceSwitcherBlock();
 
     $default_title = 'default';
     $default_link = '#live';
-    $menu_link_content = MenuLinkContent::create([
-      'title' => $default_title,
-      'menu_name' => 'main',
-      'link' => [['uri' => 'internal:/' . $default_link]],
-    ]);
-    $menu_link_content->save();
+
+    // Add a new menu link in Live.
+    $this->drupalGet('admin/structure/menu/manage/main/add');
+    $this->submitForm([
+      'title[0][value]' => $default_title,
+      'link[0][uri]' => $default_link,
+    ], 'Save');
+    $menu_links = \Drupal::entityTypeManager()
+      ->getStorage('menu_link_content')
+      ->loadByProperties(['title' => $default_title]);
+    $menu_link = reset($menu_links);
 
     $pending_title = 'pending';
     $pending_link = 'http://example.com';
+
+    // Change the menu link in 'stage' and check that the updated values are
+    // visible in that workspace.
     $this->switchToWorkspace($stage);
-    $menu_link_content->set('title', $pending_title);
-    $menu_link_content->set('link', [['uri' => $pending_link]]);
-    $menu_link_content->save();
+    $this->drupalGet("admin/structure/menu/item/{$menu_link->id()}/edit");
+    $this->submitForm([
+      'title[0][value]' => $pending_title,
+      'link[0][uri]' => $pending_link,
+    ], 'Save');
 
     $this->drupalGet('');
     $assert_session = $this->assertSession();
@@ -83,12 +98,11 @@ class WorkspaceMenuLinkContentIntegrationTest extends BrowserTestBase {
     $assert_session->linkByHrefExists($pending_link);
 
     // Add a new menu link in the Stage workspace.
-    $menu_link_content = MenuLinkContent::create([
-      'title' => 'stage link',
-      'menu_name' => 'main',
-      'link' => [['uri' => 'internal:/#stage']],
-    ]);
-    $menu_link_content->save();
+    $this->drupalGet('admin/structure/menu/manage/main/add');
+    $this->submitForm([
+      'title[0][value]' => 'stage link',
+      'link[0][uri]' => '#stage',
+    ], 'Save');
 
     $this->drupalGet('');
     $assert_session->linkExists('stage link');

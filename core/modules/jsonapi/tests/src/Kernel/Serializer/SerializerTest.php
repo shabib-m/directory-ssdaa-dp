@@ -1,24 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Kernel\Serializer;
 
 use Drupal\Core\Render\Markup;
 use Drupal\jsonapi\JsonApiResource\ResourceObject;
 use Drupal\jsonapi\Normalizer\Value\CacheableNormalization;
+use Drupal\jsonapi\Serializer\Serializer;
 use Drupal\jsonapi_test_data_type\TraversableObject;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\jsonapi\Kernel\JsonapiKernelTestBase;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the JSON:API serializer.
  *
- * @coversClass \Drupal\jsonapi\Serializer\Serializer
- * @group jsonapi
- *
  * @internal
  */
+#[Group('jsonapi')]
+#[CoversClass(Serializer::class)]
+#[RunTestsInSeparateProcesses]
 class SerializerTest extends JsonapiKernelTestBase {
 
   /**
@@ -26,7 +32,6 @@ class SerializerTest extends JsonapiKernelTestBase {
    */
   protected static $modules = [
     'serialization',
-    'system',
     'node',
     'user',
     'field',
@@ -72,7 +77,6 @@ class SerializerTest extends JsonapiKernelTestBase {
     $this->installEntitySchema('node');
     $this->installEntitySchema('user');
     // Add the additional table schemas.
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
     $this->installSchema('user', ['users_data']);
     $this->user = User::create([
@@ -82,6 +86,7 @@ class SerializerTest extends JsonapiKernelTestBase {
     $this->user->save();
     NodeType::create([
       'type' => 'foo',
+      'name' => 'Foo',
     ])->save();
     $this->createTextField('node', 'foo', 'field_text', 'Text');
     $this->node = Node::create([
@@ -100,9 +105,11 @@ class SerializerTest extends JsonapiKernelTestBase {
   }
 
   /**
-   * @covers \Drupal\jsonapi\Serializer\Serializer::normalize
+   * Tests fallback normalizer.
+   *
+   * @legacy-covers \Drupal\jsonapi\Serializer\Serializer::normalize
    */
-  public function testFallbackNormalizer() {
+  public function testFallbackNormalizer(): void {
     $context = [
       'account' => $this->user,
       'resource_object' => ResourceObject::createFromEntity($this->resourceType, $this->node),

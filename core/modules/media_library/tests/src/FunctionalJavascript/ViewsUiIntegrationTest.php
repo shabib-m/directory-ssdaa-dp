@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media_library\FunctionalJavascript;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Media Library's integration with Views UI.
- *
- * @group media_library
  */
+#[Group('media_library')]
+#[RunTestsInSeparateProcesses]
 class ViewsUiIntegrationTest extends MediaLibraryTestBase {
 
   /**
@@ -48,7 +53,7 @@ class ViewsUiIntegrationTest extends MediaLibraryTestBase {
   /**
    * Tests that the integration with Views works correctly.
    */
-  public function testViewsAdmin() {
+  public function testViewsAdmin(): void {
     $page = $this->getSession()->getPage();
 
     // Assert that the widget can be seen and that there are 8 items.

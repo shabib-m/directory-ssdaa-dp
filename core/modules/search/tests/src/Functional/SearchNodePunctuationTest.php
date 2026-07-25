@@ -1,20 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use Drupal\node\NodeAccessRebuild;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests search functionality with punctuation and HTML entities.
- *
- * @group search
  */
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchNodePunctuationTest extends BrowserTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['node', 'search'];
+  protected static $modules = ['node', 'search', 'search_node'];
 
   /**
    * {@inheritdoc}
@@ -36,7 +41,7 @@ class SearchNodePunctuationTest extends BrowserTestBase {
 
     $this->drupalCreateContentType(['type' => 'page', 'name' => 'Basic page']);
 
-    node_access_rebuild();
+    \Drupal::service(NodeAccessRebuild::class)->rebuild();
     // Create a test user and log in.
     $this->testUser = $this->drupalCreateUser([
       'access content',
@@ -50,7 +55,7 @@ class SearchNodePunctuationTest extends BrowserTestBase {
   /**
    * Tests that search works with punctuation and HTML entities.
    */
-  public function testPhraseSearchPunctuation() {
+  public function testPhraseSearchPunctuation(): void {
     $node = $this->drupalCreateNode(['body' => [['value' => "The bunny's ears were fluffy."]]]);
     // cSpell:disable-next-line
     $this->drupalCreateNode(['body' => [['value' => 'Dignissim Aliquam &amp; Quieligo meus natu quae quia te. Damnum&copy; erat&mdash; neo pneum. Facilisi feugiat ibidem ratis.']]]);

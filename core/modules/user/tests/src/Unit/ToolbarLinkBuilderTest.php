@@ -1,25 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Unit;
 
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\ToolbarLinkBuilder;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests user's ToolbarLinkBuilder.
- *
- * @coversDefaultClass \Drupal\user\ToolbarLinkBuilder
- * @group user
  */
+#[CoversClass(ToolbarLinkBuilder::class)]
+#[Group('user')]
 class ToolbarLinkBuilderTest extends UnitTestCase {
 
   /**
    * Tests structure of display name render array.
-   *
-   * @covers ::renderDisplayName
    */
-  public function testRenderDisplayName() {
+  public function testRenderDisplayName(): void {
     $account = $this->prophesize(AccountProxyInterface::class);
     $display_name = 'Something suspicious that should be #plain_text, not #markup';
     $account->getDisplayName()->willReturn($display_name);

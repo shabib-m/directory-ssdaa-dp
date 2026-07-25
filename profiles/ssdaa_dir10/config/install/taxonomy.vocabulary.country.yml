@@ -1,7 +1,0 @@
-langcode: ar
-status: true
-dependencies: {  }
-name: الدوله
-vid: country
-description: null
-weight: 0

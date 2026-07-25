@@ -1,24 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_ui\Functional;
 
 use Drupal\menu_link_content\Entity\MenuLinkContent;
+use Drupal\menu_ui\MenuUiUtility;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Menu UI and Content Moderation integration.
- *
- * @group menu_ui
  */
+#[Group('menu_ui')]
+#[RunTestsInSeparateProcesses]
 class MenuUiContentModerationTest extends BrowserTestBase {
 
   use ContentModerationTestTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'block',
@@ -56,7 +59,7 @@ class MenuUiContentModerationTest extends BrowserTestBase {
   /**
    * Tests that node drafts can not modify the menu settings.
    */
-  public function testMenuUiWithPendingRevisions() {
+  public function testMenuUiWithPendingRevisions(): void {
     $editor = $this->drupalCreateUser([
       'administer nodes',
       'administer menu',
@@ -177,8 +180,14 @@ class MenuUiContentModerationTest extends BrowserTestBase {
     $this->drupalGet('node/' . $node->id() . '/edit');
     $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains("Page {$node->label()} has been updated.");
+
+    // The link is created to the latest page, which the editor is allowed
+    // see, but an anonymous visitor not.
+    $this->assertSession()->linkExists('Second test menu link');
+    $this->drupalLogout();
     $this->assertSession()->linkNotExists('Second test menu link');
 
+    $this->drupalLogin($editor);
     // Publish the content and ensure the new menu link shows up.
     $edit = [
       'moderation_state[0][state]' => 'published',
@@ -192,7 +201,7 @@ class MenuUiContentModerationTest extends BrowserTestBase {
   /**
    * Tests that unpublished content can be selected through the menu UI.
    */
-  public function testMenuUiWithUnpublishedContent() {
+  public function testMenuUiWithUnpublishedContent(): void {
     $editor_with_unpublished_content_access = $this->drupalCreateUser([
       'administer nodes',
       'administer menu',
@@ -219,7 +228,7 @@ class MenuUiContentModerationTest extends BrowserTestBase {
     $this->assertTrue($node->access('view', $editor_with_unpublished_content_access));
     $this->assertEquals($edit['title[0][value]'], $node->getTitle());
     $this->drupalGet('node/add/page');
-    $link_id = menu_ui_get_menu_link_defaults($node)['entity_id'];
+    $link_id = \Drupal::service(MenuUiUtility::class)->getMenuLinkDefaults($node)['entity_id'];
     /** @var \Drupal\menu_link_content\Entity\MenuLinkContent $link */
     $link = MenuLinkContent::load($link_id);
     $this->assertSession()->optionExists('edit-menu-menu-parent', 'main:' . $link->getPluginId());

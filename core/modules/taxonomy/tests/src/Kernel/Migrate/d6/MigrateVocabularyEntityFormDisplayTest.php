@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d6;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Vocabulary entity form display migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateVocabularyEntityFormDisplayTest extends MigrateDrupal6TestBase {
 
   /**
@@ -37,7 +41,7 @@ class MigrateVocabularyEntityFormDisplayTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal 6 vocabulary-node type association to Drupal 8 migration.
    */
-  public function testVocabularyEntityFormDisplay() {
+  public function testVocabularyEntityFormDisplay(): void {
     $this->executeMigration('d6_vocabulary_entity_form_display');
 
     // Test that the field exists.
@@ -45,7 +49,18 @@ class MigrateVocabularyEntityFormDisplayTest extends MigrateDrupal6TestBase {
     $this->assertSame('options_select', $component['type']);
     $this->assertSame(20, $component['weight']);
     // Test the Id map.
-    $this->assertSame([['node', 'article', 'default', 'field_tags']], $this->getMigration('d6_vocabulary_entity_form_display')->getIdMap()->lookupDestinationIds([4, 'article']));
+    $this->assertSame([
+      [
+        'node',
+        'article',
+        'default',
+        'field_tags',
+      ],
+    ],
+    $this->getMigration('d6_vocabulary_entity_form_display')
+      ->getIdMap()
+      ->lookupDestinationIds([4, 'article'])
+    );
 
     // Test the term widget tags setting.
     $entity_form_display = EntityFormDisplay::load('node.story.default');
@@ -64,7 +79,7 @@ class MigrateVocabularyEntityFormDisplayTest extends MigrateDrupal6TestBase {
    * Vocabulary displays should be ignored when they belong to node types which
    * were not migrated.
    */
-  public function testSkipNonExistentNodeType() {
+  public function testSkipNonExistentNodeType(): void {
     // The "story" node type is migrated by d6_node_type but we need to pretend
     // that it didn't occur, so record that in the map table.
     $this->mockFailure('d6_node_type', ['type' => 'story']);

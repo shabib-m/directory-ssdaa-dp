@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel\Plugin\migrate\source\d6;
 
+use Drupal\file\Plugin\migrate\source\d6\File;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests D6 file source plugin.
- *
- * @covers \Drupal\file\Plugin\migrate\source\d6\File
- *
- * @group file
  */
+#[CoversClass(File::class)]
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -21,7 +26,7 @@ class FileTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.

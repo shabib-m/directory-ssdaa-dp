@@ -3,6 +3,7 @@
 namespace Drupal\Core\Cache;
 
 use Drupal\Component\Assertion\Inspector;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Defines a memory cache implementation.
@@ -23,8 +24,19 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
 
   /**
    * Array to store cache objects.
+   *
+   * @var object[]
    */
   protected $cache = [];
+
+  /**
+   * Constructs a MemoryBackend object.
+   *
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
+   */
+  public function __construct(protected TimeInterface $time) {
+  }
 
   /**
    * {@inheritdoc}
@@ -87,7 +99,7 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
     $prepared->data = unserialize($prepared->data);
 
     // Check expire time.
-    $prepared->valid = $prepared->expire == Cache::PERMANENT || $prepared->expire >= $this->getRequestTime();
+    $prepared->valid = $prepared->expire == Cache::PERMANENT || $prepared->expire >= $this->time->getRequestTime();
 
     if (!$allow_invalid && !$prepared->valid) {
       return FALSE;
@@ -107,7 +119,7 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
     $this->cache[$cid] = (object) [
       'cid' => $cid,
       'data' => serialize($data),
-      'created' => $this->getRequestTime(),
+      'created' => $this->time->getRequestTime(),
       'expire' => $expire,
       'tags' => $tags,
     ];
@@ -148,7 +160,7 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
    */
   public function invalidate($cid) {
     if (isset($this->cache[$cid])) {
-      $this->cache[$cid]->expire = $this->getRequestTime() - 1;
+      $this->cache[$cid]->expire = $this->time->getRequestTime() - 1;
     }
   }
 
@@ -158,7 +170,7 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
   public function invalidateMultiple(array $cids) {
     $items = array_intersect_key($this->cache, array_flip($cids));
     foreach ($items as $cid => $item) {
-      $this->cache[$cid]->expire = $this->getRequestTime() - 1;
+      $this->cache[$cid]->expire = $this->time->getRequestTime() - 1;
     }
   }
 
@@ -168,7 +180,7 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
   public function invalidateTags(array $tags) {
     foreach ($this->cache as $cid => $item) {
       if (array_intersect($tags, $item->tags)) {
-        $this->cache[$cid]->expire = $this->getRequestTime() - 1;
+        $this->cache[$cid]->expire = $this->time->getRequestTime() - 1;
       }
     }
   }
@@ -177,8 +189,9 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
    * {@inheritdoc}
    */
   public function invalidateAll() {
+    @trigger_error("CacheBackendInterface::invalidateAll() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use CacheBackendInterface::deleteAll() or cache tag invalidation instead. See https://www.drupal.org/node/3500622", E_USER_DEPRECATED);
     foreach ($this->cache as $cid => $item) {
-      $this->cache[$cid]->expire = $this->getRequestTime() - 1;
+      $this->cache[$cid]->expire = $this->time->getRequestTime() - 1;
     }
   }
 
@@ -186,6 +199,10 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
    * {@inheritdoc}
    */
   public function garbageCollection() {
+    $requestTime = $this->time->getRequestTime();
+    $this->cache = array_filter($this->cache, function ($item) use ($requestTime) {
+      return $item->expire == Cache::PERMANENT || $item->expire >= $requestTime;
+    });
   }
 
   /**
@@ -196,19 +213,10 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
   }
 
   /**
-   * Wrapper method for REQUEST_TIME constant.
-   *
-   * @return int
-   */
-  protected function getRequestTime() {
-    return defined('REQUEST_TIME') ? REQUEST_TIME : (int) $_SERVER['REQUEST_TIME'];
-  }
-
-  /**
    * Prevents data stored in memory backends from being serialized.
    */
-  public function __sleep() {
-    return [];
+  public function __sleep(): array {
+    return ['time'];
   }
 
   /**

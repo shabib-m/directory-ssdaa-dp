@@ -2,7 +2,9 @@
 
 namespace Drupal\Core\Cache;
 
+use Drupal\Component\Serialization\ObjectAwareSerializationInterface;
 use Drupal\Component\Assertion\Inspector;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\DatabaseException;
@@ -28,7 +30,7 @@ class DatabaseBackend implements CacheBackendInterface {
   const DEFAULT_MAX_ROWS = 5000;
 
   /**
-   * -1 means infinite allows numbers of rows for the cache backend.
+   * Indicates that an infinite number of rows is allowed for the cache backend.
    */
   const MAXIMUM_NONE = -1;
 
@@ -40,9 +42,9 @@ class DatabaseBackend implements CacheBackendInterface {
   /**
    * The maximum number of rows that this cache bin table is allowed to store.
    *
-   * @see ::MAXIMUM_NONE
-   *
    * @var int
+   *
+   * @see ::MAXIMUM_NONE
    */
   protected $maxRows;
 
@@ -75,18 +77,29 @@ class DatabaseBackend implements CacheBackendInterface {
    *   The cache tags checksum provider.
    * @param string $bin
    *   The cache bin for which the object is created.
+   * @param \Drupal\Component\Serialization\ObjectAwareSerializationInterface|int|string|null $serializer
+   *   (optional) The serializer to use.
+   * @param \Drupal\Component\Datetime\TimeInterface|int|string|null $time
+   *   The time service.
    * @param int $max_rows
    *   (optional) The maximum number of rows that are allowed in this cache bin
    *   table.
    */
-  public function __construct(Connection $connection, CacheTagsChecksumInterface $checksum_provider, $bin, $max_rows = NULL) {
+  public function __construct(
+    Connection $connection,
+    CacheTagsChecksumInterface $checksum_provider,
+    $bin,
+    protected ObjectAwareSerializationInterface $serializer,
+    protected TimeInterface $time,
+    $max_rows = NULL,
+  ) {
     // All cache tables should be prefixed with 'cache_'.
     $bin = 'cache_' . $bin;
 
     $this->bin = $bin;
     $this->connection = $connection;
     $this->checksumProvider = $checksum_provider;
-    $this->maxRows = $max_rows === NULL ? static::DEFAULT_MAX_ROWS : $max_rows;
+    $this->maxRows = $max_rows ?? static::DEFAULT_MAX_ROWS;
   }
 
   /**
@@ -115,10 +128,22 @@ class DatabaseBackend implements CacheBackendInterface {
     // ::select() is a much smaller proportion of the request.
     $result = [];
     try {
-      $result = $this->connection->query('SELECT [cid], [data], [created], [expire], [serialized], [tags], [checksum] FROM {' . $this->connection->escapeTable($this->bin) . '} WHERE [cid] IN ( :cids[] ) ORDER BY [cid]', [':cids[]' => array_keys($cid_mapping)]);
+      $result = $this->connection->query('SELECT [cid], [data], [created], [expire], [serialized], [tags], [checksum] FROM {' . $this->connection->escapeTable($this->bin) . '} WHERE [cid] IN ( :cids[] ) ORDER BY [cid]', [':cids[]' => array_keys($cid_mapping)])->fetchAll();
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       // Nothing to do.
+    }
+    // Before checking the validity of each item individually, register the
+    // cache tags for all returned cache items for preloading, this allows the
+    // cache tag service to optimize cache tag lookups.
+    if ($this->checksumProvider instanceof CacheTagsChecksumPreloadInterface) {
+      $tags_for_preload = [];
+      foreach ($result as $item) {
+        if ($item->tags) {
+          $tags_for_preload[] = explode(' ', $item->tags);
+        }
+      }
+      $this->checksumProvider->registerCacheTagsForPreload(array_merge(...$tags_for_preload));
     }
     $cache = [];
     foreach ($result as $item) {
@@ -156,7 +181,7 @@ class DatabaseBackend implements CacheBackendInterface {
     $cache->tags = $cache->tags ? explode(' ', $cache->tags) : [];
 
     // Check expire time.
-    $cache->valid = $cache->expire == Cache::PERMANENT || $cache->expire >= REQUEST_TIME;
+    $cache->valid = $cache->expire == Cache::PERMANENT || $cache->expire >= $this->time->getRequestTime();
 
     // Check if invalidateTags() has been called with any of the item's tags.
     if (!$this->checksumProvider->isValid($cache->checksum, $cache->tags)) {
@@ -169,7 +194,7 @@ class DatabaseBackend implements CacheBackendInterface {
 
     // Unserialize and return the cached data.
     if ($cache->serialized) {
-      $cache->data = unserialize($cache->data);
+      $cache->data = $this->serializer->decode($cache->data);
     }
 
     return $cache;
@@ -252,7 +277,7 @@ class DatabaseBackend implements CacheBackendInterface {
         }
 
         if (!is_string($item['data'])) {
-          $fields['data'] = serialize($item['data']);
+          $fields['data'] = $this->serializer->encode($item['data']);
           $fields['serialized'] = 1;
         }
         else {
@@ -345,9 +370,10 @@ class DatabaseBackend implements CacheBackendInterface {
     $cids = array_values(array_map([$this, 'normalizeCid'], $cids));
     try {
       // Update in chunks when a large array is passed.
+      $requestTime = $this->time->getRequestTime();
       foreach (array_chunk($cids, 1000) as $cids_chunk) {
         $this->connection->update($this->bin)
-          ->fields(['expire' => REQUEST_TIME - 1])
+          ->fields(['expire' => $requestTime - 1])
           ->condition('cid', $cids_chunk, 'IN')
           ->execute();
       }
@@ -361,9 +387,10 @@ class DatabaseBackend implements CacheBackendInterface {
    * {@inheritdoc}
    */
   public function invalidateAll() {
+    @trigger_error("CacheBackendInterface::invalidateAll() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use CacheBackendInterface::deleteAll() or cache tag invalidation instead. See https://www.drupal.org/node/3500622", E_USER_DEPRECATED);
     try {
       $this->connection->update($this->bin)
-        ->fields(['expire' => REQUEST_TIME - 1])
+        ->fields(['expire' => $this->time->getRequestTime() - 1])
         ->execute();
     }
     catch (\Exception $e) {
@@ -394,10 +421,10 @@ class DatabaseBackend implements CacheBackendInterface {
 
       $this->connection->delete($this->bin)
         ->condition('expire', Cache::PERMANENT, '<>')
-        ->condition('expire', REQUEST_TIME, '<')
+        ->condition('expire', $this->time->getRequestTime(), '<')
         ->execute();
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       // If the table does not exist, it surely does not have garbage in it.
       // If the table exists, the next garbage collection will clean up.
       // There is nothing to do.
@@ -431,7 +458,7 @@ class DatabaseBackend implements CacheBackendInterface {
     // If another process has already created the cache table, attempting to
     // recreate it will throw an exception. In this case just catch the
     // exception and do nothing.
-    catch (DatabaseException $e) {
+    catch (DatabaseException) {
       return TRUE;
     }
     return FALSE;
@@ -444,7 +471,7 @@ class DatabaseBackend implements CacheBackendInterface {
    * yet the query failed, then the cache is stale and the exception needs to
    * propagate.
    *
-   * @param $e
+   * @param \Exception $e
    *   The exception.
    * @param string|null $table_name
    *   The table name. Defaults to $this->bin.
@@ -468,8 +495,11 @@ class DatabaseBackend implements CacheBackendInterface {
    */
   protected function normalizeCid($cid) {
     // Nothing to do if the ID is a US ASCII string of 255 characters or less.
+    // Additionally check for trailing spaces in the cache ID because MySQL
+    // may or may not take these into account when making comparisons.
+    // @see https://dev.mysql.com/doc/refman/9.0/en/char.html
     $cid_is_ascii = mb_check_encoding($cid, 'ASCII');
-    if (strlen($cid) <= 255 && $cid_is_ascii) {
+    if (strlen($cid) <= 255 && $cid_is_ascii && !str_ends_with($cid, ' ')) {
       return $cid;
     }
     // Return a string that uses as much as possible of the original cache ID
@@ -549,9 +579,10 @@ class DatabaseBackend implements CacheBackendInterface {
   }
 
   /**
-   * The maximum number of rows that this cache bin table is allowed to store.
+   * Gets the maximum number of rows for this cache bin table.
    *
    * @return int
+   *   The maximum number of rows that this cache bin table is allowed to store.
    */
   public function getMaxRows() {
     return $this->maxRows;

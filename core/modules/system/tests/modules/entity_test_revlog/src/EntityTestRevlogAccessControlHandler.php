@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\entity_test_revlog;
 
 use Drupal\Core\Access\AccessResult;
@@ -33,16 +35,12 @@ class EntityTestRevlogAccessControlHandler extends EntityAccessControlHandler {
     }
     elseif ($operation === 'revert') {
       return AccessResult::allowedIf(
-        // Allow revert even if latest.
-        in_array('force allow revert', $labels, TRUE) ||
         // Disallow reverting to latest.
         (!$entity->isDefaultRevision() && !$entity->isLatestRevision() && in_array('revert', $labels, TRUE))
       );
     }
     elseif ($operation === 'delete revision') {
       return AccessResult::allowedIf(
-        // Allow revision deletion even if latest.
-        in_array('force allow delete revision', $labels, TRUE) ||
         // Disallow deleting latest and current revision.
         (!$entity->isLatestRevision() && in_array('delete revision', $labels, TRUE))
       );

@@ -2,7 +2,7 @@ update.settings:
   path: '/admin/reports/updates/settings'
   defaults:
     _form: '\Drupal\update\UpdateSettingsForm'
-    _title: 'Update Manager settings'
+    _title: 'Update Status settings'
   requirements:
     _permission: 'administer site configuration'
 
@@ -22,66 +22,3 @@ update.manual_status:
   requirements:
     _permission: 'administer site configuration'
     _csrf_token: 'TRUE'
-
-update.report_install:
-  path: '/admin/reports/updates/install'
-  defaults:
-    _form: '\Drupal\update\Form\UpdateManagerInstall'
-    _title: 'Add new module or theme'
-  requirements:
-    _permission: 'administer software updates'
-    _access_update_manager: 'TRUE'
-
-update.report_update:
-  path: '/admin/reports/updates/update'
-  defaults:
-    _form: '\Drupal\update\Form\UpdateManagerUpdate'
-    _title: 'Update'
-  requirements:
-    _permission: 'administer software updates'
-    _access_update_manager: 'TRUE'
-
-update.module_install:
-  path: '/admin/modules/install'
-  defaults:
-    _form: '\Drupal\update\Form\UpdateManagerInstall'
-    _title: 'Add new module'
-  requirements:
-    _permission: 'administer software updates'
-    _access_update_manager: 'TRUE'
-
-update.module_update:
-  path: '/admin/modules/update'
-  defaults:
-    _form: '\Drupal\update\Form\UpdateManagerUpdate'
-    _title: 'Update'
-  requirements:
-    _permission: 'administer software updates'
-    _access_update_manager: 'TRUE'
-
-update.theme_install:
-  path: '/admin/theme/install'
-  defaults:
-    _form: '\Drupal\update\Form\UpdateManagerInstall'
-    _title: 'Add new theme'
-  requirements:
-    _permission: 'administer software updates'
-    _access_update_manager: 'TRUE'
-
-update.theme_update:
-  path: '/admin/theme/update'
-  defaults:
-    _form: '\Drupal\update\Form\UpdateManagerUpdate'
-    _title: 'Update'
-  requirements:
-    _permission: 'administer software updates'
-    _access_update_manager: 'TRUE'
-
-update.confirmation_page:
-  path: '/admin/update/ready'
-  defaults:
-    _form: '\Drupal\update\Form\UpdateReady'
-    _title: 'Ready to update'
-  requirements:
-    _permission: 'administer software updates'
-    _access_update_manager: 'TRUE'

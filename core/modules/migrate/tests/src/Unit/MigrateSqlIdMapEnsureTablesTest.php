@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit;
 
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the SQL ID map plugin ensureTables() method.
- *
- * @group migrate
  */
+#[Group('migrate')]
 class MigrateSqlIdMapEnsureTablesTest extends MigrateTestCase {
 
   /**
@@ -23,7 +25,7 @@ class MigrateSqlIdMapEnsureTablesTest extends MigrateTestCase {
   /**
    * Tests the ensureTables method when the tables do not exist.
    */
-  public function testEnsureTablesNotExist() {
+  public function testEnsureTablesNotExist(): void {
     $fields['source_ids_hash'] = [
       'type' => 'varchar',
       'length' => 64,
@@ -115,86 +117,56 @@ class MigrateSqlIdMapEnsureTablesTest extends MigrateTestCase {
       ],
     ];
 
-    $schema = $this->getMockBuilder('Drupal\Core\Database\Schema')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $schema->expects($this->exactly(2))
-      ->method('tableExists')
-      ->willReturnMap([
-        ['migrate_map_sql_idmap_test', FALSE],
-        ['migrate_message_sql_idmap_test', FALSE],
-      ]);
-    $schema->expects($this->exactly(2))
-      ->method('createTable')
-      ->withConsecutive(
-        ['migrate_map_sql_idmap_test', $map_table_schema],
-        ['migrate_message_sql_idmap_test', $table_schema],
-      );
-
-    $this->runEnsureTablesTest($schema);
+    $schema = $this->prophesize('Drupal\Core\Database\Schema');
+    $schema->tableExists('migrate_map_sql_idmap_test')->willReturn(FALSE);
+    $schema->tableExists('migrate_message_sql_idmap_test')->willReturn(FALSE);
+    $schema->createTable('migrate_map_sql_idmap_test', $map_table_schema)->shouldBeCalled();
+    $schema->createTable('migrate_message_sql_idmap_test', $table_schema)->shouldBeCalled();
+    $this->runEnsureTablesTest($schema->reveal());
   }
 
   /**
    * Tests the ensureTables method when the tables exist.
    */
-  public function testEnsureTablesExist() {
-    $schema = $this->getMockBuilder('Drupal\Core\Database\Schema')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $schema->expects($this->exactly(1))
-      ->method('tableExists')
-      ->with('migrate_map_sql_idmap_test')
-      ->willReturn(TRUE);
-    $schema->expects($this->exactly(3))
-      ->method('fieldExists')
-      ->willReturnMap([
-        ['migrate_map_sql_idmap_test', 'rollback_action', FALSE],
-        ['migrate_map_sql_idmap_test', 'hash', FALSE],
-        ['migrate_map_sql_idmap_test', 'source_ids_hash', FALSE],
-      ]);
-    $schema->expects($this->exactly(3))
-      ->method('addField')
-      ->withConsecutive(
-        [
-          'migrate_map_sql_idmap_test', 'rollback_action', [
-            'type' => 'int',
-            'size' => 'tiny',
-            'unsigned' => TRUE,
-            'not null' => TRUE,
-            'default' => 0,
-            'description' => 'Flag indicating what to do for this item on rollback',
-          ],
-        ],
-        [
-          'migrate_map_sql_idmap_test', 'hash', [
-            'type' => 'varchar',
-            'length' => '64',
-            'not null' => FALSE,
-            'description' => 'Hash of source row data, for detecting changes',
-          ],
-        ],
-        [
-          'migrate_map_sql_idmap_test', 'source_ids_hash', [
-            'type' => 'varchar',
-            'length' => '64',
-            'not null' => TRUE,
-            'description' => 'Hash of source ids. Used as primary key',
-          ],
-        ],
-      );
+  public function testEnsureTablesExist(): void {
+    $schema = $this->prophesize('Drupal\Core\Database\Schema');
+    $schema->tableExists('migrate_map_sql_idmap_test')->willReturn(TRUE);
+    $schema->fieldExists('migrate_map_sql_idmap_test', 'rollback_action')->willReturn(FALSE);
+    $schema->fieldExists('migrate_map_sql_idmap_test', 'hash')->willReturn(FALSE);
+    $schema->fieldExists('migrate_map_sql_idmap_test', 'source_ids_hash')->willReturn(FALSE);
+    $schema->addField('migrate_map_sql_idmap_test', 'rollback_action', [
+      'type' => 'int',
+      'size' => 'tiny',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'Flag indicating what to do for this item on rollback',
+    ])->shouldBeCalled();
+    $schema->addField('migrate_map_sql_idmap_test', 'hash', [
+      'type' => 'varchar',
+      'length' => '64',
+      'not null' => FALSE,
+      'description' => 'Hash of source row data, for detecting changes',
+    ])->shouldBeCalled();
+    $schema->addField('migrate_map_sql_idmap_test', 'source_ids_hash', [
+      'type' => 'varchar',
+      'length' => '64',
+      'not null' => TRUE,
+      'description' => 'Hash of source ids. Used as primary key',
+    ])->shouldBeCalled();
 
-    $this->runEnsureTablesTest($schema);
+    $this->runEnsureTablesTest($schema->reveal());
   }
 
   /**
    * Actually run the test.
    *
-   * @param array $schema
+   * @param \Drupal\Core\Database\Schema $schema
    *   The mock schema object with expectations set. The Sql constructor calls
    *   ensureTables() which in turn calls this object and the expectations on
    *   it are the actual test and there are no additional asserts added.
    */
-  protected function runEnsureTablesTest($schema) {
+  protected function runEnsureTablesTest($schema): void {
     $database = $this->getMockBuilder('Drupal\Core\Database\Connection')
       ->disableOriginalConstructor()
       ->getMock();
@@ -202,7 +174,7 @@ class MigrateSqlIdMapEnsureTablesTest extends MigrateTestCase {
       ->method('schema')
       ->willReturn($schema);
     $database->expects($this->any())
-      ->method('tablePrefix')
+      ->method('getPrefix')
       ->willReturn('');
     $migration = $this->getMigration();
     $plugin = $this->createMock('Drupal\migrate\Plugin\MigrateSourceInterface');

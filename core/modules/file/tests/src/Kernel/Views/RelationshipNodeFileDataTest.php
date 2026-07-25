@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\file\Kernel\Views;
 
-use Drupal\Core\Database\Database;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
 use Drupal\node\Entity\Node;
@@ -13,13 +13,14 @@ use Drupal\node\NodeInterface;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
-use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests file on node relationship handler.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class RelationshipNodeFileDataTest extends ViewsKernelTestBase {
 
   /**
@@ -39,10 +40,6 @@ class RelationshipNodeFileDataTest extends ViewsKernelTestBase {
    */
   protected function setUp($import_test_views = TRUE): void {
     parent::setUp($import_test_views);
-
-    if (Database::getConnection()->driver() === 'pgsql') {
-      $this->markTestSkipped('Skipped because PostgreSQL is currently failing: https://www.drupal.org/project/drupal/issues/3364621');
-    }
 
     $this->installSchema('file', 'file_usage');
     $this->installEntitySchema('node');

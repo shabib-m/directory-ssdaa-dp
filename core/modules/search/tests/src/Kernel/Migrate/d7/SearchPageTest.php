@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Kernel\Migrate\d7;
 
+use Drupal\search\Plugin\migrate\source\d7\SearchPage;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests D7 search page source plugin.
- *
- * @covers \Drupal\search\Plugin\migrate\source\d7\SearchPage
- * @group search
  */
+#[CoversClass(SearchPage::class)]
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchPageTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -20,7 +26,7 @@ class SearchPageTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests[0]['source_data'] = [
       'variable' => [
         [

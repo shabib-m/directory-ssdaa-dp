@@ -2,8 +2,10 @@
 
 namespace Drupal\taxonomy\Plugin\migrate\source\d7;
 
-use Drupal\content_translation\Plugin\migrate\source\I18nQueryTrait;
+use Drupal\migrate_drupal\Plugin\migrate\source\I18nQueryTrait;
 use Drupal\migrate\Row;
+
+// cspell:ignore ltlanguage objectid
 
 /**
  * Drupal 7 i18n taxonomy terms source from database.

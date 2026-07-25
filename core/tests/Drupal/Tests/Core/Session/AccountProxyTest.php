@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Session;
 
 use Drupal\Core\Session\AccountInterface;
@@ -7,21 +9,26 @@ use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\Session\UserSession;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @coversDefaultClass \Drupal\Core\Session\AccountProxy
- * @group Session
+ * Tests Drupal\Core\Session\AccountProxy.
  */
+#[CoversClass(AccountProxy::class)]
+#[Group('Session')]
 class AccountProxyTest extends UnitTestCase {
 
   /**
-   * @covers ::id
-   * @covers ::setInitialAccountId
+   * Tests id.
+   *
+   * @legacy-covers ::id
+   * @legacy-covers ::setInitialAccountId
    */
-  public function testId() {
+  public function testId(): void {
     $dispatcher = $this->prophesize(EventDispatcherInterface::class);
     $dispatcher->dispatch(Argument::any(), Argument::any())->willReturn(new Event());
     $account_proxy = new AccountProxy($dispatcher->reveal());
@@ -39,9 +46,9 @@ class AccountProxyTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setInitialAccountId
+   * Tests set initial account id exception.
    */
-  public function testSetInitialAccountIdException() {
+  public function testSetInitialAccountIdException(): void {
     $this->expectException(\LogicException::class);
     $dispatcher = $this->prophesize(EventDispatcherInterface::class);
     $dispatcher->dispatch(Argument::any(), Argument::any())->willReturn(new Event());
@@ -52,9 +59,9 @@ class AccountProxyTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::hasRole
+   * Tests has role.
    */
-  public function testHasRole() {
+  public function testHasRole(): void {
     $dispatcher = $this->prophesize(EventDispatcherInterface::class);
     $dispatcher->dispatch(Argument::any(), Argument::any())->willReturn(new Event());
     $account_proxy = new AccountProxy($dispatcher->reveal());

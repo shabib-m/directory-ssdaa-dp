@@ -6,13 +6,15 @@ namespace Drupal\KernelTests\Core\Batch;
 
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the BatchNegotiator.
- *
- * @group Batch
  */
+#[Group('Batch')]
+#[RunTestsInSeparateProcesses]
 class BatchNegotiatorTest extends KernelTestBase {
 
   /**
@@ -25,7 +27,7 @@ class BatchNegotiatorTest extends KernelTestBase {
   /**
    * Test that the negotiator applies to the batch route.
    */
-  public function testApplies() {
+  public function testApplies(): void {
     $request = Request::create('/batch');
     // Use the router to enhance the object so that a RouteMatch can be created.
     $this->container->get('router')->matchRequest($request);

@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 18b48e99-58d1-42d7-80fc-a0354b1a391d
+  bundle: country
+  default_langcode: ar
+  depends:
+    e7ba72d1-c68f-4378-83b5-da4fd0cf3900: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: لبنان
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: e7ba72d1-c68f-4378-83b5-da4fd0cf3900
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

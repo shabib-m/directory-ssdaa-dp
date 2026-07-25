@@ -1,0 +1,8 @@
+uuid: 0ba6bfb1-5aa3-455d-9ca9-8cb3f6872c19
+langcode: ar
+status: true
+dependencies: {  }
+id: comment
+label: 'التعليقات الإفتراضية'
+target_entity_type_id: node
+description: 'السماح بالتعليق على المحتوى'

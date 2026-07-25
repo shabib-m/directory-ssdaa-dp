@@ -3,10 +3,11 @@
 namespace Drupal\user;
 
 use Drupal\Core\Discovery\YamlDiscovery;
-use Drupal\Core\Controller\ControllerResolverInterface;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Utility\CallableResolver;
 
 /**
  * Provides the available permissions based on yml files.
@@ -68,11 +69,11 @@ class PermissionHandler implements PermissionHandlerInterface {
   protected $yamlDiscovery;
 
   /**
-   * The controller resolver.
+   * The callable resolver.
    *
-   * @var \Drupal\Core\Controller\ControllerResolverInterface
+   * @var \Drupal\Core\Utility\CallableResolver
    */
-  protected $controllerResolver;
+  protected CallableResolver $callableResolver;
 
   /**
    * Constructs a new PermissionHandler.
@@ -81,15 +82,18 @@ class PermissionHandler implements PermissionHandlerInterface {
    *   The module handler.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The string translation.
-   * @param \Drupal\Core\Controller\ControllerResolverInterface $controller_resolver
-   *   The controller resolver.
+   * @param \Drupal\Core\Utility\CallableResolver $callable_resolver
+   *   The callable resolver.
+   * @param \Drupal\Core\Extension\ModuleExtensionList $moduleExtensionList
+   *   The module extension list.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, TranslationInterface $string_translation, ControllerResolverInterface $controller_resolver) {
+  public function __construct(ModuleHandlerInterface $module_handler, TranslationInterface $string_translation, CallableResolver $callable_resolver, protected ModuleExtensionList $moduleExtensionList) {
+    $this->callableResolver = $callable_resolver;
+
     // @todo It would be nice if you could pull all module directories from the
     //   container.
     $this->moduleHandler = $module_handler;
     $this->stringTranslation = $string_translation;
-    $this->controllerResolver = $controller_resolver;
   }
 
   /**
@@ -118,8 +122,8 @@ class PermissionHandler implements PermissionHandlerInterface {
    * {@inheritdoc}
    */
   public function moduleProvidesPermissions($module_name) {
-    // @TODO Static cache this information, see
-    // https://www.drupal.org/node/2339487
+    // @todo Static cache this information.
+    //   https://www.drupal.org/node/2339487
     $permissions = $this->getPermissions();
 
     foreach ($permissions as $permission) {
@@ -144,12 +148,12 @@ class PermissionHandler implements PermissionHandlerInterface {
     $all_callback_permissions = [];
 
     foreach ($this->getYamlDiscovery()->findAll() as $provider => $permissions) {
-      // The top-level 'permissions_callback' is a list of methods in controller
-      // syntax, see \Drupal\Core\Controller\ControllerResolver. These methods
+      // The top-level 'permissions_callback' is a list of methods in callable
+      // syntax, see \Drupal\Core\Utility\CallableResolver. These methods
       // should return an array of permissions in the same structure.
       if (isset($permissions['permission_callbacks'])) {
         foreach ($permissions['permission_callbacks'] as $permission_callback) {
-          $callback = $this->controllerResolver->getControllerFromDefinition($permission_callback);
+          $callback = $this->callableResolver->getCallableFromDefinition($permission_callback);
           if ($callback_permissions = call_user_func($callback)) {
             // Add any callback permissions to the array of permissions. Any
             // defaults can then get processed below.
@@ -179,7 +183,9 @@ class PermissionHandler implements PermissionHandlerInterface {
             'title' => $permission,
           ];
         }
+        // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
         $permission['title'] = $this->t($permission['title']);
+        // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
         $permission['description'] = isset($permission['description']) ? $this->t($permission['description']) : NULL;
         $permission['provider'] = !empty($permission['provider']) ? $permission['provider'] : $provider;
       }
@@ -227,7 +233,7 @@ class PermissionHandler implements PermissionHandlerInterface {
   protected function getModuleNames() {
     $modules = [];
     foreach (array_keys($this->moduleHandler->getModuleList()) as $module) {
-      $modules[$module] = $this->moduleHandler->getName($module);
+      $modules[$module] = $this->moduleExtensionList->getName($module);
     }
     asort($modules);
     return $modules;

@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal_ui\Functional\d7;
 
-use Drupal\Tests\migrate_drupal_ui\Functional\MigrateUpgradeExecuteTestBase;
 use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\Tests\migrate_drupal_ui\Functional\MigrateUpgradeExecuteTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that a double slash is not in d7_file file not found migrate messages.
- *
- * @group migrate_drupal_ui
  */
+#[Group('migrate_drupal_ui')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class DoubleSlashTest extends MigrateUpgradeExecuteTestBase {
 
   /**
@@ -27,6 +33,7 @@ class DoubleSlashTest extends MigrateUpgradeExecuteTestBase {
    */
   protected static $modules = [
     'file',
+    'comment',
     'migrate_drupal_ui',
   ];
 
@@ -42,7 +49,7 @@ class DoubleSlashTest extends MigrateUpgradeExecuteTestBase {
   /**
    * Executes all steps of migrations upgrade.
    */
-  public function testMigrateUpgradeExecute() {
+  public function testMigrateUpgradeExecute(): void {
     // Change fid 1 to a filename that does not exist.
     $this->sourceDatabase
       ->update('file_managed')
@@ -80,35 +87,35 @@ class DoubleSlashTest extends MigrateUpgradeExecuteTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getSourceBasePath() {
+  protected function getSourceBasePath(): string {
     return __DIR__ . '/files';
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEntityCounts() {
+  protected function getEntityCounts(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEntityCountsIncremental() {
+  protected function getEntityCountsIncremental(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getAvailablePaths() {
+  protected function getAvailablePaths(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getMissingPaths() {
+  protected function getMissingPaths(): array {
     return [];
   }
 

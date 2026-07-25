@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal\Core\Render\Attribute\RenderElement;
+
 /**
  * Provides a render element for a pager.
  *
@@ -13,6 +15,7 @@ namespace Drupal\Core\Render\Element;
  * Properties:
  * - #element: (optional, int) The pager ID, to distinguish between multiple
  *   pagers on the same page (defaults to 0).
+ * - #pagination_heading_level: (optional) A heading level for the pager.
  * - #parameters: (optional) An associative array of query string parameters to
  *   append to the pager.
  * - #quantity: The maximum number of numbered page links to create (defaults
@@ -27,10 +30,9 @@ namespace Drupal\Core\Render\Element;
  *   '#type' => 'pager',
  * ];
  * @endcode
- *
- * @RenderElement("pager")
  */
-class Pager extends RenderElement {
+#[RenderElement('pager')]
+class Pager extends RenderElementBase {
 
   /**
    * {@inheritdoc}
@@ -43,6 +45,8 @@ class Pager extends RenderElement {
       '#theme' => 'pager',
       // The pager ID, to distinguish between multiple pagers on the same page.
       '#element' => 0,
+      // The heading level to use for the pager.
+      '#pagination_heading_level' => 'h4',
       // An associative array of query string parameters to append to the pager
       // links.
       '#parameters' => [],
@@ -58,22 +62,25 @@ class Pager extends RenderElement {
   }
 
   /**
-   * #pre_render callback to associate the appropriate cache context.
+   * Render API callback: Associates the appropriate cache context.
    *
+   * This function is assigned as a #pre_render callback.
    *
    * @param array $pager
    *   A renderable array of #type => pager.
    *
    * @return array
+   *   The render array with cache contexts added.
    */
   public static function preRenderPager(array $pager) {
-    // Note: the default pager theme process function
-    // template_preprocess_pager() also calls
+    // Note: the default pager theme preprocess function
+    // \Drupal\Core\Pager\PagerPreprocess::preprocessPager() also calls
     // \Drupal\Core\Pager\PagerManagerInterface::getUpdatedParameters(), which
     // maintains the existing query string. Therefore
-    // template_preprocess_pager() adds the 'url.query_args' cache context,
-    // which causes the more specific cache context below to be optimized away.
-    // In other themes, however, that may not be the case.
+    // \Drupal\Core\Pager\PagerPreprocess::preprocessPager() adds the
+    // 'url.query_args' cache context which causes the more specific cache
+    // context below to be optimized away. In other themes, however, that may
+    // not be the case.
     $pager['#cache']['contexts'][] = 'url.query_args.pagers:' . $pager['#element'];
     return $pager;
   }

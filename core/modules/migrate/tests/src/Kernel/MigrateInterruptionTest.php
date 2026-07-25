@@ -1,24 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
 
-use Drupal\migrate\Event\MigratePostRowSaveEvent;
-use Drupal\migrate\Plugin\MigrationInterface;
-use Drupal\migrate\Event\MigrateEvents;
-use Drupal\migrate\MigrateExecutable;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\migrate\Event\MigrateEvents;
+use Drupal\migrate\Event\MigratePostRowSaveEvent;
+use Drupal\migrate\MigrateExecutable;
+use Drupal\migrate\Plugin\MigrationInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests interruptions triggered during migrations.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class MigrateInterruptionTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['migrate', 'migrate_events_test'];
 
@@ -34,7 +36,7 @@ class MigrateInterruptionTest extends KernelTestBase {
   /**
    * Tests migration interruptions.
    */
-  public function testMigrateEvents() {
+  public function testMigrateEvents(): void {
     // Run a simple little migration, which should trigger one of each event
     // other than map_delete.
     $definition = [
@@ -74,7 +76,7 @@ class MigrateInterruptionTest extends KernelTestBase {
    * @param string $name
    *   The event name.
    */
-  public function postRowSaveEventRecorder(MigratePostRowSaveEvent $event, $name) {
+  public function postRowSaveEventRecorder(MigratePostRowSaveEvent $event, $name): void {
     $event->getMigration()->interruptMigration(MigrationInterface::RESULT_INCOMPLETE);
   }
 

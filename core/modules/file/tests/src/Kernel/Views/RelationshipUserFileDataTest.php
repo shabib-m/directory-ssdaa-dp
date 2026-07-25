@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\file\Kernel\Views;
 
-use Drupal\Core\Database\Database;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
@@ -13,14 +12,16 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\user\Entity\User;
 use Drupal\views\Tests\ViewResultAssertionTrait;
-use Drupal\views\Views;
 use Drupal\views\Tests\ViewTestData;
+use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests file on user relationship handler.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class RelationshipUserFileDataTest extends ViewsKernelTestBase {
 
   use UserCreationTrait;
@@ -33,9 +34,6 @@ class RelationshipUserFileDataTest extends ViewsKernelTestBase {
     'field',
     'file',
     'file_test_views',
-    'system',
-    'user',
-    'views',
   ];
 
   /**
@@ -50,10 +48,6 @@ class RelationshipUserFileDataTest extends ViewsKernelTestBase {
    */
   protected function setUp($import_test_views = TRUE): void {
     parent::setUp($import_test_views);
-
-    if (Database::getConnection()->driver() === 'pgsql') {
-      $this->markTestSkipped('Skipped because PostgreSQL is currently failing: https://www.drupal.org/project/drupal/issues/3364621');
-    }
 
     $this->installSchema('file', ['file_usage']);
     $this->installEntitySchema('user');

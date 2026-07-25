@@ -1,16 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\shortcut\Kernel\Plugin\migrate\source\d7;
 
+use Drupal\shortcut\Plugin\migrate\source\d7\Shortcut;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore mlid plid
 /**
  * Tests D7 Shortcut source plugin.
- *
- * @covers Drupal\shortcut\Plugin\migrate\source\d7\Shortcut
- *
- * @group shortcut
  */
+#[CoversClass(Shortcut::class)]
+#[Group('shortcut')]
+#[RunTestsInSeparateProcesses]
 class ShortcutTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -21,7 +27,7 @@ class ShortcutTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.

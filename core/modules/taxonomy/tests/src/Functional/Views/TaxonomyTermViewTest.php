@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional\Views;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -8,18 +10,18 @@ use Drupal\node\Entity\Node;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the taxonomy term view page and its translation.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TaxonomyTermViewTest extends TaxonomyTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['taxonomy', 'views'];
 
@@ -57,7 +59,7 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
 
     // Create a vocabulary and add two term reference fields to article nodes.
 
-    $this->fieldName1 = mb_strtolower($this->randomMachineName());
+    $this->fieldName1 = $this->randomMachineName();
 
     $handler_settings = [
       'target_bundles' => [
@@ -65,7 +67,7 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
       ],
       'auto_create' => TRUE,
     ];
-    $this->createEntityReferenceField('node', 'article', $this->fieldName1, NULL, 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+    $this->createEntityReferenceField('node', 'article', $this->fieldName1, '', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
     $display_repository = \Drupal::service('entity_display.repository');
@@ -84,7 +86,7 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
   /**
    * Tests that the taxonomy term view is working properly.
    */
-  public function testTaxonomyTermView() {
+  public function testTaxonomyTermView(): void {
     // Create terms in the vocabulary.
     $term = $this->createTerm();
 

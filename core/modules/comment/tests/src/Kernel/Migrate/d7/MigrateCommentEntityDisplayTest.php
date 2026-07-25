@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel\Migrate\d7;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the migration of comment entity displays from Drupal 7.
- *
- * @group comment
- * @group migrate_drupal_7
  */
+#[Group('comment')]
+#[Group('migrate_drupal_7')]
+#[RunTestsInSeparateProcesses]
 class MigrateCommentEntityDisplayTest extends MigrateDrupal7TestBase {
 
   /**
@@ -53,7 +57,7 @@ class MigrateCommentEntityDisplayTest extends MigrateDrupal7TestBase {
   /**
    * Tests the migrated display configuration.
    */
-  public function testMigration() {
+  public function testMigration(): void {
     $this->assertDisplay('node.page.default', 'comment_node_page');
     $this->assertDisplay('node.article.default', 'comment_node_article');
     $this->assertDisplay('node.book.default', 'comment_node_book');

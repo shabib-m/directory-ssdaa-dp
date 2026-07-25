@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Functional\Rest;
 
 use Drupal\image\Entity\ImageStyle;
@@ -33,6 +35,17 @@ abstract class ImageStyleResourceTestBase extends ConfigEntityResourceTestBase {
    * @var string
    */
   protected $effectUuid;
+
+  /**
+   * Marks some tests as skipped because XML cannot be deserialized.
+   */
+  protected function setUp(): void {
+    if ($this->name() === 'testCrud' && static::$format === 'xml') {
+      // @todo Remove this method override in https://www.drupal.org/node/2905655
+      $this->markTestSkipped('XML encoder does not support UUIDs as keys: makes ImageStyle config entity XML serialization crash');
+    }
+    parent::setUp();
+  }
 
   /**
    * {@inheritdoc}

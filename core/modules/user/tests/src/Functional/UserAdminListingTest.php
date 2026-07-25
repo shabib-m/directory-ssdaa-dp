@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the user admin listing if views is not enabled.
  *
- * @group user
  * @see user_admin_account()
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserAdminListingTest extends BrowserTestBase {
 
   /**
@@ -21,7 +26,7 @@ class UserAdminListingTest extends BrowserTestBase {
   /**
    * Tests the listing.
    */
-  public function testUserListing() {
+  public function testUserListing(): void {
     // Ensure the anonymous user cannot access the admin listing.
     $this->drupalGet('admin/people');
     $this->assertSession()->statusCodeEquals(403);
@@ -49,9 +54,7 @@ class UserAdminListingTest extends BrowserTestBase {
     $rid_2 = $this->drupalCreateRole([], 'custom_role_2', 'custom_role_2');
 
     $account = $this->drupalCreateUser();
-    $account->addRole($rid_1);
-    $account->addRole($rid_2);
-    $account->save();
+    $account->addRole($rid_1)->addRole($rid_2)->save();
     $accounts[$account->label()] = $account;
     $role_account_name = $account->label();
 

@@ -1,0 +1,28 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: bcd09d0b-07f5-4ec1-b5af-abef2d2e18d3
+  bundle: main
+  default_langcode: ar
+  depends:
+    3cdfdc2f-e7c2-49fe-b8de-4171a44926f8: taxonomy_term
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'المجلات والتسجيلات الإسلاميه'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      entity: 3cdfdc2f-e7c2-49fe-b8de-4171a44926f8
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

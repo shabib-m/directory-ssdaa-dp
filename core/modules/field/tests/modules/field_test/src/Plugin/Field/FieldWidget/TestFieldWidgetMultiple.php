@@ -1,12 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\field_test\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\Validator\ConstraintViolationInterface;
+
+// cspell:ignore onewidgetfield
 
 /**
  * Plugin implementation of the 'test_field_widget_multiple' widget.
@@ -15,14 +21,13 @@ use Symfony\Component\Validator\ConstraintViolationInterface;
  * hook_field_widget_info_alter().
  *
  * @see field_test_field_widget_info_alter()
- *
- * @FieldWidget(
- *   id = "test_field_widget_multiple",
- *   label = @Translation("Test widget - multiple"),
- *   multiple_values = TRUE,
- *   weight = 10
- * )
  */
+#[FieldWidget(
+  id: 'test_field_widget_multiple',
+  label: new TranslatableMarkup('Test widget - multiple'),
+  multiple_values: TRUE,
+  weight: 10,
+)]
 class TestFieldWidgetMultiple extends WidgetBase {
 
   /**
@@ -53,7 +58,10 @@ class TestFieldWidgetMultiple extends WidgetBase {
    */
   public function settingsSummary() {
     $summary = [];
-    $summary[] = $this->t('@setting: @value', ['@setting' => 'test_widget_setting_multiple', '@value' => $this->getSetting('test_widget_setting_multiple')]);
+    $summary[] = $this->t('@setting: @value', [
+      '@setting' => 'test_widget_setting_multiple',
+      '@value' => $this->getSetting('test_widget_setting_multiple'),
+    ]);
     return $summary;
   }
 

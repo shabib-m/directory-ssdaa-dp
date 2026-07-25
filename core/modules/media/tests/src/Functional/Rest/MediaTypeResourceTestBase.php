@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Functional\Rest;
 
 use Drupal\media\Entity\MediaType;
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 
+/**
+ * Resource test base for the MediaType entity.
+ */
 abstract class MediaTypeResourceTestBase extends ConfigEntityResourceTestBase {
 
   /**
@@ -35,7 +40,7 @@ abstract class MediaTypeResourceTestBase extends ConfigEntityResourceTestBase {
   protected function createEntity() {
     // Create a "Camelids" media type.
     $camelids = MediaType::create([
-      'name' => 'Camelids',
+      'label' => 'Camelids',
       'id' => 'camelids',
       'description' => 'Camelids are large, strictly herbivorous animals with slender necks and long legs.',
       'source' => 'file',
@@ -55,7 +60,7 @@ abstract class MediaTypeResourceTestBase extends ConfigEntityResourceTestBase {
       'description' => 'Camelids are large, strictly herbivorous animals with slender necks and long legs.',
       'field_map' => [],
       'id' => 'camelids',
-      'label' => NULL,
+      'label' => 'Camelids',
       'langcode' => 'en',
       'source' => 'file',
       'queue_thumbnail_downloads' => FALSE,

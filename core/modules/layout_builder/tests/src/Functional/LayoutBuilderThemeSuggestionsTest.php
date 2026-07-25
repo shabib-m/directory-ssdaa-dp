@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Functional;
 
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests template suggestions.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutBuilderThemeSuggestionsTest extends BrowserTestBase {
 
   /**
@@ -58,19 +62,19 @@ class LayoutBuilderThemeSuggestionsTest extends BrowserTestBase {
   /**
    * Tests alterations of the layout list via preprocess functions.
    */
-  public function testLayoutListSuggestion() {
+  public function testLayoutListSuggestion(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 
     $this->drupalGet('node/1/layout');
     $page->clickLink('Add section');
-    $assert_session->pageTextContains('layout_builder_theme_suggestions_test_preprocess_item_list__layouts');
+    $assert_session->pageTextContains('itemListLayouts');
   }
 
   /**
    * Tests that of view mode specific field templates are suggested.
    */
-  public function testFieldBlockViewModeTemplates() {
+  public function testFieldBlockViewModeTemplates(): void {
     $assert_session = $this->assertSession();
 
     $this->drupalGet('node/1');

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ajax_test\Form;
 
 use Drupal\Core\Ajax\AjaxResponse;
@@ -31,7 +33,7 @@ class AjaxTestMessageCommandForm implements FormInterface {
     ];
     $form['button_default'] = [
       '#type' => 'submit',
-      '#name' => 'makedefaultmessage',
+      '#name' => 'make_default_message',
       '#value' => 'Make Message In Default Location',
       '#ajax' => [
         'callback' => '::makeMessageDefault',
@@ -39,7 +41,7 @@ class AjaxTestMessageCommandForm implements FormInterface {
     ];
     $form['button_alternate'] = [
       '#type' => 'submit',
-      '#name' => 'makealternatemessage',
+      '#name' => 'make_alternate_message',
       '#value' => 'Make Message In Alternate Location',
       '#ajax' => [
         'callback' => '::makeMessageAlternate',
@@ -47,7 +49,7 @@ class AjaxTestMessageCommandForm implements FormInterface {
     ];
     $form['button_warning'] = [
       '#type' => 'submit',
-      '#name' => 'makewarningmessage',
+      '#name' => 'make_warning_message',
       '#value' => 'Make Warning Message',
       '#ajax' => [
         'callback' => '::makeMessageWarning',
@@ -101,7 +103,10 @@ class AjaxTestMessageCommandForm implements FormInterface {
    */
   public function makeMessageWarning() {
     $response = new AjaxResponse();
-    return $response->addCommand(new MessageCommand('I am a warning message in the default location.', NULL, ['type' => 'warning', 'announce' => '']));
+    return $response->addCommand(new MessageCommand('I am a warning message in the default location.', NULL, [
+      'type' => 'warning',
+      'announce' => '',
+    ]));
   }
 
 }

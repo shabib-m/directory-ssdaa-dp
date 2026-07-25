@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\captcha\Functional;
 
-use Drupal\captcha\Constants\CaptchaConstants;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\captcha\Constants\CaptchaConstants;
 
 /**
  * Tests CAPTCHA main test case sensitivity.
@@ -53,7 +53,7 @@ class CaptchaTest extends CaptchaWebTestBase {
       'pass' => $user->pass_raw,
       'captcha_response' => '?',
     ];
-    $this->submitForm($edit, $this->t('Log in'), self::LOGIN_HTML_FORM_ID);
+    $this->submitForm($edit, 'Log in', self::LOGIN_HTML_FORM_ID);
     // Check for error message.
     $this->assertSession()->pageTextContains(self::CAPTCHA_WRONG_RESPONSE_ERROR_MESSAGE);
 
@@ -75,7 +75,7 @@ class CaptchaTest extends CaptchaWebTestBase {
       'wrong_captcha_response_message' => $customized_menssage,
     ];
     $this->drupalGet("admin/config/people/captcha");
-    $this->submitForm($edit, $this->t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
 
     // Set a CAPTCHA on login form.
     /** @var \Drupal\captcha\Entity\CaptchaPoint $captcha_point */
@@ -94,7 +94,7 @@ class CaptchaTest extends CaptchaWebTestBase {
       'pass' => $this->adminUser->pass_raw,
       'captcha_response' => '?',
     ];
-    $this->submitForm($edit, $this->t('Log in'), self::LOGIN_HTML_FORM_ID);
+    $this->submitForm($edit, 'Log in', self::LOGIN_HTML_FORM_ID);
     $this->assertSession()->pageTextContains($customized_menssage);
 
   }
@@ -128,7 +128,7 @@ class CaptchaTest extends CaptchaWebTestBase {
     $comment_body = $edit['comment_body[0][value]'];
     $edit['captcha_response'] = $captcha_response;
     $this->drupalGet('comment/reply/node/' . $node->id() . '/comment');
-    $this->submitForm($edit, $this->t('Save'), 'comment-form');
+    $this->submitForm($edit, 'Save', 'comment-form');
 
     if ($should_pass) {
       // There should be no error message.
@@ -199,7 +199,7 @@ class CaptchaTest extends CaptchaWebTestBase {
     $edit = $this->getCommentFormValues();
     $edit['captcha_response'] = 'Test 123';
     $this->drupalGet('comment/reply/node/' . $node->id() . '/comment');
-    $this->submitForm($edit, $this->t('Preview'));
+    $this->submitForm($edit, 'Preview');
 
     // Check that there is no CAPTCHA after preview.
     $this->assertCaptchaPresence(FALSE);
@@ -226,7 +226,7 @@ class CaptchaTest extends CaptchaWebTestBase {
     $edit = $this->getNodeFormValues();
     $edit['captcha_response'] = 'Test 123';
     $this->drupalGet('node/add/page');
-    $this->submitForm($edit, $this->t('Preview'));
+    $this->submitForm($edit, 'Preview');
 
     $this->assertCaptchaPresence(FALSE);
   }
@@ -276,7 +276,7 @@ class CaptchaTest extends CaptchaWebTestBase {
 
     // Create intentionally long id Captcha Point.
     $this->drupalGet(self::CAPTCHA_ADMIN_PATH . '/captcha-points/add');
-    $this->submitForm($form_values, $this->t('Save'));
+    $this->submitForm($form_values, 'Save');
     $this->assertSession()->responseContains($this->t('Captcha Point for %label form was created.', ['%label' => $formId]));
 
     // We need to log out to test the captcha.
@@ -452,7 +452,6 @@ class CaptchaTest extends CaptchaWebTestBase {
     $session->elementExists('css', '#captcha-test-test > fieldset[data-drupal-selector="edit-math-captcha-admin-true"] > div.captcha__element > div.form-item-captcha-response > label.form-required');
     $session->elementTextContains('css', '#captcha-test-test > fieldset[data-drupal-selector="edit-math-captcha-admin-true"] > div.captcha__element > div.form-item-captcha-response > label.form-required', 'Math question');
     // Check other elements:
-    $session->elementExists('css', '#captcha-test-test > fieldset[data-drupal-selector="edit-math-captcha-admin-true"] > div.captcha__element > div.form-item-captcha-response > span.field-prefix');
     $session->elementExists('css', '#captcha-test-test > fieldset[data-drupal-selector="edit-math-captcha-admin-true"] > div.captcha__element > div.form-item-captcha-response > input.form-text');
     $session->elementExists('css', '#captcha-test-test > fieldset[data-drupal-selector="edit-math-captcha-admin-true"] > div.captcha__element > div.form-item-captcha-response > div#edit-captcha-response--description');
     $session->elementTextContains('css', '#captcha-test-test > fieldset[data-drupal-selector="edit-math-captcha-admin-true"] > div.captcha__element > div.form-item-captcha-response > div#edit-captcha-response--description', 'Solve this simple math problem and enter the result. E.g. for 1+3, enter 4.');

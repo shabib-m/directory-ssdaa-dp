@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: ae43a2a9-8915-4df3-9b2a-67fba9673f2f
+  bundle: country
+  default_langcode: ar
+  depends:
+    37aca007-a5e9-41d9-bde2-5dc134e185d3: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: الاردن
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 37aca007-a5e9-41d9-bde2-5dc134e185d3
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

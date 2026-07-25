@@ -1,14 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Kernel\Migrate\d6;
 
 use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group migrate_drupal_6
+ * Tests Migrate Language.
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateLanguageTest extends MigrateDrupal6TestBase {
 
   /**
@@ -44,7 +50,7 @@ class MigrateLanguageTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of Drupal 6 languages to configurable language entities.
    */
-  public function testLanguageMigration() {
+  public function testLanguageMigration(): void {
     $this->executeMigration('language');
     $this->assertLanguage('en', 'English');
     $this->assertLanguage('fr', 'French');

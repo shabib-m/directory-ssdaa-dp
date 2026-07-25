@@ -2,10 +2,13 @@
 
 namespace Drupal\text\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\text\TextSummary;
 
 /**
  * Plugin implementation of the 'text_trimmed' formatter.
@@ -14,17 +17,16 @@ use Drupal\Core\Security\TrustedCallbackInterface;
  * 'text_summary_or_trimmed' formatter.
  *
  * @see \Drupal\text\Field\Formatter\TextSummaryOrTrimmedFormatter
- *
- * @FieldFormatter(
- *   id = "text_trimmed",
- *   label = @Translation("Trimmed"),
- *   field_types = {
- *     "text",
- *     "text_long",
- *     "text_with_summary"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'text_trimmed',
+  label: new TranslatableMarkup('Trimmed'),
+  field_types: [
+    'text',
+    'text_long',
+    'text_with_summary',
+  ],
+)]
 class TextTrimmedFormatter extends FormatterBase implements TrustedCallbackInterface {
 
   /**
@@ -100,7 +102,7 @@ class TextTrimmedFormatter extends FormatterBase implements TrustedCallbackInter
   }
 
   /**
-   * Pre-render callback: Renders a processed text element's #markup as a summary.
+   * Pre-render callback: Renders a processed text element's #markup summary.
    *
    * @param array $element
    *   A structured array with the following key-value pairs:
@@ -109,16 +111,16 @@ class TextTrimmedFormatter extends FormatterBase implements TrustedCallbackInter
    *     filter the text. Defaults to the fallback format. See
    *     filter_fallback_format().
    *   - #text_summary_trim_length: the desired character length of the summary
-   *     (used by text_summary())
+   *     (used by \Drupal\text\TextSummary::generate())
    *
    * @return array
    *   The passed-in element with the filtered text in '#markup' trimmed.
    *
    * @see filter_pre_render_text()
-   * @see text_summary()
+   * @see \Drupal\text\TextSummary::generate()
    */
   public static function preRenderSummary(array $element) {
-    $element['#markup'] = text_summary($element['#markup'], $element['#format'], $element['#text_summary_trim_length']);
+    $element['#markup'] = \Drupal::service(TextSummary::class)->generate($element['#markup'], $element['#format'], $element['#text_summary_trim_length']);
     return $element;
   }
 

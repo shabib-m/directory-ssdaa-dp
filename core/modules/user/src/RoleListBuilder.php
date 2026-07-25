@@ -2,6 +2,7 @@
 
 namespace Drupal\user;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\DraggableListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -34,9 +35,11 @@ class RoleListBuilder extends DraggableListBuilder {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    */
-  public function __construct(EntityTypeInterface $entityType,
-                              EntityStorageInterface $storage,
-                              MessengerInterface $messenger) {
+  public function __construct(
+    EntityTypeInterface $entityType,
+    EntityStorageInterface $storage,
+    MessengerInterface $messenger,
+  ) {
     parent::__construct($entityType, $storage);
     $this->messenger = $messenger;
   }
@@ -63,7 +66,7 @@ class RoleListBuilder extends DraggableListBuilder {
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header['label'] = t('Name');
+    $header['label'] = $this->t('Name');
     return $header + parent::buildHeader();
   }
 
@@ -78,12 +81,14 @@ class RoleListBuilder extends DraggableListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOperations(EntityInterface $entity) {
-    $operations = parent::getDefaultOperations($entity);
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $args = func_get_args();
+    $cacheability = $args[1] ?? new CacheableMetadata();
+    $operations = parent::getDefaultOperations($entity, $cacheability);
 
     if ($entity->hasLinkTemplate('edit-permissions-form')) {
       $operations['permissions'] = [
-        'title' => t('Edit permissions'),
+        'title' => $this->t('Edit permissions'),
         'weight' => 20,
         'url' => $entity->toUrl('edit-permissions-form'),
       ];

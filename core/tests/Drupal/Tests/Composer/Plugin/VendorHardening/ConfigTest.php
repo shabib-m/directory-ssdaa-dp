@@ -1,24 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Composer\Plugin\VendorHardening;
 
 use Composer\Package\RootPackageInterface;
 use Drupal\Composer\Plugin\VendorHardening\Config;
-use Drupal\Tests\Traits\PhpUnitWarnings;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @coversDefaultClass Drupal\Composer\Plugin\VendorHardening\Config
- * @group VendorHardening
+ * Tests Drupal\Composer\Plugin\VendorHardening\Config.
  */
+#[CoversClass(Config::class)]
+#[Group('VendorHardening')]
 class ConfigTest extends TestCase {
 
-  use PhpUnitWarnings;
-
   /**
-   * @covers ::getPathsForPackage
+   * Tests get paths for package mixed case.
    */
-  public function testGetPathsForPackageMixedCase() {
+  public function testGetPathsForPackageMixedCase(): void {
     $config = $this->getMockBuilder(Config::class)
       ->onlyMethods(['getAllCleanupPaths'])
       ->disableOriginalConstructor()
@@ -32,13 +35,13 @@ class ConfigTest extends TestCase {
   }
 
   /**
-   * @covers ::getAllCleanupPaths
+   * Tests no root merge config.
+   *
+   * @legacy-covers ::getAllCleanupPaths
    */
-  public function testNoRootMergeConfig() {
+  public function testNoRootMergeConfig(): void {
     // Root package has no extra field.
-    $root = $this->getMockBuilder(RootPackageInterface::class)
-      ->onlyMethods(['getExtra'])
-      ->getMockForAbstractClass();
+    $root = $this->createMock(RootPackageInterface::class);
     $root->expects($this->once())
       ->method('getExtra')
       ->willReturn([]);
@@ -55,13 +58,13 @@ class ConfigTest extends TestCase {
   }
 
   /**
-   * @covers ::getAllCleanupPaths
+   * Tests root merge config.
+   *
+   * @legacy-covers ::getAllCleanupPaths
    */
-  public function testRootMergeConfig() {
+  public function testRootMergeConfig(): void {
     // Root package has configuration in extra.
-    $root = $this->getMockBuilder(RootPackageInterface::class)
-      ->onlyMethods(['getExtra'])
-      ->getMockForAbstractClass();
+    $root = $this->createMock(RootPackageInterface::class);
     $root->expects($this->once())
       ->method('getExtra')
       ->willReturn([
@@ -82,13 +85,14 @@ class ConfigTest extends TestCase {
   }
 
   /**
-   * @covers ::getAllCleanupPaths
+   * Tests mixed case config cleanup packages.
+   *
+   * @legacy-covers ::getAllCleanupPaths
    */
-  public function testMixedCaseConfigCleanupPackages() {
+  #[RunInSeparateProcess]
+  public function testMixedCaseConfigCleanupPackages(): void {
     // Root package has configuration in extra.
-    $root = $this->getMockBuilder(RootPackageInterface::class)
-      ->onlyMethods(['getExtra'])
-      ->getMockForAbstractClass();
+    $root = $this->createMock(RootPackageInterface::class);
     $root->expects($this->once())
       ->method('getExtra')
       ->willReturn([
@@ -104,8 +108,8 @@ class ConfigTest extends TestCase {
     // Put some mixed-case in the defaults.
     $ref_default = new \ReflectionProperty($config, 'defaultConfig');
     $ref_default->setValue($config, [
-      'BeHatted/Mank' => ['tests'],
-      'SymFunic/HTTPFoundational' => ['src'],
+      'BeHatted/Monk' => ['tests'],
+      'SymPhony/HTTPFoundational' => ['src'],
     ]);
 
     $plugin_config = $ref_plugin_config->invoke($config);
@@ -113,6 +117,25 @@ class ConfigTest extends TestCase {
     foreach (array_keys($plugin_config) as $package_name) {
       $this->assertDoesNotMatchRegularExpression('/[A-Z]/', $package_name);
     }
+  }
+
+  /**
+   * Tests skip clean.
+   *
+   * @legacy-covers ::getAllCleanupPaths
+   */
+  public function testSkipClean(): void {
+    $root = $this->createMock(RootPackageInterface::class);
+    $root->expects($this->once())
+      ->method('getExtra')
+      ->willReturn([
+        'drupal-core-vendor-hardening' => [
+          'composer/composer' => FALSE,
+        ],
+      ]);
+
+    $plugin_config = (new Config($root))->getAllCleanupPaths();
+    $this->assertArrayNotHasKey('composer/composer', $plugin_config);
   }
 
 }

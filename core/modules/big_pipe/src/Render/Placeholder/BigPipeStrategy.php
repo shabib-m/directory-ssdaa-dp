@@ -106,9 +106,21 @@ class BigPipeStrategy implements PlaceholderStrategyInterface {
    * {@inheritdoc}
    */
   public function processPlaceholders(array $placeholders) {
+    // Prevent placeholders from being processed by BigPipe if the request is
+    // a sub request. BigPipe cannot process placeholder in sub requests because
+    // the request stack is not the same when BigPipe is rendering the
+    // placeholders.
+    if ($this->requestStack->getParentRequest()) {
+      return [];
+    }
+
     $request = $this->requestStack->getCurrentRequest();
 
-    // @todo remove this check when https://www.drupal.org/node/2367555 lands.
+    // Prevent placeholders from being processed by BigPipe on uncacheable
+    // request methods. For example, a form rendered inside a placeholder will
+    // be rendered as soon as possible before any headers are sent, so that it
+    // can be detected, submitted, and redirected immediately.
+    // @todo https://www.drupal.org/node/2367555
     if (!$request->isMethodCacheable()) {
       return [];
     }

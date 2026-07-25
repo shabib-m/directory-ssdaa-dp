@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\FunctionalJavascript\Plugin\views\Handler;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the contextual filter handler UI.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ContextualFilterTest extends WebDriverTestBase {
 
   /**
@@ -42,9 +46,6 @@ class ContextualFilterTest extends WebDriverTestBase {
 
     ViewTestData::createTestViews(static::class, ['views_test_config']);
 
-    // Always show advanced column.
-    \Drupal::configFactory()->getEditable('views.settings')->set('ui.show.advanced_column', TRUE)->save();
-
     // Disable automatic live preview to make the sequence of calls clearer. And
     // prevent errors on saving the view with the preview ajax load that are
     // cancelled.
@@ -57,7 +58,7 @@ class ContextualFilterTest extends WebDriverTestBase {
   /**
    * Tests adding a contextual filter handler through the UI.
    */
-  public function testAddContextualFilterUI() {
+  public function testAddContextualFilterUI(): void {
     $this->drupalGet('/admin/structure/views/view/test_field_body');
 
     $web_assert = $this->assertSession();

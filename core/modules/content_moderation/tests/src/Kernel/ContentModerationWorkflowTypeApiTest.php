@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Kernel;
 
+use Drupal\content_moderation\Plugin\WorkflowType\ContentModeration;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\workflows\Entity\Workflow;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the API of the ContentModeration workflow type plugin.
- *
- * @group content_moderation
- *
- * @coversDefaultClass \Drupal\content_moderation\Plugin\WorkflowType\ContentModeration
  */
+#[CoversClass(ContentModeration::class)]
+#[Group('content_moderation')]
+#[RunTestsInSeparateProcesses]
 class ContentModerationWorkflowTypeApiTest extends KernelTestBase {
 
   /**
@@ -22,9 +27,7 @@ class ContentModerationWorkflowTypeApiTest extends KernelTestBase {
   protected $workflow;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'workflows',
@@ -40,11 +43,13 @@ class ContentModerationWorkflowTypeApiTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::getBundlesForEntityType
-   * @covers ::addEntityTypeAndBundle
-   * @covers ::removeEntityTypeAndBundle
+   * Tests get bundles for entity type.
+   *
+   * @legacy-covers ::getBundlesForEntityType
+   * @legacy-covers ::addEntityTypeAndBundle
+   * @legacy-covers ::removeEntityTypeAndBundle
    */
-  public function testGetBundlesForEntityType() {
+  public function testGetBundlesForEntityType(): void {
     /** @var \Drupal\content_moderation\Plugin\WorkflowType\ContentModeration $workflow_plugin */
     $workflow_plugin = $this->workflow->getTypePlugin();
     // The content moderation plugin does not validate the existence of the
@@ -58,11 +63,13 @@ class ContentModerationWorkflowTypeApiTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::appliesToEntityTypeAndBundle
-   * @covers ::addEntityTypeAndBundle
-   * @covers ::removeEntityTypeAndBundle
+   * Tests applies to entity type and bundle.
+   *
+   * @legacy-covers ::appliesToEntityTypeAndBundle
+   * @legacy-covers ::addEntityTypeAndBundle
+   * @legacy-covers ::removeEntityTypeAndBundle
    */
-  public function testAppliesToEntityTypeAndBundle() {
+  public function testAppliesToEntityTypeAndBundle(): void {
     /** @var \Drupal\content_moderation\Plugin\WorkflowType\ContentModeration $workflow_plugin */
     $workflow_plugin = $this->workflow->getTypePlugin();
     // The content moderation plugin does not validate the existence of the
@@ -76,9 +83,9 @@ class ContentModerationWorkflowTypeApiTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::addEntityTypeAndBundle
+   * Tests add entity type and bundle.
    */
-  public function testAddEntityTypeAndBundle() {
+  public function testAddEntityTypeAndBundle(): void {
     /** @var \Drupal\content_moderation\Plugin\WorkflowType\ContentModeration $workflow_plugin */
     $workflow_plugin = $this->workflow->getTypePlugin();
 
@@ -99,10 +106,12 @@ class ContentModerationWorkflowTypeApiTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::addEntityTypeAndBundle
-   * @covers ::removeEntityTypeAndBundle
+   * Tests remove entity type and bundle.
+   *
+   * @legacy-covers ::addEntityTypeAndBundle
+   * @legacy-covers ::removeEntityTypeAndBundle
    */
-  public function testRemoveEntityTypeAndBundle() {
+  public function testRemoveEntityTypeAndBundle(): void {
     /** @var \Drupal\content_moderation\Plugin\WorkflowType\ContentModeration $workflow_plugin */
     $workflow_plugin = $this->workflow->getTypePlugin();
 

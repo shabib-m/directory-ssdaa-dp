@@ -1,29 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Entity;
 
+use Drupal\Core\Access\AccessibleInterface;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\Container;
+use Drupal\Core\Entity\EntityAccessCheck;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Routing\Route;
-use Drupal\Core\Access\AccessibleInterface;
-use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Entity\EntityAccessCheck;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * Unit test of entity access checking system.
- *
- * @coversDefaultClass \Drupal\Core\Entity\EntityAccessCheck
- *
- * @group Access
- * @group Entity
  */
+#[CoversClass(EntityAccessCheck::class)]
+#[Group('Access')]
+#[Group('Entity')]
 class EntityAccessCheckTest extends UnitTestCase {
 
   /**
@@ -41,7 +43,7 @@ class EntityAccessCheckTest extends UnitTestCase {
   /**
    * Tests the method for checking access to routes.
    */
-  public function testAccess() {
+  public function testAccess(): void {
     $route = new Route('/foo/{var_name}', [], ['_entity_access' => 'var_name.update'], ['parameters' => ['var_name' => ['type' => 'entity:node']]]);
     /** @var \Drupal\Core\Session\AccountInterface $account */
     $account = $this->prophesize(AccountInterface::class)->reveal();
@@ -62,9 +64,9 @@ class EntityAccessCheckTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::access
+   * Tests access with type placeholder.
    */
-  public function testAccessWithTypePlaceholder() {
+  public function testAccessWithTypePlaceholder(): void {
     $route = new Route('/foo/{entity_type}/{var_name}', [], ['_entity_access' => 'var_name.update'], ['parameters' => ['var_name' => ['type' => 'entity:{entity_type}']]]);
     /** @var \Drupal\Core\Session\AccountInterface $account */
     $account = $this->prophesize(AccountInterface::class)->reveal();
@@ -82,9 +84,9 @@ class EntityAccessCheckTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::access
+   * Tests access with different route parameters.
    */
-  public function testAccessWithDifferentRouteParameters() {
+  public function testAccessWithDifferentRouteParameters(): void {
     $route = new Route(
       '/foo/{var_name}',
       [],
@@ -114,10 +116,10 @@ class EntityAccessCheckTest extends UnitTestCase {
    * Wrap any object with a route match, and return that.
    *
    * @param object $object
-   *   Any object, including prophesized mocks based on interfaces.
+   *   Any object, including mocks based on interfaces.
    *
    * @return \Drupal\Core\Routing\RouteMatchInterface
-   *   A prophesized RouteMatchInterface.
+   *   A mock RouteMatchInterface.
    */
   private function createRouteMatchForObject(\stdClass $object) {
     $route_match = $this->prophesize(RouteMatchInterface::class);

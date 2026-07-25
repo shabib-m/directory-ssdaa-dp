@@ -2,6 +2,7 @@
 
 namespace Drupal\field\Plugin\migrate\process\d6;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
@@ -9,11 +10,20 @@ use Drupal\migrate\Row;
 // cspell:ignore filefield imagefield
 
 /**
- * @MigrateProcessPlugin(
- *   id = "d6_field_field_settings"
- * )
+ * Determines the field instance settings.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3533560
  */
+#[MigrateProcess('d6_field_field_settings')]
 class FieldInstanceSettings extends ProcessPluginBase {
+
+  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560', E_USER_DEPRECATED);
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
   /**
    * {@inheritdoc}
@@ -71,7 +81,7 @@ class FieldInstanceSettings extends ProcessPluginBase {
    * as D8 uses "KB" and "MB" respectively.
    *
    * @param string $size_string
-   *   The size string, eg 10M
+   *   The size string, eg "10M".
    *
    * @return string
    *   The D8 version of the size string.

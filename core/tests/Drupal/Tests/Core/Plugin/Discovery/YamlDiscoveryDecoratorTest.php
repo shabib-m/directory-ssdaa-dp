@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Plugin\Discovery;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Plugin\Discovery\YamlDiscoveryDecorator;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * YamlDiscoveryDecorator unit tests.
- *
- * @group Plugin
  */
+#[Group('Plugin')]
 class YamlDiscoveryDecoratorTest extends UnitTestCase {
 
   /**
@@ -70,7 +72,7 @@ class YamlDiscoveryDecoratorTest extends UnitTestCase {
   /**
    * Tests the getDefinitions() method.
    */
-  public function testGetDefinitions() {
+  public function testGetDefinitions(): void {
     $definitions = $this->discoveryDecorator->getDefinitions();
 
     $this->assertIsArray($definitions);

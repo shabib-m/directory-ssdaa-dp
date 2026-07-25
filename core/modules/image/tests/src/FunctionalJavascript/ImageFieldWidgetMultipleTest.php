@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\FunctionalJavascript;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -7,12 +9,14 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\image\Kernel\ImageFieldCreationTrait;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the image field widget support multiple upload correctly.
- *
- * @group image
  */
+#[Group('image')]
+#[RunTestsInSeparateProcesses]
 class ImageFieldWidgetMultipleTest extends WebDriverTestBase {
 
   use ImageFieldCreationTrait;
@@ -40,7 +44,7 @@ class ImageFieldWidgetMultipleTest extends WebDriverTestBase {
     $field_name = 'images';
     $storage_settings = ['cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED];
     $field_settings = ['alt_field_required' => 0];
-    $this->createImageField($field_name, 'article', $storage_settings, $field_settings);
+    $this->createImageField($field_name, 'node', 'article', $storage_settings, $field_settings);
     $this->drupalLogin($this->drupalCreateUser(['access content', 'create article content']));
     $this->drupalGet('node/add/article');
     $this->assertSession()->fieldExists('title[0][value]')->setValue('Test');

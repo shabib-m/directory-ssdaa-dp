@@ -5,6 +5,7 @@ namespace Drupal\Core\ImageToolkit;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkit;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
@@ -37,8 +38,20 @@ class ImageToolkitManager extends DefaultPluginManager {
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
    */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, ConfigFactoryInterface $config_factory) {
-    parent::__construct('Plugin/ImageToolkit', $namespaces, $module_handler, 'Drupal\Core\ImageToolkit\ImageToolkitInterface', 'Drupal\Core\ImageToolkit\Annotation\ImageToolkit');
+  public function __construct(
+    \Traversable $namespaces,
+    CacheBackendInterface $cache_backend,
+    ModuleHandlerInterface $module_handler,
+    ConfigFactoryInterface $config_factory,
+  ) {
+    parent::__construct(
+      'Plugin/ImageToolkit',
+      $namespaces,
+      $module_handler,
+      ImageToolkitInterface::class,
+      ImageToolkit::class,
+      'Drupal\Core\ImageToolkit\Annotation\ImageToolkit',
+    );
 
     $this->setCacheBackend($cache_backend, 'image_toolkit_plugins');
     $this->configFactory = $config_factory;
@@ -47,7 +60,7 @@ class ImageToolkitManager extends DefaultPluginManager {
   /**
    * Gets the default image toolkit ID.
    *
-   * @return string|bool
+   * @return string|false
    *   ID of the default toolkit, or FALSE on error.
    */
   public function getDefaultToolkitId() {
@@ -57,8 +70,7 @@ class ImageToolkitManager extends DefaultPluginManager {
     if (!isset($toolkits[$toolkit_id]) || !class_exists($toolkits[$toolkit_id]['class'])) {
       // The selected toolkit isn't available so return the first one found. If
       // none are available this will return FALSE.
-      reset($toolkits);
-      $toolkit_id = key($toolkits);
+      $toolkit_id = array_key_first($toolkits);
     }
 
     return $toolkit_id;
@@ -96,6 +108,21 @@ class ImageToolkitManager extends DefaultPluginManager {
     }
 
     return $output;
+  }
+
+  /**
+   * Returns all valid extensions.
+   *
+   * @return string[]
+   *   All possible valid extensions.
+   *
+   * @see \Drupal\image\Plugin\ImageEffect\ConvertImageEffect::buildConfigurationForm()
+   *
+   * @internal
+   * @todo Revisit in https://www.drupal.org/node/3446364
+   */
+  public static function getAllValidExtensions(): array {
+    return \Drupal::service('image.toolkit.manager')->getDefaultToolkit()->getSupportedExtensions();
   }
 
 }

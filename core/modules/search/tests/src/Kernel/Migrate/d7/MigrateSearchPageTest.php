@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Kernel\Migrate\d7;
 
 use Drupal\Core\Database\Database;
-use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 use Drupal\search\Entity\SearchPage;
+use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests migration of search page status and settings.
- *
- * @group migrate_drupal_7
  */
+#[Group('migrate_drupal_7')]
+#[RunTestsInSeparateProcesses]
 class MigrateSearchPageTest extends MigrateDrupal7TestBase {
 
   /**
@@ -34,7 +38,7 @@ class MigrateSearchPageTest extends MigrateDrupal7TestBase {
    *
    * @internal
    */
-  protected function assertEntity(string $id, string $path, bool $status = FALSE, array $expected_config = NULL): void {
+  protected function assertEntity(string $id, string $path, bool $status = FALSE, ?array $expected_config = NULL): void {
     /** @var \Drupal\search\Entity\SearchPage $search_page */
     $search_page = SearchPage::load($id);
     $this->assertSame($id, $search_page->id());
@@ -49,9 +53,9 @@ class MigrateSearchPageTest extends MigrateDrupal7TestBase {
   /**
    * Tests migration of search status and settings to search page entity.
    */
-  public function testSearchPage() {
-    $this->enableModules(['node']);
-    $this->installConfig(['search']);
+  public function testSearchPage(): void {
+    $this->enableModules(['node', 'search_node']);
+    $this->installConfig(['search', 'search_node']);
     $this->executeMigration('d7_search_page');
     $configuration = [
       'rankings' => [
@@ -97,7 +101,7 @@ class MigrateSearchPageTest extends MigrateDrupal7TestBase {
   /**
    * Tests that search page is only migrated for modules enabled on D8 site.
    */
-  public function testModuleExists() {
+  public function testModuleExists(): void {
     $this->installConfig(['search']);
     $this->executeMigration('d7_search_page');
 
@@ -108,9 +112,9 @@ class MigrateSearchPageTest extends MigrateDrupal7TestBase {
   /**
    * Tests that a search page will be created if it does not exist.
    */
-  public function testUserSearchCreate() {
-    $this->enableModules(['node']);
-    $this->installConfig(['search']);
+  public function testUserSearchCreate(): void {
+    $this->enableModules(['node', 'search_node']);
+    $this->installConfig(['search', 'search_node']);
     /** @var \Drupal\search\Entity\SearchPage $search_page */
     $search_page = SearchPage::load('user_search');
     $search_page->delete();

@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Entity;
 
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\Tests\views\Functional\ViewTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests views base field access.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class BaseFieldAccessTest extends ViewTestBase {
 
   /**
@@ -20,9 +24,7 @@ class BaseFieldAccessTest extends ViewTestBase {
   public static $testViews = ['test_entity_test_protected_access'];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'views', 'views_test_config', 'entity_test', 'node', 'views_entity_test',
@@ -62,7 +64,7 @@ class BaseFieldAccessTest extends ViewTestBase {
   /**
    * Tests access to protected base fields.
    */
-  public function testProtectedField() {
+  public function testProtectedField(): void {
     $this->drupalGet('test-entity-protected-access');
     $this->assertSession()->pageTextContains('ok to see this one');
     $this->assertSession()->pageTextNotContains('no access value');

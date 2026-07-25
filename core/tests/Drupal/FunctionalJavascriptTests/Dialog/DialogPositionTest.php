@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests\Dialog;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the JavaScript functionality of the dialog position.
- *
- * @group dialog
  */
+#[Group('dialog')]
+#[RunTestsInSeparateProcesses]
 class DialogPositionTest extends WebDriverTestBase {
 
   /**
@@ -24,7 +28,7 @@ class DialogPositionTest extends WebDriverTestBase {
   /**
    * Tests if the dialog UI works properly with block layout page.
    */
-  public function testDialogOpenAndClose() {
+  public function testDialogOpenAndClose(): void {
     $admin_user = $this->drupalCreateUser(['administer blocks']);
     $this->drupalLogin($admin_user);
     $this->drupalGet('admin/structure/block');
@@ -43,7 +47,6 @@ class DialogPositionTest extends WebDriverTestBase {
     // Close the dialog again.
     $closeButton = $page->find('css', '.ui-dialog-titlebar-close');
     $closeButton->click();
-    $assert_session->assertWaitOnAjaxRequest();
     $dialog = $page->find('css', '.ui-dialog');
     $this->assertNull($dialog, 'Dialog is closed after clicking the close button.');
 
@@ -51,7 +54,7 @@ class DialogPositionTest extends WebDriverTestBase {
     // finish as no Javascript errors should have been triggered. If there were
     // javascript errors the test will fail on that.
     $session->resizeWindow(625, 625);
-    $assert_session->assertWaitOnAjaxRequest();
+    usleep(5000);
   }
 
 }

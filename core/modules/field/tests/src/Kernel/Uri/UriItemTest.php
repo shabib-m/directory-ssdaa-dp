@@ -1,19 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Uri;
 
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\field\Kernel\FieldKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests URI field functionality.
  *
  * @see \Drupal\Core\Field\Plugin\Field\FieldType\UriItem
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class UriItemTest extends FieldKernelTestBase {
 
   /**
@@ -33,11 +37,11 @@ class UriItemTest extends FieldKernelTestBase {
   /**
    * Tests URI field.
    */
-  public function testUriField() {
+  public function testUriField(): void {
     $label = $this->randomMachineName();
 
     // Create a field with settings to validate.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $this->fieldStorage = FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'entity_test',

@@ -51,20 +51,6 @@ interface UserInterface extends ContentEntityInterface, EntityChangedInterface, 
   const TIMEZONE_SELECT = 2;
 
   /**
-   * Whether a user has a certain role.
-   *
-   * @param string $rid
-   *   The role ID to check.
-   *
-   * @return bool
-   *   Returns TRUE if the user has the role, otherwise FALSE.
-   *
-   * @todo in Drupal 11, move method to Drupal\Core\Session\AccountInterface.
-   * @see https://www.drupal.org/node/3228209
-   */
-  public function hasRole($rid);
-
-  /**
    * Add a role to a user.
    *
    * @param string $rid
@@ -107,7 +93,7 @@ interface UserInterface extends ContentEntityInterface, EntityChangedInterface, 
    * Sets the user password.
    *
    * @param string $password
-   *   The new unhashed password.
+   *   The new un-hashed password.
    *
    * @return $this
    *   The called user entity.
@@ -134,7 +120,7 @@ interface UserInterface extends ContentEntityInterface, EntityChangedInterface, 
   public function getCreatedTime();
 
   /**
-   * Sets the UNIX timestamp when the user last accessed the site..
+   * Sets the UNIX timestamp when the user last accessed the site.
    *
    * @param int $timestamp
    *   Timestamp of the last access.

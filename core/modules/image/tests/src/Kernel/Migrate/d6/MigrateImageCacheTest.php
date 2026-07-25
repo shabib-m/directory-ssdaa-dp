@@ -1,19 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Kernel\Migrate\d6;
 
 use Drupal\Core\Database\Database;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\image\ImageEffectPluginCollection;
-use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Exception\RequirementsException;
+use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests migration of ImageCache presets to image styles.
- *
- * @group image
  */
+#[Group('image')]
+#[RunTestsInSeparateProcesses]
 class MigrateImageCacheTest extends MigrateDrupal6TestBase {
 
   /**
@@ -27,7 +31,7 @@ class MigrateImageCacheTest extends MigrateDrupal6TestBase {
   /**
    * Tests that an exception is thrown when ImageCache is not installed.
    */
-  public function testMissingTable() {
+  public function testMissingTable(): void {
     $this->sourceDatabase->update('system')
       ->fields([
         'status' => 0,
@@ -45,7 +49,7 @@ class MigrateImageCacheTest extends MigrateDrupal6TestBase {
   /**
    * Tests basic passing migrations.
    */
-  public function testPassingMigration() {
+  public function testPassingMigration(): void {
     $this->executeMigration('d6_imagecache_presets');
 
     /** @var \Drupal\image\Entity\ImageStyle $style */
@@ -82,7 +86,7 @@ class MigrateImageCacheTest extends MigrateDrupal6TestBase {
   /**
    * Tests that missing actions causes failures.
    */
-  public function testMissingEffectPlugin() {
+  public function testMissingEffectPlugin(): void {
     Database::getConnection('default', 'migrate')->insert("imagecache_action")
       ->fields([
         'presetid',
@@ -110,7 +114,7 @@ class MigrateImageCacheTest extends MigrateDrupal6TestBase {
   /**
    * Tests that missing action's causes failures.
    */
-  public function testInvalidCropValues() {
+  public function testInvalidCropValues(): void {
     Database::getConnection('default', 'migrate')->insert("imagecache_action")
       ->fields([
         'presetid',
@@ -143,7 +147,7 @@ class MigrateImageCacheTest extends MigrateDrupal6TestBase {
    * Assert that a given image effect is migrated.
    *
    * @param \Drupal\image\ImageEffectPluginCollection $collection
-   *   Collection of effects
+   *   Collection of effects.
    * @param string $id
    *   Id that should exist in the collection.
    * @param array $config

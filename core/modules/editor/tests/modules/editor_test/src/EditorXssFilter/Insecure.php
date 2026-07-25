@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\editor_test\EditorXssFilter;
 
 use Drupal\filter\FilterFormatInterface;
@@ -13,7 +15,7 @@ class Insecure implements EditorXssFilterInterface {
   /**
    * {@inheritdoc}
    */
-  public static function filterXss($html, FilterFormatInterface $format, FilterFormatInterface $original_format = NULL) {
+  public static function filterXss($html, FilterFormatInterface $format, ?FilterFormatInterface $original_format = NULL) {
     // Don't apply any XSS filtering, just return the string we received.
     return $html;
   }

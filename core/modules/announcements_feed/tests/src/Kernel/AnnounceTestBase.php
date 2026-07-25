@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\announcements_feed\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -12,7 +14,7 @@ use GuzzleHttp\Psr7\Response;
 /**
  * Base class for Announce Kernel tests.
  */
-class AnnounceTestBase extends KernelTestBase {
+abstract class AnnounceTestBase extends KernelTestBase {
 
   /**
    * {@inheritdoc}

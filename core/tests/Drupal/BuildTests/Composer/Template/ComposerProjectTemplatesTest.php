@@ -1,14 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\BuildTests\Composer\Template;
 
 use Composer\Json\JsonFile;
 use Composer\Semver\VersionParser;
 use Drupal\BuildTests\Composer\ComposerBuildTestBase;
 use Drupal\Composer\Composer;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * Demonstrate that Composer project templates are buildable as patched.
+ * Demonstrate that Composer project templates can be built as patched.
  *
  * We have to use the packages.json fixture so that Composer will use the
  * in-codebase version of the project template.
@@ -19,12 +24,9 @@ use Drupal\Composer\Composer;
  *
  * This is because Composer only uses the packages.json file to resolve the
  * project template and not any other dependencies.
- *
- * @group #slow
- * @group Template
- *
- * @requires externalCommand composer
  */
+#[CoversNothing]
+#[Group('Template')]
 class ComposerProjectTemplatesTest extends ComposerBuildTestBase {
 
   /**
@@ -67,7 +69,7 @@ class ComposerProjectTemplatesTest extends ComposerBuildTestBase {
     return $data;
   }
 
-  public function provideTemplateCreateProject() {
+  public static function provideTemplateCreateProject(): array {
     return [
       'recommended-project' => [
         'drupal/recommended-project',
@@ -85,7 +87,7 @@ class ComposerProjectTemplatesTest extends ComposerBuildTestBase {
   /**
    * Make sure that static::MINIMUM_STABILITY is sufficiently strict.
    */
-  public function testMinimumStabilityStrictness() {
+  public function testMinimumStabilityStrictness(): void {
     // Ensure that static::MINIMUM_STABILITY is not less stable than the
     // current core stability. For example, if we've already released a beta on
     // the branch, ensure that we no longer allow alpha dependencies.
@@ -110,6 +112,8 @@ class ComposerProjectTemplatesTest extends ComposerBuildTestBase {
 
     $exclude = [
       'drupal/core',
+      'drupal/core-composer-scaffold',
+      'drupal/core-recipe-unpack',
       'drupal/core-project-message',
       'drupal/core-vendor-hardening',
     ];
@@ -121,7 +125,12 @@ class ComposerProjectTemplatesTest extends ComposerBuildTestBase {
         continue;
       }
 
-      $project_stability = VersionParser::parseStability($project['version']);
+      // VersionParser::parseStability doesn't play nice with (mostly dev-)
+      // versions ending with the first seven characters of the commit ID as
+      // returned by "composer info". Let's strip those suffixes here.
+      $version = preg_replace('/ [0-9a-f]{7}$/i', '', $project['version']);
+
+      $project_stability = VersionParser::parseStability($version);
       $project_stability_order_index = $stability_order_indexes[$project_stability];
 
       $project_stabilities[$project['name']] = $project_stability;
@@ -141,7 +150,7 @@ class ComposerProjectTemplatesTest extends ComposerBuildTestBase {
   /**
    * Make sure we've accounted for all the templates.
    */
-  public function testVerifyTemplateTestProviderIsAccurate() {
+  public function testVerifyTemplateTestProviderIsAccurate(): void {
     $root = $this->getDrupalRoot();
     $data = $this->provideTemplateCreateProject();
 
@@ -166,11 +175,9 @@ class ComposerProjectTemplatesTest extends ComposerBuildTestBase {
     }
   }
 
-  /**
-   * @dataProvider provideTemplateCreateProject
-   */
-  public function testTemplateCreateProject($project, $package_dir, $docroot_dir) {
-    // Make a working COMPOSER_HOME directory for setting global composer config
+  #[DataProvider('provideTemplateCreateProject')]
+  public function testTemplateCreateProject($project, $package_dir, $docroot_dir): void {
+    // Make a working COMPOSER_HOME directory for setting global composer config.
     $composer_home = $this->getWorkspaceDirectory() . '/composer-home';
     mkdir($composer_home);
     // Create an empty global composer.json file, just to avoid warnings.
@@ -238,15 +245,17 @@ class ComposerProjectTemplatesTest extends ComposerBuildTestBase {
     $repository_path = $this->getWorkspaceDirectory() . '/test_repository/packages.json';
     $this->makeTestPackage($repository_path, $simulated_core_version);
 
-    $installed_composer_json = $this->getWorkspaceDirectory() . '/testproject/composer.json';
-    $autoloader = $this->getWorkspaceDirectory() . '/testproject' . $docroot_dir . '/autoload.php';
+    $installed_composer_json = $this->getWorkspaceDirectory() . '/test_project/composer.json';
+    $autoloader = $this->getWorkspaceDirectory() . '/test_project' . $docroot_dir . '/autoload.php';
+    $recipes_dir = $this->getWorkspaceDirectory() . '/test_project/recipes';
     $this->assertFileDoesNotExist($autoloader);
+    $this->assertDirectoryDoesNotExist($recipes_dir);
 
-    $this->executeCommand("COMPOSER_HOME=$composer_home COMPOSER_ROOT_VERSION=$simulated_core_version composer create-project --no-ansi $project testproject $simulated_core_version -vvv --repository $repository_path");
+    $this->executeCommand("COMPOSER_HOME=$composer_home COMPOSER_ROOT_VERSION=$simulated_core_version composer create-project --no-ansi $project test_project $simulated_core_version -vvv --repository $repository_path");
     $this->assertCommandSuccessful();
     // Check the output of the project creation for the absence of warnings
     // about any non-allowed composer plugins.
-    // Note: There are different warnings for unallowed composer plugins
+    // Note: There are different warnings for disallowed composer plugins
     // depending on running in non-interactive mode or not. It seems the Drupal
     // CI environment always forces composer commands to run in the
     // non-interactive mode. The only thing these messages have in common is the
@@ -261,6 +270,8 @@ class ComposerProjectTemplatesTest extends ComposerBuildTestBase {
     // Verify that there is an autoloader. This is written by the scaffold
     // plugin, so its existence assures us that scaffolding happened.
     $this->assertFileExists($autoloader);
+    // Verify recipes directory exists.
+    $this->assertDirectoryExists($recipes_dir);
 
     // Verify that the minimum stability in the installed composer.json file
     // matches the stability of the simulated core version.
@@ -305,7 +316,7 @@ class ComposerProjectTemplatesTest extends ComposerBuildTestBase {
    * @param string $version
    *   The version under test.
    */
-  protected function makeTestPackage($repository_path, $version) {
+  protected function makeTestPackage($repository_path, $version): void {
     $json = <<<JSON
 {
   "packages": {
@@ -344,7 +355,7 @@ JSON;
    * @param string $repository_path
    *   The path where to create the test package.
    */
-  protected function makeVendorPackage($repository_path) {
+  protected function makeVendorPackage($repository_path): void {
     $root = $this->getDrupalRoot();
     $process = $this->executeCommand("composer --working-dir=$root info --format=json");
     $this->assertCommandSuccessful();
@@ -415,12 +426,17 @@ JSON;
    */
   protected function getCoreStability() {
     $version = \Drupal::VERSION;
+    // If the current version is x.y-dev then this is the equivalent of the main
+    // branch and should be treated as a dev release.
+    if (preg_match('/^(\d)+\.(\d)+-dev$/', $version)) {
+      return 'dev';
+    }
     $stability = VersionParser::parseStability($version);
     if ($stability === 'dev') {
-      // Strip off "-dev";
+      // Strip off "-dev".
       $version_towards = substr($version, 0, -4);
 
-      if (substr($version_towards, -2) !== '.0') {
+      if (!str_ends_with($version_towards, '.0')) {
         // If the current version is developing towards an x.y.z release where
         // z is not 0, it means that the x.y.0 has already been released, and
         // only stable changes are permitted on the branch.

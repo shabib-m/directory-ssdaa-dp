@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\PhpStorage;
 
 use Drupal\Component\PhpStorage\PhpStorageInterface;
@@ -31,7 +33,7 @@ abstract class PhpStorageTestBase extends TestCase {
   /**
    * Assert that a PHP storage's load/save/delete operations work.
    */
-  public function assertCRUD($php) {
+  public function assertCRUD($php): void {
     // Random generator.
     $random_generator = new Random();
 

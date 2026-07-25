@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Entity;
 
 use Drupal\Core\Language\Language;
@@ -7,13 +9,15 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Functional\ViewTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\CssSelector\CssSelectorConverter;
 
 /**
  * Tests the rendering of fields (base fields) and their translations.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldEntityTranslationTest extends ViewTestBase {
 
   /**
@@ -44,7 +48,7 @@ class FieldEntityTranslationTest extends ViewTestBase {
 
     $node_type = NodeType::create([
       'type' => 'article',
-      'label' => 'Article',
+      'name' => 'Article',
     ]);
     $node_type->save();
 
@@ -65,7 +69,7 @@ class FieldEntityTranslationTest extends ViewTestBase {
   /**
    * Tests that different translation mechanisms can be used for base fields.
    */
-  public function testTranslationRows() {
+  public function testTranslationRows(): void {
     $node = Node::create([
       'type' => 'article',
       'title' => 'example EN',

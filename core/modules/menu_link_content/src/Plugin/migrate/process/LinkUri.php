@@ -9,10 +9,14 @@ use Drupal\migrate\MigrateException;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Generates an internal URI from the source value.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ * \Drupal\migrate\Plugin\migrate\process\LinkUri instead.
+ *
+ * @see https://www.drupal.org/node/3572239
  *
  * Converts the source path value to an 'entity:', 'internal:' or 'base:' URI.
  *
@@ -38,10 +42,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * without validating if the resulting URI is valid. For example, if the
  * 'link_path' property is 'node/12', the uri property value of link will be
  * 'entity:node/12'.
- *
- * @MigrateProcessPlugin(
- *   id = "link_uri"
- * )
  */
 class LinkUri extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
@@ -58,30 +58,19 @@ class LinkUri extends ProcessPluginBase implements ContainerFactoryPluginInterfa
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager, used to fetch entity link templates.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal\migrate\Plugin\migrate\process\LinkUri instead. See https://www.drupal.org/node/3533560', E_USER_DEPRECATED);
     $configuration += [
       'validate_route' => TRUE,
     ];
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager')
-    );
   }
 
   /**
@@ -95,8 +84,11 @@ class LinkUri extends ProcessPluginBase implements ContainerFactoryPluginInterfa
       if ($path == '<front>') {
         $path = '';
       }
-      elseif ($path == '<nolink>') {
+      elseif (empty($path) || in_array($path, ['<nolink>', '<none>'])) {
         return 'route:<nolink>';
+      }
+      elseif ($path == '<button>') {
+        return 'route:<button>';
       }
       $path = 'internal:/' . $path;
 

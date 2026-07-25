@@ -1,0 +1,12 @@
+name: 'Locale test extra'
+type: module
+description: 'Extra test module for locale translation testing.'
+package: Testing
+# version: '1.0'
+hidden: true
+'interface translation project': locale_test_extra
+
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
+project: 'drupal'
+datestamp: 1784141321

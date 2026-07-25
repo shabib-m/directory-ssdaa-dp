@@ -5,6 +5,7 @@ namespace Drupal\migrate_drupal;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\migrate\Exception\RequirementsException;
 use Drupal\migrate\Plugin\RequirementsInterface;
 
@@ -70,7 +71,7 @@ trait MigrationConfigurationTrait {
     $system_data = [];
     try {
       $results = $connection->select('system', 's', [
-        'fetch' => \PDO::FETCH_ASSOC,
+        'fetch' => FetchAs::Associative,
       ])
         ->fields('s')
         ->execute();
@@ -78,7 +79,7 @@ trait MigrationConfigurationTrait {
         $system_data[$result['type']][$result['name']] = $result;
       }
     }
-    catch (DatabaseExceptionWrapper $e) {
+    catch (DatabaseExceptionWrapper) {
       // The table might not exist for example in tests.
     }
     return $system_data;
@@ -113,7 +114,7 @@ trait MigrationConfigurationTrait {
    *
    * @param string $database_state_key
    *   The state key.
-   * @param int $drupal_version
+   * @param numeric $drupal_version
    *   The version of Drupal we're getting the migrations for.
    *
    * @return \Drupal\migrate\Plugin\MigrationInterface[]
@@ -167,7 +168,7 @@ trait MigrationConfigurationTrait {
         }
         $migrations[] = $migration;
       }
-      catch (RequirementsException $e) {
+      catch (RequirementsException) {
         // Migrations which are not applicable given the source and destination
         // site configurations (e.g., what modules are enabled) will be silently
         // ignored.
@@ -181,6 +182,7 @@ trait MigrationConfigurationTrait {
    * Returns the follow-up migration tags.
    *
    * @return string[]
+   *   An array of follow-up migration tags.
    */
   protected function getFollowUpMigrationTags() {
     if ($this->followUpMigrationTags === NULL) {
@@ -211,40 +213,18 @@ trait MigrationConfigurationTrait {
         $version_string = $connection
           ->query('SELECT [schema_version] FROM {system} WHERE [name] = :module', [':module' => 'system'])
           ->fetchField();
-        if ($version_string && $version_string[0] == '1') {
-          if ((int) $version_string >= 1000) {
-            $version_string = '5';
-          }
-          else {
-            $version_string = FALSE;
-          }
-        }
       }
-      catch (DatabaseExceptionWrapper $e) {
-        $version_string = FALSE;
+      catch (DatabaseExceptionWrapper) {
+        // All database errors return FALSE.
       }
-    }
-    // For Drupal 8 (and we're predicting beyond) the schema version is in the
-    // key_value store.
-    elseif ($connection->schema()->tableExists('key_value')) {
-      try {
-        $result = $connection
-          ->query("SELECT [value] FROM {key_value} WHERE [collection] = :system_schema AND [name] = :module", [
-            ':system_schema' => 'system.schema',
-            ':module' => 'system',
-          ])
-          ->fetchField();
-        $version_string = unserialize($result);
-      }
-      catch (DatabaseExceptionWrapper $e) {
-        $version_string = FALSE;
-      }
-    }
-    else {
-      $version_string = FALSE;
     }
 
-    return $version_string ? substr($version_string, 0, 1) : FALSE;
+    return match (TRUE) {
+      !isset($version_string) => FALSE,
+      (int) $version_string >= 6000 => substr($version_string, 0, 1),
+      (int) $version_string >= 1000 => '5',
+      default => FALSE,
+    };
   }
 
   /**

@@ -1,15 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Functional\FieldWidget;
 
 use Drupal\field\Entity\FieldConfig;
+use Drupal\media\Plugin\Field\FieldWidget\OEmbedWidget;
 use Drupal\Tests\media\Functional\MediaFunctionalTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @covers \Drupal\media\Plugin\Field\FieldWidget\OEmbedWidget
- *
- * @group media
+ * Tests OEmbed Field Widget.
  */
+#[Group('media')]
+#[CoversClass(OEmbedWidget::class)]
+#[RunTestsInSeparateProcesses]
 class OEmbedFieldWidgetTest extends MediaFunctionalTestBase {
 
   /**
@@ -20,7 +27,7 @@ class OEmbedFieldWidgetTest extends MediaFunctionalTestBase {
   /**
    * Tests that the oEmbed field widget shows the configured help text.
    */
-  public function testFieldWidgetHelpText() {
+  public function testFieldWidgetHelpText(): void {
     $account = $this->drupalCreateUser(['create media']);
     $this->drupalLogin($account);
 

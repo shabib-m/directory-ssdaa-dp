@@ -3,6 +3,8 @@
 namespace Drupal\views\Plugin\views\pager;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsPager;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 
@@ -10,26 +12,28 @@ use Drupal\views\Plugin\views\display\DisplayPluginBase;
  * Plugin for views without pagers.
  *
  * @ingroup views_pager_plugins
- *
- * @ViewsPager(
- *   id = "none",
- *   title = @Translation("Display all items"),
- *   help = @Translation("Display all items that this view might find."),
- *   display_types = {"basic"}
- * )
  */
+#[ViewsPager(
+  id: "none",
+  title: new TranslatableMarkup("Display all items"),
+  help: new TranslatableMarkup("Display all items that this view might find."),
+  display_types: ["basic"],
+)]
 class None extends PagerPluginBase {
 
   /**
    * {@inheritdoc}
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
 
     // If the pager is set to none, then it should show all items.
     $this->setItemsPerPage(0);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function summaryTitle() {
     if (!empty($this->options['offset'])) {
       return $this->t('All items, skip @skip', ['@skip' => $this->options['offset']]);
@@ -37,6 +41,9 @@ class None extends PagerPluginBase {
     return $this->t('All items');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
     $options['offset'] = ['default' => 0];
@@ -58,26 +65,45 @@ class None extends PagerPluginBase {
     ];
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function usePager() {
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function useCountQuery() {
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getItemsPerPage() {
     return 0;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function executeCountQuery(&$count_query) {
-    // If we are displaying all items, never count. But we can update the count in post_execute.
+    // If we are displaying all items, never count. But we can update the count
+    // in post_execute.
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function postExecute(&$result) {
     $this->total_items = count($result);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function query() {
     // The only query modifications we might do are offsets.
     if (!empty($this->options['offset'])) {

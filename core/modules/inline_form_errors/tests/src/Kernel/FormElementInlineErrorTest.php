@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\inline_form_errors\Kernel;
 
 use Drupal\Core\Form\FormState;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests messages on form elements.
- *
- * @group InlineFormErrors
  */
+#[Group('InlineFormErrors')]
+#[RunTestsInSeparateProcesses]
 class FormElementInlineErrorTest extends KernelTestBase {
 
   /**
@@ -20,7 +24,7 @@ class FormElementInlineErrorTest extends KernelTestBase {
   /**
    * Tests that no inline form errors are shown when disabled for a form.
    */
-  public function testDisplayErrorMessagesNotInline() {
+  public function testDisplayErrorMessagesNotInline(): void {
     $form_id = 'test';
 
     $form = [

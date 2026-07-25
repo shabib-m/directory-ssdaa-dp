@@ -2,6 +2,7 @@ langcode: en
 status: true
 dependencies: {  }
 id: test_click_sort_ajax
+label: test_click_sort_ajax
 module: views
 description: ''
 tag: ''
@@ -42,6 +43,15 @@ display:
       style:
         type: table
         options:
+          grouping: {  }
+          class: ''
+          row_class: ''
+          default_row_class: true
+          override: true
+          sticky: true
+          caption: ''
+          summary: ''
+          description: ''
           info:
             id:
               sortable: true

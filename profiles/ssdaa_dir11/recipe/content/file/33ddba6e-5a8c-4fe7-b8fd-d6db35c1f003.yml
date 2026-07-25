@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 33ddba6e-5a8c-4fe7-b8fd-d6db35c1f003
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: EG.png
+  uri:
+    -
+      value: 'public://term-country/2026-07/EG.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 4093
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

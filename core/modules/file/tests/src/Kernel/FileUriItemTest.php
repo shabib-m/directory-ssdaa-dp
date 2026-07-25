@@ -1,23 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel;
 
 use Drupal\file\Entity\File;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * File URI field item test.
  *
- * @group file
- *
  * @see \Drupal\file\Plugin\Field\FieldType\FileUriItem
  * @see \Drupal\file\FileUrl
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileUriItemTest extends FileManagedUnitTestBase {
 
   /**
    * Tests the file entity override of the URI field.
    */
-  public function testCustomFileUriField() {
+  public function testCustomFileUriField(): void {
     $uri = 'public://druplicon.txt';
 
     // Create a new file entity.

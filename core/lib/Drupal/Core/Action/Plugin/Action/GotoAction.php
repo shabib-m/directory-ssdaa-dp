@@ -5,24 +5,24 @@ namespace Drupal\Core\Action\Plugin\Action;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Action\ConfigurableActionBase;
+use Drupal\Core\Action\Attribute\Action;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Utility\UnroutedUrlAssemblerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
  * Redirects to a different URL.
- *
- * @Action(
- *   id = "action_goto_action",
- *   label = @Translation("Redirect to URL"),
- *   type = "system"
- * )
  */
+#[Action(
+  id: 'action_goto_action',
+  label: new TranslatableMarkup('Redirect to URL'),
+  type: 'system'
+)]
 class GotoAction extends ConfigurableActionBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -58,13 +58,6 @@ class GotoAction extends ConfigurableActionBase implements ContainerFactoryPlugi
 
     $this->dispatcher = $dispatcher;
     $this->unroutedUrlAssembler = $url_assembler;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('event_dispatcher'), $container->get('unrouted_url_assembler'));
   }
 
   /**
@@ -115,7 +108,7 @@ class GotoAction extends ConfigurableActionBase implements ContainerFactoryPlugi
     $form['url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('URL'),
-      '#description' => $this->t('The URL to which the user should be redirected. This can be an internal URL like /node/1234 or an external URL like @url.', ['@url' => 'http://example.com']),
+      '#description' => $this->t('The URL to which the user should be redirected. This can be an internal URL like /node/1234 or an external URL like @url.', ['@url' => 'https://example.com']),
       '#default_value' => $this->configuration['url'],
       '#required' => TRUE,
     ];
@@ -132,7 +125,7 @@ class GotoAction extends ConfigurableActionBase implements ContainerFactoryPlugi
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $access = AccessResult::allowed();
     return $return_as_object ? $access : $access->isAllowed();
   }

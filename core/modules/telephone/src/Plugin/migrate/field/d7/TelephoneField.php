@@ -2,16 +2,18 @@
 
 namespace Drupal\telephone\Plugin\migrate\field\d7;
 
+use Drupal\migrate_drupal\Attribute\MigrateField;
 use Drupal\migrate_drupal\Plugin\migrate\field\FieldPluginBase;
 
 /**
- * @MigrateField(
- *   id = "telephone",
- *   core = {7},
- *   source_module = "telephone",
- *   destination_module = "telephone"
- * )
+ * Migrate field plugin for Drupal 7 telephone fields.
  */
+#[MigrateField(
+  id: 'telephone',
+  core: [7],
+  source_module: 'telephone',
+  destination_module: 'telephone',
+)]
 class TelephoneField extends FieldPluginBase {
 
   /**

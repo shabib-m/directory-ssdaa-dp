@@ -1,19 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Transliteration;
 
 use Drupal\Component\Transliteration\PhpTransliteration;
 use Drupal\Component\Utility\Random;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests Transliteration component functionality.
- *
- * @group Transliteration
- *
- * @coversDefaultClass \Drupal\Component\Transliteration\PhpTransliteration
  */
+#[CoversClass(PhpTransliteration::class)]
+#[Group('Transliteration')]
 class PhpTransliterationTest extends TestCase {
 
   /**
@@ -23,10 +26,9 @@ class PhpTransliterationTest extends TestCase {
    *   The language code to test.
    * @param string $expected
    *   The expected return from PhpTransliteration::removeDiacritics().
-   *
-   * @dataProvider providerTestPhpTransliterationRemoveDiacritics
    */
-  public function testRemoveDiacritics($original, $expected) {
+  #[DataProvider('providerTestPhpTransliterationRemoveDiacritics')]
+  public function testRemoveDiacritics($original, $expected): void {
     $transliterator_class = new PhpTransliteration();
     $result = $transliterator_class->removeDiacritics($original);
     $this->assertEquals($expected, $result);
@@ -39,7 +41,7 @@ class PhpTransliterationTest extends TestCase {
    *   An array of arrays, each containing the parameters for
    *   self::testRemoveDiacritics().
    */
-  public function providerTestPhpTransliterationRemoveDiacritics() {
+  public static function providerTestPhpTransliterationRemoveDiacritics(): array {
     // cSpell:disable
     return [
       // Test all characters in the Unicode range 0x00bf to 0x017f.
@@ -86,10 +88,9 @@ class PhpTransliterationTest extends TestCase {
    *   (optional) If provided, return at most this many characters, ensuring
    *   that the transliteration does not split in the middle of an input
    *   character's transliteration.
-   *
-   * @dataProvider providerTestPhpTransliteration
    */
-  public function testPhpTransliteration($langcode, $original, $expected, $unknown_character = '?', $max_length = NULL) {
+  #[DataProvider('providerTestPhpTransliteration')]
+  public function testPhpTransliteration(string $langcode, string $original, string $expected, string $unknown_character = '?', ?int $max_length = NULL): void {
     $transliterator_class = new PhpTransliteration();
     $actual = $transliterator_class->transliterate($original, $langcode, $unknown_character, $max_length);
     $this->assertSame($expected, $actual);
@@ -102,7 +103,7 @@ class PhpTransliterationTest extends TestCase {
    *   An array of arrays, each containing the parameters for
    *   self::testPhpTransliteration().
    */
-  public function providerTestPhpTransliteration() {
+  public static function providerTestPhpTransliteration(): array {
     $random_generator = new Random();
     $random = $random_generator->string(10);
     // Make some strings with two, three, and four-byte characters for testing.
@@ -169,16 +170,16 @@ class PhpTransliterationTest extends TestCase {
       'Do not split up the transliteration of a single character' => [
         'de', $two_byte, 'Ae Oe Ue A O aeoe', '?', 18,
       ],
-      'Illegal/unknown unicode' => [
+      'Invalid/unknown unicode' => [
         'en', chr(0xF8) . chr(0x80) . chr(0x80) . chr(0x80) . chr(0x80), '?????',
       ],
-      'Illegal/unknown unicode with non default replacement' => [
+      'Invalid/unknown unicode with non default replacement' => [
         'en', chr(0xF8) . chr(0x80) . chr(0x80) . chr(0x80) . chr(0x80), '-----', '-',
       ],
-      'Contains Illegal/unknown unicode' => [
+      'Contains Invalid/unknown unicode' => [
         'en', 'Hel' . chr(0x80) . 'o World', 'Hel?o World',
       ],
-      'Illegal/unknown unicode at end' => [
+      'Invalid/unknown unicode at end' => [
         'en', 'Hell' . chr(0x80) . ' World', 'Hell? World',
       ],
       'Non default replacement' => [
@@ -221,9 +222,9 @@ class PhpTransliterationTest extends TestCase {
   /**
    * Tests inclusion is safe.
    *
-   * @covers ::readLanguageOverrides
+   * @legacy-covers ::readLanguageOverrides
    */
-  public function testSafeInclude() {
+  public function testSafeInclude(): void {
     // The overrides in the transliteration data directory transliterates 0x82
     // into "safe" but the overrides one directory higher transliterates the
     // same character into "security hole". So by using "../index" as the

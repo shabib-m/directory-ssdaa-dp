@@ -16,7 +16,7 @@ trait DependencySerializationTrait {
    *
    * @var array
    */
-  // phpcs:ignore Drupal.Classes.PropertyDeclaration
+  // phpcs:ignore Drupal.Classes.PropertyDeclaration, Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $_serviceIds = [];
 
   /**
@@ -24,13 +24,13 @@ trait DependencySerializationTrait {
    *
    * @var array
    */
-  // phpcs:ignore Drupal.Classes.PropertyDeclaration
+  // phpcs:ignore Drupal.Classes.PropertyDeclaration, Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $_entityStorages = [];
 
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     $vars = get_object_vars($this);
     try {
       $container = \Drupal::getContainer();
@@ -53,14 +53,14 @@ trait DependencySerializationTrait {
         }
         elseif ($service_id = $reverse_container->getId($value)) {
           // If a class member was instantiated by the dependency injection
-          // container, only store its ID so it can be used to get a fresh object
-          // on unserialization.
+          // container, only store its ID so it can be used to get a fresh
+          // object on unserialization.
           $this->_serviceIds[$key] = $service_id;
           unset($vars[$key]);
         }
       }
     }
-    catch (ContainerNotInitializedException $e) {
+    catch (ContainerNotInitializedException) {
       // No container, no problem.
     }
 
@@ -70,31 +70,18 @@ trait DependencySerializationTrait {
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function __wakeup() {
-    // Tests in isolation potentially unserialize in the parent process.
-    $phpunit_bootstrap = isset($GLOBALS['__PHPUNIT_BOOTSTRAP']);
-    if ($phpunit_bootstrap && !\Drupal::hasContainer()) {
+  public function __wakeup(): void {
+    // Avoid trying to wakeup if there's nothing to do.
+    if (empty($this->_serviceIds) && empty($this->_entityStorages)) {
       return;
     }
     $container = \Drupal::getContainer();
     foreach ($this->_serviceIds as $key => $service_id) {
-      // In rare cases, when test data is serialized in the parent process,
-      // there is a service container but it doesn't contain all expected
-      // services. To avoid fatal errors during the wrap-up of failing tests, we
-      // check for this case, too.
-      if ($phpunit_bootstrap && !$container->has($service_id)) {
-        continue;
-      }
       $this->$key = $container->get($service_id);
     }
     $this->_serviceIds = [];
 
-    // In rare cases, when test data is serialized in the parent process, there
-    // is a service container but it doesn't contain all expected services. To
-    // avoid fatal errors during the wrap-up of failing tests, we check for this
-    // case, too.
-    if ($this->_entityStorages && (!$phpunit_bootstrap || $container->has('entity_type.manager'))) {
+    if ($this->_entityStorages) {
       /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
       $entity_type_manager = $container->get('entity_type.manager');
       foreach ($this->_entityStorages as $key => $entity_type_id) {

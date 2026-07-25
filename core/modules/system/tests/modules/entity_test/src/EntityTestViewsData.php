@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\entity_test;
 
 use Drupal\Component\Utility\NestedArray;
@@ -23,6 +25,16 @@ class EntityTestViewsData extends EntityViewsData {
           'id' => 'field',
           'default_formatter' => 'string',
           'field_name' => 'computed_string_field',
+        ],
+      ];
+    }
+    if ($this->entityType->id() === 'entity_test_comp_bund_fld') {
+      $views_data['entity_test_comp_bund_fld']['computed_bundle_field'] = [
+        'title' => $this->t('Computed Bundle Field'),
+        'field' => [
+          'id' => 'field',
+          'default_formatter' => 'string',
+          'field_name' => 'computed_bundle_field',
         ],
       ];
     }

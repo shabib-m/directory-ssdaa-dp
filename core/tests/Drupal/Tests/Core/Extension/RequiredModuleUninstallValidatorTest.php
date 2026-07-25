@@ -1,13 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Extension;
 
+use Drupal\Core\Extension\RequiredModuleUninstallValidator;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Extension\RequiredModuleUninstallValidator
- * @group Extension
+ * Tests Drupal\Core\Extension\RequiredModuleUninstallValidator.
  */
+#[CoversClass(RequiredModuleUninstallValidator::class)]
+#[Group('Extension')]
 class RequiredModuleUninstallValidatorTest extends UnitTestCase {
 
   /**
@@ -28,9 +34,9 @@ class RequiredModuleUninstallValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::validate
+   * Tests validate no module.
    */
-  public function testValidateNoModule() {
+  public function testValidateNoModule(): void {
     $this->uninstallValidator->expects($this->once())
       ->method('getModuleInfoByModule')
       ->willReturn([]);
@@ -42,9 +48,9 @@ class RequiredModuleUninstallValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::validate
+   * Tests validate not required.
    */
-  public function testValidateNotRequired() {
+  public function testValidateNotRequired(): void {
     $module = $this->randomMachineName();
 
     $this->uninstallValidator->expects($this->once())
@@ -57,9 +63,9 @@ class RequiredModuleUninstallValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::validate
+   * Tests validate required.
    */
-  public function testValidateRequired() {
+  public function testValidateRequired(): void {
     $module = $this->randomMachineName();
 
     $this->uninstallValidator->expects($this->once())

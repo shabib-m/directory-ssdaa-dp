@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests validity of date format machine names.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class DateFormatsMachineNameTest extends BrowserTestBase {
 
   /**
@@ -29,7 +33,7 @@ class DateFormatsMachineNameTest extends BrowserTestBase {
   /**
    * Tests that date formats cannot be created with invalid machine names.
    */
-  public function testDateFormatsMachineNameAllowedValues() {
+  public function testDateFormatsMachineNameAllowedValues(): void {
     // Try to create a date format with a not allowed character to test the date
     // format specific machine name replace pattern.
     $edit = [
@@ -63,7 +67,7 @@ class DateFormatsMachineNameTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('The machine-readable name is already in use. It must be unique.');
 
     // Create a date format with a machine name distinct from the previous two.
-    $id = mb_strtolower($this->randomMachineName(16));
+    $id = $this->randomMachineName(16);
     $edit = [
       'label' => $this->randomMachineName(16),
       'id' => $id,

@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filter\Functional;
 
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests form elements with associated text formats.
- *
- * @group filter
  */
+#[Group('filter')]
+#[RunTestsInSeparateProcesses]
 class FilterFormTest extends BrowserTestBase {
 
   /**
-   * Modules to enable for this test.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['filter', 'filter_test'];
 
@@ -68,7 +70,7 @@ class FilterFormTest extends BrowserTestBase {
   /**
    * Tests various different configurations of the 'text_format' element.
    */
-  public function testFilterForm() {
+  public function testFilterForm(): void {
     $this->doFilterFormTestAsAdmin();
     $this->doFilterFormTestAsNonAdmin();
     // Ensure that enabling modules which provide filter plugins behaves
@@ -80,7 +82,7 @@ class FilterFormTest extends BrowserTestBase {
   /**
    * Tests the behavior of the 'text_format' element as an administrator.
    */
-  protected function doFilterFormTestAsAdmin() {
+  protected function doFilterFormTestAsAdmin(): void {
     $this->drupalLogin($this->adminUser);
     $this->drupalGet('filter-test/text-format');
 
@@ -128,7 +130,7 @@ class FilterFormTest extends BrowserTestBase {
   /**
    * Tests the behavior of the 'text_format' element as a normal user.
    */
-  protected function doFilterFormTestAsNonAdmin() {
+  protected function doFilterFormTestAsNonAdmin(): void {
     $this->drupalLogin($this->webUser);
     $this->drupalGet('filter-test/text-format');
 

@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Functional;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Content Translation metadata fields handling.
- *
- * @group content_translation
  */
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class ContentTranslationMetadataFieldsTest extends ContentTranslationTestBase {
 
   /**
@@ -24,23 +29,35 @@ class ContentTranslationMetadataFieldsTest extends ContentTranslationTestBase {
   protected $bundle = 'article';
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['language', 'content_translation', 'node'];
 
   /**
-   * The profile to install as a basis for testing.
-   *
-   * @var string
+   * {@inheritdoc}
    */
-  protected $profile = 'standard';
+  protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setupBundle(): void {
+    parent::setupBundle();
+    $this->createContentType(['type' => $this->bundle]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+    $this->doSetup();
+  }
 
   /**
    * Tests skipping setting non translatable metadata fields.
    */
-  public function testSkipUntranslatable() {
+  public function testSkipUntranslatable(): void {
     $this->drupalLogin($this->translator);
     $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions($this->entityTypeId, $this->bundle);
 
@@ -96,7 +113,7 @@ class ContentTranslationMetadataFieldsTest extends ContentTranslationTestBase {
   /**
    * Tests setting translatable metadata fields.
    */
-  public function testSetTranslatable() {
+  public function testSetTranslatable(): void {
     $this->drupalLogin($this->translator);
     $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions($this->entityTypeId, $this->bundle);
 

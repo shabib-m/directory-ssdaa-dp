@@ -1,20 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Verifies that a form embedded in search results works.
- *
- * @group search
  */
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchEmbedFormTest extends BrowserTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['node', 'search', 'search_embedded_form'];
+  protected static $modules = ['node', 'search', 'search_embedded_form', 'search_node'];
 
   /**
    * {@inheritdoc}
@@ -63,7 +67,7 @@ class SearchEmbedFormTest extends BrowserTestBase {
   /**
    * Tests that the embedded form appears and can be submitted.
    */
-  public function testEmbeddedForm() {
+  public function testEmbeddedForm(): void {
     // First verify we can submit the form from the module's page.
     $this->drupalGet('search_embedded_form');
     $this->submitForm(['name' => 'John'], 'Send away');

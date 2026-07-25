@@ -1,41 +1,50 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Entity;
 
+use Drupal\comment\Entity\CommentType;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\node\Entity\NodeType;
-use Drupal\views\Tests\ViewTestData;
+use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
+use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
-use Drupal\comment\Entity\CommentType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the calculation of dependencies for views.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ViewEntityDependenciesTest extends ViewsKernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * Views used by this test.
    *
    * @var array
    */
-  public static $testViews = ['test_field_get_entity', 'test_relationship_dependency', 'test_plugin_dependencies', 'test_argument_dependency'];
+  public static $testViews = [
+    'test_field_get_entity',
+    'test_relationship_dependency',
+    'test_plugin_dependencies',
+    'test_argument_dependency',
+  ];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'node',
     'comment',
-    'user',
     'field',
     'text',
     'search',
+    'search_node',
   ];
 
   /**
@@ -56,13 +65,12 @@ class ViewEntityDependenciesTest extends ViewsKernelTestBase {
     ]);
     $comment_type->save();
 
-    $content_type = NodeType::create([
+    $content_type = $this->createContentType([
       'type' => $this->randomMachineName(),
       'name' => $this->randomString(),
     ]);
-    $content_type->save();
     $field_storage = FieldStorageConfig::create([
-      'field_name' => mb_strtolower($this->randomMachineName()),
+      'field_name' => $this->randomMachineName(),
       'entity_type' => 'node',
       'type' => 'comment',
     ]);
@@ -76,15 +84,6 @@ class ViewEntityDependenciesTest extends ViewsKernelTestBase {
         'comment_type' => $comment_type->id(),
       ],
     ])->save();
-    FieldConfig::create([
-      'field_storage' => FieldStorageConfig::loadByName('node', 'body'),
-      'bundle' => $content_type->id(),
-      'label' => $this->randomMachineName() . '_body',
-      'settings' => [
-        'display_summary' => TRUE,
-        'allowed_formats' => [],
-      ],
-    ])->save();
 
     ViewTestData::createTestViews(static::class, ['views_test_config']);
   }
@@ -92,7 +91,7 @@ class ViewEntityDependenciesTest extends ViewsKernelTestBase {
   /**
    * Tests the getDependencies method.
    */
-  public function testGetDependencies() {
+  public function testGetDependencies(): void {
     $expected = [];
     $expected['test_field_get_entity'] = [
       'module' => [
@@ -132,8 +131,6 @@ class ViewEntityDependenciesTest extends ViewsKernelTestBase {
       ],
       'module' => [
         'node',
-        // The argument handler is provided by the search module.
-        'search',
         'text',
         'user',
       ],
@@ -160,7 +157,6 @@ class ViewEntityDependenciesTest extends ViewsKernelTestBase {
       'module' => [
         'core',
         'node',
-        'search',
         'user',
         'views',
       ],

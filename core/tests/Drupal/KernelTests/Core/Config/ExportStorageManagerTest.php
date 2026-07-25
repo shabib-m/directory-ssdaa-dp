@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\Core\Config\ExportStorageManager;
 use Drupal\Core\Config\StorageTransformerException;
 use Drupal\Core\Lock\NullLockBackend;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore arrr
 /**
  * Tests the export storage manager.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ExportStorageManagerTest extends KernelTestBase {
 
   /**
@@ -33,7 +38,7 @@ class ExportStorageManagerTest extends KernelTestBase {
   /**
    * Tests getting the export storage.
    */
-  public function testGetStorage() {
+  public function testGetStorage(): void {
     // Get the raw system.site config and set it in the sync storage.
     $rawConfig = $this->config('system.site')->getRawData();
     $this->container->get('config.storage.sync')->write('system.site', $rawConfig);
@@ -77,7 +82,7 @@ class ExportStorageManagerTest extends KernelTestBase {
   /**
    * Tests the export storage when it is locked.
    */
-  public function testGetStorageLock() {
+  public function testGetStorageLock(): void {
     $lock = $this->createMock('Drupal\Core\Lock\LockBackendInterface');
     $lock->expects($this->exactly(2))
       ->method('acquire')

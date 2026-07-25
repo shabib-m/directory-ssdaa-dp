@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the revision tab display.
@@ -10,9 +14,9 @@ use Drupal\node\Entity\NodeType;
  * This test is similar to NodeRevisionsUITest except that it uses a user with
  * the bypass node access permission to make sure that the revision access
  * check adds correct cacheability metadata.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeRevisionsUiBypassAccessTest extends NodeTestBase {
 
   /**
@@ -51,7 +55,7 @@ class NodeRevisionsUiBypassAccessTest extends NodeTestBase {
   /**
    * Checks that the Revision tab is displayed correctly.
    */
-  public function testDisplayRevisionTab() {
+  public function testDisplayRevisionTab(): void {
     $this->drupalPlaceBlock('local_tasks_block');
 
     $this->drupalLogin($this->editor);

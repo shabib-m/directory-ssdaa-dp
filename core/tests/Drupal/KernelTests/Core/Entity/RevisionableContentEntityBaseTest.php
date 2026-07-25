@@ -1,23 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\entity_test_revlog\Entity\EntityTestMulWithRevisionLog;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test the revision system.
  *
  * This test uses the entity_test_revlog module, which intentionally omits the
  * entity_metadata_keys fields. This causes deprecation errors.
- *
- * @coversDefaultClass \Drupal\Core\Entity\RevisionableContentEntityBase
- * @group Entity
  */
+#[CoversClass(RevisionableContentEntityBase::class)]
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class RevisionableContentEntityBaseTest extends EntityKernelTestBase {
 
   /**
@@ -36,7 +43,7 @@ class RevisionableContentEntityBaseTest extends EntityKernelTestBase {
   /**
    * Tests the correct functionality CRUD operations of entity revisions.
    */
-  public function testRevisionableContentEntity() {
+  public function testRevisionableContentEntity(): void {
     $entity_type = 'entity_test_mul_revlog';
     $definition = \Drupal::entityTypeManager()->getDefinition($entity_type);
     $user = User::create(['name' => 'test name']);
@@ -53,12 +60,13 @@ class RevisionableContentEntityBaseTest extends EntityKernelTestBase {
 
     // Create the second revision.
     $entity->setNewRevision(TRUE);
-    $random_timestamp = rand(1e8, 2e8);
+    $random_timestamp = rand(100_000_000, 200_000_000);
     $this->createRevision($entity, $user, $random_timestamp, 'This is my log message');
 
     $revision_id = $entity->getRevisionId();
     $revision_ids[] = $revision_id;
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = \Drupal::entityTypeManager()->getStorage('entity_test_mul_revlog');
     $entity = $storage->loadRevision($revision_id);
     $this->assertEquals($random_timestamp, $entity->getRevisionCreationTime());
@@ -67,14 +75,14 @@ class RevisionableContentEntityBaseTest extends EntityKernelTestBase {
     $this->assertEquals('This is my log message', $entity->getRevisionLogMessage());
 
     // Create the third revision.
-    $random_timestamp = rand(1e8, 2e8);
+    $random_timestamp = rand(100_000_000, 200_000_000);
     $this->createRevision($entity, $user, $random_timestamp, 'This is my log message');
     $this->assertItemsTableCount(3, $definition);
     $revision_ids[] = $entity->getRevisionId();
 
     // Create another 3 revisions.
     foreach (range(1, 3) as $count) {
-      $timestamp = rand(1e8, 2e8);
+      $timestamp = rand(100_000_000, 200_000_000);
       $this->createRevision($entity, $user, $timestamp, 'This is my log message number: ' . $count);
       $revision_ids[] = $entity->getRevisionId();
     }
@@ -94,9 +102,9 @@ class RevisionableContentEntityBaseTest extends EntityKernelTestBase {
   /**
    * Tests the behavior of the "revision_default" flag.
    *
-   * @covers \Drupal\Core\Entity\ContentEntityBase::wasDefaultRevision
+   * @legacy-covers \Drupal\Core\Entity\ContentEntityBase::wasDefaultRevision
    */
-  public function testWasDefaultRevision() {
+  public function testWasDefaultRevision(): void {
     $entity_type_id = 'entity_test_mul_revlog';
     $entity = EntityTestMulWithRevisionLog::create([
       'type' => $entity_type_id,
@@ -135,6 +143,7 @@ class RevisionableContentEntityBaseTest extends EntityKernelTestBase {
     $this->assertFalse($entity->wasDefaultRevision());
 
     // Check that the default revision status was stored correctly.
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity_type_id);
     foreach ([TRUE, FALSE, TRUE, FALSE] as $index => $expected) {
       /** @var \Drupal\entity_test_revlog\Entity\EntityTestMulWithRevisionLog $revision */
@@ -148,6 +157,8 @@ class RevisionableContentEntityBaseTest extends EntityKernelTestBase {
     $this->assertTrue($entity->wasDefaultRevision());
 
     // Check that the "revision_default" flag cannot be changed once set.
+    $this->expectException(EntityStorageException::class);
+    $this->expectExceptionMessage("An existing default revision of the 'entity_test_mul_revlog' entity type can not be changed to a non-default revision.");
     /** @var \Drupal\entity_test_revlog\Entity\EntityTestMulWithRevisionLog $entity2 */
     $entity2 = EntityTestMulWithRevisionLog::create([
       'type' => $entity_type_id,
@@ -190,7 +201,7 @@ class RevisionableContentEntityBaseTest extends EntityKernelTestBase {
    * @param string $log_message
    *   The log message of the new revision.
    */
-  protected function createRevision(EntityInterface $entity, UserInterface $user, $timestamp, $log_message) {
+  protected function createRevision(EntityInterface $entity, UserInterface $user, $timestamp, $log_message): void {
     $entity->setNewRevision(TRUE);
     $entity->setRevisionCreationTime($timestamp);
     $entity->setRevisionUserId($user->id());

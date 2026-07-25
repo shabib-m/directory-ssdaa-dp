@@ -1,8 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
-// cspell:ignore datafilter downcasted linkimageediting emptyelement downcastdispatcher
+// cspell:ignore datafilter downcasted linkimageediting emptyelement downcastdispatcher imageloadobserver
 import { Plugin } from 'ckeditor5/src/core';
 import { setViewAttributes } from '@ckeditor/ckeditor5-html-support/src/utils';
-
+import { ImageLoadObserver } from '@ckeditor/ckeditor5-image/src/image/imageloadobserver';
 /**
  * @typedef {function} converterHandler
  *
@@ -22,7 +22,7 @@ import { setViewAttributes } from '@ckeditor/ckeditor5-html-support/src/utils';
  * @param {writer} writer
  *  The CKEditor 5 writer object.
  *
- * @return {module:engine/view/emptyelement~EmptyElement}
+ * @return {module:engine/view/emptyelement~ViewEmptyElement}
  *  The empty image element.
  *
  * @private
@@ -46,6 +46,26 @@ function isNumberString(value) {
   const parsedValue = parseFloat(value);
 
   return !Number.isNaN(parsedValue) && value === String(parsedValue);
+}
+
+/**
+ * Downcasts a string that may use a %-based value.
+ *
+ * @param {string} value
+ *  A string ending with `px` or `%`.
+ *
+ * @return {string}
+ *  The given value if it ends with '%', otherwise the parsed integer value.
+ *
+ * @private
+ */
+function downcastPxOrPct(value) {
+  // In one specific case, override the default behavior.
+  if (typeof value === 'string' && value.endsWith('%')) {
+    return value;
+  }
+  // This matches the upstream behavior.
+  return `${parseInt(value, 10)}`;
 }
 
 /**
@@ -79,7 +99,6 @@ function modelEntityUuidToDataAttribute() {
     const imageInFigure = Array.from(viewElement.getChildren()).find(
       (child) => child.name === 'img',
     );
-
     writer.setAttribute(
       'data-entity-uuid',
       data.attributeNewValue,
@@ -302,100 +321,6 @@ function modelImageStyleToDataAttribute() {
 }
 
 /**
- * Generates a callback that saves the width value to an attribute on
- * data downcast.
- *
- * @return {function}
- *  Callback that binds an event to its parameter.
- *
- * @private
- */
-function modelImageWidthToAttribute() {
-  /**
-   * Callback for the attribute:width event.
-   *
-   * Saves the width value to the width attribute.
-   *
-   * @type {converterHandler}
-   */
-  function converter(event, data, conversionApi) {
-    const { item } = data;
-    const { consumable, writer } = conversionApi;
-
-    if (!consumable.consume(item, event.name)) {
-      return;
-    }
-
-    const viewElement = conversionApi.mapper.toViewElement(item);
-    const imageInFigure = Array.from(viewElement.getChildren()).find(
-      (child) => child.name === 'img',
-    );
-
-    writer.setAttribute(
-      'width',
-      data.attributeNewValue.replace('px', ''),
-      imageInFigure || viewElement,
-    );
-  }
-
-  return (dispatcher) => {
-    dispatcher.on('attribute:width:imageInline', converter, {
-      priority: 'high',
-    });
-    dispatcher.on('attribute:width:imageBlock', converter, {
-      priority: 'high',
-    });
-  };
-}
-
-/**
- * Generates a callback that saves the height value to an attribute on
- * data downcast.
- *
- * @return {function}
- *  Callback that binds an event to its parameter.
- *
- * @private
- */
-function modelImageHeightToAttribute() {
-  /**
-   * Callback for the attribute:height event.
-   *
-   * Saves the height value to the height attribute.
-   *
-   * @type {converterHandler}
-   */
-  function converter(event, data, conversionApi) {
-    const { item } = data;
-    const { consumable, writer } = conversionApi;
-
-    if (!consumable.consume(item, event.name)) {
-      return;
-    }
-
-    const viewElement = conversionApi.mapper.toViewElement(item);
-    const imageInFigure = Array.from(viewElement.getChildren()).find(
-      (child) => child.name === 'img',
-    );
-
-    writer.setAttribute(
-      'height',
-      data.attributeNewValue.replace('px', ''),
-      imageInFigure || viewElement,
-    );
-  }
-
-  return (dispatcher) => {
-    dispatcher.on('attribute:height:imageInline', converter, {
-      priority: 'high',
-    });
-    dispatcher.on('attribute:height:imageBlock', converter, {
-      priority: 'high',
-    });
-  };
-}
-
-/**
  * Generates a callback that handles the data downcast for the img element.
  *
  * @return {function}
@@ -494,26 +419,28 @@ function viewImageToModelImage(editor) {
       attributesToConsume.push('data-caption');
     }
 
-    if (
-      consumable.test(viewItem, { name: true, attributes: 'data-entity-uuid' })
-    ) {
-      writer.setAttribute(
-        'dataEntityUuid',
-        viewItem.getAttribute('data-entity-uuid'),
-        image,
-      );
-      attributesToConsume.push('data-entity-uuid');
-    }
+    const modelViewAttributes = {
+      dataEntityUuid: 'data-entity-uuid',
+      dataEntityType: 'data-entity-type',
+      drupalLinkEntityUuid: 'data-link-entity-uuid',
+      drupalLinkEntityType: 'data-link-entity-type',
+      drupalLinkEntityMetadata: 'data-link-entity-metadata',
+    };
 
-    if (
-      consumable.test(viewItem, { name: true, attributes: 'data-entity-type' })
-    ) {
-      writer.setAttribute(
-        'dataEntityType',
-        viewItem.getAttribute('data-entity-type'),
-        image,
-      );
-      attributesToConsume.push('data-entity-type');
+    // eslint-disable-next-line no-restricted-syntax
+    for (const [modelAttribute, viewAttribute] of Object.entries(
+      modelViewAttributes,
+    )) {
+      if (
+        consumable.test(viewItem, { name: true, attributes: viewAttribute })
+      ) {
+        writer.setAttribute(
+          modelAttribute,
+          viewItem.getAttribute(viewAttribute),
+          image,
+        );
+        attributesToConsume.push(viewAttribute);
+      }
     }
 
     // Try to place the image in the allowed position.
@@ -593,6 +520,78 @@ function upcastImageBlockLinkGhsAttributes(dataFilter) {
   };
 }
 
+function downcastBlockImageLink() {
+  function converter(event, data, conversionApi) {
+    const { item } = data;
+    const { consumable, writer } = conversionApi;
+    const viewElement = conversionApi.mapper.toViewElement(item);
+
+    let image = Array.from(viewElement.getChildren()).find(
+      (child) => child.name === 'img',
+    );
+
+    if (!image && viewElement.name === 'image') {
+      image = viewElement;
+    }
+
+    const additionalAttributes = {};
+    const modelEntityLinkAttrs = {
+      drupalLinkEntityType: 'data-entity-type',
+      drupalLinkEntityUuid: 'data-entity-uuid',
+      drupalLinkEntityMetadata: 'data-entity-metadata',
+    };
+    if (!image) {
+      return;
+    }
+
+    Object.keys(modelEntityLinkAttrs).forEach((modelAttribute) => {
+      if (data.item.hasAttribute(modelAttribute)) {
+        const viewAttribute = modelEntityLinkAttrs[modelAttribute];
+        const viewValue = data.item.getAttribute(modelAttribute);
+        additionalAttributes[viewAttribute] = viewValue;
+        image._setAttribute(
+          viewAttribute.replace('data-', 'data-link-'),
+          viewValue,
+        );
+      }
+    });
+
+    // 1. Create an empty link element.
+    const linkElement = writer.createContainerElement('a', {
+      href: data.attributeNewValue,
+      ...additionalAttributes,
+    });
+    // 2. Insert link before the associated image.
+    writer.insert(writer.createPositionBefore(image), linkElement);
+    // 3. Move the image into the link.
+    writer.move(
+      writer.createRangeOn(image),
+      writer.createPositionAt(linkElement, 0),
+    );
+
+    // Modified alternative implementation of GHS' addBlockImageLinkAttributeConversion().
+    // This is happening here as well to avoid a race condition with the link
+    // element not yet existing.
+    if (
+      conversionApi.consumable.consume(
+        data.item,
+        'attribute:htmlLinkAttributes:imageBlock',
+      )
+    ) {
+      setViewAttributes(
+        conversionApi.writer,
+        data.item.getAttribute('htmlLinkAttributes'),
+        linkElement,
+      );
+    }
+  }
+  return (dispatcher) => {
+    dispatcher.on('attribute:linkHref:imageBlock', converter, {
+      priority: 'high',
+    });
+  };
+}
+
 /**
  * Modified alternative implementation of linkimageediting.js' downcastImageLink.
  *
@@ -601,7 +600,7 @@ function upcastImageBlockLinkGhsAttributes(dataFilter) {
  *
  * @private
  */
-function downcastBlockImageLink() {
+function dataDowncastBlockImageLink() {
   /**
    * Callback for the attribute:linkHref event.
    *
@@ -611,14 +610,32 @@ function downcastBlockImageLink() {
     if (!conversionApi.consumable.consume(data.item, event.name)) {
       return;
     }
-
     // The image will be already converted - so it will be present in the view.
     const image = conversionApi.mapper.toViewElement(data.item);
     const writer = conversionApi.writer;
 
+    const additionalAttributes = {};
+    const modelEntityLinkAttrs = {
+      drupalLinkEntityType: 'data-entity-type',
+      drupalLinkEntityUuid: 'data-entity-uuid',
+      drupalLinkEntityMetadata: 'data-entity-metadata',
+    };
+    Object.keys(modelEntityLinkAttrs).forEach((modelAttribute) => {
+      if (data.item.hasAttribute(modelAttribute)) {
+        const viewAttribute = modelEntityLinkAttrs[modelAttribute];
+        const viewValue = data.item.getAttribute(modelAttribute);
+        additionalAttributes[viewAttribute] = viewValue;
+        image._setAttribute(
+          viewAttribute.replace('data-', 'data-link-'),
+          viewValue,
+        );
+      }
+    });
+
     // 1. Create an empty link element.
     const linkElement = writer.createContainerElement('a', {
       href: data.attributeNewValue,
+      ...additionalAttributes,
     });
     // 2. Insert link before the associated image.
     writer.insert(writer.createPositionBefore(image), linkElement);
@@ -685,13 +702,7 @@ export default class DrupalImageEditing extends Plugin {
 
     if (schema.isRegistered('imageInline')) {
       schema.extend('imageInline', {
-        allowAttributes: [
-          'dataEntityUuid',
-          'dataEntityType',
-          'isDecorative',
-          'width',
-          'height',
-        ],
+        allowAttributes: ['dataEntityUuid', 'dataEntityType', 'isDecorative'],
       });
     }
 
@@ -701,8 +712,9 @@ export default class DrupalImageEditing extends Plugin {
           'dataEntityUuid',
           'dataEntityType',
           'isDecorative',
-          'width',
-          'height',
+          'drupalLinkEntityType',
+          'drupalLinkEntityUuid',
+          'drupalLinkEntityMetadata',
         ],
       });
     }
@@ -711,33 +723,37 @@ export default class DrupalImageEditing extends Plugin {
     conversion
       .for('upcast')
       .add(viewImageToModelImage(editor))
+      // The width attribute to resizedWidth conversion.
       .attributeToAttribute({
         view: {
           name: 'img',
           key: 'width',
         },
         model: {
-          key: 'width',
+          key: 'resizedWidth',
           value: (viewElement) => {
+            // Support resizing using pixels and (the HTML 4.01-only) percentages.
             if (isNumberString(viewElement.getAttribute('width'))) {
-              return `${viewElement.getAttribute('width')}px`;
+              return `${parseInt(viewElement.getAttribute('width'), 10)}px`;
             }
-            return `${viewElement.getAttribute('width')}`;
+            return viewElement.getAttribute('width').trim();
           },
         },
       })
+      // The height attribute to resizedHeight conversion.
       .attributeToAttribute({
         view: {
           name: 'img',
           key: 'height',
         },
         model: {
-          key: 'height',
+          key: 'resizedHeight',
           value: (viewElement) => {
+            // Support resizing using pixels and (the HTML 4.01-only) percentages.
             if (isNumberString(viewElement.getAttribute('height'))) {
-              return `${viewElement.getAttribute('height')}px`;
+              return `${parseInt(viewElement.getAttribute('height'), 10)}px`;
             }
-            return `${viewElement.getAttribute('height')}`;
+            return viewElement.getAttribute('height').trim();
           },
         },
       });
@@ -752,7 +768,8 @@ export default class DrupalImageEditing extends Plugin {
     conversion
       .for('downcast')
       .add(modelEntityUuidToDataAttribute())
-      .add(modelEntityTypeToDataAttribute());
+      .add(modelEntityTypeToDataAttribute())
+      .add(downcastBlockImageLink());
 
     conversion
       .for('dataDowncast')
@@ -770,8 +787,212 @@ export default class DrupalImageEditing extends Plugin {
         converterPriority: 'high',
       })
       .add(modelImageStyleToDataAttribute())
-      .add(modelImageWidthToAttribute())
-      .add(modelImageHeightToAttribute())
-      .add(downcastBlockImageLink());
+      .add(dataDowncastBlockImageLink())
+
+      // ⚠️ Everything below this point is copy/pasted directly from https://github.com/ckeditor/ckeditor5/pull/15222,
+      // to continue to use the `width` and `height` attributes to indicate resized width and height. This is necessary
+      // since CKEditor 5 v40.0.0.
+      // @see https://github.com/ckeditor/ckeditor5/releases/tag/v40.0.0
+      // Exceptions are:
+      // - reformatting to comply with Drupal's eslint-enforced coding standards
+      // - support for %-based image resizes
+      // There is a resizedWidth so use it as a width attribute in data.
+      .attributeToAttribute({
+        model: {
+          name: 'imageBlock',
+          key: 'resizedWidth',
+        },
+        view: (attributeValue) => ({
+          key: 'width',
+          value: downcastPxOrPct(attributeValue),
+        }),
+        converterPriority: 'high',
+      })
+      .attributeToAttribute({
+        model: {
+          name: 'imageInline',
+          key: 'resizedWidth',
+        },
+        view: (attributeValue) => ({
+          key: 'width',
+          value: downcastPxOrPct(attributeValue),
+        }),
+        converterPriority: 'high',
+      })
+
+      // There is a resizedHeight so use it as a height attribute in data.
+      .attributeToAttribute({
+        model: {
+          name: 'imageBlock',
+          key: 'resizedHeight',
+        },
+        view: (attributeValue) => ({
+          key: 'height',
+          value: downcastPxOrPct(attributeValue),
+        }),
+        converterPriority: 'high',
+      })
+      .attributeToAttribute({
+        model: {
+          name: 'imageInline',
+          key: 'resizedHeight',
+        },
+        view: (attributeValue) => ({
+          key: 'height',
+          value: downcastPxOrPct(attributeValue),
+        }),
+        converterPriority: 'high',
+      })
+
+      // Natural width should be used only if resizedWidth is not specified (is equal to natural width).
+      .attributeToAttribute({
+        model: {
+          name: 'imageBlock',
+          key: 'width',
+        },
+        view: (attributeValue, { consumable }, data) => {
+          if (data.item.hasAttribute('resizedWidth')) {
+            // Natural width consumed and not down-casted (because resizedWidth was used to downcast to the width attribute).
+            consumable.consume(data.item, 'attribute:width');
+
+            return null;
+          }
+          // There is no resizedWidth so downcast natural width to the attribute in data.
+          return {
+            key: 'width',
+            value: attributeValue,
+          };
+        },
+        converterPriority: 'high',
+      })
+      .attributeToAttribute({
+        model: {
+          name: 'imageInline',
+          key: 'width',
+        },
+        view: (attributeValue, { consumable }, data) => {
+          if (data.item.hasAttribute('resizedWidth')) {
+            // Natural width consumed and not down-casted (because resizedWidth was used to downcast to the width attribute).
+            consumable.consume(data.item, 'attribute:width');
+
+            return null;
+          }
+          // There is no resizedWidth so downcast natural width to the attribute in data.
+          return {
+            key: 'width',
+            value: attributeValue,
+          };
+        },
+        converterPriority: 'high',
+      })
+
+      // Natural height converted to resized height attribute (based on aspect ratio and resized width if available).
+      .attributeToAttribute({
+        model: {
+          name: 'imageBlock',
+          key: 'height',
+        },
+        view: (attributeValue, conversionApi, data) => {
+          if (data.item.hasAttribute('resizedWidth')) {
+            // TRICKY: Drupal must continue to support %-based image resizes.
+            // @see https://www.drupal.org/project/drupal/issues/3249592
+            // @see https://www.drupal.org/project/drupal/issues/3348603
+            if (data.item.getAttribute('resizedWidth').endsWith('%')) {
+              return {
+                key: 'height',
+                value: data.item.getAttribute('resizedWidth'),
+              };
+            }
+            // The resizedWidth is present so calculate height from aspect ratio.
+            const resizedWidth = parseInt(
+              data.item.getAttribute('resizedWidth'),
+              10,
+            );
+            const naturalWidth = parseInt(data.item.getAttribute('width'), 10);
+            const naturalHeight = parseInt(attributeValue, 10);
+            const aspectRatio = naturalWidth / naturalHeight;
+
+            return {
+              key: 'height',
+              value: `${Math.round(resizedWidth / aspectRatio)}`,
+            };
+          }
+          // There is no resizedWidth so using natural height attribute.
+          return {
+            key: 'height',
+            value: attributeValue,
+          };
+        },
+        converterPriority: 'high',
+      })
+      .attributeToAttribute({
+        model: {
+          name: 'imageInline',
+          key: 'height',
+        },
+        view: (attributeValue, conversionApi, data) => {
+          if (data.item.hasAttribute('resizedWidth')) {
+            // TRICKY: Drupal must continue to support %-based image resizes.
+            // @see https://www.drupal.org/project/drupal/issues/3249592
+            // @see https://www.drupal.org/project/drupal/issues/3348603
+            if (data.item.getAttribute('resizedWidth').endsWith('%')) {
+              return {
+                key: 'height',
+                value: data.item.getAttribute('resizedWidth'),
+              };
+            }
+            // The resizedWidth is present so calculate height from aspect ratio.
+            const resizedWidth = parseInt(
+              data.item.getAttribute('resizedWidth'),
+              10,
+            );
+            const naturalWidth = parseInt(data.item.getAttribute('width'), 10);
+            const naturalHeight = parseInt(attributeValue, 10);
+            const aspectRatio = naturalWidth / naturalHeight;
+
+            return {
+              key: 'height',
+              value: `${Math.round(resizedWidth / aspectRatio)}`,
+            };
+          }
+          // There is no resizedWidth so using natural height attribute.
+          return {
+            key: 'height',
+            value: attributeValue,
+          };
+        },
+        converterPriority: 'high',
+      });
+
+    // Waiting for any new images loaded, so we can set their natural width and height.
+    // @see https://github.com/ckeditor/ckeditor5/pull/15222
+    editor.editing.view.addObserver(ImageLoadObserver);
+    const imageUtils = editor.plugins.get('ImageUtils');
+    editor.editing.view.document.on('imageLoaded', (evt, domEvent) => {
+      const imgViewElement = editor.editing.view.domConverter.mapDomToView(
+        domEvent.target,
+      );
+
+      if (!imgViewElement) {
+        return;
+      }
+
+      const viewElement =
+        imageUtils.getImageWidgetFromImageView(imgViewElement);
+
+      if (!viewElement) {
+        return;
+      }
+
+      const modelElement = editor.editing.mapper.toModelElement(viewElement);
+
+      if (!modelElement) {
+        return;
+      }
+
+      editor.model.enqueueChange({ isUndoable: false }, () => {
+        imageUtils.setImageNaturalSizeAttributes(modelElement);
+      });
+    });
   }
 }

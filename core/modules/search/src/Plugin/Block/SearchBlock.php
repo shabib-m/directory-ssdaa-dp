@@ -3,24 +3,24 @@
 namespace Drupal\search\Plugin\Block;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\search\Form\SearchBlockForm;
 use Drupal\search\SearchPageRepositoryInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'Search form' block.
- *
- * @Block(
- *   id = "search_form_block",
- *   admin_label = @Translation("Search form"),
- *   category = @Translation("Forms")
- * )
  */
+#[Block(
+  id: "search_form_block",
+  admin_label: new TranslatableMarkup("Search form"),
+  category: new TranslatableMarkup("Forms"),
+)]
 class SearchBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -60,16 +60,6 @@ class SearchBlock extends BlockBase implements ContainerFactoryPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition,
-      $container->get('form_builder'),
-      $container->get('search.search_page_repository')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function blockAccess(AccountInterface $account) {
     return AccessResult::allowedIfHasPermission($account, 'search content');
   }
@@ -87,7 +77,7 @@ class SearchBlock extends BlockBase implements ContainerFactoryPluginInterface {
    */
   public function defaultConfiguration() {
     return [
-      'page_id' => '',
+      'page_id' => NULL,
     ];
   }
 
@@ -120,7 +110,11 @@ class SearchBlock extends BlockBase implements ContainerFactoryPluginInterface {
    * {@inheritdoc}
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
-    $this->configuration['page_id'] = $form_state->getValue('page_id');
+    // Handle the #empty_value: using the default requires specifying `null` in
+    // the config.
+    // @see search.schema.yml
+    // @see \Drupal\search\Form\SearchBlockForm::buildForm()
+    $this->configuration['page_id'] = $form_state->getValue('page_id') ?: NULL;
   }
 
 }

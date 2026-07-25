@@ -3,24 +3,25 @@
 namespace Drupal\path\Plugin\Field\FieldType;
 
 use Drupal\Component\Utility\Random;
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
  * Defines the 'path' entity field type.
- *
- * @FieldType(
- *   id = "path",
- *   label = @Translation("Path"),
- *   description = @Translation("An entity field containing a path alias and related data."),
- *   no_ui = TRUE,
- *   default_widget = "path",
- *   list_class = "\Drupal\path\Plugin\Field\FieldType\PathFieldItemList",
- *   constraints = {"PathAlias" = {}},
- * )
  */
+#[FieldType(
+  id: "path",
+  label: new TranslatableMarkup("Path"),
+  description: new TranslatableMarkup("An entity field containing a path alias and related data."),
+  default_widget: "path",
+  no_ui: TRUE,
+  list_class: PathFieldItemList::class,
+  constraints: ["PathAlias" => []],
+)]
 class PathItem extends FieldItemBase {
 
   /**
@@ -47,15 +48,20 @@ class PathItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    return ($this->alias === NULL || $this->alias === '') && ($this->pid === NULL || $this->pid === '') && ($this->langcode === NULL || $this->langcode === '');
+    $alias = $this->get('alias')->getValue();
+    $pid = $this->get('pid')->getValue();
+    $langcode = $this->get('langcode')->getValue();
+
+    return ($alias === NULL || $alias === '') && ($pid === NULL || $pid === '') && ($langcode === NULL || $langcode === '');
   }
 
   /**
    * {@inheritdoc}
    */
   public function preSave() {
-    if ($this->alias !== NULL) {
-      $this->alias = trim($this->alias);
+    $alias = $this->get('alias')->getValue();
+    if ($alias !== NULL) {
+      $this->set('alias', trim($alias));
     }
   }
 
@@ -65,35 +71,64 @@ class PathItem extends FieldItemBase {
   public function postSave($update) {
     $path_alias_storage = \Drupal::entityTypeManager()->getStorage('path_alias');
     $entity = $this->getEntity();
+    $alias = $this->get('alias')->getValue();
+    $pid = $this->get('pid')->getValue();
+    $langcode = $this->get('langcode')->getValue();
 
-    // If specified, rely on the langcode property for the language, so that the
-    // existing language of an alias can be kept. That could for example be
-    // unspecified even if the field/entity has a specific langcode.
-    $alias_langcode = ($this->langcode && $this->pid) ? $this->langcode : $this->getLangcode();
+    // If an explicit alias langcode is provided, use it. This allows code to
+    // preserve an existing alias language or set a specific language,
+    // including language-neutral, when creating or updating an alias.
+    // Otherwise, fall back to the field/entity langcode.
+    $alias_langcode = $langcode ?: $this->getLangcode();
 
     // If we have an alias, we need to create or update a path alias entity.
-    if ($this->alias) {
-      if (!$update || !$this->pid) {
-        $path_alias = $path_alias_storage->create([
-          'path' => '/' . $entity->toUrl()->getInternalPath(),
-          'alias' => $this->alias,
-          'langcode' => $alias_langcode,
-        ]);
-        $path_alias->save();
-        $this->pid = $path_alias->id();
-      }
-      elseif ($this->pid) {
-        $path_alias = $path_alias_storage->load($this->pid);
+    if ($alias) {
+      $properties = [
+        'path' => '/' . $entity->toUrl()->getInternalPath(),
+        'alias' => $alias,
+        'langcode' => $alias_langcode,
+      ];
 
-        if ($this->alias != $path_alias->getAlias()) {
-          $path_alias->setAlias($this->alias);
+      if (!$pid) {
+        // Try to load it from storage before creating it. In some cases the
+        // path alias could be created before this function runs. For example,
+        // \Drupal\workspaces\EntityOperations::entityTranslationInsert will
+        // create a translation, and an associated path alias will be created
+        // with it.
+        $query = $path_alias_storage->getQuery()->accessCheck(FALSE);
+        foreach ($properties as $field => $value) {
+          $query->condition($field, $value);
+        }
+        $ids = $query->execute();
+        $pid = $ids ? reset($ids) : $pid;
+      }
+
+      if (!$pid) {
+        $path_alias = $path_alias_storage->create($properties);
+        $path_alias->save();
+        $this->set('pid', $path_alias->id());
+      }
+      else {
+        $path_alias = $path_alias_storage->load($pid);
+        $path_alias_changed = FALSE;
+
+        if ($alias != $path_alias->getAlias()) {
+          $path_alias->setAlias($alias);
+          $path_alias_changed = TRUE;
+        }
+        // Persist langcode-only updates when the alias text is unchanged.
+        if ($alias_langcode !== $path_alias->language()->getId()) {
+          $path_alias->set('langcode', $alias_langcode);
+          $path_alias_changed = TRUE;
+        }
+        if ($path_alias_changed) {
           $path_alias->save();
         }
       }
     }
-    elseif ($this->pid && !$this->alias) {
+    elseif ($pid) {
       // Otherwise, delete the old alias if the user erased it.
-      $path_alias = $path_alias_storage->load($this->pid);
+      $path_alias = $path_alias_storage->load($pid);
       if ($entity->isDefaultRevision()) {
         $path_alias_storage->delete([$path_alias]);
       }

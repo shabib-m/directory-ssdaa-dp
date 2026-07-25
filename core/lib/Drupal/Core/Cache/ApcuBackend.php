@@ -3,6 +3,7 @@
 namespace Drupal\Core\Cache;
 
 use Drupal\Component\Assertion\Inspector;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Stores cache items in the Alternative PHP Cache User Cache (APCu).
@@ -48,8 +49,15 @@ class ApcuBackend implements CacheBackendInterface {
    *   The prefix to use for all keys in the storage that belong to this site.
    * @param \Drupal\Core\Cache\CacheTagsChecksumInterface $checksum_provider
    *   The cache tags checksum provider.
+   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   *   The time service.
    */
-  public function __construct($bin, $site_prefix, CacheTagsChecksumInterface $checksum_provider) {
+  public function __construct(
+    $bin,
+    $site_prefix,
+    CacheTagsChecksumInterface $checksum_provider,
+    protected TimeInterface $time,
+  ) {
     $this->bin = $bin;
     $this->sitePrefix = $site_prefix;
     $this->checksumProvider = $checksum_provider;
@@ -90,6 +98,18 @@ class ApcuBackend implements CacheBackendInterface {
     $result = apcu_fetch(array_keys($map));
     $cache = [];
     if ($result) {
+      // Before checking the validity of each item individually, register the
+      // cache tags for all returned cache items for preloading, this allows the
+      // cache tag service to optimize cache tag lookups.
+      if ($this->checksumProvider instanceof CacheTagsChecksumPreloadInterface) {
+        $tags_for_preload = [];
+        foreach ($result as $item) {
+          if ($item->tags) {
+            $tags_for_preload[] = explode(' ', $item->tags);
+          }
+        }
+        $this->checksumProvider->registerCacheTagsForPreload(array_merge(...$tags_for_preload));
+      }
       foreach ($result as $key => $item) {
         $item = $this->prepareItem($item, $allow_invalid);
         if ($item) {
@@ -145,7 +165,7 @@ class ApcuBackend implements CacheBackendInterface {
     $cache->tags = $cache->tags ? explode(' ', $cache->tags) : [];
 
     // Check expire time.
-    $cache->valid = $cache->expire == Cache::PERMANENT || $cache->expire >= REQUEST_TIME;
+    $cache->valid = $cache->expire == Cache::PERMANENT || $cache->expire >= $this->time->getRequestTime();
 
     // Check if invalidateTags() has been called with any of the entry's tags.
     if (!$this->checksumProvider->isValid($cache->checksum, $cache->tags)) {
@@ -235,7 +255,7 @@ class ApcuBackend implements CacheBackendInterface {
    */
   public function invalidateMultiple(array $cids) {
     foreach ($this->getMultiple($cids) as $cache) {
-      $this->set($cache->cid, $cache, REQUEST_TIME - 1);
+      $this->set($cache->cid, $cache, $this->time->getRequestTime() - 1);
     }
   }
 
@@ -243,9 +263,10 @@ class ApcuBackend implements CacheBackendInterface {
    * {@inheritdoc}
    */
   public function invalidateAll() {
+    @trigger_error("CacheBackendInterface::invalidateAll() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use CacheBackendInterface::deleteAll() or cache tag invalidation instead. See https://www.drupal.org/node/3500622", E_USER_DEPRECATED);
     foreach ($this->getAll() as $data) {
       $cid = str_replace($this->binPrefix, '', $data['key']);
-      $this->set($cid, $data['value'], REQUEST_TIME - 1);
+      $this->set($cid, $data['value'], $this->time->getRequestTime() - 1);
     }
   }
 
@@ -265,6 +286,7 @@ class ApcuBackend implements CacheBackendInterface {
    *   The type to list. Either pass in APC_LIST_ACTIVE or APC_LIST_DELETED.
    *
    * @return \APCUIterator
+   *   An APCUIterator class.
    */
   protected function getIterator($search = NULL, $format = APC_ITER_ALL, $chunk_size = 100, $list = APC_LIST_ACTIVE) {
     return new \APCUIterator($search, $format, $chunk_size, $list);

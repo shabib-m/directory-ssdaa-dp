@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Migrate\d6;
 
 use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrate view modes.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateViewModesTest extends MigrateDrupal6TestBase {
 
   /**
@@ -23,7 +27,7 @@ class MigrateViewModesTest extends MigrateDrupal6TestBase {
   /**
    * Tests Drupal 6 view modes to Drupal 8 migration.
    */
-  public function testViewModes() {
+  public function testViewModes(): void {
     // Test a new view mode.
     $view_mode = EntityViewMode::load('node.preview');
     $this->assertNotNull($view_mode);

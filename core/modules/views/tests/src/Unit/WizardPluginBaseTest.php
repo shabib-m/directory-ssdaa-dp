@@ -1,24 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Unit;
 
 use Drupal\Core\Form\FormState;
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Plugin\views\wizard\WizardPluginBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\views\Plugin\views\wizard\WizardPluginBase
- *
- * @group views
+ * Tests Drupal\views\Plugin\views\wizard\WizardPluginBase.
  */
+#[CoversClass(WizardPluginBase::class)]
+#[Group('views')]
 class WizardPluginBaseTest extends UnitTestCase {
 
   /**
-   * @covers ::getSelected
-   *
-   * @dataProvider providerTestGetSelected
+   * Tests get selected.
    */
-  public function testGetSelected($expected, $element = [], $parents = [], $user_input = [], $not_rebuilding_expected = NULL) {
+  #[DataProvider('providerTestGetSelected')]
+  public function testGetSelected($expected, $element = [], $parents = [], $user_input = [], $not_rebuilding_expected = NULL): void {
     $not_rebuilding_expected = $not_rebuilding_expected ?: $expected;
     $form_state = new FormState();
     $form_state->setUserInput($user_input);
@@ -36,7 +40,7 @@ class WizardPluginBaseTest extends UnitTestCase {
   /**
    * Provides test data for testGetSelected().
    */
-  public function providerTestGetSelected() {
+  public static function providerTestGetSelected() {
     $data = [];
     // A form element with an invalid #type.
     $data['invalid_type'] = [

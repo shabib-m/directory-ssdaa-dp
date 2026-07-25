@@ -1,16 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel;
 
-use Drupal\views\Views;
 use Drupal\views\Plugin\views\PluginBase;
+use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that an instance of all views plugins can be created.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class PluginInstanceTest extends ViewsKernelTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'path_alias',
+  ];
 
   /**
    * All views plugin types.
@@ -65,7 +76,7 @@ class PluginInstanceTest extends ViewsKernelTestBase {
   /**
    * Confirms that there is plugin data for all views plugin types.
    */
-  public function testPluginData() {
+  public function testPluginData(): void {
     // Check that we have an array of data.
     $this->assertIsArray($this->definitions);
 
@@ -87,7 +98,7 @@ class PluginInstanceTest extends ViewsKernelTestBase {
    * This will iterate through all plugins from _views_fetch_plugin_data(),
    * filtering out deprecated plugins.
    */
-  public function testPluginInstances() {
+  public function testPluginInstances(): void {
     $this->assertPluginInstances(FALSE);
   }
 

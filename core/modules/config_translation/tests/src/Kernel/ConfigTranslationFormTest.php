@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config_translation\Kernel;
 
 use Drupal\config_translation\Form\ConfigTranslationAddForm;
 use Drupal\config_translation\Form\ConfigTranslationEditForm;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for altering configuration translation forms.
- *
- * @group config_translation
  */
+#[Group('config_translation')]
+#[RunTestsInSeparateProcesses]
 class ConfigTranslationFormTest extends KernelTestBase {
 
   /**
@@ -27,7 +31,7 @@ class ConfigTranslationFormTest extends KernelTestBase {
   /**
    * Tests altering of the configuration translation forms.
    */
-  public function testConfigTranslationFormAlter() {
+  public function testConfigTranslationFormAlter(): void {
     $this->installConfig(['config_translation_test']);
 
     $definitions = $this->container->get('plugin.manager.config_translation.mapper')->getDefinitions();

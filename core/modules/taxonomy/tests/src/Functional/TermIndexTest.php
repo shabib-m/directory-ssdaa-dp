@@ -1,22 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional;
 
-use Drupal\Core\Link;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the hook implementations that maintain the taxonomy index.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermIndexTest extends TaxonomyTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['views'];
 
@@ -61,14 +62,14 @@ class TermIndexTest extends TaxonomyTestBase {
     // Create a vocabulary and add two term reference fields to article nodes.
     $this->vocabulary = $this->createVocabulary();
 
-    $this->fieldName1 = mb_strtolower($this->randomMachineName());
+    $this->fieldName1 = $this->randomMachineName();
     $handler_settings = [
       'target_bundles' => [
         $this->vocabulary->id() => $this->vocabulary->id(),
       ],
       'auto_create' => TRUE,
     ];
-    $this->createEntityReferenceField('node', 'article', $this->fieldName1, NULL, 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+    $this->createEntityReferenceField('node', 'article', $this->fieldName1, '', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
     $display_repository = \Drupal::service('entity_display.repository');
@@ -83,8 +84,8 @@ class TermIndexTest extends TaxonomyTestBase {
       ])
       ->save();
 
-    $this->fieldName2 = mb_strtolower($this->randomMachineName());
-    $this->createEntityReferenceField('node', 'article', $this->fieldName2, NULL, 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+    $this->fieldName2 = $this->randomMachineName();
+    $this->createEntityReferenceField('node', 'article', $this->fieldName2, '', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
     $display_repository = \Drupal::service('entity_display.repository');
@@ -103,7 +104,7 @@ class TermIndexTest extends TaxonomyTestBase {
   /**
    * Tests that the taxonomy index is maintained properly.
    */
-  public function testTaxonomyIndex() {
+  public function testTaxonomyIndex(): void {
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
     // Create terms in the vocabulary.
     $term_1 = $this->createTerm($this->vocabulary);
@@ -172,7 +173,6 @@ class TermIndexTest extends TaxonomyTestBase {
     $this->assertEquals(1, $index_count, 'Term 2 is indexed once.');
 
     // Redo the above tests without interface.
-    $node_storage->resetCache([$node->id()]);
     $node = $node_storage->load($node->id());
     $node->title = $this->randomMachineName();
 
@@ -234,24 +234,6 @@ class TermIndexTest extends TaxonomyTestBase {
       ->execute()
       ->fetchField();
     $this->assertEquals(0, $index_count, 'Term 2 is not indexed.');
-  }
-
-  /**
-   * Tests that there is a link to the parent term on the child term page.
-   */
-  public function testTaxonomyTermHierarchyBreadcrumbs() {
-    // Create two taxonomy terms and set term2 as the parent of term1.
-    $term1 = $this->createTerm($this->vocabulary);
-    $term2 = $this->createTerm($this->vocabulary);
-    $term1->parent = [$term2->id()];
-    $term1->save();
-
-    // Verify that the page breadcrumbs include a link to the parent term.
-    $this->drupalGet('taxonomy/term/' . $term1->id());
-    // Breadcrumbs are not rendered with a language, prevent the term
-    // language from being added to the options.
-    // Check that parent term link is displayed when viewing the node.
-    $this->assertSession()->responseContains(Link::fromTextAndUrl($term2->getName(), $term2->toUrl('canonical', ['language' => NULL]))->toString());
   }
 
 }

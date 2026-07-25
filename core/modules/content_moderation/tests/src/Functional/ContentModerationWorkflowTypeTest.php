@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test the workflow type plugin in the content_moderation module.
- *
- * @group content_moderation
  */
+#[Group('content_moderation')]
+#[RunTestsInSeparateProcesses]
 class ContentModerationWorkflowTypeTest extends BrowserTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'content_moderation',
@@ -41,7 +43,7 @@ class ContentModerationWorkflowTypeTest extends BrowserTestBase {
   /**
    * Tests creating a new workflow using the content moderation plugin.
    */
-  public function testNewWorkflow() {
+  public function testNewWorkflow(): void {
     $types[] = $this->createContentType();
     $types[] = $this->createContentType();
     $types[] = $this->createContentType();

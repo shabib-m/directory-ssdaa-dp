@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 77d2505c-435d-4b75-8ef3-dfa6ca4f3efd
+  bundle: country
+  default_langcode: ar
+  depends:
+    0b472e5c-cc69-48fb-8964-55f00515411f: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: عمان
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 0b472e5c-cc69-48fb-8964-55f00515411f
+      alt: ''
+      title: ''
+      width: 512
+      height: 512
+  field_sndwq_aldwl:
+    -
+      value: true

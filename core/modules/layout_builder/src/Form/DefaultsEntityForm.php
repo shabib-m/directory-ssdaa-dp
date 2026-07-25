@@ -20,6 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class DefaultsEntityForm extends EntityForm {
 
   use PreviewToggleTrait;
+  use LayoutBuilderEntityFormTrait;
 
   /**
    * Layout tempstore repository.
@@ -68,38 +69,16 @@ class DefaultsEntityForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function getBaseFormId() {
-    return $this->getEntity()->getEntityTypeId() . '_layout_builder_form';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL) {
     $form['#attributes']['class'][] = 'layout-builder-form';
     $form['layout_builder'] = [
       '#type' => 'layout_builder',
       '#section_storage' => $section_storage,
-      '#process' => [[static::class, 'layoutBuilderElementGetKeys']],
     ];
     $form['layout_builder_message'] = $this->buildMessage($section_storage->getContextValue('display'));
 
     $this->sectionStorage = $section_storage;
     return parent::buildForm($form, $form_state);
-  }
-
-  /**
-   * Form element #process callback.
-   *
-   * Save the layout builder element array parents as a property on the top form
-   * element so that they can be used to access the element within the whole
-   * render array later.
-   *
-   * @see \Drupal\layout_builder\Controller\LayoutBuilderHtmlEntityFormController
-   */
-  public static function layoutBuilderElementGetKeys(array $element, FormStateInterface $form_state, &$form) {
-    $form['#layout_builder_element_keys'] = $element['#array_parents'];
-    return $element;
   }
 
   /**
@@ -126,23 +105,7 @@ class DefaultsEntityForm extends EntityForm {
     else {
       $message = $this->t('You are editing the layout template for all @plural_label.', $args);
     }
-    return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => [
-          'layout-builder__message',
-          'layout-builder__message--defaults',
-        ],
-      ],
-      'message' => [
-        '#theme' => 'status_messages',
-        '#message_list' => ['status' => [$message]],
-        '#status_headings' => [
-          'status' => $this->t('Status message'),
-        ],
-      ],
-      '#weight' => -900,
-    ];
+    return $this->buildMessageContainer($message, 'defaults');
   }
 
   /**
@@ -171,26 +134,7 @@ class DefaultsEntityForm extends EntityForm {
    */
   protected function actions(array $form, FormStateInterface $form_state) {
     $actions = parent::actions($form, $form_state);
-    $actions['#attributes']['role'] = 'region';
-    $actions['#attributes']['aria-label'] = $this->t('Layout Builder tools');
-    $actions['submit']['#value'] = $this->t('Save layout');
-    $actions['#weight'] = -1000;
-
-    $actions['discard_changes'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Discard changes'),
-      '#submit' => ['::redirectOnSubmit'],
-      '#redirect' => 'discard_changes',
-    ];
-    $actions['preview_toggle'] = $this->buildContentPreviewToggle();
-    return $actions;
-  }
-
-  /**
-   * Form submission handler.
-   */
-  public function redirectOnSubmit(array $form, FormStateInterface $form_state) {
-    $form_state->setRedirectUrl($this->sectionStorage->getLayoutBuilderUrl($form_state->getTriggeringElement()['#redirect']));
+    return $this->buildActions($actions);
   }
 
   /**
@@ -198,20 +142,8 @@ class DefaultsEntityForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $return = $this->sectionStorage->save();
-    $this->layoutTempstoreRepository->delete($this->sectionStorage);
-    $this->messenger()->addMessage($this->t('The layout has been saved.'));
-    $form_state->setRedirectUrl($this->sectionStorage->getRedirectUrl());
+    $this->saveTasks($form_state, $this->t('The layout has been saved.'));
     return $return;
-  }
-
-  /**
-   * Retrieves the section storage object.
-   *
-   * @return \Drupal\layout_builder\SectionStorageInterface
-   *   The section storage for the current form.
-   */
-  public function getSectionStorage() {
-    return $this->sectionStorage;
   }
 
 }

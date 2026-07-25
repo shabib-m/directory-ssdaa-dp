@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: aa4e9b75-4a12-41d5-ba4c-7a194654e9ff
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: six-flags-2-dsktp.png
+  uri:
+    -
+      value: 'public://2026-07/six-flags-2-dsktp.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 1381475
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

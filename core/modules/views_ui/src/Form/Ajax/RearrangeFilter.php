@@ -56,7 +56,7 @@ class RearrangeFilter extends ViewsFormBase {
     if ($display->defaultableSections($types[$type]['plural'])) {
       $section = $types[$type]['plural'];
       $form_state->set('section', $section);
-      views_ui_standard_display_dropdown($form, $form_state, $section);
+      $this->standardDisplayDropdown($form, $form_state, $section);
     }
 
     if (!empty($view->form_cache)) {
@@ -69,7 +69,7 @@ class RearrangeFilter extends ViewsFormBase {
     }
     $count = 0;
 
-    // Get relationship labels
+    // Get relationship labels.
     $relationships = [];
     foreach ($display->getHandlers('relationship') as $id => $handler) {
       $relationships[$id] = $handler->adminLabel();
@@ -77,14 +77,14 @@ class RearrangeFilter extends ViewsFormBase {
 
     $group_options = [];
 
-    /**
+    /*
      * Filter groups is an array that contains:
-     * array(
+     * [
      *   'operator' => 'and' || 'or',
-     *   'groups' => array(
+     *   'groups' => [
      *     $group_id => 'and' || 'or',
-     *   ),
-     * );
+     *   ],
+     * ];
      */
 
     $grouping = count(array_keys($groups['groups'])) > 1;
@@ -242,9 +242,9 @@ class RearrangeFilter extends ViewsFormBase {
     // Whatever button was clicked, re-calculate field information.
     $new_fields = $order = [];
 
-    // Make an array with the weights
+    // Make an array with the weights.
     foreach ($form_state->getValue('filters') as $field => $info) {
-      // add each value that is a field with a weight to our list, but only if
+      // Add each value that is a field with a weight to our list, but only if
       // it has had its 'removed' checkbox checked.
       if (is_array($info) && empty($info['removed'])) {
         if (isset($info['weight'])) {
@@ -258,7 +258,7 @@ class RearrangeFilter extends ViewsFormBase {
       }
     }
 
-    // Sort the array
+    // Sort the array.
     asort($order);
 
     // Create a new list of fields in the new order.
@@ -271,7 +271,7 @@ class RearrangeFilter extends ViewsFormBase {
     $triggering_element = $form_state->getTriggeringElement();
     if (!empty($triggering_element['#group'])) {
       if ($triggering_element['#group'] == 'add') {
-        // Add a new group
+        // Add a new group.
         $groups['groups'][] = 'AND';
       }
       else {
@@ -333,7 +333,7 @@ class RearrangeFilter extends ViewsFormBase {
   /**
    * Adds one to each key of an array.
    *
-   * For example array(0 => 'foo') would be array(1 => 'foo').
+   * For example [0 => 'foo'] would be [1 => 'foo'].
    *
    * @param array $array
    *   The array to increment keys on.

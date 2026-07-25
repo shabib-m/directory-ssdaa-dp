@@ -7,11 +7,12 @@ use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Config\ConfigImporterEvent;
 use Drupal\Core\Config\ConfigImportValidateEventSubscriberBase;
 use Drupal\Core\Config\ConfigNameException;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Extension\ConfigImportModuleUninstallValidatorInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
-use Drupal\Core\Extension\ModuleUninstallValidatorInterface;
-use Drupal\Core\Extension\ThemeHandlerInterface;
+use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Core\Installer\InstallerKernel;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
  * Config import subscriber for config import events.
@@ -33,40 +34,33 @@ class ConfigImportSubscriber extends ConfigImportValidateEventSubscriberBase {
   protected $moduleExtensionList;
 
   /**
-   * The theme handler.
+   * The theme extension list.
    *
-   * @var \Drupal\Core\Extension\ThemeHandlerInterface
+   * @var \Drupal\Core\Extension\ThemeExtensionList
    */
-  protected $themeHandler;
-
-  /**
-   * The uninstall validators.
-   *
-   * @var \Drupal\Core\Extension\ModuleUninstallValidatorInterface[]
-   */
-  protected $uninstallValidators = [];
+  protected ThemeExtensionList $themeList;
 
   /**
    * Constructs the ConfigImportSubscriber.
    *
-   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
-   *   The theme handler.
+   * @param \Drupal\Core\Extension\ThemeExtensionList $theme_extension_list
+   *   The theme extension list.
    * @param \Drupal\Core\Extension\ModuleExtensionList $extension_list_module
    *   The module extension list.
+   * @param \Traversable $uninstallValidators
+   *   The uninstall validator services.
+   * @param \Drupal\Core\Database\Connection $connection
+   *   The database connection.
    */
-  public function __construct(ThemeHandlerInterface $theme_handler, ModuleExtensionList $extension_list_module) {
-    $this->themeHandler = $theme_handler;
+  public function __construct(
+    ThemeExtensionList $theme_extension_list,
+    ModuleExtensionList $extension_list_module,
+    #[AutowireIterator(tag: 'module_install.uninstall_validator')]
+    protected \Traversable $uninstallValidators,
+    protected readonly Connection $connection,
+  ) {
+    $this->themeList = $theme_extension_list;
     $this->moduleExtensionList = $extension_list_module;
-  }
-
-  /**
-   * Adds a module uninstall validator.
-   *
-   * @param \Drupal\Core\Extension\ModuleUninstallValidatorInterface $uninstall_validator
-   *   The uninstall validator to add.
-   */
-  public function addUninstallValidator(ModuleUninstallValidatorInterface $uninstall_validator): void {
-    $this->uninstallValidators[] = $uninstall_validator;
   }
 
   /**
@@ -83,7 +77,7 @@ class ConfigImportSubscriber extends ConfigImportValidateEventSubscriberBase {
         try {
           Config::validateName($name);
         }
-        catch (ConfigNameException $e) {
+        catch (ConfigNameException) {
           $message = $this->t('The config name @config_name is invalid.', ['@config_name' => $name]);
           $event->getConfigImporter()->logError($message);
         }
@@ -112,23 +106,30 @@ class ConfigImportSubscriber extends ConfigImportValidateEventSubscriberBase {
     // Get the install profile from the site's configuration.
     $current_core_extension = $config_importer->getStorageComparer()->getTargetStorage()->read('core.extension');
     $install_profile = $current_core_extension['profile'] ?? NULL;
+    $new_install_profile = $core_extension['profile'] ?? NULL;
+    $database_driver_module = $this->connection->getProvider();
 
     // Ensure the profile is not changing.
-    if ($install_profile !== $core_extension['profile']) {
+    if ($install_profile !== $new_install_profile) {
       if (InstallerKernel::installationAttempted()) {
         $config_importer->logError($this->t('The selected installation profile %install_profile does not match the profile stored in configuration %config_profile.', [
           '%install_profile' => $install_profile,
-          '%config_profile' => $core_extension['profile'],
+          '%config_profile' => $new_install_profile,
         ]));
         // If this error has occurred the other checks are irrelevant.
         return;
       }
-      else {
+      elseif ($new_install_profile) {
         $config_importer->logError($this->t('Cannot change the install profile from %profile to %new_profile once Drupal is installed.', [
           '%profile' => $install_profile,
-          '%new_profile' => $core_extension['profile'],
+          '%new_profile' => $new_install_profile,
         ]));
       }
+    }
+    elseif ($new_install_profile && !isset($core_extension['module'][$new_install_profile])) {
+      $config_importer->logError($this->t('The install profile %profile is not in the list of installed modules.', [
+        '%profile' => $new_install_profile,
+      ]));
     }
 
     // Get a list of modules with dependency weights as values.
@@ -163,10 +164,16 @@ class ConfigImportSubscriber extends ConfigImportValidateEventSubscriberBase {
     $uninstalls = $config_importer->getExtensionChangelist('module', 'uninstall');
     foreach ($uninstalls as $module) {
       foreach (array_keys($module_data[$module]->required_by) as $dependent_module) {
-        if ($module_data[$dependent_module]->status && !in_array($dependent_module, $uninstalls, TRUE) && $dependent_module !== $install_profile) {
+        if ($module_data[$dependent_module]->status &&
+          !in_array($dependent_module, $uninstalls, TRUE) &&
+          !in_array($dependent_module, [$install_profile, $database_driver_module], TRUE)
+        ) {
           $module_name = $module_data[$module]->info['name'];
           $dependent_module_name = $module_data[$dependent_module]->info['name'];
-          $config_importer->logError($this->t('Unable to uninstall the %module module since the %dependent_module module is installed.', ['%module' => $module_name, '%dependent_module' => $dependent_module_name]));
+          $config_importer->logError($this->t('Unable to uninstall the %module module since the %dependent_module module is installed.', [
+            '%module' => $module_name,
+            '%dependent_module' => $dependent_module_name,
+          ]));
         }
       }
       // Ensure that modules can be uninstalled.
@@ -179,12 +186,6 @@ class ConfigImportSubscriber extends ConfigImportValidateEventSubscriberBase {
             ['%module' => $module_data[$module]->info['name'], '@reason' => $reason]));
         }
       }
-    }
-
-    // Ensure that the install profile is not being uninstalled.
-    if (in_array($install_profile, $uninstalls, TRUE)) {
-      $profile_name = $module_data[$install_profile]->info['name'];
-      $config_importer->logError($this->t('Unable to uninstall the %profile profile since it is the install profile.', ['%profile' => $profile_name]));
     }
   }
 
@@ -219,14 +220,20 @@ class ConfigImportSubscriber extends ConfigImportValidateEventSubscriberBase {
         if (!isset($core_extension['theme'][$required_theme])) {
           $theme_name = $theme_data[$theme]->info['name'];
           $required_theme_name = $theme_data[$required_theme]->info['name'];
-          $config_importer->logError($this->t('Unable to install the %theme theme since it requires the %required_theme theme.', ['%theme' => $theme_name, '%required_theme' => $required_theme_name]));
+          $config_importer->logError($this->t('Unable to install the %theme theme since it requires the %required_theme theme.', [
+            '%theme' => $theme_name,
+            '%required_theme' => $required_theme_name,
+          ]));
         }
       }
       foreach (array_keys($module_dependencies) as $required_module) {
         if (!isset($core_extension['module'][$required_module])) {
           $theme_name = $theme_data[$theme]->info['name'];
           $required_module_name = $module_data[$required_module]->info['name'];
-          $config_importer->logError($this->t('Unable to install the %theme theme since it requires the %required_module module.', ['%theme' => $theme_name, '%required_module' => $required_module_name]));
+          $config_importer->logError($this->t('Unable to install the %theme theme since it requires the %required_module module.', [
+            '%theme' => $theme_name,
+            '%required_module' => $required_module_name,
+          ]));
         }
       }
     }
@@ -239,7 +246,10 @@ class ConfigImportSubscriber extends ConfigImportValidateEventSubscriberBase {
         if ($theme_data[$dependent_theme]->status && !in_array($dependent_theme, $uninstalls, TRUE)) {
           $theme_name = $theme_data[$theme]->info['name'];
           $dependent_theme_name = $theme_data[$dependent_theme]->info['name'];
-          $config_importer->logError($this->t('Unable to uninstall the %theme theme since the %dependent_theme theme is installed.', ['%theme' => $theme_name, '%dependent_theme' => $dependent_theme_name]));
+          $config_importer->logError($this->t('Unable to uninstall the %theme theme since the %dependent_theme theme is installed.', [
+            '%theme' => $theme_name,
+            '%dependent_theme' => $dependent_theme_name,
+          ]));
         }
       }
     }
@@ -350,10 +360,11 @@ class ConfigImportSubscriber extends ConfigImportValidateEventSubscriberBase {
    * Gets theme data.
    *
    * @return \Drupal\Core\Extension\Extension[]
+   *   Processed extension objects, keyed by machine name.
    */
   protected function getThemeData() {
     if (!isset($this->themeData)) {
-      $this->themeData = $this->themeHandler->rebuildThemeData();
+      $this->themeData = $this->themeList->reset()->getList();
     }
     return $this->themeData;
   }

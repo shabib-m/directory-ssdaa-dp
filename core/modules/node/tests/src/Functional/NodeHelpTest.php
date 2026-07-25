@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests help functionality for nodes.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeHelpTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'node', 'help'];
 
@@ -66,7 +68,7 @@ class NodeHelpTest extends BrowserTestBase {
   /**
    * Verifies that help text appears on node add/edit forms.
    */
-  public function testNodeShowHelpText() {
+  public function testNodeShowHelpText(): void {
     // Check the node add form.
     $this->drupalGet('node/add/' . $this->testType);
     $this->assertSession()->statusCodeEquals(200);

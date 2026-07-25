@@ -45,7 +45,7 @@ class UserAgent {
     //                  1#( language-range [ ";" "q" "=" qvalue ] )
     //   language-range  = ( ( 1*8ALPHA *( "-" 1*8ALPHA ) ) | "*" )
     // @endcode
-    // Samples: "hu, en-us;q=0.66, en;q=0.33", "hu,en-us;q=0.5"
+    // Samples: "hu, en-us;q=0.66, en;q=0.33", "hu,en-us;q=0.5".
     $ua_langcodes = [];
     if (preg_match_all('@(?<=[, ]|^)([a-zA-Z-]+|\*)(?:;q=([0-9.]+))?(?:$|\s*,\s*)@', trim($http_accept_language), $matches, PREG_SET_ORDER)) {
       foreach ($matches as $match) {
@@ -79,7 +79,7 @@ class UserAgent {
     // In that case, we assume that the lowest value of the specific tags is the
     // value of the generic language to be as close to the HTTP 1.1 spec as
     // possible.
-    // See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4 and
+    // See https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4 and
     // http://blogs.msdn.com/b/ie/archive/2006/10/17/accept-language-header-for-internet-explorer-7.aspx
     asort($ua_langcodes);
     foreach ($ua_langcodes as $langcode => $qvalue) {
@@ -88,7 +88,7 @@ class UserAgent {
       // first occurrence of '-' otherwise we get a non-existing language zh.
       // All other languages use a langcode without a '-', so we can safely
       // split on the first occurrence of it.
-      if (strlen($langcode) > 7 && (substr($langcode, 0, 7) == 'zh-hant' || substr($langcode, 0, 7) == 'zh-hans')) {
+      if (strlen($langcode) > 7 && (str_starts_with($langcode, 'zh-hant') || str_starts_with($langcode, 'zh-hans'))) {
         $generic_tag = substr($langcode, 0, 7);
       }
       else {

@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests block HTML ID validity.
- *
- * @group block
  */
+#[Group('block')]
+#[RunTestsInSeparateProcesses]
 class BlockHtmlTest extends BrowserTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'block_test'];
 
@@ -29,11 +31,14 @@ class BlockHtmlTest extends BrowserTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->drupalLogin($this->rootUser);
+    $this->drupalLogin($this->drupalCreateUser([
+      'administer blocks',
+      'access administration pages',
+    ]));
 
     // Enable the test_html block, to test HTML ID and attributes.
-    \Drupal::state()->set('block_test.attributes', ['data-custom-attribute' => 'foo']);
-    \Drupal::state()->set('block_test.content', $this->randomMachineName());
+    \Drupal::keyValue('block_test')->set('wrapper_attributes', ['data-custom-attribute' => 'foo']);
+    \Drupal::keyValue('block_test')->set('content', $this->randomMachineName());
     $this->drupalPlaceBlock('test_html', ['id' => 'test_html_block']);
 
     // Enable a menu block, to test more complicated HTML.
@@ -43,7 +48,7 @@ class BlockHtmlTest extends BrowserTestBase {
   /**
    * Tests for valid HTML for a block.
    */
-  public function testHtml() {
+  public function testHtml(): void {
     $this->drupalGet('');
 
     // Ensure that a block's ID is converted to an HTML valid ID, and that

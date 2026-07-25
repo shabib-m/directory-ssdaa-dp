@@ -1,18 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Plugin;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
-use Drupal\views_test_data\Plugin\views\display_extender\DisplayExtenderTest as DisplayExtenderTestData;
 use Drupal\views\Views;
+use Drupal\views_test_data\Plugin\views\display_extender\DisplayExtenderTest as DisplayExtenderTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the display extender plugins.
  *
- * @group views
  * @see \Drupal\views_test_data\Plugin\views\display_extender\DisplayExtenderTest
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class DisplayExtenderTest extends ViewsKernelTestBase {
 
   /**
@@ -25,7 +29,7 @@ class DisplayExtenderTest extends ViewsKernelTestBase {
   /**
    * Tests display extenders.
    */
-  public function testDisplayExtenders() {
+  public function testDisplayExtenders(): void {
     $this->config('views.settings')->set('display_extenders', ['display_extender_test'])->save();
     $this->assertCount(1, Views::getEnabledDisplayExtenders(), 'Make sure that there is only one enabled display extender.');
 
@@ -46,7 +50,7 @@ class DisplayExtenderTest extends ViewsKernelTestBase {
   /**
    * Tests display extenders validation.
    */
-  public function testDisplayExtendersValidate() {
+  public function testDisplayExtendersValidate(): void {
     $this->config('views.settings')->set('display_extenders', ['display_extender_test_3'])->save();
 
     $view = Views::getView('test_view');
@@ -54,7 +58,7 @@ class DisplayExtenderTest extends ViewsKernelTestBase {
 
     foreach ($view->displayHandlers as $id => $display) {
       $this->assertArrayHasKey($id, $errors);
-      $this->assertContains('Display extender test error.', $errors[$id], new FormattableMarkup('Error message found for @id display', ['@id' => $id]));
+      $this->assertContains('Display extender test error.', $errors[$id], "Error message found for $id display");
     }
   }
 

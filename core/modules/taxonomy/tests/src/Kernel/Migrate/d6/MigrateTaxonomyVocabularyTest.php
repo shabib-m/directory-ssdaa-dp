@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d6;
 
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrate taxonomy vocabularies to taxonomy.vocabulary.*.yml.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateTaxonomyVocabularyTest extends MigrateDrupal6TestBase {
 
   /**
@@ -28,7 +32,7 @@ class MigrateTaxonomyVocabularyTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal 6 taxonomy vocabularies to Drupal 8 migration.
    */
-  public function testTaxonomyVocabulary() {
+  public function testTaxonomyVocabulary(): void {
     for ($i = 0; $i < 3; $i++) {
       $j = $i + 1;
       $vocabulary = Vocabulary::load("vocabulary_{$j}_i_{$i}_");

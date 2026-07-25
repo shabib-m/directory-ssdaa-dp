@@ -73,7 +73,7 @@ class DatabaseQueue implements ReliableQueueInterface, QueueGarbageCollectionInt
   /**
    * Adds a queue item and store it directly to the queue.
    *
-   * @param $data
+   * @param mixed $data
    *   Arbitrary data to be associated with the new task in the queue.
    *
    * @return int|string
@@ -87,8 +87,9 @@ class DatabaseQueue implements ReliableQueueInterface, QueueGarbageCollectionInt
       ->fields([
         'name' => $this->name,
         'data' => serialize($data),
-        // We cannot rely on REQUEST_TIME because many items might be created
-        // by a single request which takes longer than 1 second.
+        // We cannot rely on \Drupal::time()->getRequestTime() because many
+        // items might be created by a single request which takes longer than
+        // 1 second.
         'created' => \Drupal::time()->getCurrentTime(),
       ]);
     // Return the new serial ID, or FALSE on failure.
@@ -133,11 +134,11 @@ class DatabaseQueue implements ReliableQueueInterface, QueueGarbageCollectionInt
       }
 
       // Try to update the item. Only one thread can succeed in UPDATEing the
-      // same row. We cannot rely on REQUEST_TIME because items might be
-      // claimed by a single consumer which runs longer than 1 second. If we
-      // continue to use REQUEST_TIME instead of the current time(), we steal
-      // time from the lease, and will tend to reset items before the lease
-      // should really expire.
+      // same row. We cannot rely on \Drupal::time()->getRequestTime() because
+      // items might be claimed by a single consumer which runs longer than 1
+      // second. If we continue to use ::getRequestTime() instead of
+      // ::getCurrentTime(), we steal time from the lease, and will tend to
+      // reset items before the lease should really expire.
       $update = $this->connection->update(static::TABLE_NAME)
         ->fields([
           'expire' => \Drupal::time()->getCurrentTime() + $lease_time,
@@ -245,8 +246,8 @@ class DatabaseQueue implements ReliableQueueInterface, QueueGarbageCollectionInt
         ->condition('name', 'drupal_batch:%', 'LIKE')
         ->execute();
 
-      // Reset expired items in the default queue implementation table. If that's
-      // not used, this will simply be a no-op.
+      // Reset expired items in the default queue implementation table. If
+      // that's not used, this will simply be a no-op.
       $this->connection->update(static::TABLE_NAME)
         ->fields([
           'expire' => 0,
@@ -272,9 +273,9 @@ class DatabaseQueue implements ReliableQueueInterface, QueueGarbageCollectionInt
     // If another process has already created the queue table, attempting to
     // recreate it will throw an exception. In this case just catch the
     // exception and do nothing.
-    catch (DatabaseException $e) {
+    catch (DatabaseException) {
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       return FALSE;
     }
     return TRUE;
@@ -287,7 +288,7 @@ class DatabaseQueue implements ReliableQueueInterface, QueueGarbageCollectionInt
    * yet the query failed, then the queue is stale and the exception needs to
    * propagate.
    *
-   * @param $e
+   * @param \Exception $e
    *   The exception.
    *
    * @throws \Exception

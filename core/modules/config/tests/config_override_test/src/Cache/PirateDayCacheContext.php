@@ -1,9 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\config_override_test\Cache;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\Context\CacheContextInterface;
+
+// cspell:ignore yarr
 
 /**
  * Defines the PirateDayCacheContext service that allows to cache the booty.

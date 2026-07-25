@@ -2,6 +2,8 @@
 
 namespace Drupal\language\Entity;
 
+use Drupal\Core\Entity\Attribute\ConfigEntityType;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -10,32 +12,43 @@ use Drupal\language\ContentLanguageSettingsInterface;
 
 /**
  * Defines the ContentLanguageSettings entity.
- *
- * @ConfigEntityType(
- *   id = "language_content_settings",
- *   label = @Translation("Content language settings"),
- *   label_collection = @Translation("Content language settings"),
- *   label_singular = @Translation("content language setting"),
- *   label_plural = @Translation("content languages settings"),
- *   label_count = @PluralTranslation(
- *     singular = "@count content language setting",
- *     plural = "@count content languages settings",
- *   ),
- *   admin_permission = "administer languages",
- *   config_prefix = "content_settings",
- *   entity_keys = {
- *     "id" = "id"
- *   },
- *   config_export = {
- *     "id",
- *     "target_entity_type_id",
- *     "target_bundle",
- *     "default_langcode",
- *     "language_alterable",
- *   },
- *   list_cache_tags = { "rendered" }
- * )
  */
+#[ConfigEntityType(
+  id: 'language_content_settings',
+  label: new TranslatableMarkup('Content language settings'),
+  label_collection: new TranslatableMarkup('Content language settings'),
+  label_singular: new TranslatableMarkup('content language setting'),
+  label_plural: new TranslatableMarkup('content languages settings'),
+  config_prefix: 'content_settings',
+  static_cache: TRUE,
+  entity_keys: [
+    'id' => 'id',
+  ],
+  admin_permission: 'administer languages',
+  label_count: [
+    'singular' => '@count content language setting',
+    'plural' => '@count content languages settings',
+  ],
+  list_cache_tags: [
+    'rendered',
+  ],
+  constraints: [
+    'ImmutableProperties' => [
+      'properties' => [
+        'id',
+        'target_entity_type_id',
+        'target_bundle',
+      ],
+    ],
+  ],
+  config_export: [
+    'id',
+    'target_entity_type_id',
+    'target_bundle',
+    'default_langcode',
+    'language_alterable',
+  ],
+  )]
 class ContentLanguageSettings extends ConfigEntityBase implements ContentLanguageSettingsInterface {
 
   /**
@@ -212,6 +225,27 @@ class ContentLanguageSettings extends ConfigEntityBase implements ContentLanguag
     $this->addDependency($bundle_config_dependency['type'], $bundle_config_dependency['name']);
 
     return $this;
+  }
+
+  /**
+   * Returns all valid values for the `default_langcode` property.
+   *
+   * @return string[]
+   *   All possible valid default langcodes. This includes all langcodes in the
+   *   standard list of human languages, along with special langcodes like
+   *   `site_default`, `current_interface` and `authors_default`.
+   *
+   * @see \Drupal\language\Element\LanguageConfiguration::getDefaultOptions()
+   * @see \Drupal\Core\TypedData\Plugin\DataType\LanguageReference::getAllValidLangcodes()
+   */
+  public static function getAllValidDefaultLangcodes(): array {
+    $language_manager = \Drupal::service('language_manager');
+    return array_unique([
+      ...array_keys($language_manager->getLanguages(LanguageInterface::STATE_ALL)),
+      LanguageInterface::LANGCODE_SITE_DEFAULT,
+      'current_interface',
+      'authors_default',
+    ]);
   }
 
 }

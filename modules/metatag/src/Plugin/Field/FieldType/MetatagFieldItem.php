@@ -3,22 +3,23 @@
 namespace Drupal\metatag\Plugin\Field\FieldType;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
  * Plugin implementation of the 'metatag' field type.
- *
- * @FieldType(
- *   id = "metatag",
- *   label = @Translation("Meta tags"),
- *   description = @Translation("This field stores code meta tags."),
- *   list_class = "\Drupal\metatag\Plugin\Field\FieldType\MetatagFieldItemList",
- *   default_widget = "metatag_firehose",
- *   default_formatter = "metatag_empty_formatter",
- * )
  */
+#[FieldType(
+ id: "metatag",
+ label: new TranslatableMarkup("Meta tags"),
+ description: new TranslatableMarkup("This field stores code meta tags."),
+ list_class: "\Drupal\metatag\Plugin\Field\FieldType\MetatagFieldItemList",
+ default_widget: "metatag_firehose",
+ default_formatter: "metatag_empty_formatter"
+)]
 class MetatagFieldItem extends FieldItemBase {
 
   /**
@@ -66,7 +67,7 @@ class MetatagFieldItem extends FieldItemBase {
 
     // Get the value about to be saved.
     // @todo Does this need to be rewritten to use $this->getValue()?
-    $current_value = $this->value;
+    $current_value = $this->getValue()['value'] ?? '';
 
     // Only unserialize if still serialized string.
     if (is_string($current_value)) {
@@ -89,7 +90,7 @@ class MetatagFieldItem extends FieldItemBase {
     ksort($tags_to_save);
 
     // Update the value to only save overridden tags.
-    $this->value = Json::encode($tags_to_save);
+    $this->setValue(['value' => Json::encode($tags_to_save)]);
   }
 
 }

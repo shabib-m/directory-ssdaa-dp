@@ -14,7 +14,7 @@
    */
   Drupal.behaviors.ViewsAjaxView = {};
   Drupal.behaviors.ViewsAjaxView.attach = function (context, settings) {
-    if (settings && settings.views && settings.views.ajaxViews) {
+    if (settings?.views?.ajaxViews) {
       const {
         views: { ajaxViews },
       } = settings;
@@ -25,7 +25,7 @@
   };
   Drupal.behaviors.ViewsAjaxView.detach = (context, settings, trigger) => {
     if (trigger === 'unload') {
-      if (settings && settings.views && settings.views.ajaxViews) {
+      if (settings?.views?.ajaxViews) {
         const {
           views: { ajaxViews },
         } = settings;
@@ -63,13 +63,19 @@
   Drupal.views.ajaxView = function (settings) {
     const selector = `.js-view-dom-id-${settings.view_dom_id}`;
     this.$view = $(selector);
+    this.$exposed_form = $(
+      `form#views-exposed-form-${settings.view_name.replace(
+        /_/g,
+        '-',
+      )}-${settings.view_display_id.replace(/_/g, '-')}`,
+    );
 
     // Retrieve the path to use for views' ajax.
     let ajaxPath = drupalSettings.views.ajax_path;
 
     // If there are multiple views this might've ended up showing up multiple
     // times.
-    if (ajaxPath.constructor.toString().indexOf('Array') !== -1) {
+    if (ajaxPath.constructor.toString().includes('Array')) {
       ajaxPath = ajaxPath[0];
     }
 
@@ -77,13 +83,27 @@
     let queryString = window.location.search || '';
     if (queryString !== '') {
       // Remove the question mark and Drupal path component if any.
-      queryString = queryString
-        .slice(1)
-        .replace(/q=[^&]+&?|&?render=[^&]+/, '');
+      queryString = queryString.slice(1);
+
+      // Remove current exposed filters.
+      const params = decodeURI(queryString)
+        .split('&')
+        .filter((param) => {
+          const [name, value] = param.split('=');
+          return (
+            this.$exposed_form.find(`input[name="${name}"]`).length === 0 &&
+            /*
+            Submitting filters should reset paging and sorting
+            because that is what happens without AJAX.
+             */
+            !['page', 'reset', 'sort', 'order', 'q', 'render'].includes(name)
+          );
+        });
+      queryString = encodeURI(params.join('&'));
+      // If there is a '?' in ajaxPath, clean URL are on and & should be
+      // used to add parameters.
       if (queryString !== '') {
-        // If there is a '?' in ajaxPath, clean URL are on and & should be
-        // used to add parameters.
-        queryString = (/\?/.test(ajaxPath) ? '&' : '?') + queryString;
+        queryString = (ajaxPath.includes('?') ? '&' : '?') + queryString;
       }
     }
 
@@ -100,14 +120,8 @@
     this.settings = settings;
 
     // Add the ajax to exposed forms.
-    this.$exposed_form = $(
-      `form#views-exposed-form-${settings.view_name.replace(
-        /_/g,
-        '-',
-      )}-${settings.view_display_id.replace(/_/g, '-')}`,
-    );
     once('exposed-form', this.$exposed_form).forEach(
-      $.proxy(this.attachExposedFormAjax, this),
+      this.attachExposedFormAjax.bind(this),
     );
 
     // Add the ajax to pagers.
@@ -116,8 +130,8 @@
       this.$view
         // Don't attach to nested views. Doing so would attach multiple behaviors
         // to a given element.
-        .filter($.proxy(this.filterNestedViews, this)),
-    ).forEach($.proxy(this.attachPagerAjax, this));
+        .filter(this.filterNestedViews.bind(this)),
+    ).forEach(this.attachPagerAjax.bind(this));
 
     // Add a trigger to update this view specifically. In order to trigger a
     // refresh use the following code.
@@ -174,7 +188,7 @@
       .find(
         '.js-pager__items a, th.views-field a, .attachment .views-summary a',
       )
-      .each($.proxy(this.attachPagerLinkAjax, this));
+      .each(this.attachPagerLinkAjax.bind(this));
   };
 
   /**
@@ -209,21 +223,19 @@
   };
 
   /**
-   * Views scroll to top ajax command.
+   * Sets the browser URL ajax command.
    *
    * @param {Drupal.Ajax} [ajax]
    *   A {@link Drupal.ajax} object.
    * @param {object} response
    *   Ajax response.
-   * @param {string} response.selector
-   *   Selector to use.
-   *
-   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0.
-   *   Use Drupal.AjaxCommands.prototype.scrollTop().
-   *
-   * @see https://www.drupal.org/node/3344141
+   * @param {string} response.url
+   *   URL to be set.
    */
-  Drupal.AjaxCommands.prototype.viewsScrollTop = function (ajax, response) {
-    Drupal.AjaxCommands.prototype.scrollTop(ajax, response);
+  Drupal.AjaxCommands.prototype.setBrowserUrl = (ajax, response) => {
+    // Do not change browser URL if we are in a dialog wrapper.
+    if (ajax.element && !ajax.element.closest('.ui-dialog-content')) {
+      window.history.replaceState(null, '', response.url);
+    }
   };
 })(jQuery, Drupal, drupalSettings);

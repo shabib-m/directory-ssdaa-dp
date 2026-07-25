@@ -4,31 +4,22 @@ namespace Drupal\Core\Display;
 
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\PluginBase;
+use Drupal\Core\Plugin\ConfigurablePluginBase;
 use Drupal\Core\Plugin\PluginDependencyTrait;
 use Drupal\Core\Session\AccountInterface;
 
 /**
  * Provides a base class for DisplayVariant plugins.
  *
- * @see \Drupal\Core\Display\Annotation\DisplayVariant
+ * @see \Drupal\Core\Display\Attribute\DisplayVariant
  * @see \Drupal\Core\Display\VariantInterface
  * @see \Drupal\Core\Display\VariantManager
  * @see plugin_api
  */
-abstract class VariantBase extends PluginBase implements VariantInterface {
+abstract class VariantBase extends ConfigurablePluginBase implements VariantInterface {
 
   use PluginDependencyTrait;
   use RefinableCacheableDependencyTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->setConfiguration($configuration);
-  }
 
   /**
    * {@inheritdoc}
@@ -72,14 +63,6 @@ abstract class VariantBase extends PluginBase implements VariantInterface {
     return [
       'id' => $this->getPluginId(),
     ] + $this->configuration;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setConfiguration(array $configuration) {
-    $this->configuration = $configuration + $this->defaultConfiguration();
-    return $this;
   }
 
   /**
@@ -130,7 +113,7 @@ abstract class VariantBase extends PluginBase implements VariantInterface {
   /**
    * {@inheritdoc}
    */
-  public function access(AccountInterface $account = NULL) {
+  public function access(?AccountInterface $account = NULL) {
     return TRUE;
   }
 

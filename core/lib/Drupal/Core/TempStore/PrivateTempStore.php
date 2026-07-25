@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * A PrivateTempStore can be used to make temporary, non-cache data available
  * across requests. The data for the PrivateTempStore is stored in one
  * key/value collection. PrivateTempStore data expires automatically after a
- * given timeframe.
+ * given time frame.
  *
  * The PrivateTempStore is different from a cache, because the data in it is not
  * yet saved permanently and so it cannot be rebuilt. Typically, the
@@ -102,7 +102,7 @@ class PrivateTempStore {
    *   The data associated with the key, or NULL if the key does not exist.
    */
   public function get($key) {
-    $key = $this->createkey($key);
+    $key = $this->createKey($key);
     if (($object = $this->storage->get($key)) && ($object->owner == $this->getOwner())) {
       return $object->data;
     }
@@ -121,18 +121,13 @@ class PrivateTempStore {
    */
   public function set($key, $value) {
     if ($this->currentUser->isAnonymous()) {
-      // Ensure that an anonymous user has a session created for them, as
-      // otherwise subsequent page loads will not be able to retrieve their
-      // tempstore data. Note this has to be done before the key is created as
-      // the owner is used in key creation.
-      $this->startSession();
-      $session = $this->requestStack->getCurrentRequest()->getSession();
+      $session = $this->requestStack->getSession();
       if (!$session->has('core.tempstore.private.owner')) {
         $session->set('core.tempstore.private.owner', Crypt::randomBytesBase64());
       }
     }
 
-    $key = $this->createkey($key);
+    $key = $this->createKey($key);
     if (!$this->lockBackend->acquire($key)) {
       $this->lockBackend->wait($key);
       if (!$this->lockBackend->acquire($key)) {
@@ -160,7 +155,7 @@ class PrivateTempStore {
    *   NULL otherwise.
    */
   public function getMetadata($key) {
-    $key = $this->createkey($key);
+    $key = $this->createKey($key);
     // Fetch the key/value pair and its metadata.
     $object = $this->storage->get($key);
     if ($object) {
@@ -184,7 +179,7 @@ class PrivateTempStore {
    *   Thrown when a lock for the backend storage could not be acquired.
    */
   public function delete($key) {
-    $key = $this->createkey($key);
+    $key = $this->createKey($key);
     if (!$object = $this->storage->get($key)) {
       return TRUE;
     }
@@ -211,7 +206,7 @@ class PrivateTempStore {
    * @return string
    *   The unique key for the user.
    */
-  protected function createkey($key) {
+  protected function createKey($key) {
     return $this->getOwner() . ':' . $key;
   }
 
@@ -225,33 +220,10 @@ class PrivateTempStore {
     $owner = $this->currentUser->id();
     if ($this->currentUser->isAnonymous()) {
       // Check to see if an owner key exists in the session.
-      $this->startSession();
-      $session = $this->requestStack->getCurrentRequest()->getSession();
+      $session = $this->requestStack->getSession();
       $owner = $session->get('core.tempstore.private.owner');
     }
     return $owner;
-  }
-
-  /**
-   * Start session because it is required for a private temp store.
-   *
-   * Ensures that an anonymous user has a session created for them, as
-   * otherwise subsequent page loads will not be able to retrieve their
-   * tempstore data.
-   *
-   * @todo when https://www.drupal.org/node/2865991 is resolved, use force
-   * start session API.
-   */
-  protected function startSession() {
-    $has_session = $this->requestStack
-      ->getCurrentRequest()
-      ->hasSession();
-    if (!$has_session) {
-      /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface $session */
-      $session = \Drupal::service('session');
-      $this->requestStack->getCurrentRequest()->setSession($session);
-      $session->start();
-    }
   }
 
 }

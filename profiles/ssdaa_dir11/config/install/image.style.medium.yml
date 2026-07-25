@@ -1,0 +1,28 @@
+uuid: 04aa22dc-1e4b-4218-badd-997eff10b12e
+langcode: ar
+status: true
+dependencies: {  }
+name: medium
+label: 'متوسط (220×220)'
+effects:
+  bddf0d06-42f9-4c75-a700-a33cafa25ea0:
+    uuid: bddf0d06-42f9-4c75-a700-a33cafa25ea0
+    id: image_scale
+    weight: -9
+    data:
+      width: 220
+      height: 220
+      upscale: false
+  c410ed2f-aa30-4d9c-a224-d2865d9188cd:
+    uuid: c410ed2f-aa30-4d9c-a224-d2865d9188cd
+    id: image_convert_avif
+    weight: -8
+    data:
+      extension: webp
+  192097fa-3c78-4781-80e9-84b899941d87:
+    uuid: 192097fa-3c78-4781-80e9-84b899941d87
+    id: image_resize
+    weight: -10
+    data:
+      width: 220
+      height: 220

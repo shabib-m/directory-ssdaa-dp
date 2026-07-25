@@ -1,23 +1,44 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Unit;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\BubbleableMetadata;
-use Drupal\Tests\UnitTestCase;
 use Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @coversDefaultClass \Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl
- * @group language
+ * Tests Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl.
  */
+#[CoversClass(LanguageNegotiationUrl::class)]
+#[Group('language')]
 class LanguageNegotiationUrlTest extends UnitTestCase {
 
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
   protected $languageManager;
+
+  /**
+   * The test user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
   protected $user;
+
+  /**
+   * An array of languages.
+   */
   protected array $languages;
 
   /**
@@ -64,10 +85,9 @@ class LanguageNegotiationUrlTest extends UnitTestCase {
 
   /**
    * Tests path prefix language negotiation and outbound path processing.
-   *
-   * @dataProvider providerTestPathPrefix
    */
-  public function testPathPrefix($prefix, $prefixes, $expected_langcode) {
+  #[DataProvider('providerTestPathPrefix')]
+  public function testPathPrefix($prefix, $prefixes, $expected_langcode): void {
     $this->languageManager->expects($this->any())
       ->method('getCurrentLanguage')
       ->willReturn($this->languages[(in_array($expected_langcode, [
@@ -111,7 +131,7 @@ class LanguageNegotiationUrlTest extends UnitTestCase {
    * @return array
    *   An array of data for checking path prefix negotiation.
    */
-  public function providerTestPathPrefix() {
+  public static function providerTestPathPrefix() {
     $path_prefix_configuration[] = [
       'prefix' => 'de',
       'prefixes' => [
@@ -155,11 +175,74 @@ class LanguageNegotiationUrlTest extends UnitTestCase {
   }
 
   /**
-   * Tests domain language negotiation and outbound path processing.
-   *
-   * @dataProvider providerTestDomain
+   * Tests outbound path processing for neutral languages.
    */
-  public function testDomain($http_host, $domains, $expected_langcode) {
+  #[DataProvider('providerNeutralLanguages')]
+  public function testNeutralLanguages($langcode, $expected_langcode): void {
+    if ($expected_langcode) {
+      $this->languageManager->expects($this->once())
+        ->method('getCurrentLanguage')
+        ->willReturn($this->languages['en']);
+    }
+
+    $config = $this->getConfigFactoryStub([
+      'language.negotiation' => [
+        'url' => [
+          'source' => LanguageNegotiationUrl::CONFIG_PATH_PREFIX,
+          'prefixes' => [
+            'de' => 'de',
+            'en' => 'en',
+          ],
+        ],
+      ],
+    ]);
+
+    $request = Request::create('/foo', 'GET');
+    $method = new LanguageNegotiationUrl();
+    $method->setLanguageManager($this->languageManager);
+    $method->setConfig($config);
+    $method->setCurrentUser($this->user);
+    $this->assertNull($method->getLangcode($request));
+
+    $language = $this->createMock(LanguageInterface::class);
+    $language->expects($this->any())
+      ->method('getId')
+      ->willReturn($langcode);
+    $cacheability = new BubbleableMetadata();
+    $options = [
+      'language' => $language,
+    ];
+    $method->processOutbound('foo', $options, $request, $cacheability);
+    $expected_cacheability = new BubbleableMetadata();
+    if ($expected_langcode) {
+      $this->assertSame($expected_langcode . '/', $options['prefix']);
+      $expected_cacheability->setCacheContexts(['languages:' . LanguageInterface::TYPE_URL]);
+    }
+    else {
+      $this->assertFalse(isset($options['prefix']));
+    }
+    $this->assertEquals($expected_cacheability, $cacheability);
+  }
+
+  /**
+   * Provides data for the neutral language test.
+   *
+   * @return array
+   *   An array of data for checking path prefix negotiation for neutral
+   *   languages.
+   */
+  public static function providerNeutralLanguages() {
+    return [
+      [LanguageInterface::LANGCODE_NOT_APPLICABLE, NULL],
+      [LanguageInterface::LANGCODE_NOT_SPECIFIED, 'en'],
+    ];
+  }
+
+  /**
+   * Tests domain language negotiation and outbound path processing.
+   */
+  #[DataProvider('providerTestDomain')]
+  public function testDomain($http_host, $domains, $expected_langcode): void {
     $this->languageManager->expects($this->any())
       ->method('getCurrentLanguage')
       ->willReturn($this->languages['en']);
@@ -185,7 +268,8 @@ class LanguageNegotiationUrlTest extends UnitTestCase {
     $this->assertSame('foo', $method->processOutbound('foo', $options, $request, $cacheability));
     $expected_cacheability = new BubbleableMetadata();
     if ($expected_langcode !== FALSE && count($domains) > 1) {
-      $expected_cacheability->setCacheMaxAge(Cache::PERMANENT)->setCacheContexts(['languages:' . LanguageInterface::TYPE_URL, 'url.site']);
+      $expected_cacheability->setCacheMaxAge(
+        Cache::PERMANENT)->setCacheContexts(['languages:' . LanguageInterface::TYPE_URL, 'url.site']);
     }
     $this->assertEquals($expected_cacheability, $cacheability);
   }
@@ -196,7 +280,7 @@ class LanguageNegotiationUrlTest extends UnitTestCase {
    * @return array
    *   An array of data for checking domain negotiation.
    */
-  public function providerTestDomain() {
+  public static function providerTestDomain() {
 
     $domain_configuration[] = [
       'http_host' => 'example.de',
@@ -255,6 +339,51 @@ class LanguageNegotiationUrlTest extends UnitTestCase {
     return $domain_configuration;
   }
 
+  /**
+   * Tests path outbound processing correctly setting relative/absolute paths.
+   */
+  public function testProcessOutboundOutputsRelativePathsForSameDomain(): void {
+    $this->languageManager->expects($this->any())
+      ->method('getCurrentLanguage')
+      ->willReturn($this->languages['en']);
+
+    $config = $this->getConfigFactoryStub([
+      'language.negotiation' => [
+        'url' => [
+          'source' => LanguageNegotiationUrl::CONFIG_DOMAIN,
+          'domains' => [
+            'de' => 'example.de',
+            'en' => 'example.com',
+          ],
+        ],
+      ],
+    ]);
+
+    $request = Request::create('', 'GET', [], [], [], ['HTTP_HOST' => 'example.com']);
+    $method = new LanguageNegotiationUrl();
+    $method->setLanguageManager($this->languageManager);
+    $method->setConfig($config);
+    $method->setCurrentUser($this->user);
+
+    // Check relative paths are used when the language
+    // is the current language.
+    $options = [
+      'language' => $this->languages['en'],
+    ];
+    $method->processOutbound('foo', $options, $request);
+    // $options['absolute'] not set or null equals to FALSE.
+    $this->assertFalse($options['absolute'] ?? FALSE);
+
+    // Check absolute paths are used when the language
+    // is not the current language.
+    $options = [
+      'language' => $this->languages['de'],
+    ];
+    $method->processOutbound('foo', $options, $request);
+    $this->assertTrue($options['absolute']);
+
+  }
+
 }
 
 // @todo Remove as part of https://www.drupal.org/node/2481833.
@@ -262,6 +391,9 @@ namespace Drupal\language\Plugin\LanguageNegotiation;
 
 if (!function_exists('base_path')) {
 
+  /**
+   * Returns the base path.
+   */
   function base_path() {
     return '/';
   }

@@ -1,21 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Theme;
 
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\WaitTerminateTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the loading of Claro assets on a non-Claro default theme.
- *
- * @group Theme
  */
+#[Group('Theme')]
+#[RunTestsInSeparateProcesses]
 class ToolbarClaroOverridesTest extends BrowserTestBase {
+
+  use WaitTerminateTestTrait;
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['toolbar', 'test_page_test', 'shortcut', 'node'];
+  protected static $modules = ['toolbar', 'test_page_test', 'node'];
 
   /**
    * {@inheritdoc}
@@ -46,20 +53,18 @@ class ToolbarClaroOverridesTest extends BrowserTestBase {
     $this->themeManager = $this->container->get('theme.manager');
     $this->themeInstaller->install(['claro']);
 
-    // Create user with sufficient permissions to have the shortcut toolbar menu
-    // be available.
     $this->drupalLogin($this->drupalCreateUser([
       'access toolbar',
-      'access shortcuts',
-      'administer shortcuts',
       'access content overview',
     ]));
+
+    $this->setWaitForTerminate();
   }
 
   /**
    * Confirm Claro assets load on a non-Claro default theme.
    */
-  public function testClaroAssets() {
+  public function testClaroAssets(): void {
     $default_stylesheets = [
       'core/modules/toolbar/css/toolbar.module.css',
       'core/modules/toolbar/css/toolbar.menu.css',
@@ -101,7 +106,7 @@ class ToolbarClaroOverridesTest extends BrowserTestBase {
       $this->assertStringNotContainsString($stylesheet, $head);
     }
 
-    // Confirm toolbar is not processed by claro_preprocess_toolbar().
+    // Confirm toolbar is not processed by ClaroHooks::preprocessToolbar.
     $this->assertFalse($this->getSession()->getPage()->find('css', '#toolbar-administration')->hasAttribute('data-drupal-claro-processed-toolbar'));
 
     // Confirm menu--toolbar.html.twig is not loaded from Claro.
@@ -134,7 +139,7 @@ class ToolbarClaroOverridesTest extends BrowserTestBase {
       $this->assertStringNotContainsString($stylesheet, $head);
     }
 
-    // Confirm toolbar is processed by claro_preprocess_toolbar().
+    // Confirm toolbar is processed by ClaroHooks::preprocessToolbar.
     $this->assertTrue($this->getSession()->getPage()->find('css', '#toolbar-administration')->hasAttribute('data-drupal-claro-processed-toolbar'));
 
     // Confirm toolbar templates are loaded from Claro.

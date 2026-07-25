@@ -1,30 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\rest\Kernel\Entity;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\rest\Entity\ConfigDependencies;
 use Drupal\rest\Entity\RestResourceConfig;
 use Drupal\rest\RestResourceConfigInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\rest\Entity\ConfigDependencies
- *
- * @group rest
+ * Tests Drupal\rest\Entity\ConfigDependencies.
  */
+#[CoversClass(ConfigDependencies::class)]
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class ConfigDependenciesTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['rest', 'entity_test', 'serialization'];
+  protected static $modules = ['rest', 'entity_test', 'serialization', 'user'];
 
   /**
-   * @covers ::calculateDependencies
-   *
-   * @dataProvider providerBasicDependencies
+   * Tests calculate dependencies.
    */
-  public function testCalculateDependencies(array $configuration) {
+  #[DataProvider('providerBasicDependencies')]
+  public function testCalculateDependencies(array $configuration): void {
     $config_dependencies = new ConfigDependencies(['json' => 'serialization'], ['basic_auth' => 'basic_auth']);
 
     $rest_config = RestResourceConfig::create($configuration);
@@ -36,13 +42,14 @@ class ConfigDependenciesTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::onDependencyRemoval
-   * @covers ::onDependencyRemovalForMethodGranularity
-   * @covers ::onDependencyRemovalForResourceGranularity
+   * Tests on dependency removal remove unrelated dependency.
    *
-   * @dataProvider providerBasicDependencies
+   * @legacy-covers ::onDependencyRemoval
+   * @legacy-covers ::onDependencyRemovalForMethodGranularity
+   * @legacy-covers ::onDependencyRemovalForResourceGranularity
    */
-  public function testOnDependencyRemovalRemoveUnrelatedDependency(array $configuration) {
+  #[DataProvider('providerBasicDependencies')]
+  public function testOnDependencyRemovalRemoveUnrelatedDependency(array $configuration): void {
     $config_dependencies = new ConfigDependencies(['json' => 'serialization'], ['basic_auth' => 'basic_auth']);
 
     $rest_config = RestResourceConfig::create($configuration);
@@ -56,7 +63,7 @@ class ConfigDependenciesTest extends KernelTestBase {
    *   An array with numerical keys:
    *   0. The original REST resource configuration.
    */
-  public function providerBasicDependencies() {
+  public static function providerBasicDependencies() {
     return [
       'method' => [
         [
@@ -89,10 +96,12 @@ class ConfigDependenciesTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::onDependencyRemoval
-   * @covers ::onDependencyRemovalForMethodGranularity
+   * Tests on dependency removal remove auth.
+   *
+   * @legacy-covers ::onDependencyRemoval
+   * @legacy-covers ::onDependencyRemovalForMethodGranularity
    */
-  public function testOnDependencyRemovalRemoveAuth() {
+  public function testOnDependencyRemovalRemoveAuth(): void {
     $config_dependencies = new ConfigDependencies(['json' => 'serialization'], ['basic_auth' => 'basic_auth']);
 
     $rest_config = RestResourceConfig::create([
@@ -125,12 +134,13 @@ class ConfigDependenciesTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::onDependencyRemoval
-   * @covers ::onDependencyRemovalForResourceGranularity
+   * Tests on dependency removal for resource granularity.
    *
-   * @dataProvider providerOnDependencyRemovalForResourceGranularity
+   * @legacy-covers ::onDependencyRemoval
+   * @legacy-covers ::onDependencyRemovalForResourceGranularity
    */
-  public function testOnDependencyRemovalForResourceGranularity(array $configuration, $module, $expected_configuration) {
+  #[DataProvider('providerOnDependencyRemovalForResourceGranularity')]
+  public function testOnDependencyRemovalForResourceGranularity(array $configuration, $module, $expected_configuration): void {
     assert(is_string($module));
     assert($expected_configuration === FALSE || is_array($expected_configuration));
 
@@ -151,7 +161,7 @@ class ConfigDependenciesTest extends KernelTestBase {
    *   1. The module to uninstall (the dependency that is about to be removed).
    *   2. The expected configuration after uninstalling this module.
    */
-  public function providerOnDependencyRemovalForResourceGranularity() {
+  public static function providerOnDependencyRemovalForResourceGranularity() {
     return [
       'resource with multiple formats' => [
         [

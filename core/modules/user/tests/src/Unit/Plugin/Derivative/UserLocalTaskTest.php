@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Unit\Plugin\Derivative;
 
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\Plugin\Derivative\UserLocalTask;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the local tasks deriver class.
- *
- * @coversDefaultClass \Drupal\user\Plugin\Derivative\UserLocalTask
- * @group user
  */
+#[CoversClass(UserLocalTask::class)]
+#[Group('user')]
 class UserLocalTaskTest extends UnitTestCase {
 
   /**
@@ -62,9 +65,9 @@ class UserLocalTaskTest extends UnitTestCase {
   /**
    * Tests the derivatives generated for local tasks.
    *
-   * @covers \Drupal\user\Plugin\Derivative\UserLocalTask::getDerivativeDefinitions
+   * @legacy-covers \Drupal\user\Plugin\Derivative\UserLocalTask::getDerivativeDefinitions
    */
-  public function testGetDerivativeDefinitions() {
+  public function testGetDerivativeDefinitions(): void {
     $expected = [
       'permissions_entity_bundle_of_id' => [
         'route_name' => 'entity.entity_bundle_of_id.entity_permissions_form',

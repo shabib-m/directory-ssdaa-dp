@@ -1,0 +1,28 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 4bc9a828-c788-4dce-8b65-8d5f812f8b95
+  bundle: main
+  default_langcode: ar
+  depends:
+    0f280d4e-497e-4364-9860-ede472ea7fa3: taxonomy_term
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'منتديات اقتصاديه'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      entity: 0f280d4e-497e-4364-9860-ede472ea7fa3
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

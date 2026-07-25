@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that messages appear in the off-canvas dialog with configuring blocks.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class BlockFormMessagesTest extends WebDriverTestBase {
 
   use ContextualLinkClickTrait;
@@ -46,10 +50,7 @@ class BlockFormMessagesTest extends WebDriverTestBase {
   /**
    * Tests that validation messages are shown on the block form.
    */
-  public function testValidationMessage() {
-    // @todo Work out why this fixes random fails in this test.
-    //   https://www.drupal.org/project/drupal/issues/3055982
-    $this->getSession()->resizeWindow(800, 1000);
+  public function testValidationMessage(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -78,7 +79,6 @@ class BlockFormMessagesTest extends WebDriverTestBase {
 
     // Ensure that message are displayed when configuring an existing block.
     $this->drupalGet('node/1/layout');
-    $assert_session->assertWaitOnAjaxRequest();
     $this->clickContextualLink($block_css_locator, 'Configure', TRUE);
     $this->assertNotEmpty($assert_session->waitForElementVisible('css', '#drupal-off-canvas [name="settings[label]"]'));
     $page->findField('Title')->setValue('');

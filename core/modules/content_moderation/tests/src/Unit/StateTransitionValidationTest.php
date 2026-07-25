@@ -1,22 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Unit;
 
 use Drupal\content_moderation\ModerationInformationInterface;
+use Drupal\content_moderation\StateTransitionValidation;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\content_moderation\StateTransitionValidation;
 use Drupal\Tests\UnitTestCase;
 use Drupal\workflow_type_test\Plugin\WorkflowType\TestType;
 use Drupal\workflows\Entity\Workflow;
 use Drupal\workflows\WorkflowTypeManager;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\content_moderation\StateTransitionValidation
- * @group content_moderation
+ * Tests Drupal\content_moderation\StateTransitionValidation.
  */
+#[CoversClass(StateTransitionValidation::class)]
+#[Group('content_moderation')]
 class StateTransitionValidationTest extends UnitTestCase {
 
   /**
@@ -64,10 +70,9 @@ class StateTransitionValidationTest extends UnitTestCase {
    *   Whether or not to grant a user this permission.
    * @param bool $result
    *   Whether getValidTransitions() is expected to have the.
-   *
-   * @dataProvider userTransitionsProvider
    */
-  public function testUserSensitiveValidTransitions($from_id, $to_id, $permission, $allowed, $result) {
+  #[DataProvider('userTransitionsProvider')]
+  public function testUserSensitiveValidTransitions($from_id, $to_id, $permission, $allowed, $result): void {
     $user = $this->prophesize(AccountInterface::class);
     // The one listed permission will be returned as instructed; Any others are
     // always denied.
@@ -96,7 +101,7 @@ class StateTransitionValidationTest extends UnitTestCase {
   /**
    * Data provider for the user transition test.
    */
-  public function userTransitionsProvider() {
+  public static function userTransitionsProvider() {
     // The user has the right permission, so let it through.
     $ret[] = ['draft', 'draft', 'use process transition draft', TRUE, TRUE];
 

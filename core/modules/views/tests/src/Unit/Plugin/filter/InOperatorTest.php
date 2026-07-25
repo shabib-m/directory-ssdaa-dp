@@ -1,20 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Unit\Plugin\filter;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Plugin\views\filter\InOperator;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\views\Plugin\views\filter\InOperator
- * @group views
+ * Tests Drupal\views\Plugin\views\filter\InOperator.
  */
+#[CoversClass(InOperator::class)]
+#[Group('views')]
 class InOperatorTest extends UnitTestCase {
 
   /**
-   * @covers ::validate
+   * Tests validate.
    */
-  public function testValidate() {
+  public function testValidate(): void {
     $definition = [
       'title' => 'Is InOperator Test',
       'group' => 'Test',
@@ -30,7 +35,12 @@ class InOperatorTest extends UnitTestCase {
   }
 
   /**
+   * Views filter callback: Generate the values for the options.
+   *
+   * Returns 'yes' and 'no' options.
+   *
    * @return array
+   *   The options for the filter.
    */
   public static function validate_options_callback() {
     return ['Yes', 'No'];

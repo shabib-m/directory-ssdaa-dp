@@ -2,6 +2,7 @@
 
 namespace Drupal\migrate\Plugin\migrate\process;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
@@ -36,12 +37,11 @@ use Drupal\migrate\Row;
  * a three items array [bar, alpha, beta], suitable for import.
  *
  * @see \Drupal\migrate\Plugin\MigrateProcessInterface
- *
- * @MigrateProcessPlugin(
- *   id = "flatten",
- *   handle_multiples = TRUE
- * )
  */
+#[MigrateProcess(
+  id: "flatten",
+  handle_multiples: TRUE,
+)]
 class Flatten extends ProcessPluginBase {
 
   /**
@@ -54,7 +54,7 @@ class Flatten extends ProcessPluginBase {
       $type = gettype($value);
       throw new MigrateException(sprintf("Input should be an array or an object, instead it was of type '%s'", $type));
     }
-    return iterator_to_array(new \RecursiveIteratorIterator(new \RecursiveArrayIterator($value)), FALSE);
+    return iterator_to_array(new \RecursiveIteratorIterator(new \RecursiveArrayIterator((array) $value)), FALSE);
   }
 
 }

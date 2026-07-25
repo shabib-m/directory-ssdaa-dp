@@ -2,22 +2,29 @@
 
 namespace Drupal\text\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'text' field type.
- *
- * @FieldType(
- *   id = "text",
- *   label = @Translation("Text (formatted)"),
- *   description = @Translation("This field stores a text with a text format."),
- *   category = @Translation("Text"),
- *   default_widget = "text_textfield",
- *   default_formatter = "text_default",
- *   list_class = "\Drupal\text\Plugin\Field\FieldType\TextFieldItemList"
- * )
  */
+#[FieldType(
+  id: "text",
+  label: new TranslatableMarkup("Short text"),
+  description: [
+    new TranslatableMarkup("Uses a one-line text field for input"),
+    new TranslatableMarkup("Efficient storage"),
+    new TranslatableMarkup("Fixed maximum length (up to 16383 characters)"),
+    new TranslatableMarkup("May be faster for searching and sorting"),
+    new TranslatableMarkup("Recommended for titles and names that need markup for bold, italic or links"),
+  ],
+  category: "formatted_text",
+  default_widget: "text_textfield",
+  default_formatter: "text_default",
+  list_class: TextFieldItemList::class,
+)]
 class TextItem extends TextItemBase {
 
   /**
@@ -59,10 +66,16 @@ class TextItem extends TextItemBase {
 
     if ($max_length = $this->getSetting('max_length')) {
       $constraints[] = $constraint_manager->create('ComplexData', [
-        'value' => [
-          'Length' => [
-            'max' => $max_length,
-            'maxMessage' => $this->t('%name: the text may not be longer than @max characters.', ['%name' => $this->getFieldDefinition()->getLabel(), '@max' => $max_length]),
+        'properties' => [
+          'value' => [
+            'Length' => [
+              'max' => $max_length,
+              'maxMessage' => $this->t('%name: the text may not be longer than @max characters.', [
+                '%name' => $this->getFieldDefinition()
+                  ->getLabel(),
+                '@max' => $max_length,
+              ]),
+            ],
           ],
         ],
       ]);

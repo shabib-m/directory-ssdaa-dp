@@ -1,23 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Functional;
 
-use Drupal\Core\Url;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Adds and configures custom languages.
- *
- * @group language
  */
+#[Group('language')]
+#[RunTestsInSeparateProcesses]
 class LanguageCustomLanguageConfigurationTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['language'];
 
@@ -29,7 +31,7 @@ class LanguageCustomLanguageConfigurationTest extends BrowserTestBase {
   /**
    * Functional tests for adding, editing and deleting languages.
    */
-  public function testLanguageConfiguration() {
+  public function testLanguageConfiguration(): void {
 
     // Create user with permissions to add and remove languages.
     $admin_user = $this->drupalCreateUser([
@@ -63,7 +65,7 @@ class LanguageCustomLanguageConfigurationTest extends BrowserTestBase {
 
     $this->assertSession()->statusMessageContains('Language code must be a valid language tag as defined by the W3C.', 'error');
     $this->assertSession()->linkExists("defined by the W3C");
-    $this->assertSession()->linkByHrefExists("http://www.w3.org/International/articles/language-tags/");
+    $this->assertSession()->linkByHrefExists("https://www.w3.org/International/articles/language-tags/");
     $this->assertSession()->statusMessageContains('Language name cannot contain any markup.', 'error');
     $this->assertSession()->addressEquals(Url::fromRoute('language.add'));
 

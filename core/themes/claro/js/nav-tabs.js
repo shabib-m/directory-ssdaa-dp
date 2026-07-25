@@ -13,6 +13,12 @@
 
     const openMenu = () => {
       $target.toggleClass('is-open');
+      const isOpen = $target.hasClass('is-open');
+
+      $target.find('button').attr('aria-expanded', isOpen);
+
+      $tab.find('.hamburger-icon').toggle(!isOpen).attr('aria-hidden', isOpen);
+      $tab.find('.close-icon').toggle(isOpen).attr('aria-hidden', !isOpen);
     };
 
     const toggleOrder = (reset) => {
@@ -39,8 +45,8 @@
       }
     };
 
-    const toggleCollapsed = () => {
-      if (window.matchMedia('(min-width: 48em)').matches) {
+    const toggleCollapsed = ({ matches }) => {
+      if (matches) {
         if ($tab.hasClass('is-horizontal') && !$tab.attr('data-width')) {
           let width = 0;
 
@@ -54,9 +60,11 @@
         // the width of the parent container.
         const isHorizontal = $tab.attr('data-width') <= $tab.outerWidth();
         $tab.toggleClass('is-horizontal', isHorizontal);
+        $tab.find('button').attr('aria-expanded', null);
         toggleOrder(isHorizontal);
       } else {
         toggleOrder(false);
+        $tab.find('button').attr('aria-expanded', 'false');
       }
     };
 
@@ -68,10 +76,9 @@
     });
 
     $tab.on('click.tabs', '[data-drupal-nav-tabs-trigger]', openMenu);
-    $(window)
-      // @todo use a media query event listener https://www.drupal.org/project/drupal/issues/3225621
-      .on('resize.tabs', Drupal.debounce(toggleCollapsed, 150))
-      .trigger('resize.tabs');
+    const mql = window.matchMedia('(min-width: 48em)');
+    mql.addEventListener('change', toggleCollapsed);
+    toggleCollapsed(mql);
   }
   /**
    * Initialize the tabs JS.

@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 62bacfca-13ea-4531-9894-5fbf5a8da24e
+  bundle: country
+  default_langcode: ar
+  depends:
+    785aecc7-d0ae-4c0b-9eca-349652d2c5c2: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: الكويت
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 785aecc7-d0ae-4c0b-9eca-349652d2c5c2
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: true

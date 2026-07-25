@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Cache;
 
 use Drupal\Core\Cache\Cache;
@@ -30,7 +32,7 @@ trait AssertPageCacheContextsAndTagsTrait {
    * @return string[]
    *   The header value, potentially exploded by spaces.
    */
-  protected function getCacheHeaderValues($header_name) {
+  protected function getCacheHeaderValues($header_name): array {
     $header_value = $this->getSession()->getResponseHeader($header_name);
     return empty($header_value) ? [] : explode(' ', $header_value);
   }
@@ -127,13 +129,22 @@ trait AssertPageCacheContextsAndTagsTrait {
    * @return bool
    *   Always returns TRUE.
    */
-  protected function assertCacheContexts(array $expected_contexts, $message = NULL, $include_default_contexts = TRUE) {
+  protected function assertCacheContexts(array $expected_contexts, $message = NULL, $include_default_contexts = TRUE): bool {
     if ($include_default_contexts) {
       $default_contexts = ['languages:language_interface', 'theme'];
-      // Add the user.permission context to the list of default contexts except
-      // when user is already there.
+      // Add the user based contexts to the list of default contexts except when
+      // user is already there.
       if (!in_array('user', $expected_contexts)) {
         $default_contexts[] = 'user.permissions';
+
+        if (!in_array('user.roles', $expected_contexts)) {
+          // The system_page_attachments() hook is only called when dealing with
+          // the HtmlRenderer, so check the Content-Type header.
+          // @see \Drupal\Core\Render\MainContent\HtmlRenderer::invokePageAttachmentHooks()
+          if ($this->getSession()->getResponseHeader('Content-Type') === 'text/html; charset=utf-8') {
+            $default_contexts[] = 'user.roles:authenticated';
+          }
+        }
       }
       $expected_contexts = Cache::mergeContexts($expected_contexts, $default_contexts);
     }
@@ -151,8 +162,8 @@ trait AssertPageCacheContextsAndTagsTrait {
    * @param int $max_age
    *   The maximum age of the cache.
    */
-  protected function assertCacheMaxAge($max_age) {
-    $this->assertSession()->responseHeaderContains('Cache-Control', 'max-age:' . $max_age);
+  protected function assertCacheMaxAge(int $max_age) {
+    $this->assertSession()->responseHeaderEquals('Cache-Control', "max-age=$max_age, public");
   }
 
 }

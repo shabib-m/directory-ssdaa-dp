@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Action;
 
 use Drupal\Core\Action\ActionInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\system\Entity\Action;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests action plugins.
- *
- * @group Action
  */
+#[Group('Action')]
+#[RunTestsInSeparateProcesses]
 class ActionTest extends KernelTestBase {
 
   /**
@@ -34,13 +38,13 @@ class ActionTest extends KernelTestBase {
 
     $this->actionManager = $this->container->get('plugin.manager.action');
     $this->installEntitySchema('user');
-    $this->installSchema('system', ['sequences']);
+    $this->installConfig('user');
   }
 
   /**
    * Tests the functionality of test actions.
    */
-  public function testOperations() {
+  public function testOperations(): void {
     // Test that actions can be discovered.
     $definitions = $this->actionManager->getDefinitions();
     // Verify that the action definitions are found.
@@ -75,7 +79,7 @@ class ActionTest extends KernelTestBase {
   /**
    * Tests the dependency calculation of actions.
    */
-  public function testDependencies() {
+  public function testDependencies(): void {
     // Create a new action that depends on a user role.
     $action = Action::create([
       'id' => 'user_add_role_action.' . RoleInterface::ANONYMOUS_ID,
@@ -97,6 +101,28 @@ class ActionTest extends KernelTestBase {
       ],
     ];
     $this->assertSame($expected, $action->calculateDependencies()->getDependencies());
+  }
+
+  /**
+   * Tests no type specified action.
+   */
+  public function testNoTypeAction(): void {
+    // Create an action config entity using the action_test_no_type plugin.
+    $action = Action::create([
+      'id' => 'action_test_no_type_action',
+      'label' => 'Test Action with No Type',
+      'plugin' => 'action_test_no_type',
+    ]);
+    $action->save();
+
+    // Reload the action to ensure it's saved correctly.
+    $action = Action::load('action_test_no_type_action');
+
+    // Assert that the action was saved and loaded correctly.
+    $this->assertNotNull($action, 'The action config entity was saved and loaded correctly.');
+    $this->assertSame('action_test_no_type_action', $action->id(), 'The action ID is correct.');
+    $this->assertSame('Test Action with No Type', $action->label(), 'The action label is correct.');
+    $this->assertNull($action->getType(), 'The action type is correctly set to NULL.');
   }
 
 }

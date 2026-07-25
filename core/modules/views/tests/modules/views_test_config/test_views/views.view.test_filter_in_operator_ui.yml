@@ -4,7 +4,7 @@ dependencies:
   module:
     - node
 id: test_filter_in_operator_ui
-label: ''
+label: test_filter_in_operator_ui
 module: views
 description: ''
 tag: ''
@@ -97,8 +97,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
           is_grouped: false
           group_info:
             label: ''

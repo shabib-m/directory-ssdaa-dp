@@ -3,9 +3,10 @@
 namespace Drupal\node\Plugin\Block;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
@@ -13,12 +14,16 @@ use Drupal\Core\Url;
 /**
  * Provides a 'Syndicate' block that links to the site's RSS feed.
  *
- * @Block(
- *   id = "node_syndicate_block",
- *   admin_label = @Translation("Syndicate"),
- *   category = @Translation("System")
- * )
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3519248
  */
+#[Block(
+  id: "node_syndicate_block",
+  admin_label: new TranslatableMarkup("Syndicate"),
+  category: new TranslatableMarkup("System")
+)]
 class SyndicateBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
 
@@ -35,27 +40,16 @@ class SyndicateBlock extends BlockBase implements ContainerFactoryPluginInterfac
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigFactoryInterface $configFactory) {
+    @trigger_error('The Syndicate block is deprecated in drupal:11.2.0 and will be removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3519248', E_USER_DEPRECATED);
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->configFactory = $configFactory;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('config.factory')
-    );
   }
 
   /**

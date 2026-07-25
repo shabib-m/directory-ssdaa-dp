@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 3b00e3be-a74e-483e-8d48-d85d1ea811cc
+  bundle: country
+  default_langcode: ar
+  depends:
+    33ddba6e-5a8c-4fe7-b8fd-d6db35c1f003: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: مصر
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 33ddba6e-5a8c-4fe7-b8fd-d6db35c1f003
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: true

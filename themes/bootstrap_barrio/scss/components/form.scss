@@ -1,6 +1,6 @@
 /**
  * @file
- * Visual styles for Bootstrap Barrio's form components.
+ * Visual styles for Bootstrap's form components.
  */
 
 .form-required::after {
@@ -38,4 +38,8 @@ form {
   background: none;
   text-decoration: underline;
   color: var(--bs-link-color);
+}
+
+.image-button.form-control {
+  border: none;
 }

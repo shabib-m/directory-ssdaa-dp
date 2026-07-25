@@ -1,29 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\views\Entity\View;
-use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
-use Drupal\Core\Entity\Entity\EntityViewMode;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the core Drupal\views\Plugin\views\field\RenderedEntity handler.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldRenderedEntityTest extends ViewsKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['entity_test', 'field'];
 
@@ -44,7 +46,7 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpFixtures() {
+  protected function setUpFixtures(): void {
     $this->installEntitySchema('user');
     $this->installEntitySchema('entity_test');
     $this->installConfig(['entity_test']);
@@ -111,11 +113,12 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
   /**
    * Tests the default rendered entity output.
    */
-  public function testRenderedEntityWithoutField() {
+  public function testRenderedEntityWithoutAndWithField(): void {
+    // First test without test_field displayed.
     \Drupal::currentUser()->setAccount($this->user);
 
-    EntityViewDisplay::load('entity_test.entity_test.foobar')
-      ->removeComponent('test_field')
+    $display = EntityViewDisplay::load('entity_test.entity_test.foobar');
+    $display->removeComponent('test_field')
       ->save();
 
     $view = Views::getView('test_field_entity_test_rendered');
@@ -126,11 +129,34 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
       '#display_id' => 'default',
     ];
     $renderer = \Drupal::service('renderer');
-    $renderer->renderPlain($build);
+    $renderer->renderInIsolation($build);
     for ($i = 1; $i <= 3; $i++) {
-      $view_field = $view->style_plugin->getField($i - 1, 'rendered_entity');
+      $view_field = (string) $view->style_plugin->getField($i - 1, 'rendered_entity');
       $search_result = str_contains($view_field, "Test $i");
       $this->assertFalse($search_result, "The text 'Test $i' not found in the view.");
+    }
+
+    $this->assertConfigDependencies($view->storage);
+    $this->assertCacheabilityMetadata($build);
+
+    // Now show the test_field on the entity_test.entity_test.foobar view
+    // display to confirm render is updated correctly.
+    $display->setComponent('test_field', ['type' => 'string', 'label' => 'above'])->save();
+    // Need to reload the view because the rendered fields are statically cached
+    // in the object.
+    $view = Views::getView('test_field_entity_test_rendered');
+    $build = [
+      '#type' => 'view',
+      '#name' => 'test_field_entity_test_rendered',
+      '#view' => $view,
+      '#display_id' => 'default',
+    ];
+
+    $renderer->renderInIsolation($build);
+    for ($i = 1; $i <= 3; $i++) {
+      $view_field = (string) $view->style_plugin->getField($i - 1, 'rendered_entity');
+      $search_result = str_contains($view_field, "Test $i");
+      $this->assertTrue($search_result, "The text 'Test $i' found in the view.");
     }
 
     $this->assertConfigDependencies($view->storage);
@@ -141,13 +167,12 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
    * Ensures that the expected cacheability metadata is applied.
    *
    * @param array $build
-   *   The render array
+   *   The render array.
    *
    * @internal
    */
   protected function assertCacheabilityMetadata(array $build): void {
     $this->assertEqualsCanonicalizing([
-      'config:core.entity_view_display.entity_test.entity_test.foobar',
       'config:views.view.test_field_entity_test_rendered',
       'entity_test:1',
       'entity_test:2',
@@ -179,35 +204,6 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
       'config' => ['core.entity_view_mode.entity_test.foobar'],
       'module' => ['entity_test'],
     ], $storage->getDependencies());
-  }
-
-  /**
-   * Tests the rendered entity output with the test field configured to show.
-   */
-  public function testRenderedEntityWithField() {
-    \Drupal::currentUser()->setAccount($this->user);
-
-    // Show the test_field on the entity_test.entity_test.foobar view display.
-    EntityViewDisplay::load('entity_test.entity_test.foobar')->setComponent('test_field', ['type' => 'string', 'label' => 'above'])->save();
-
-    $view = Views::getView('test_field_entity_test_rendered');
-    $build = [
-      '#type' => 'view',
-      '#name' => 'test_field_entity_test_rendered',
-      '#view' => $view,
-      '#display_id' => 'default',
-    ];
-
-    $renderer = \Drupal::service('renderer');
-    $renderer->renderPlain($build);
-    for ($i = 1; $i <= 3; $i++) {
-      $view_field = $view->style_plugin->getField($i - 1, 'rendered_entity');
-      $search_result = str_contains($view_field, "Test $i");
-      $this->assertTrue($search_result, "The text 'Test $i' found in the view.");
-    }
-
-    $this->assertConfigDependencies($view->storage);
-    $this->assertCacheabilityMetadata($build);
   }
 
 }

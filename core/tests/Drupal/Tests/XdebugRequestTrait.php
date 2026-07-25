@@ -1,9 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests;
 
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Trait for testing with Xdebug cookies extraction from request.
+ */
 trait XdebugRequestTrait {
 
   /**
@@ -23,7 +28,7 @@ trait XdebugRequestTrait {
    * @return array
    *   The extracted cookies.
    */
-  protected function extractCookiesFromRequest(Request $request) {
+  protected function extractCookiesFromRequest(Request $request): array {
     $cookie_params = $request->cookies;
     $cookies = [];
     if ($cookie_params->has('XDEBUG_SESSION')) {

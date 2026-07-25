@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional\Views;
 
 use Drupal\Core\Cache\Cache;
@@ -7,13 +9,16 @@ use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 use Drupal\user\Plugin\views\access\Role;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests views role access plugin.
  *
- * @group user
  * @see \Drupal\user\Plugin\views\access\Role
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class AccessRoleTest extends AccessTestBase {
 
   use AssertPageCacheContextsAndTagsTrait;
@@ -40,7 +45,7 @@ class AccessRoleTest extends AccessTestBase {
   /**
    * Tests role access plugin.
    */
-  public function testAccessRole() {
+  public function testAccessRole(): void {
     /** @var \Drupal\views\ViewEntityInterface $view */
     $view = \Drupal::entityTypeManager()->getStorage('view')->load('test_access_role');
     $display = &$view->getDisplay('default');
@@ -111,7 +116,7 @@ class AccessRoleTest extends AccessTestBase {
   /**
    * Tests access on render caching.
    */
-  public function testRenderCaching() {
+  public function testRenderCaching(): void {
     $view = Views::getView('test_access_role');
     $display = &$view->storage->getDisplay('default');
     $display['display_options']['cache'] = [
@@ -130,7 +135,7 @@ class AccessRoleTest extends AccessTestBase {
     // First access as user with access.
     $build = DisplayPluginBase::buildBasicRenderable('test_access_role', 'default');
     $account_switcher->switchTo($this->normalUser);
-    $result = $renderer->renderPlain($build);
+    $result = $renderer->renderInIsolation($build);
     $this->assertContains('user.roles', $build['#cache']['contexts']);
     $this->assertEquals(['config:views.view.test_access_role'], $build['#cache']['tags']);
     $this->assertEquals(Cache::PERMANENT, $build['#cache']['max-age']);
@@ -139,7 +144,7 @@ class AccessRoleTest extends AccessTestBase {
     // Then without access.
     $build = DisplayPluginBase::buildBasicRenderable('test_access_role', 'default');
     $account_switcher->switchTo($this->webUser);
-    $result = $renderer->renderPlain($build);
+    $result = $renderer->renderInIsolation($build);
     // @todo Fix this in https://www.drupal.org/node/2551037,
     // DisplayPluginBase::applyDisplayCacheabilityMetadata() is not invoked when
     // using buildBasicRenderable() and a Views access plugin returns FALSE.

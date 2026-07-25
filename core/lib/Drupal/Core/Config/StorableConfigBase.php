@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Config;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Config\Schema\Ignore;
 use Drupal\Core\Config\Schema\Mapping;
 use Drupal\Core\Config\Schema\Sequence;
@@ -68,7 +69,8 @@ abstract class StorableConfigBase extends ConfigBase {
    * @param bool $has_trusted_data
    *   Set to TRUE if the configuration data has already been checked to ensure
    *   it conforms to schema. Generally this is only used during module and
-   *   theme installation.
+   *   theme installation. This argument is deprecated in Drupal 11.4.0 and is
+   *   removed in Drupal 13.0.0.
    *
    * @return $this
    *
@@ -122,6 +124,47 @@ abstract class StorableConfigBase extends ConfigBase {
   }
 
   /**
+   * Gets original data from this configuration object.
+   *
+   * Original data is the data as it is immediately after loading from
+   * configuration storage before any changes. If this is a new configuration
+   * object it will be an empty array.
+   *
+   * @param string $key
+   *   A string that maps to a key within the configuration data.
+   *
+   * @return mixed
+   *   The data that was requested.
+   *
+   * @see \Drupal\Core\Config\Config::get()
+   */
+  public function getOriginal($key = '') {
+    $original_data = $this->originalData;
+
+    if (empty($key)) {
+      return $original_data;
+    }
+
+    $parts = explode('.', $key);
+    if (count($parts) == 1) {
+      return $original_data[$key] ?? NULL;
+    }
+
+    $value = NestedArray::getValue($original_data, $parts, $key_exists);
+    return $key_exists ? $value : NULL;
+  }
+
+  /**
+   * Gets the raw data without any manipulations.
+   *
+   * @return array
+   *   The raw data.
+   */
+  public function getRawData() {
+    return $this->data;
+  }
+
+  /**
    * Gets the schema wrapper for the whole configuration object.
    *
    * The schema wrapper is dependent on the configuration name and the whole
@@ -129,6 +172,7 @@ abstract class StorableConfigBase extends ConfigBase {
    * should be reset.
    *
    * @return \Drupal\Core\Config\Schema\Element
+   *   A configuration element.
    */
   protected function getSchemaWrapper() {
     if (!isset($this->schemaWrapper)) {

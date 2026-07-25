@@ -1,26 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Functional;
 
 use Drupal\node\Entity\Node;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test the content moderation actions.
- *
- * @group content_moderation
  */
+#[Group('content_moderation')]
+#[RunTestsInSeparateProcesses]
 class ModerationActionsTest extends BrowserTestBase {
 
   use ContentTypeCreationTrait;
   use ContentModerationTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'content_moderation',
@@ -58,10 +61,9 @@ class ModerationActionsTest extends BrowserTestBase {
 
   /**
    * Tests the node status actions report moderation status to users correctly.
-   *
-   * @dataProvider nodeStatusActionsTestCases
    */
-  public function testNodeStatusActions($action, $bundle, $warning_appears, $starting_status, $final_status) {
+  #[DataProvider('nodeStatusActionsTestCases')]
+  public function testNodeStatusActions($action, $bundle, $warning_appears, $starting_status, $final_status): void {
     // Create and run an action on a node.
     $node = Node::create([
       'type' => $bundle,
@@ -80,11 +82,12 @@ class ModerationActionsTest extends BrowserTestBase {
     ], 'Apply to selected items');
 
     if ($warning_appears) {
+      $typeLabel = $node->getBundleEntity()->label();
       if ($action == 'node_publish_action') {
-        $this->assertSession()->statusMessageContains(node_get_type_label($node) . ' content items were skipped as they are under moderation and may not be directly published.', 'warning');
+        $this->assertSession()->statusMessageContains($typeLabel . ' content items were skipped as they are under moderation and may not be directly published.', 'warning');
       }
       else {
-        $this->assertSession()->statusMessageContains(node_get_type_label($node) . ' content items were skipped as they are under moderation and may not be directly unpublished.', 'warning');
+        $this->assertSession()->statusMessageContains($typeLabel . ' content items were skipped as they are under moderation and may not be directly unpublished.', 'warning');
       }
     }
     else {
@@ -102,7 +105,7 @@ class ModerationActionsTest extends BrowserTestBase {
    * @return array
    *   An array of test cases.
    */
-  public function nodeStatusActionsTestCases() {
+  public static function nodeStatusActionsTestCases() {
     return [
       'Moderated bundle shows warning (publish action)' => [
         'node_publish_action',

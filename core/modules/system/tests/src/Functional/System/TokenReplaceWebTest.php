@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the token system integration.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class TokenReplaceWebTest extends BrowserTestBase {
 
   use AssertPageCacheContextsAndTagsTrait;
@@ -28,7 +32,7 @@ class TokenReplaceWebTest extends BrowserTestBase {
   /**
    * Tests a token replacement on an actual website.
    */
-  public function testTokens() {
+  public function testTokens(): void {
     $node = $this->drupalCreateNode();
     $account = $this->drupalCreateUser();
     $this->drupalLogin($account);
@@ -36,12 +40,22 @@ class TokenReplaceWebTest extends BrowserTestBase {
     $this->drupalGet('token-test/' . $node->id());
     $this->assertSession()->pageTextContains("Tokens: {$node->id()} {$account->id()}");
     $this->assertCacheTags(['node:1', 'rendered', 'user:2']);
-    $this->assertCacheContexts(['languages:language_interface', 'theme', 'url.query_args:' . MainContentViewSubscriber::WRAPPER_FORMAT, 'user']);
+    $this->assertCacheContexts([
+      'languages:language_interface',
+      'theme',
+      'url.query_args:' . MainContentViewSubscriber::WRAPPER_FORMAT,
+      'user',
+    ]);
 
     $this->drupalGet('token-test-without-bubbleable-metadata/' . $node->id());
     $this->assertSession()->pageTextContains("Tokens: {$node->id()} {$account->id()}");
     $this->assertCacheTags(['node:1', 'rendered', 'user:2']);
-    $this->assertCacheContexts(['languages:language_interface', 'theme', 'url.query_args:' . MainContentViewSubscriber::WRAPPER_FORMAT, 'user']);
+    $this->assertCacheContexts([
+      'languages:language_interface',
+      'theme',
+      'url.query_args:' . MainContentViewSubscriber::WRAPPER_FORMAT,
+      'user',
+    ]);
   }
 
 }

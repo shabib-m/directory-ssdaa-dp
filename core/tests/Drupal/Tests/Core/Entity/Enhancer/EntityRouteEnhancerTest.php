@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Entity\Enhancer;
 
 use Drupal\Core\Entity\Enhancer\EntityRouteEnhancer;
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Routing\RouteObjectInterface;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
 
 /**
- * @coversDefaultClass \Drupal\Core\Entity\Enhancer\EntityRouteEnhancer
- * @group Entity
+ * Tests Drupal\Core\Entity\Enhancer\EntityRouteEnhancer.
  */
+#[CoversClass(EntityRouteEnhancer::class)]
+#[Group('Entity')]
 class EntityRouteEnhancerTest extends UnitTestCase {
 
   /**
@@ -19,7 +24,7 @@ class EntityRouteEnhancerTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Entity\Enhancer\EntityRouteEnhancer::enhancer()
    */
-  public function testEnhancer() {
+  public function testEnhancer(): void {
     $route_enhancer = new EntityRouteEnhancer();
 
     // Set a controller to ensure it is not overridden.

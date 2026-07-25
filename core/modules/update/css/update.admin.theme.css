@@ -1,6 +1,6 @@
 /**
  * @file
- * Styles used by the Update Manager module.
+ * Styles used by the Update Status module.
  */
 
 .project-update__title {
@@ -15,10 +15,10 @@
   float: left;
 }
 .project-update__status--not-supported {
-  float: left; /* LTR */
+  float: right; /* LTR */
 }
 [dir="rtl"] .project-update__status--not-supported {
-  float: right;
+  float: left;
 }
 .project-update__status--security-error {
   color: #970f00;

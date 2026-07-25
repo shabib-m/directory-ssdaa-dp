@@ -1,16 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\responsive_image\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\responsive_image\Entity\ResponsiveImageStyle;
+use Drupal\Tests\field_ui\Traits\FieldUiJSTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the responsive image field UI.
- *
- * @group responsive_image
  */
+#[Group('responsive_image')]
+#[RunTestsInSeparateProcesses]
 class ResponsiveImageFieldUiTest extends WebDriverTestBase {
+
+  use FieldUiJSTestTrait;
 
   /**
    * {@inheritdoc}
@@ -18,9 +25,7 @@ class ResponsiveImageFieldUiTest extends WebDriverTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'node',
@@ -44,6 +49,7 @@ class ResponsiveImageFieldUiTest extends WebDriverTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->drupalPlaceBlock('system_breadcrumb_block');
+    $this->drupalPlaceBlock('local_actions_block');
     // Create a test user.
     $admin_user = $this->drupalCreateUser([
       'access content',
@@ -56,7 +62,7 @@ class ResponsiveImageFieldUiTest extends WebDriverTestBase {
     $this->drupalLogin($admin_user);
 
     // Create content type, with underscores.
-    $type_name = strtolower($this->randomMachineName(8)) . '_test';
+    $type_name = $this->randomMachineName(8) . '_test';
     $type = $this->drupalCreateContentType([
       'name' => $type_name,
       'type' => $type_name,
@@ -67,30 +73,13 @@ class ResponsiveImageFieldUiTest extends WebDriverTestBase {
   /**
    * Tests formatter settings.
    */
-  public function testResponsiveImageFormatterUi() {
+  public function testResponsiveImageFormatterUi(): void {
     $manage = 'admin/structure/types/manage/' . $this->type;
-    $add_field = $manage . '/fields/add-field';
-    $manage_display = $manage . '/display';
+    $manage_display = $manage . '/display/default';
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert_session */
     $assert_session = $this->assertSession();
 
-    // Create a field, and a node with some data for the field.
-    // Create the field.
-    $this->drupalGet($add_field);
-
-    $page = $this->getSession()->getPage();
-    $storage_type = $page->findField('edit-new-storage-type');
-    $storage_type->setValue('image');
-
-    // Set the label.
-    $label = $page->findField('edit-label');
-    $label->setValue('Image');
-
-    // Wait for the machine name.
-    $assert_session->waitForElementVisible('css', '[name="label"] + * .machine-name-value');
-
-    // Save the current page.
-    $save_button = $page->findButton('Save and continue');
-    $save_button->click();
+    $this->fieldUIAddNewFieldJS('admin/structure/types/manage/' . $this->type, 'image', 'Image', 'image');
 
     // Display the "Manage display" page.
     $this->drupalGet($manage_display);
@@ -105,7 +94,7 @@ class ResponsiveImageFieldUiTest extends WebDriverTestBase {
     $this->assertEquals('Select a responsive image style. Loading attribute: lazy', $summary_text->getText());
 
     $page->pressButton('Save');
-    $assert_session->responseContains("Select a responsive image style.");
+    $this->assertTrue($assert_session->waitForText('Select a responsive image style.'));
 
     // Create responsive image styles.
     $responsive_image_style = ResponsiveImageStyle::create([
@@ -155,8 +144,8 @@ class ResponsiveImageFieldUiTest extends WebDriverTestBase {
     // Save the form to save the settings.
     $page->pressButton('Save');
 
-    $assert_session->responseContains('Responsive image style: Style One');
-    $assert_session->responseContains('Linked to content');
+    $this->assertTrue($assert_session->waitForText('Responsive image style: Style One'));
+    $this->assertTrue($assert_session->waitForText('Linked to content'));
 
     $page->find('css', '#edit-fields-field-image-settings-edit')->click();
     $assert_session->waitForField('fields[field_image][settings_edit_form][settings][responsive_image_style]');
@@ -165,8 +154,8 @@ class ResponsiveImageFieldUiTest extends WebDriverTestBase {
     // Save the form to save the settings.
     $page->pressButton('Save');
 
-    $assert_session->responseContains('Responsive image style: Style One');
-    $assert_session->responseContains('Linked to file');
+    $this->assertTrue($assert_session->waitForText('Responsive image style: Style One'));
+    $this->assertTrue($assert_session->waitForText('Linked to file'));
   }
 
 }

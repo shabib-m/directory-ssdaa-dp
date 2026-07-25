@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel\Views;
 
 use Drupal\file\Entity\File;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\user\Entity\User;
 use Drupal\Tests\views\Kernel\Handler\FieldFieldAccessTestBase;
+use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests base field access in Views for the file entity.
- *
- * @group File
  */
+#[Group('File')]
+#[RunTestsInSeparateProcesses]
 class FileViewsFieldAccessTest extends FieldFieldAccessTestBase {
 
   /**
@@ -31,10 +35,10 @@ class FileViewsFieldAccessTest extends FieldFieldAccessTestBase {
   /**
    * Check access for file fields.
    */
-  public function testFileFields() {
+  public function testFileFields(): void {
     ConfigurableLanguage::create([
       'id' => 'fr',
-      'name' => 'French',
+      'label' => 'French',
     ])->save();
 
     $user = User::create([
@@ -64,7 +68,7 @@ class FileViewsFieldAccessTest extends FieldFieldAccessTestBase {
     $this->assertFieldAccess('file', 'filesize', '4 bytes');
     $this->assertFieldAccess('file', 'status', 'Permanent');
     // $this->assertFieldAccess('file', 'created', \Drupal::service('date.formatter')->format(123456));
-    // $this->assertFieldAccess('file', 'changed', \Drupal::service('date.formatter')->format(REQUEST_TIME));
+    // $this->assertFieldAccess('file', 'changed', \Drupal::service('date.formatter')->format(\Drupal::time()->getRequestTime()));
   }
 
 }

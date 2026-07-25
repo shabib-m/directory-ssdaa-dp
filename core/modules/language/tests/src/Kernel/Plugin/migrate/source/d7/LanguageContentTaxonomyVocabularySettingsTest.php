@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Kernel\Plugin\migrate\source\d7;
 
+use Drupal\language\Plugin\migrate\source\d7\LanguageContentSettingsTaxonomyVocabulary;
 use Drupal\Tests\taxonomy\Kernel\Plugin\migrate\source\d7\VocabularyTest;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests i18ntaxonomy vocabulary setting source plugin.
- *
- * @covers \Drupal\language\Plugin\migrate\source\d7\LanguageContentSettingsTaxonomyVocabulary
- *
- * @group language
  */
+#[CoversClass(LanguageContentSettingsTaxonomyVocabulary::class)]
+#[Group('language')]
+#[RunTestsInSeparateProcesses]
 class LanguageContentTaxonomyVocabularySettingsTest extends VocabularyTest {
 
   /**
@@ -21,7 +26,7 @@ class LanguageContentTaxonomyVocabularySettingsTest extends VocabularyTest {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     // Get the source data from parent.
     $tests = parent::providerSource();
 

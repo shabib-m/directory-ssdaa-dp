@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\Core\Database\Database;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests all ui related settings under admin/structure/views/settings.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class SettingsTest extends UITestBase {
 
   /**
@@ -34,7 +38,7 @@ class SettingsTest extends UITestBase {
   /**
    * Tests the settings for the edit ui.
    */
-  public function testEditUI() {
+  public function testEditUI(): void {
     $this->drupalLogin($this->adminUser);
 
     // Test the settings tab exists.
@@ -55,7 +59,7 @@ class SettingsTest extends UITestBase {
 
     $view = [];
     $view['label'] = $this->randomMachineName(16);
-    $view['id'] = strtolower($this->randomMachineName(16));
+    $view['id'] = $this->randomMachineName(16);
     $view['description'] = $this->randomMachineName(16);
     $view['page[create]'] = TRUE;
     $view['page[title]'] = $this->randomMachineName(16);
@@ -78,7 +82,7 @@ class SettingsTest extends UITestBase {
 
     // Create a view with an additional display, so default should be hidden.
     $view['page[create]'] = TRUE;
-    $view['id'] = strtolower($this->randomMachineName());
+    $view['id'] = $this->randomMachineName();
     $this->drupalGet('admin/structure/views/add');
     $this->submitForm($view, 'Save and edit');
 
@@ -94,7 +98,7 @@ class SettingsTest extends UITestBase {
     $this->drupalGet('admin/structure/views/settings');
     $this->submitForm($edit, 'Save configuration');
 
-    $view['id'] = strtolower($this->randomMachineName());
+    $view['id'] = $this->randomMachineName();
     $this->drupalGet('admin/structure/views/add');
     $this->submitForm($view, 'Save and edit');
     $this->assertSession()->buttonExists('edit-displays-top-add-display-embed');
@@ -116,7 +120,7 @@ class SettingsTest extends UITestBase {
     $this->drupalGet('admin/structure/views/settings');
     $this->submitForm($edit, 'Save configuration');
 
-    $view['id'] = strtolower($this->randomMachineName());
+    $view['id'] = $this->randomMachineName();
     $this->drupalGet('admin/structure/views/add');
     $this->submitForm($view, 'Save and edit');
 
@@ -130,7 +134,7 @@ class SettingsTest extends UITestBase {
     $this->drupalGet('admin/structure/views/settings');
     $this->submitForm($edit, 'Save configuration');
 
-    $view['id'] = strtolower($this->randomMachineName());
+    $view['id'] = $this->randomMachineName();
     $this->drupalGet('admin/structure/views/add');
     $this->submitForm($view, 'Save and edit');
 
@@ -151,13 +155,11 @@ class SettingsTest extends UITestBase {
     $this->assertSession()->pageTextContains('The configuration options have been saved.');
 
     $edit = [
-      'skip_cache' => TRUE,
       'sql_signature' => TRUE,
     ];
     $this->drupalGet('admin/structure/views/settings/advanced');
     $this->submitForm($edit, 'Save configuration');
 
-    $this->assertSession()->checkboxChecked('edit-skip-cache');
     $this->assertSession()->checkboxChecked('edit-sql-signature');
 
     // Test the "Clear Views' cache" button.

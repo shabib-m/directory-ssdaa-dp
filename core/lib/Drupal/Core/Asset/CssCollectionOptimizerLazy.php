@@ -8,8 +8,8 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\State\StateInterface;
 use Drupal\Core\Theme\ThemeManagerInterface;
+use Drupal\Core\Site\Settings;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -42,8 +42,6 @@ class CssCollectionOptimizerLazy implements AssetCollectionGroupOptimizerInterfa
    *   The time service.
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
-   * @param \Drupal\Core\State\StateInterface $state
-   *   The state key/value store.
    */
   public function __construct(
     protected readonly AssetCollectionGrouperInterface $grouper,
@@ -56,7 +54,6 @@ class CssCollectionOptimizerLazy implements AssetCollectionGroupOptimizerInterfa
     protected readonly FileUrlGeneratorInterface $fileUrlGenerator,
     protected readonly TimeInterface $time,
     protected readonly LanguageManagerInterface $languageManager,
-    protected readonly StateInterface $state
   ) {}
 
   /**
@@ -110,7 +107,7 @@ class CssCollectionOptimizerLazy implements AssetCollectionGroupOptimizerInterfa
       'theme' => $this->themeManager->getActiveTheme()->getName(),
       'include' => UrlHelper::compressQueryParameter(implode(',', $this->dependencyResolver->getMinimalRepresentativeSubset($libraries))),
     ];
-    $ajax_page_state = $this->requestStack->getCurrentRequest()->get('ajax_page_state');
+    $ajax_page_state = $this->requestStack->getCurrentRequest()->attributes->get('ajax_page_state');
     $already_loaded = isset($ajax_page_state) ? explode(',', $ajax_page_state['libraries']) : [];
     if ($already_loaded) {
       $query_args['exclude'] = UrlHelper::compressQueryParameter(implode(',', $this->dependencyResolver->getMinimalRepresentativeSubset($already_loaded)));
@@ -134,16 +131,17 @@ class CssCollectionOptimizerLazy implements AssetCollectionGroupOptimizerInterfa
   /**
    * {@inheritdoc}
    */
-  public function getAll() {
-    return $this->state->get('drupal_css_cache_files', []);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function deleteAll() {
-    $this->state->delete('drupal_css_cache_files');
-    $this->fileSystem->deleteRecursive('assets://css');
+    if (!\is_dir('assets://css')) {
+      return;
+    }
+    $directory_iterator = new \DirectoryIterator('assets://css');
+    $threshold = Settings::get('aggregate_gc_threshold', 86400 * 45);
+    foreach ($directory_iterator as $file) {
+      if ($file->isFile() && $this->time->getRequestTime() - $file->getMtime() > $threshold) {
+        $this->fileSystem->delete($file->getPathName());
+      }
+    }
   }
 
   /**
@@ -160,10 +158,21 @@ class CssCollectionOptimizerLazy implements AssetCollectionGroupOptimizerInterfa
         $data .= "/* @license " . $css_asset['license']['name'] . " " . $css_asset['license']['url'] . " */\n";
       }
       $current_license = $css_asset['license'];
-      $data .= $this->optimizer->optimize($css_asset);
+
+      // Only external minified files can skip optimization.
+      // Local files (even if minified) must be processed to ensure resource
+      // paths are rewritten relative to the cached aggregated file location.
+      $is_minified = isset($css_asset['minified']) && $css_asset['minified'];
+      $is_external = isset($css_asset['type']) && $css_asset['type'] === 'external';
+      if ($is_minified && $is_external) {
+        $data .= file_get_contents($css_asset['data']);
+      }
+      else {
+        $data .= $this->optimizer->optimize($css_asset);
+      }
     }
     // Per the W3C specification at
-    // http://www.w3.org/TR/REC-CSS2/cascade.html#at-import, @import rules must
+    // https://www.w3.org/TR/REC-CSS2/cascade.html#at-import, @import rules must
     // precede any other style, so we move those to the top. The regular
     // expression is expressed in NOWDOC since it is detecting backslashes as
     // well as single and double quotes. It is difficult to read when

@@ -1,21 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Entity;
 
 use Drupal\Component\Utility\Html;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\node\Entity\NodeType;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\node\Entity\NodeType;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore xyabz
 /**
  * Tests entity reference selection plugins.
- *
- * @group entity_reference
  */
+#[Group('entity_reference')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class EntityReferenceSelectionReferenceableTest extends KernelTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * Bundle of 'entity_test_no_label' entity.
@@ -42,7 +49,6 @@ class EntityReferenceSelectionReferenceableTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'system',
     'user',
     'field',
     'node',
@@ -64,24 +70,24 @@ class EntityReferenceSelectionReferenceableTest extends KernelTestBase {
 
     // Create a new node-type.
     NodeType::create([
-      'type' => $node_type = mb_strtolower($this->randomMachineName()),
+      'type' => $node_type = $this->randomMachineName(),
       'name' => $this->randomString(),
     ])->save();
 
     // Create an entity reference field targeting 'entity_test_no_label'
     // entities.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $this->createEntityReferenceField('node', $node_type, $field_name, $this->randomString(), 'entity_test_no_label');
     $field_config = FieldConfig::loadByName('node', $node_type, $field_name);
     $this->selectionHandler = $this->container->get('plugin.manager.entity_reference_selection')->getSelectionHandler($field_config);
 
     // Generate a bundle name to be used with 'entity_test_no_label'.
-    $this->bundle = mb_strtolower($this->randomMachineName());
+    $this->bundle = $this->randomMachineName();
 
     // Create 6 entities to be referenced by the field.
     foreach (static::$labels as $name) {
       $storage->create([
-        'id' => mb_strtolower($this->randomMachineName()),
+        'id' => $this->randomMachineName(),
         'name' => $name,
         'type' => $this->bundle,
       ])->save();
@@ -90,8 +96,6 @@ class EntityReferenceSelectionReferenceableTest extends KernelTestBase {
 
   /**
    * Tests referenceable entities with no target entity type 'label' key.
-   *
-   * @see \Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface::getReferenceableEntities()
    *
    * @param mixed $match
    *   The input text to be checked.
@@ -106,9 +110,10 @@ class EntityReferenceSelectionReferenceableTest extends KernelTestBase {
    * @param int $count_all
    *   The total number (unlimited) of entities to be retrieved.
    *
-   * @dataProvider providerTestCases
+   * @see \Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface::getReferenceableEntities()
    */
-  public function testReferenceablesWithNoLabelKey($match, $match_operator, $limit, $count_limited, array $items, $count_all) {
+  #[DataProvider('providerTestCases')]
+  public function testReferenceablesWithNoLabelKey($match, $match_operator, $limit, $count_limited, array $items, $count_all): void {
     // Test ::getReferenceableEntities().
     $referenceables = $this->selectionHandler->getReferenceableEntities($match, $match_operator, $limit);
 
@@ -138,8 +143,9 @@ class EntityReferenceSelectionReferenceableTest extends KernelTestBase {
    * Provides test cases for ::testReferenceablesWithNoLabelKey() test.
    *
    * @return array[]
+   *   An array of test cases.
    */
-  public function providerTestCases() {
+  public static function providerTestCases() {
     return [
       // All referenceables, no limit. Expecting 9 items.
       [NULL, 'CONTAINS', 0, 9, static::$labels, 9],

@@ -1,29 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel;
 
+use Drupal\comment\AnonymousContact;
 use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Entity\CommentType;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\node\Entity\Node;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests comment validation constraints.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentValidationTest extends EntityKernelTestBase {
   use CommentTestTrait;
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['comment', 'node'];
 
@@ -39,7 +42,7 @@ class CommentValidationTest extends EntityKernelTestBase {
   /**
    * Tests the comment validation constraints.
    */
-  public function testValidation() {
+  public function testValidation(): void {
     // Add a user.
     $user = User::create(['name' => 'test', 'status' => TRUE]);
     $user->save();
@@ -142,7 +145,7 @@ class CommentValidationTest extends EntityKernelTestBase {
     $comment->set('thread', NULL);
 
     // Force anonymous users to enter contact details.
-    $field->setSetting('anonymous', CommentInterface::ANONYMOUS_MUST_CONTACT);
+    $field->setSetting('anonymous', AnonymousContact::Required->value);
     $field->save();
     // Reset the node entity.
     \Drupal::entityTypeManager()->getStorage('node')->resetCache([$node->id()]);
@@ -190,7 +193,7 @@ class CommentValidationTest extends EntityKernelTestBase {
   /**
    * Tests that comments of unpublished nodes are not valid.
    */
-  public function testValidationOfCommentOfUnpublishedNode() {
+  public function testValidationOfCommentOfUnpublishedNode(): void {
     // Create a page node type.
     $this->entityTypeManager->getStorage('node_type')->create([
       'type' => 'page',
@@ -271,10 +274,7 @@ class CommentValidationTest extends EntityKernelTestBase {
     $violations = $node2->validate();
     $this->assertCount(1, $violations);
     $this->assertEquals('entity_reference_comment.0.target_id', $violations[0]->getPropertyPath());
-    $this->assertEquals(t('This entity (%type: %name) cannot be referenced.', [
-      '%type' => $comment1->getEntityTypeId(),
-      '%name' => $comment1->id(),
-    ]), $violations[0]->getMessage());
+    $this->assertEquals(sprintf('This entity (%s: %s) cannot be referenced.', $comment1->getEntityTypeId(), $comment1->id()), $violations[0]->getMessage());
 
     $this->drupalSetCurrentUser($comment_admin_user);
     $this->assertEquals(\Drupal::currentUser()->id(), $comment_admin_user->id());

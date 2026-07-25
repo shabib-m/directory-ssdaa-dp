@@ -1,23 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Kernel;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Ensures that Layout Builder and core EntityViewDisplays are compatible.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutBuilderInstallTest extends LayoutBuilderCompatibilityTestBase {
 
   /**
    * Tests the compatibility of Layout Builder with existing entity displays.
    */
-  public function testCompatibility() {
+  public function testCompatibility(): void {
     // Ensure that the fields are shown.
     $expected_fields = [
       'field field--name-name field--type-string field--label-hidden field__item',

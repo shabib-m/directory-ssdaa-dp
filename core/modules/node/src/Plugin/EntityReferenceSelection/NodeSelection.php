@@ -2,20 +2,21 @@
 
 namespace Drupal\node\Plugin\EntityReferenceSelection;
 
+use Drupal\Core\Entity\Attribute\EntityReferenceSelection;
 use Drupal\Core\Entity\Plugin\EntityReferenceSelection\DefaultSelection;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
 
 /**
  * Provides specific access control for the node entity type.
- *
- * @EntityReferenceSelection(
- *   id = "default:node",
- *   label = @Translation("Node selection"),
- *   entity_types = {"node"},
- *   group = "default",
- *   weight = 1
- * )
  */
+#[EntityReferenceSelection(
+  id: "default:node",
+  label: new TranslatableMarkup("Node selection"),
+  entity_types: ["node"],
+  group: "default",
+  weight: 1
+)]
 class NodeSelection extends DefaultSelection {
 
   /**
@@ -26,8 +27,8 @@ class NodeSelection extends DefaultSelection {
     // Adding the 'node_access' tag is sadly insufficient for nodes: core
     // requires us to also know about the concept of 'published' and
     // 'unpublished'. We need to do that as long as there are no access control
-    // modules in use on the site. As long as one access control module is there,
-    // it is supposed to handle this check.
+    // modules in use on the site. As long as one access control module is
+    // there, it is supposed to handle this check.
     if (!$this->currentUser->hasPermission('bypass node access') && !$this->moduleHandler->hasImplementations('node_grants')) {
       $query->condition('status', NodeInterface::PUBLISHED);
     }

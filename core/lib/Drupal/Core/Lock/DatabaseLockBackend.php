@@ -80,7 +80,7 @@ class DatabaseLockBackend extends LockBackendAbstract {
           // We never need to try again.
           $retry = FALSE;
         }
-        catch (IntegrityConstraintViolationException $e) {
+        catch (IntegrityConstraintViolationException) {
           // Suppress the error. If this is our first pass through the loop,
           // then $retry is FALSE. In this case, the insert failed because some
           // other request acquired the lock but did not release it. We decide
@@ -165,9 +165,16 @@ class DatabaseLockBackend extends LockBackendAbstract {
       if (empty($lock_id)) {
         $lock_id = $this->getLockId();
       }
-      $this->database->delete('semaphore')
-        ->condition('value', $lock_id)
-        ->execute();
+      // In functional tests the test site may have been removed before the
+      // final request has been terminated.
+      try {
+        $this->database->delete('semaphore')
+          ->condition('value', $lock_id)
+          ->execute();
+      }
+      catch (\Exception $e) {
+        $this->catchException($e);
+      }
     }
   }
 
@@ -183,9 +190,9 @@ class DatabaseLockBackend extends LockBackendAbstract {
     // If another process has already created the semaphore table, attempting to
     // recreate it will throw an exception. In this case just catch the
     // exception and do nothing.
-    catch (DatabaseException $e) {
+    catch (DatabaseException) {
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       return FALSE;
     }
     return TRUE;
@@ -198,7 +205,7 @@ class DatabaseLockBackend extends LockBackendAbstract {
    * yet the query failed, then the semaphore is stale and the exception needs
    * to propagate.
    *
-   * @param $e
+   * @param \Exception $e
    *   The exception.
    *
    * @throws \Exception

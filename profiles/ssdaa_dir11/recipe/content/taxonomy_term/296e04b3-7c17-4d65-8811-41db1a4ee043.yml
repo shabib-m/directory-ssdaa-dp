@@ -1,0 +1,30 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 296e04b3-7c17-4d65-8811-41db1a4ee043
+  bundle: main
+  default_langcode: ar
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'مواقع طبيه'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_ayqwnt_alqsm:
+    -
+      value: |
+        fa fa-heartbeat
+  field_sndwq_alaqsam:
+    -
+      value: true

@@ -1,25 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit\process;
 
 use Drupal\migrate\Plugin\migrate\process\DefaultValue;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the default_value process plugin.
- *
- * @group migrate
- * @coversDefaultClass \Drupal\migrate\Plugin\migrate\process\DefaultValue
  */
+#[CoversClass(DefaultValue::class)]
+#[Group('migrate')]
 class DefaultValueTest extends MigrateProcessTestCase {
 
   /**
    * Tests the default_value process plugin.
    *
-   * @covers ::transform
-   *
-   * @dataProvider defaultValueDataProvider
+   * @legacy-covers ::transform
    */
-  public function testDefaultValue($configuration, $expected_value, $value) {
+  #[DataProvider('defaultValueDataProvider')]
+  public function testDefaultValue($configuration, $expected_value, $value): void {
     $process = new DefaultValue($configuration, 'default_value', []);
     $value = $process->transform($value, $this->migrateExecutable, $this->row, 'destination_property');
     $this->assertSame($expected_value, $value);
@@ -29,8 +32,9 @@ class DefaultValueTest extends MigrateProcessTestCase {
    * Provides data for the successful lookup test.
    *
    * @return array
+   *   An array of test cases.
    */
-  public function defaultValueDataProvider() {
+  public static function defaultValueDataProvider() {
     return [
       'strict_true_value_populated_array' => [
         'configuration' => [

@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: d53f997e-d90c-4d64-8b63-3b6019e74f93
+  bundle: country
+  default_langcode: ar
+  depends:
+    9a6508ca-220b-40a3-a733-515987425361: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: الجزائر
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 9a6508ca-220b-40a3-a733-515987425361
+      alt: ''
+      title: ''
+      width: 512
+      height: 512
+  field_sndwq_aldwl:
+    -
+      value: true

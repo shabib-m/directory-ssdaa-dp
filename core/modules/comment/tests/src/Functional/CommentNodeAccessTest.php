@@ -1,23 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional;
 
 use Drupal\comment\CommentManagerInterface;
+use Drupal\comment\CommentPreviewMode;
+use Drupal\node\NodeAccessRebuild;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests comments with node access.
  *
  * Verifies there is no PostgreSQL error when viewing a node with threaded
  * comments (a comment and a reply), if a node access module is in use.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentNodeAccessTest extends CommentTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node_access_test'];
 
@@ -32,7 +36,7 @@ class CommentNodeAccessTest extends CommentTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    node_access_rebuild();
+    \Drupal::service(NodeAccessRebuild::class)->rebuild();
 
     // Re-create user.
     $this->webUser = $this->drupalCreateUser([
@@ -51,14 +55,12 @@ class CommentNodeAccessTest extends CommentTestBase {
   /**
    * Tests that threaded comments can be viewed.
    */
-  public function testThreadedCommentView() {
+  public function testThreadedCommentView(): void {
     // Set comments to have subject required and preview disabled.
-    $this->drupalLogin($this->adminUser);
-    $this->setCommentPreview(DRUPAL_DISABLED);
+    $this->setCommentPreview(CommentPreviewMode::Disabled);
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(TRUE);
     $this->setCommentSettings('default_mode', CommentManagerInterface::COMMENT_MODE_THREADED, 'Comment paging changed.');
-    $this->drupalLogout();
 
     // Post comment.
     $this->drupalLogin($this->webUser);

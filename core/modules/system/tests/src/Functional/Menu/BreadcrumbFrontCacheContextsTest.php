@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Menu;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests breadcrumbs functionality.
- *
- * @group Menu
  */
+#[Group('Menu')]
+#[RunTestsInSeparateProcesses]
 class BreadcrumbFrontCacheContextsTest extends BrowserTestBase {
 
   use AssertBreadcrumbTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'block',
@@ -77,7 +79,7 @@ class BreadcrumbFrontCacheContextsTest extends BrowserTestBase {
    * Checking that the breadcrumb will be printed on node canonical routes even
    * if it was rendered for the <front> page first.
    */
-  public function testBreadcrumbsFrontPageCache() {
+  public function testBreadcrumbsFrontPageCache(): void {
     // Hit front page first as anonymous user with 'cold' render cache.
     $this->drupalGet('<front>');
     $web_assert = $this->assertSession();

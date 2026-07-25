@@ -1,22 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional\Views;
 
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests if entity access is respected on a user bulk form.
  *
- * @group user
  * @see \Drupal\user\Plugin\views\field\UserBulkForm
  * @see \Drupal\user\Tests\Views\BulkFormTest
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class BulkFormAccessTest extends UserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['user_access_test'];
 
@@ -35,7 +38,7 @@ class BulkFormAccessTest extends UserTestBase {
   /**
    * Tests if users that may not be edited, can not be edited in bulk.
    */
-  public function testUserEditAccess() {
+  public function testUserEditAccess(): void {
     // Create an authenticated user.
     $no_edit_user = $this->drupalCreateUser([], 'no_edit');
     // Ensure this account is not blocked.
@@ -65,7 +68,7 @@ class BulkFormAccessTest extends UserTestBase {
     $no_edit_user = User::load($no_edit_user->id());
     $this->assertFalse($no_edit_user->isBlocked(), 'The user is not blocked.');
 
-    // Create a normal user which can be edited by the admin user
+    // Create a normal user which can be edited by the admin user.
     $normal_user = $this->drupalCreateUser();
     $this->assertTrue($normal_user->access('update', $admin_user));
 
@@ -97,7 +100,7 @@ class BulkFormAccessTest extends UserTestBase {
   /**
    * Tests if users that may not be deleted, can not be deleted in bulk.
    */
-  public function testUserDeleteAccess() {
+  public function testUserDeleteAccess(): void {
     // Create two authenticated users.
     $account = $this->drupalCreateUser([], 'no_delete');
     $account2 = $this->drupalCreateUser([], 'may_delete');

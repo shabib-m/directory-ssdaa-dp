@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel;
 
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\taxonomy\Plugin\Validation\Constraint\TaxonomyTermHierarchyConstraintValidator;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests handling of pending revisions.
- *
- * @coversDefaultClass \Drupal\taxonomy\Plugin\Validation\Constraint\TaxonomyTermHierarchyConstraintValidator
- *
- * @group taxonomy
  */
+#[CoversClass(TaxonomyTermHierarchyConstraintValidator::class)]
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermHierarchyValidationTest extends EntityKernelTestBase {
 
   /**
@@ -31,8 +36,8 @@ class TermHierarchyValidationTest extends EntityKernelTestBase {
   /**
    * Tests the term hierarchy validation with re-parenting in pending revisions.
    */
-  public function testTermHierarchyValidation() {
-    $vocabulary_id = mb_strtolower($this->randomMachineName());
+  public function testTermHierarchyValidation(): void {
+    $vocabulary_id = $this->randomMachineName();
     $vocabulary = Vocabulary::create([
       'name' => $vocabulary_id,
       'vid' => $vocabulary_id,

@@ -3,21 +3,31 @@
 namespace Drupal\node\Plugin\views\filter;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\node\NodeGrantsHelper;
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\views\filter\FilterPluginBase;
 
 /**
  * Filter by node_access records.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("node_access")
  */
+#[ViewsFilter("node_access")]
 class Access extends FilterPluginBase {
 
+  /**
+   * {@inheritdoc}
+   */
   public function adminSummary() {}
 
+  /**
+   * {@inheritdoc}
+   */
   protected function operatorForm(&$form, FormStateInterface $form_state) {}
 
+  /**
+   * {@inheritdoc}
+   */
   public function canExpose() {
     return FALSE;
   }
@@ -27,10 +37,10 @@ class Access extends FilterPluginBase {
    */
   public function query() {
     $account = $this->view->getUser();
-    if (!$account->hasPermission('bypass node access')) {
+    if (!$account->hasPermission('bypass node access') && $this->moduleHandler->hasImplementations('node_grants')) {
       $table = $this->ensureMyTable();
       $grants = $this->query->getConnection()->condition('OR');
-      foreach (node_access_grants('view', $account) as $realm => $gids) {
+      foreach (\Drupal::service(NodeGrantsHelper::class)->nodeAccessGrants('view', $account) as $realm => $gids) {
         foreach ($gids as $gid) {
           $grants->condition(($this->query->getConnection()->condition('AND'))
             ->condition($table . '.gid', $gid)

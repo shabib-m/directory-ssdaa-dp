@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\rest\Functional;
 
 use Drupal\Core\Url;
@@ -25,34 +27,34 @@ trait CookieResourceTestTrait {
   /**
    * The session cookie.
    *
-   * @see ::initAuthentication
-   *
    * @var string
+   *
+   * @see ::initAuthentication
    */
   protected $sessionCookie;
 
   /**
    * The CSRF token.
    *
-   * @see ::initAuthentication
-   *
    * @var string
+   *
+   * @see ::initAuthentication
    */
   protected $csrfToken;
 
   /**
    * The logout token.
    *
-   * @see ::initAuthentication
-   *
    * @var string
+   *
+   * @see ::initAuthentication
    */
   protected $logoutToken;
 
   /**
    * {@inheritdoc}
    */
-  protected function initAuthentication() {
+  protected function initAuthentication(): void {
     $user_login_url = Url::fromRoute('user.login.http')
       ->setRouteParameter('_format', static::$format);
 
@@ -80,9 +82,12 @@ trait CookieResourceTestTrait {
    * {@inheritdoc}
    */
   protected function getAuthenticationRequestOptions($method) {
-    $request_options[RequestOptions::HEADERS]['Cookie'] = $this->sessionCookie;
+    $request_options = [];
+    if (isset($this->sessionCookie)) {
+      $request_options[RequestOptions::HEADERS]['Cookie'] = $this->sessionCookie;
+    }
     // @see https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
-    if (!in_array($method, ['HEAD', 'GET', 'OPTIONS', 'TRACE'])) {
+    if (isset($this->csrfToken) && !in_array($method, ['HEAD', 'GET', 'OPTIONS', 'TRACE'])) {
       $request_options[RequestOptions::HEADERS]['X-CSRF-Token'] = $this->csrfToken;
     }
     return $request_options;
@@ -91,7 +96,7 @@ trait CookieResourceTestTrait {
   /**
    * {@inheritdoc}
    */
-  protected function assertResponseWhenMissingAuthentication($method, ResponseInterface $response) {
+  protected function assertResponseWhenMissingAuthentication($method, ResponseInterface $response): void {
     // Requests needing cookie authentication but missing it results in a 403
     // response. The cookie authentication mechanism sets no response message.
     // Hence, effectively, this is just the 403 response that one gets as the
@@ -99,19 +104,17 @@ trait CookieResourceTestTrait {
     // @see \Drupal\user\Authentication\Provider\Cookie
     // @todo https://www.drupal.org/node/2847623
     if ($method === 'GET') {
-      $expected_cookie_403_cacheability = $this->getExpectedUnauthorizedAccessCacheability()
+      $expected_cookie_403_cacheability = $this->getExpectedUnauthorizedAccessCacheability();
+      if (method_exists($this, 'getExpectedUnauthorizedEntityAccessCacheability')) {
         // @see \Drupal\Core\EventSubscriber\AnonymousUserResponseSubscriber::onRespond()
-        ->addCacheableDependency($this->getExpectedUnauthorizedEntityAccessCacheability(FALSE));
+        $expected_cookie_403_cacheability->addCacheableDependency($this->getExpectedUnauthorizedEntityAccessCacheability(FALSE));
+      }
       // - \Drupal\Core\EventSubscriber\AnonymousUserResponseSubscriber applies
       //   to cacheable anonymous responses: it updates their cacheability.
       // - A 403 response to a GET request is cacheable.
       // Therefore we must update our cacheability expectations accordingly.
       if (in_array('user.permissions', $expected_cookie_403_cacheability->getCacheContexts(), TRUE)) {
         $expected_cookie_403_cacheability->addCacheTags(['config:user.role.anonymous']);
-      }
-      // @todo Fix \Drupal\block\BlockAccessControlHandler::mergeCacheabilityFromConditions() in https://www.drupal.org/node/2867881
-      if (static::$entityTypeId === 'block') {
-        $expected_cookie_403_cacheability->setCacheTags(str_replace('user:2', 'user:0', $expected_cookie_403_cacheability->getCacheTags()));
       }
       $this->assertResourceErrorResponse(403, FALSE, $response, $expected_cookie_403_cacheability->getCacheTags(), $expected_cookie_403_cacheability->getCacheContexts(), 'MISS', FALSE);
     }
@@ -123,7 +126,7 @@ trait CookieResourceTestTrait {
   /**
    * {@inheritdoc}
    */
-  protected function assertAuthenticationEdgeCases($method, Url $url, array $request_options) {
+  protected function assertAuthenticationEdgeCases($method, Url $url, array $request_options): void {
     // X-CSRF-Token request header is unnecessary for safe and side effect-free
     // HTTP methods. No need for additional assertions.
     // @see https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html

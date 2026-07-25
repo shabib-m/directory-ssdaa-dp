@@ -1,17 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filter\Unit;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\filter\Plugin\Filter\FilterHtml;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\filter\Plugin\Filter\FilterHtml
- * @group filter
+ * Tests Drupal\filter\Plugin\Filter\FilterHtml.
  */
+#[CoversClass(FilterHtml::class)]
+#[Group('filter')]
 class FilterHtmlTest extends UnitTestCase {
 
   /**
+   * The filter to test.
+   *
    * @var \Drupal\filter\Plugin\Filter\FilterHtml
    */
   protected $filter;
@@ -31,58 +39,88 @@ class FilterHtmlTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::filterAttributes
-   *
-   * @dataProvider providerFilterAttributes
+   * Tests filter attributes.
    *
    * @param string $html
    *   Input HTML.
    * @param string $expected
    *   The expected output string.
    */
-  public function testfilterAttributes($html, $expected) {
+  #[DataProvider('providerFilterAttributes')]
+  public function testFilterAttributes($html, $expected): void {
     $this->assertSame($expected, $this->filter->filterAttributes($html));
   }
 
   /**
-   * Provides data for testfilterAttributes.
+   * Provides data for testFilterAttributes.
    *
    * @return array
    *   An array of test data.
    */
-  public function providerFilterAttributes() {
+  public static function providerFilterAttributes() {
     return [
       ['<a href="/blog" title="Blog">Blog</a>', '<a href="/blog">Blog</a>'],
       ['<p dir="rtl" />', '<p dir="rtl"></p>'],
       ['<p dir="bogus" />', '<p></p>'],
       ['<p id="first" />', '<p></p>'],
-      // The addition of xml:lang isn't especially desired, but is still valid
-      // HTML5. See https://www.drupal.org/node/1333730.
-      ['<p id="first" lang="en">text</p>', '<p lang="en" xml:lang="en">text</p>'],
+      ['<p id="first" lang="en">text</p>', '<p lang="en">text</p>'],
       ['<p style="display: none;" />', '<p></p>'],
-      ['<code class="pretty invalid">foreach ($a as $b) {}</code>', '<code class="pretty">foreach ($a as $b) {}</code>'],
-      ['<code class="boring pretty">foreach ($a as $b) {}</code>', '<code class="boring pretty">foreach ($a as $b) {}</code>'],
-      ['<code class="boring    pretty ">foreach ($a as $b) {}</code>', '<code class="boring pretty">foreach ($a as $b) {}</code>'],
-      ['<code class="invalid alpaca">foreach ($a as $b) {}</code>', '<code>foreach ($a as $b) {}</code>'],
+      [
+        '<code class="pretty invalid">foreach ($a as $b) {}</code>',
+        '<code class="pretty">foreach ($a as $b) {}</code>',
+      ],
+      [
+        '<code class="boring pretty">foreach ($a as $b) {}</code>',
+        '<code class="boring pretty">foreach ($a as $b) {}</code>',
+      ],
+      [
+        '<code class="boring    pretty ">foreach ($a as $b) {}</code>',
+        '<code class="boring pretty">foreach ($a as $b) {}</code>',
+      ],
+      [
+        '<code class="invalid alpaca">foreach ($a as $b) {}</code>',
+        '<code>foreach ($a as $b) {}</code>',
+      ],
       ['<h3 class="big">a heading</h3>', '<h3>a heading</h3>'],
       ['<h3 id="first">a heading</h3>', '<h3 id="first">a heading</h3>'],
       // Wildcard value. Case matters, so upper case doesn't match.
-      ['<code class="align-left bold">foreach ($a as $b) {}</code>', '<code class="align-left">foreach ($a as $b) {}</code>'],
-      ['<code class="align-right ">foreach ($a as $b) {}</code>', '<code class="align-right">foreach ($a as $b) {}</code>'],
-      ['<code class="Align-right ">foreach ($a as $b) {}</code>', '<code>foreach ($a as $b) {}</code>'],
+      [
+        '<code class="align-left bold">foreach ($a as $b) {}</code>',
+        '<code class="align-left">foreach ($a as $b) {}</code>',
+      ],
+      [
+        '<code class="align-right ">foreach ($a as $b) {}</code>',
+        '<code class="align-right">foreach ($a as $b) {}</code>',
+      ],
+      [
+        '<code class="Align-right ">foreach ($a as $b) {}</code>',
+        '<code>foreach ($a as $b) {}</code>',
+      ],
       // Wildcard name, case is ignored.
-      ['<ol style="display: none;" llama-wim="noble majestic"></ol>', '<ol llama-wim="noble majestic"></ol>'],
-      ['<ol style="display: none;" LlamA-Wim="majestic"></ol>', '<ol llama-wim="majestic"></ol>'],
-      ['<ol style="display: none;" llama-="noble majestic"></ol>', '<ol llama-="noble majestic"></ol>'],
+      [
+        '<ol style="display: none;" llama-wim="noble majestic"></ol>',
+        '<ol llama-wim="noble majestic"></ol>',
+      ],
+      [
+        '<ol style="display: none;" LlamA-Wim="majestic"></ol>',
+        '<ol llama-wim="majestic"></ol>',
+      ],
+      [
+        '<ol style="display: none;" llama-="noble majestic"></ol>',
+        '<ol llama-="noble majestic"></ol>',
+      ],
       // Both wildcard names and values.
-      ['<ul style="display: none;" alpaca-wool="wooly-warm strong majestic"></ul>', '<ul alpaca-wool="wooly-warm strong"></ul>'],
+      [
+        '<ul style="display: none;" alpaca-wool="wooly-warm strong majestic"></ul>',
+        '<ul alpaca-wool="wooly-warm strong"></ul>',
+      ],
     ];
   }
 
   /**
-   * @covers ::setConfiguration
+   * Tests set configuration.
    */
-  public function testSetConfiguration() {
+  public function testSetConfiguration(): void {
     $configuration['settings'] = [
       // New lines and spaces are replaced with a single space.
       'allowed_html' => "<a>  <br>\r\n  <p>",

@@ -40,10 +40,10 @@ class DomainRedirectRequestSubscriber implements EventSubscriberInterface {
    *
    * @var \Drupal\Core\Config\Config
    */
-  protected  $redirectConfig;
+  protected $redirectConfig;
 
   /**
-   * Constructs a \Drupal\redirect\EventSubscriber\RedirectRequestSubscriber object.
+   * Constructs a \Drupal\redirect\EventSubscriber\RedirectRequestSubscriber.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
@@ -127,7 +127,7 @@ class DomainRedirectRequestSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     // This needs to run before RouterListener::onKernelRequest(), which has
     // a priority of 32 and
     // RedirectRequestSubscriber::onKernelRequestCheckRedirect(), which has

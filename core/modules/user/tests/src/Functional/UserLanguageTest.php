@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional;
 
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Functional tests for a user's ability to change their default language.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserLanguageTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['user', 'language'];
 
@@ -27,7 +29,7 @@ class UserLanguageTest extends BrowserTestBase {
   /**
    * Tests if user can change their default language.
    */
-  public function testUserLanguageConfiguration() {
+  public function testUserLanguageConfiguration(): void {
     // User to add and remove language.
     $admin_user = $this->drupalCreateUser([
       'administer languages',

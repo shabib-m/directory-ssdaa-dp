@@ -1,21 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Unit\Plugin\area;
 
 use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Entity\View;
-use Drupal\views\Plugin\views\pager\PagerPluginBase;
-use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\area\Result;
+use Drupal\views\Plugin\views\pager\PagerPluginBase;
+use Drupal\views\Plugin\ViewsPluginManager;
+use Drupal\views\ViewExecutable;
 use Drupal\views\ViewsData;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\views\Plugin\views\area\Result
- * @group views
+ * Tests Drupal\views\Plugin\views\area\Result.
  */
+#[CoversClass(Result::class)]
+#[Group('views')]
 class ResultTest extends UnitTestCase {
 
   /**
@@ -45,7 +52,8 @@ class ResultTest extends UnitTestCase {
     $user = $this->prophesize(AccountInterface::class)->reveal();
     $views_data = $this->prophesize(ViewsData::class)->reveal();
     $route_provider = $this->prophesize(RouteProviderInterface::class)->reveal();
-    $this->view = new ViewExecutable($storage->reveal(), $user, $views_data, $route_provider);
+    $display_plugin_manager = $this->prophesize(ViewsPluginManager::class)->reveal();
+    $this->view = new ViewExecutable($storage->reveal(), $user, $views_data, $route_provider, $display_plugin_manager);
 
     $this->resultHandler = new Result([], 'result', []);
     $this->resultHandler->view = $this->view;
@@ -54,7 +62,7 @@ class ResultTest extends UnitTestCase {
   /**
    * Tests the query method.
    */
-  public function testQuery() {
+  public function testQuery(): void {
     $this->assertNull($this->view->get_total_rows);
     // @total should set get_total_rows.
     $this->resultHandler->options['content'] = '@total';
@@ -76,10 +84,9 @@ class ResultTest extends UnitTestCase {
    *   The expected content string.
    * @param int $items_per_page
    *   The items per page of the configuration.
-   *
-   * @dataProvider providerTestResultArea
    */
-  public function testResultArea($content, $expected, $items_per_page = 0) {
+  #[DataProvider('providerTestResultArea')]
+  public function testResultArea($content, $expected, $items_per_page = 0): void {
     $this->setupViewPager($items_per_page);
     $this->resultHandler->options['content'] = $content;
     $this->assertEquals(['#markup' => $expected], $this->resultHandler->render());
@@ -89,8 +96,9 @@ class ResultTest extends UnitTestCase {
    * Data provider for testResultArea.
    *
    * @return array
+   *   An array of test cases.
    */
-  public function providerTestResultArea() {
+  public static function providerTestResultArea() {
     return [
       ['@label', 'ResultTest'],
       ['@start', '1'],
@@ -118,7 +126,7 @@ class ResultTest extends UnitTestCase {
    * @param int $items_per_page
    *   The value to return from getItemsPerPage().
    */
-  protected function setupViewPager($items_per_page = 0) {
+  protected function setupViewPager($items_per_page = 0): void {
     $pager = $this->prophesize(PagerPluginBase::class);
     $pager->getItemsPerPage()
       ->willReturn($items_per_page)

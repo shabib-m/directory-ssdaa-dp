@@ -1,19 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\rest\Kernel\Views;
 
 use Drupal\rest\Plugin\views\display\RestExport;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Entity\View;
 use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the REST export view display plugin.
- *
- * @coversDefaultClass \Drupal\rest\Plugin\views\display\RestExport
- *
- * @group rest
  */
+#[CoversClass(RestExport::class)]
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class RestExportTest extends ViewsKernelTestBase {
 
   /**
@@ -42,9 +46,9 @@ class RestExportTest extends ViewsKernelTestBase {
   }
 
   /**
-   * @covers ::buildResponse
+   * Tests build response.
    */
-  public function testBuildResponse() {
+  public function testBuildResponse(): void {
     /** @var \Drupal\views\Entity\View $view */
     $view = View::load('test_serializer_display_entity');
     $display = &$view->getDisplay('rest_export_1');

@@ -8,18 +8,17 @@ use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Entity\Render\EntityTranslationRenderTrait;
 use Drupal\views\ResultRow;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Cache\Cache;
 
 /**
  * Provides a field handler which renders an entity in a certain view mode.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsField("rendered_entity")
  */
+#[ViewsField("rendered_entity")]
 class RenderedEntity extends FieldPluginBase implements CacheableDependencyInterface {
 
   use EntityTranslationRenderTrait;
@@ -58,7 +57,7 @@ class RenderedEntity extends FieldPluginBase implements CacheableDependencyInter
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param array $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -77,21 +76,6 @@ class RenderedEntity extends FieldPluginBase implements CacheableDependencyInter
     $this->languageManager = $language_manager;
     $this->entityRepository = $entity_repository;
     $this->entityDisplayRepository = $entity_display_repository;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('language_manager'),
-      $container->get('entity.repository'),
-      $container->get('entity_display.repository')
-    );
   }
 
   /**
@@ -155,17 +139,9 @@ class RenderedEntity extends FieldPluginBase implements CacheableDependencyInter
    * {@inheritdoc}
    */
   public function getCacheTags() {
-    $view_display_storage = $this->entityTypeManager->getStorage('entity_view_display');
-    $view_displays = $view_display_storage->loadMultiple($view_display_storage
-      ->getQuery()
-      ->condition('targetEntityType', $this->getEntityTypeId())
-      ->execute());
-
-    $tags = [];
-    foreach ($view_displays as $view_display) {
-      $tags[] = $view_display->getCacheTags();
-    }
-    return array_merge(...$tags);
+    // On render, tags that get invalidated on entity view display save are
+    // bubbled up, so there is no need to add view display cache tags here.
+    return [];
   }
 
   /**

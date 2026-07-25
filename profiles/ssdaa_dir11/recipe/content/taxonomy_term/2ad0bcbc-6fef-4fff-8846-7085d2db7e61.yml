@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 2ad0bcbc-6fef-4fff-8846-7085d2db7e61
+  bundle: country
+  default_langcode: ar
+  depends:
+    9d1c4124-d501-40fb-8ab0-aff5c7b6afe1: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'المملكة العربية السعودية'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 9d1c4124-d501-40fb-8ab0-aff5c7b6afe1
+      alt: ''
+      title: ''
+      width: 1024
+      height: 1024
+  field_sndwq_aldwl:
+    -
+      value: true

@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: e4a09275-2c95-422e-9775-3433177ce9b0
+  bundle: country
+  default_langcode: ar
+  depends:
+    125cc351-e815-4bb1-ab3f-2fbaff66c6d4: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: فلسطين
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 125cc351-e815-4bb1-ab3f-2fbaff66c6d4
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

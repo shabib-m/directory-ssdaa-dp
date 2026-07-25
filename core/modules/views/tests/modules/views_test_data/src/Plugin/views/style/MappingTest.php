@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_test_data\Plugin\views\style;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsStyle;
 use Drupal\views\Plugin\views\style\Mapping;
 use Drupal\views\Plugin\views\field\NumericField;
 
@@ -9,15 +13,14 @@ use Drupal\views\Plugin\views\field\NumericField;
  * Provides a test plugin for the mapping style.
  *
  * @ingroup views_style_plugins
- *
- * @ViewsStyle(
- *   id = "mapping_test",
- *   title = @Translation("Field mapping"),
- *   help = @Translation("Maps specific fields to specific purposes."),
- *   theme = "views_view_mapping_test",
- *   display_types = {"normal", "test"}
- * )
  */
+#[ViewsStyle(
+  id: "mapping_test",
+  title: new TranslatableMarkup("Field mapping"),
+  help: new TranslatableMarkup("Maps specific fields to specific purposes."),
+  theme: "views_view_mapping_test",
+  display_types: ["normal", "test"],
+)]
 class MappingTest extends Mapping {
 
   /**
@@ -26,18 +29,18 @@ class MappingTest extends Mapping {
   protected function defineMapping() {
     return [
       'title_field' => [
-        '#title' => $this->t('Title field'),
-        '#description' => $this->t('Choose the field with the custom title.'),
+        '#title' => 'Title field',
+        '#description' => 'Choose the field with the custom title.',
         '#toggle' => TRUE,
         '#required' => TRUE,
       ],
       'name_field' => [
-        '#title' => $this->t('Name field'),
-        '#description' => $this->t('Choose the field with the custom name.'),
+        '#title' => 'Name field',
+        '#description' => 'Choose the field with the custom name.',
       ],
       'numeric_field' => [
-        '#title' => $this->t('Numeric field'),
-        '#description' => $this->t('Select one or more numeric fields.'),
+        '#title' => 'Numeric field',
+        '#description' => 'Select one or more numeric fields.',
         '#multiple' => TRUE,
         '#toggle' => TRUE,
         '#filter' => 'filterNumericFields',

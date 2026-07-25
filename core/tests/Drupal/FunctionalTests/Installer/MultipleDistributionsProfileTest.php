@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Component\Serialization\Yaml;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests multiple distribution profile support.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class MultipleDistributionsProfileTest extends InstallerTestBase {
 
   /**
@@ -26,7 +30,7 @@ class MultipleDistributionsProfileTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function prepareEnvironment() {
+  protected function prepareEnvironment(): void {
     parent::prepareEnvironment();
     // Create two distributions.
     foreach (['distribution_one', 'distribution_two'] as $name) {
@@ -53,7 +57,7 @@ class MultipleDistributionsProfileTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpLanguage() {
+  protected function setUpLanguage(): void {
     // Verify that the distribution name appears.
     $this->assertSession()->pageTextContains('distribution_one');
     // Verify that the requested theme is used.
@@ -67,14 +71,14 @@ class MultipleDistributionsProfileTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpProfile() {
+  protected function setUpProfile(): void {
     // This step is skipped, because there is a distribution profile.
   }
 
   /**
    * Confirms that the installation succeeded.
    */
-  public function testInstalled() {
+  public function testInstalled(): void {
     $this->assertSession()->addressEquals('user/1');
     $this->assertSession()->statusCodeEquals(200);
     // Confirm that we are logged-in after installation.

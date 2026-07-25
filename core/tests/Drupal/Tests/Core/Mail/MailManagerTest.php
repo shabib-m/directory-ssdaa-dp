@@ -1,25 +1,25 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\Mail\MailManagerTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Mail;
 
+use Drupal\Component\Plugin\Discovery\DiscoveryInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\Mail\MailManager;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Core\Mail\MailManager;
-use Drupal\Component\Plugin\Discovery\DiscoveryInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * @coversDefaultClass \Drupal\Core\Mail\MailManager
- * @group Mail
+ * Tests Drupal\Core\Mail\MailManager.
  */
+#[CoversClass(MailManager::class)]
+#[Group('Mail')]
 class MailManagerTest extends UnitTestCase {
 
   /**
@@ -114,11 +114,19 @@ class MailManagerTest extends UnitTestCase {
   /**
    * Sets up the mail manager for testing.
    */
-  protected function setUpMailManager($interface = []) {
+  protected function setUpMailManager($interface = []): void {
     // Use the provided config for system.mail.interface settings.
     $this->configFactory = $this->getConfigFactoryStub([
       'system.mail' => [
         'interface' => $interface,
+        'mailer_dsn' => [
+          'scheme' => 'null',
+          'host' => 'null',
+          'user' => NULL,
+          'password' => NULL,
+          'port' => NULL,
+          'options' => [],
+        ],
       ],
       'system.site' => [
         'mail' => 'test@example.com',
@@ -146,13 +154,11 @@ class MailManagerTest extends UnitTestCase {
 
   /**
    * Tests the getInstance method.
-   *
-   * @covers ::getInstance
    */
-  public function testGetInstance() {
+  public function testGetInstance(): void {
     $interface = [
       'default' => 'php_mail',
-      'example_testkey' => 'test_mail_collector',
+      'example_test_key' => 'test_mail_collector',
     ];
     $this->setUpMailManager($interface);
 
@@ -162,26 +168,24 @@ class MailManagerTest extends UnitTestCase {
     $this->assertInstanceOf('Drupal\Core\Mail\Plugin\Mail\PhpMail', $instance);
 
     // Test that a matching message_id returns the specified plugin instance.
-    $options = ['module' => 'example', 'key' => 'testkey'];
+    $options = ['module' => 'example', 'key' => 'test_key'];
     $instance = $this->mailManager->getInstance($options);
     $this->assertInstanceOf('Drupal\Core\Mail\Plugin\Mail\TestMailCollector', $instance);
   }
 
   /**
    * Tests that mails are sent in a separate render context.
-   *
-   * @covers ::mail
    */
-  public function testMailInRenderContext() {
+  public function testMailInRenderContext(): void {
     $interface = [
       'default' => 'php_mail',
-      'example_testkey' => 'test_mail_collector',
+      'example_test_key' => 'test_mail_collector',
     ];
     $this->setUpMailManager($interface);
 
     $this->renderer->expects($this->exactly(1))
       ->method('executeInRenderContext')
-      ->willReturnCallback(function (RenderContext $render_context, $callback) {
+      ->willReturnCallback(function (RenderContext $render_context, $callback): void {
         $message = $callback();
         $this->assertEquals('example', $message['module']);
       });
@@ -201,7 +205,7 @@ class TestMailManager extends MailManager {
    * @param \Drupal\Component\Plugin\Discovery\DiscoveryInterface $discovery
    *   The discovery object.
    */
-  public function setDiscovery(DiscoveryInterface $discovery) {
+  public function setDiscovery(DiscoveryInterface $discovery): void {
     $this->discovery = $discovery;
   }
 

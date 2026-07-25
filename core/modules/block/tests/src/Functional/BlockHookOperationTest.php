@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for Block module regarding hook_entity_operations_alter().
- *
- * @group block
  */
+#[Group('block')]
+#[RunTestsInSeparateProcesses]
 class BlockHookOperationTest extends BrowserTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'entity_test'];
 
@@ -41,10 +43,10 @@ class BlockHookOperationTest extends BrowserTestBase {
   /**
    * Tests the block list to see if the test_operation link is added.
    */
-  public function testBlockOperationAlter() {
+  public function testBlockOperationAlter(): void {
     // Add a test block, any block will do.
     // Set the machine name so the test_operation link can be built later.
-    $block_id = mb_strtolower($this->randomMachineName(16));
+    $block_id = $this->randomMachineName(16);
     $this->drupalPlaceBlock('system_powered_by_block', ['id' => $block_id]);
 
     // Get the Block listing.

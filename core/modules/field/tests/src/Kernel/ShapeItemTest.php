@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel;
 
 use Drupal\Core\Field\FieldItemInterface;
@@ -7,18 +9,18 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the new entity API for the shape field type.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class ShapeItemTest extends FieldKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['field_test'];
 
@@ -51,7 +53,7 @@ class ShapeItemTest extends FieldKernelTestBase {
   /**
    * Tests using entity fields of the shape field type.
    */
-  public function testShapeItem() {
+  public function testShapeItem(): void {
     // Verify entity creation.
     $entity = EntityTest::create();
     $shape = 'cube';

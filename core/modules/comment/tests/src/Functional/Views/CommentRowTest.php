@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional\Views;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the comment row plugin.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentRowTest extends CommentTestBase {
 
   /**
@@ -24,7 +29,7 @@ class CommentRowTest extends CommentTestBase {
   /**
    * Tests comment row.
    */
-  public function testCommentRow() {
+  public function testCommentRow(): void {
     $this->drupalGet('test-comment-row');
     $this->assertSession()->elementsCount('xpath', '//article[contains(@class, "comment")]', 1);
   }

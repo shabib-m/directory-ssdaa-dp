@@ -7,14 +7,10 @@ use Drupal\Core\Entity\RevisionableInterface;
 /**
  * Defines an interface for the workspace_association service.
  *
- * The canonical workspace association data is stored in a revision metadata
- * field on each entity revision that is tracked by a workspace.
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0.
+ * Use \Drupal\workspaces\WorkspaceTrackerInterface instead.
  *
- * For the purpose of optimizing workspace-specific queries, the default
- * implementation of this interface defines a custom 'workspace_association'
- * index table which stores only the latest revisions tracked by a workspace.
- *
- * @internal
+ * @see https://www.drupal.org/node/3551450
  */
 interface WorkspaceAssociationInterface {
 
@@ -52,6 +48,24 @@ interface WorkspaceAssociationInterface {
    *   type IDs and the values are an array of entity IDs keyed by revision IDs.
    */
   public function getTrackedEntities($workspace_id, $entity_type_id = NULL, $entity_ids = NULL);
+
+  /**
+   * Retrieves a paged list of entities tracked by a given workspace.
+   *
+   * @param string $workspace_id
+   *   The ID of the workspace.
+   * @param int|null $pager_id
+   *   (optional) A pager ID. Defaults to NULL.
+   * @param int|false $limit
+   *   (optional) An integer specifying the number of elements per page. If
+   *   passed a false value (FALSE, 0, NULL), the pager is disabled. Defaults to
+   *   50.
+   *
+   * @return array
+   *   Returns a multidimensional array where the first level keys are entity
+   *   type IDs and the values are an array of entity IDs keyed by revision IDs.
+   */
+  public function getTrackedEntitiesForListing($workspace_id, ?int $pager_id = NULL, int|false $limit = 50): array;
 
   /**
    * Retrieves all content revisions tracked by a given workspace.
@@ -96,25 +110,15 @@ interface WorkspaceAssociationInterface {
    *
    * @param \Drupal\Core\Entity\RevisionableInterface $entity
    *   An entity object.
+   * @param bool $latest_revision
+   *   (optional) Whether to return only the workspaces in which the latest
+   *   revision of the entity is tracked. Defaults to FALSE.
    *
    * @return string[]
    *   An array of workspace IDs where the given entity is tracked, or an empty
    *   array if it is not tracked anywhere.
    */
-  public function getEntityTrackingWorkspaceIds(RevisionableInterface $entity);
-
-  /**
-   * Triggers clean-up operations after publishing a workspace.
-   *
-   * @param \Drupal\workspaces\WorkspaceInterface $workspace
-   *   A workspace entity.
-   *
-   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use the
-   *   \Drupal\workspaces\Event\WorkspacePostPublishEvent event instead.
-   *
-   * @see https://www.drupal.org/node/3242573
-   */
-  public function postPublish(WorkspaceInterface $workspace);
+  public function getEntityTrackingWorkspaceIds(RevisionableInterface $entity, bool $latest_revision = FALSE);
 
   /**
    * Deletes all the workspace association records for the given workspace.

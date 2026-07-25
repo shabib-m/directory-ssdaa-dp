@@ -3,6 +3,7 @@
 namespace Drupal\Core\Render\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 
 /**
@@ -13,34 +14,32 @@ use Drupal\Core\Render\Element;
  *
  * Usage example:
  * @code
- * $form['copy'] = array(
+ * $form['copy'] = [
  *   '#type' => 'checkbox',
  *   '#title' => $this->t('Send me a copy'),
- * );
+ * ];
  * @endcode
  *
  * @see \Drupal\Core\Render\Element\Checkboxes
- *
- * @FormElement("checkbox")
  */
-class Checkbox extends FormElement {
+#[FormElement('checkbox')]
+class Checkbox extends FormElementBase {
 
   /**
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#input' => TRUE,
       '#return_value' => 1,
       '#process' => [
-        [$class, 'processCheckbox'],
-        [$class, 'processAjaxForm'],
-        [$class, 'processGroup'],
+        [static::class, 'processCheckbox'],
+        [static::class, 'processAjaxForm'],
+        [static::class, 'processGroup'],
       ],
       '#pre_render' => [
-        [$class, 'preRenderCheckbox'],
-        [$class, 'preRenderGroup'],
+        [static::class, 'preRenderCheckbox'],
+        [static::class, 'preRenderGroup'],
       ],
       '#theme' => 'input__checkbox',
       '#theme_wrappers' => ['form_element'],
@@ -61,7 +60,7 @@ class Checkbox extends FormElement {
     }
     else {
       // Checked checkboxes are submitted with a value (possibly '0' or ''):
-      // http://www.w3.org/TR/html401/interact/forms.html#successful-controls.
+      // https://www.w3.org/TR/html401/interact/forms.html#successful-controls.
       // For checked checkboxes, browsers submit the string version of
       // #return_value, but we return the original #return_value. For unchecked
       // checkboxes, browsers submit nothing at all, but

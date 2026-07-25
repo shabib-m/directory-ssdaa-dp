@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Kernel;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -11,18 +13,19 @@ use Drupal\file_test\StreamWrapper\DummyRemoteReadOnlyStreamWrapper;
 use Drupal\file_test\StreamWrapper\DummyStreamWrapper;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests derivative generation with source images using stream wrappers.
- *
- * @group image
  */
+#[Group('image')]
+#[RunTestsInSeparateProcesses]
 class ImageStyleCustomStreamWrappersTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var string[]
+   * {@inheritdoc}
    */
   protected static $modules = ['system', 'image'];
 
@@ -46,17 +49,24 @@ class ImageStyleCustomStreamWrappersTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->fileSystem = $this->container->get('file_system');
-    $this->config('system.file')->set('default_scheme', 'public')->save();
-    $this->imageStyle = ImageStyle::create(['name' => 'test']);
+    $this->config('system.file')
+      ->set('default_scheme', 'public')
+      ->set('allow_insecure_uploads', FALSE)
+      ->set('temporary_maximum_age', 21600)
+      ->save();
+    $this->imageStyle = ImageStyle::create([
+      'name' => 'test',
+      'label' => 'Test',
+    ]);
     $this->imageStyle->save();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function register(ContainerBuilder $container) {
+  public function register(ContainerBuilder $container): void {
     parent::register($container);
-    foreach ($this->providerTestCustomStreamWrappers() as $stream_wrapper) {
+    foreach (static::providerTestCustomStreamWrappers() as $stream_wrapper) {
       $scheme = $stream_wrapper[0];
       $class = $stream_wrapper[2];
       $container->register("stream_wrapper.$scheme", $class)
@@ -67,14 +77,15 @@ class ImageStyleCustomStreamWrappersTest extends KernelTestBase {
   /**
    * Tests derivative creation with several source on a local writable stream.
    *
-   * @dataProvider providerTestCustomStreamWrappers
-   *
    * @param string $source_scheme
    *   The source stream wrapper scheme.
    * @param string $expected_scheme
    *   The derivative expected stream wrapper scheme.
+   * @param class-string $class
+   *   The stream wrapper service class.
    */
-  public function testCustomStreamWrappers($source_scheme, $expected_scheme) {
+  #[DataProvider('providerTestCustomStreamWrappers')]
+  public function testCustomStreamWrappers(string $source_scheme, string $expected_scheme, string $class): void {
     $derivative_uri = $this->imageStyle->buildUri("$source_scheme://some/path/image.png");
     $derivative_scheme = StreamWrapperManager::getScheme($derivative_uri);
 
@@ -99,7 +110,7 @@ class ImageStyleCustomStreamWrappersTest extends KernelTestBase {
    *   - The derivative expected stream wrapper scheme.
    *   - The stream wrapper service class.
    */
-  public function providerTestCustomStreamWrappers() {
+  public static function providerTestCustomStreamWrappers() {
     return [
       ['public', 'public', PublicStream::class],
       ['private', 'private', PrivateStream::class],

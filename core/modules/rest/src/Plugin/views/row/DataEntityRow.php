@@ -5,22 +5,22 @@ namespace Drupal\rest\Plugin\views\row;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsRow;
 use Drupal\views\Entity\Render\EntityTranslationRenderTrait;
 use Drupal\views\Plugin\views\row\RowPluginBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin which displays entities as raw data.
  *
  * @ingroup views_row_plugins
- *
- * @ViewsRow(
- *   id = "data_entity",
- *   title = @Translation("Entity"),
- *   help = @Translation("Use entities as row data."),
- *   display_types = {"data"}
- * )
  */
+#[ViewsRow(
+  id: "data_entity",
+  title: new TranslatableMarkup("Entity"),
+  help: new TranslatableMarkup("Use entities as row data."),
+  display_types: ["data"]
+)]
 class DataEntityRow extends RowPluginBase {
 
   use EntityTranslationRenderTrait;
@@ -71,7 +71,7 @@ class DataEntityRow extends RowPluginBase {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param array $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -87,20 +87,6 @@ class DataEntityRow extends RowPluginBase {
     $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
     $this->entityRepository = $entity_repository;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('language_manager'),
-      $container->get('entity.repository')
-    );
   }
 
   /**

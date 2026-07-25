@@ -1,25 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Kernel;
 
 use Drupal\Core\Render\RenderContext;
 use Drupal\entity_test\Entity\EntityTestRev;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test the state field formatter.
- *
- * @group content_moderation
  */
+#[Group('content_moderation')]
+#[RunTestsInSeparateProcesses]
 class StateFormatterTest extends KernelTestBase {
 
   use ContentModerationTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'workflows',
@@ -45,10 +48,9 @@ class StateFormatterTest extends KernelTestBase {
 
   /**
    * Tests the embed field.
-   *
-   * @dataProvider formatterTestCases
    */
-  public function testStateFieldFormatter($field_value, $formatter_settings, $expected_output) {
+  #[DataProvider('formatterTestCases')]
+  public function testStateFieldFormatter($field_value, $formatter_settings, $expected_output): void {
     $entity = EntityTestRev::create([
       'moderation_state' => $field_value,
     ]);
@@ -64,7 +66,7 @@ class StateFormatterTest extends KernelTestBase {
   /**
    * Test cases for testStateFieldFormatter().
    */
-  public function formatterTestCases() {
+  public static function formatterTestCases() {
     return [
       'Draft State' => [
         'draft',

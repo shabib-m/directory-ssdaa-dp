@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Kernel\Plugin\migrate\source\d7;
 
+use Drupal\language\Plugin\migrate\source\d7\LanguageContentSettings;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests menu source plugin.
- *
- * @covers \Drupal\language\Plugin\migrate\source\d7\LanguageContentSettings
- *
- * @group language
  */
+#[CoversClass(LanguageContentSettings::class)]
+#[Group('language')]
+#[RunTestsInSeparateProcesses]
 class LanguageContentSettingsTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -21,7 +26,7 @@ class LanguageContentSettingsTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.

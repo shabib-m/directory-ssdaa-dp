@@ -2,10 +2,12 @@
 
 namespace Drupal\Core\Entity;
 
+use Drupal\Core\Config\Action\Attribute\ActionMethod;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Entity\Display\EntityDisplayInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides a common base class for entity view and form displays.
@@ -345,6 +347,7 @@ abstract class EntityDisplayBase extends ConfigEntityBase implements EntityDispl
   /**
    * {@inheritdoc}
    */
+  #[ActionMethod(adminLabel: new TranslatableMarkup('Add component to display'))]
   public function setComponent($name, array $options = []) {
     // If no weight specified, make sure the field sinks at the bottom.
     if (!isset($options['weight'])) {
@@ -370,6 +373,7 @@ abstract class EntityDisplayBase extends ConfigEntityBase implements EntityDispl
   /**
    * {@inheritdoc}
    */
+  #[ActionMethod(adminLabel: new TranslatableMarkup('Hide component'), name: 'hideComponent')]
   public function removeComponent($name) {
     $this->hidden[$name] = TRUE;
     unset($this->content[$name]);
@@ -392,7 +396,13 @@ abstract class EntityDisplayBase extends ConfigEntityBase implements EntityDispl
     }
 
     // Let other modules feedback about their own additions.
-    $weights = array_merge($weights, \Drupal::moduleHandler()->invokeAll('field_info_max_weight', [$this->targetEntityType, $this->bundle, $this->displayContext, $this->mode]));
+    $weights = array_merge($weights,
+      \Drupal::moduleHandler()->invokeAll('field_info_max_weight', [
+        $this->targetEntityType,
+        $this->bundle,
+        $this->displayContext,
+        $this->mode,
+      ]));
 
     return $weights ? max($weights) : NULL;
   }
@@ -429,6 +439,10 @@ abstract class EntityDisplayBase extends ConfigEntityBase implements EntityDispl
    *   A field definition.
    *
    * @return array|null
+   *   The array of display options for the field, or NULL if the field is not
+   *   displayed.
+   *
+   * @see \Drupal\Core\Field\FieldDefinitionInterface::getDisplayOptions
    */
   private function fieldHasDisplayOptions(FieldDefinitionInterface $definition) {
     // The display only cares about fields that specify display options.
@@ -544,7 +558,7 @@ abstract class EntityDisplayBase extends ConfigEntityBase implements EntityDispl
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     // Only store the definition, not external objects or derived data.
     $keys = array_keys($this->toArray());
     // In addition, we need to keep the entity type and the "is new" status.
@@ -563,7 +577,7 @@ abstract class EntityDisplayBase extends ConfigEntityBase implements EntityDispl
   /**
    * {@inheritdoc}
    */
-  public function __wakeup() {
+  public function __wakeup(): void {
     // Determine what were the properties from toArray() that were saved in
     // __sleep().
     $keys = $this->_serializedKeys;
@@ -582,6 +596,22 @@ abstract class EntityDisplayBase extends ConfigEntityBase implements EntityDispl
    */
   protected function getLogger() {
     return \Drupal::logger('system');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function set($property_name, $value): static {
+    // If changing the entity ID, also update the target entity type, bundle,
+    // and view mode.
+    if ($this->isNew() && $property_name === $this->getEntityType()->getKey('id')) {
+      if (substr_count($value, '.') !== 2) {
+        throw new \InvalidArgumentException("'$value' is not a valid entity display ID.");
+      }
+      [$this->targetEntityType, $this->bundle, $this->mode] = explode('.', $value);
+    }
+    parent::set($property_name, $value);
+    return $this;
   }
 
 }

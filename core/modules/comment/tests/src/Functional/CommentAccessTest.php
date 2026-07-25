@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional;
 
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests comment administration and preview access.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentAccessTest extends BrowserTestBase {
 
   use CommentTestTrait;
@@ -73,7 +77,7 @@ class CommentAccessTest extends BrowserTestBase {
   /**
    * Tests commenting disabled for access-blocked entities.
    */
-  public function testCannotCommentOnEntitiesYouCannotView() {
+  public function testCannotCommentOnEntitiesYouCannotView(): void {
     $assert = $this->assertSession();
 
     $comment_url = 'comment/reply/node/' . $this->unpublishedNode->id() . '/comment';
@@ -91,7 +95,7 @@ class CommentAccessTest extends BrowserTestBase {
   /**
    * Tests cannot view comment reply form on entities you cannot view.
    */
-  public function testCannotViewCommentReplyFormOnEntitiesYouCannotView() {
+  public function testCannotViewCommentReplyFormOnEntitiesYouCannotView(): void {
     $assert = $this->assertSession();
 
     // Create a comment on an unpublished node.

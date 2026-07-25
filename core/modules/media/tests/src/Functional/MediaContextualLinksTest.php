@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Functional;
 
 use Drupal\media\Entity\Media;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests views contextual links on media items.
- *
- * @group media
  */
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaContextualLinksTest extends MediaFunctionalTestBase {
 
   /**
@@ -26,11 +30,11 @@ class MediaContextualLinksTest extends MediaFunctionalTestBase {
   /**
    * Tests contextual links.
    */
-  public function testMediaContextualLinks() {
+  public function testMediaContextualLinks(): void {
     \Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)
-      ->save(TRUE);
+      ->save();
 
     $this->container->get('router.builder')->rebuild();
 

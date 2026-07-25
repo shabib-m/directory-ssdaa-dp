@@ -1,15 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Asset;
 
 use Drupal\Core\Asset\JsOptimizer;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the JS asset optimizer.
- *
- * @group Asset
  */
+#[Group('Asset')]
 class JsOptimizerUnitTest extends UnitTestCase {
 
   /**
@@ -36,7 +39,7 @@ class JsOptimizerUnitTest extends UnitTestCase {
    * @return array
    *   An array of test data.
    */
-  public function providerTestClean() {
+  public static function providerTestClean(): array {
     $path = dirname(__FILE__) . '/js_test_files/';
     return [
       // File. Tests:
@@ -68,10 +71,9 @@ class JsOptimizerUnitTest extends UnitTestCase {
 
   /**
    * Tests cleaning of a JS asset group containing 'type' => 'file'.
-   *
-   * @dataProvider providerTestClean
    */
-  public function testClean($js_asset, $expected) {
+  #[DataProvider('providerTestClean')]
+  public function testClean($js_asset, $expected): void {
     $this->assertEquals($expected, $this->optimizer->clean($js_asset));
   }
 
@@ -83,7 +85,7 @@ class JsOptimizerUnitTest extends UnitTestCase {
    * @return array
    *   An array of test data.
    */
-  public function providerTestOptimize() {
+  public static function providerTestOptimize(): array {
     $path = dirname(__FILE__) . '/js_test_files/';
     return [
       0 => [
@@ -134,10 +136,9 @@ class JsOptimizerUnitTest extends UnitTestCase {
 
   /**
    * Tests cleaning of a JS asset group containing 'type' => 'file'.
-   *
-   * @dataProvider providerTestOptimize
    */
-  public function testOptimize($js_asset, $expected) {
+  #[DataProvider('providerTestOptimize')]
+  public function testOptimize($js_asset, $expected): void {
     $this->assertEquals($expected, $this->optimizer->optimize($js_asset));
   }
 

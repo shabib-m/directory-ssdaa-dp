@@ -1,22 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel;
 
 use Drupal\Core\Site\Settings;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Create field storages and fields during config create method invocation.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class FieldImportCreateTest extends FieldKernelTestBase {
 
   /**
    * Tests creating field storages and fields during default config import.
    */
-  public function testImportCreateDefault() {
+  public function testImportCreateDefault(): void {
     $field_name = 'field_test_import';
     $field_storage_id = "entity_test.$field_name";
     $field_id = "entity_test.entity_test.$field_name";
@@ -33,7 +38,7 @@ class FieldImportCreateTest extends FieldKernelTestBase {
     $this->assertNull(FieldConfig::load($field_id_2b));
 
     // Create a second bundle for the 'Entity test' entity type.
-    entity_test_create_bundle('test_bundle');
+    EntityTestHelper::createBundle('test_bundle');
 
     // Enable field_test_config module and check that the field and storage
     // shipped in the module's default config were created.
@@ -72,7 +77,7 @@ class FieldImportCreateTest extends FieldKernelTestBase {
   /**
    * Tests creating field storages and fields during config import.
    */
-  public function testImportCreate() {
+  public function testImportCreate(): void {
     // A field storage with one single field.
     $field_name = 'field_test_import_sync';
     $field_storage_id = "entity_test.$field_name";

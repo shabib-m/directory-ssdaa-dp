@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\entity_test\Functional\Rest;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\rest\Functional\AnonResourceTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test that internal properties are not exposed in the 'json' format.
- *
- * @group rest
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class EntityTestJsonInternalPropertyNormalizerTest extends EntityTestResourceTestBase {
 
   use AnonResourceTestTrait;

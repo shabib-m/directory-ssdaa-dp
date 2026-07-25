@@ -1,25 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity\EntityReferenceSelection;
 
 use Drupal\Component\Utility\Html;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
-use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests sorting referenced items.
- *
- * @group entity_reference
  */
+#[Group('entity_reference')]
+#[RunTestsInSeparateProcesses]
 class EntityReferenceSelectionSortTest extends EntityKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node'];
 
@@ -32,6 +34,7 @@ class EntityReferenceSelectionSortTest extends EntityKernelTestBase {
     // Create an Article node type.
     $article = NodeType::create([
       'type' => 'article',
+      'name' => 'Article',
     ]);
     $article->save();
 
@@ -43,7 +46,7 @@ class EntityReferenceSelectionSortTest extends EntityKernelTestBase {
   /**
    * Assert sorting by field and property.
    */
-  public function testSort() {
+  public function testSort(): void {
     // Add text field to entity, to sort by.
     FieldStorageConfig::create([
       'field_name' => 'field_text',

@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal\Core\Render\Attribute\RenderElement;
+
 /**
  * Provides a render element where the user supplies an in-line Twig template.
  *
@@ -20,19 +22,17 @@ namespace Drupal\Core\Render\Element;
  *   ]
  * ];
  * @endcode
- *
- * @RenderElement("inline_template")
  */
-class InlineTemplate extends RenderElement {
+#[RenderElement('inline_template')]
+class InlineTemplate extends RenderElementBase {
 
   /**
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#pre_render' => [
-        [$class, 'preRenderInlineTemplate'],
+        [static::class, 'preRenderInlineTemplate'],
       ],
       '#template' => '',
       '#context' => [],
@@ -46,6 +46,7 @@ class InlineTemplate extends RenderElement {
    *   The element.
    *
    * @return array
+   *   The modified element with the rendered #markup in it.
    */
   public static function preRenderInlineTemplate($element) {
     /** @var \Drupal\Core\Template\TwigEnvironment $environment */

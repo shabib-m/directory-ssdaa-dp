@@ -102,8 +102,8 @@ abstract class EntityDisplayFormBase extends EntityForm {
    * @return array
    *   Example usage:
    *   @code
-   *     return array(
-   *       'content' => array(
+   *     return [
+   *       'content' => [
    *         // label for the region.
    *         'title' => $this->t('Content'),
    *         // Indicates if the region is visible in the UI.
@@ -111,8 +111,8 @@ abstract class EntityDisplayFormBase extends EntityForm {
    *         // A message to indicate that there is nothing to be displayed in
    *         // the region.
    *         'message' => $this->t('No field is displayed.'),
-   *       ),
-   *     );
+   *       ],
+   *     ];
    *   @endcode
    */
   public function getRegions() {
@@ -220,34 +220,6 @@ abstract class EntityDisplayFormBase extends EntityForm {
 
     $form['fields'] = $table;
 
-    // Custom display settings.
-    if ($this->entity->getMode() == 'default') {
-      // Only show the settings if there is at least one custom display mode.
-      $display_mode_options = $this->getDisplayModeOptions();
-      // Unset default option.
-      unset($display_mode_options['default']);
-      if ($display_mode_options) {
-        $form['modes'] = [
-          '#type' => 'details',
-          '#title' => $this->t('Custom display settings'),
-        ];
-        // Prepare default values for the 'Custom display settings' checkboxes.
-        $default = [];
-        if ($enabled_displays = array_filter($this->getDisplayStatuses())) {
-          $default = array_keys(array_intersect_key($display_mode_options, $enabled_displays));
-        }
-        natcasesort($display_mode_options);
-        $form['modes']['display_modes_custom'] = [
-          '#type' => 'checkboxes',
-          '#title' => $this->t('Use custom display settings for the following @display_context modes', ['@display_context' => $this->displayContext]),
-          '#options' => $display_mode_options,
-          '#default_value' => $default,
-        ];
-        // Provide link to manage display modes.
-        $form['modes']['display_modes_link'] = $this->getDisplayModesLink();
-      }
-    }
-
     // In overviews involving nested rows from contributed modules (i.e
     // field_group), the 'plugin type' selects can trigger a series of changes
     // in child rows. The #ajax behavior is therefore not attached directly to
@@ -268,7 +240,11 @@ abstract class EntityDisplayFormBase extends EntityForm {
         // spinners will be added manually by the client-side script.
         'progress' => 'none',
       ],
-      '#attributes' => ['class' => ['visually-hidden']],
+      '#attributes' => [
+        'class' => ['visually-hidden'],
+        // Ensure the button is not focusable via keyboard navigation.
+        'tabindex' => '-1',
+      ],
     ];
 
     $form['actions'] = ['#type' => 'actions'];
@@ -318,6 +294,10 @@ abstract class EntityDisplayFormBase extends EntityForm {
       ],
       'human_name' => [
         '#plain_text' => $label,
+      ],
+      'machine_name' => [
+        '#markup' => $field_name,
+        '#attributes' => ['class' => ['machine-name']],
       ],
       'weight' => [
         '#type' => 'textfield',
@@ -492,6 +472,10 @@ abstract class EntityDisplayFormBase extends EntityForm {
       'human_name' => [
         '#markup' => $extra_field['label'],
       ],
+      'machine_name' => [
+        '#markup' => $field_id,
+        '#attributes' => ['class' => ['machine-name']],
+      ],
       'weight' => [
         '#type' => 'textfield',
         '#title' => $this->t('Weight for @title', ['@title' => $extra_field['label']]),
@@ -551,35 +535,13 @@ abstract class EntityDisplayFormBase extends EntityForm {
     }
 
     parent::submitForm($form, $form_state);
-    $form_values = $form_state->getValues();
 
-    // Handle the 'display modes' checkboxes if present.
-    if ($this->entity->getMode() == 'default' && !empty($form_values['display_modes_custom'])) {
-      $display_modes = $this->getDisplayModes();
-      $current_statuses = $this->getDisplayStatuses();
-
-      $statuses = [];
-      foreach ($form_values['display_modes_custom'] as $mode => $value) {
-        if (!empty($value) && empty($current_statuses[$mode])) {
-          // If no display exists for the newly enabled view mode, initialize
-          // it with those from the 'default' view mode, which were used so
-          // far.
-          if (!$this->entityTypeManager->getStorage($this->entity->getEntityTypeId())->load($this->entity->getTargetEntityTypeId() . '.' . $this->entity->getTargetBundle() . '.' . $mode)) {
-            $display = $this->getEntityDisplay($this->entity->getTargetEntityTypeId(), $this->entity->getTargetBundle(), 'default')->createCopy($mode);
-            $display->save();
-          }
-
-          $display_mode_label = $display_modes[$mode]['label'];
-          $url = $this->getOverviewUrl($mode);
-          $this->messenger()->addStatus($this->t('The %display_mode mode now uses custom display settings. You might want to <a href=":url">configure them</a>.', ['%display_mode' => $display_mode_label, ':url' => $url->toString()]));
-        }
-        $statuses[$mode] = !empty($value);
-      }
-
-      $this->saveDisplayStatuses($statuses);
+    // The saved message may not be needed in some cases. An example of
+    // this is in LayoutBuilderEntityViewDisplayForm which can redirect
+    // the user to a confirmation form before the settings are saved.
+    if (!$form_state->getRedirect()) {
+      $this->messenger()->addStatus($this->t('Your settings have been saved.'));
     }
-
-    $this->messenger()->addStatus($this->t('Your settings have been saved.'));
   }
 
   /**
@@ -688,23 +650,16 @@ abstract class EntityDisplayFormBase extends EntityForm {
     $op = $trigger['#op'];
 
     // Pick the elements that need to receive the ajax-new-content effect.
-    switch ($op) {
-      case 'edit':
-        $updated_rows = [$trigger['#field_name']];
-        $updated_columns = ['plugin'];
-        break;
-
-      case 'update':
-      case 'cancel':
-        $updated_rows = [$trigger['#field_name']];
-        $updated_columns = ['plugin', 'settings_summary', 'settings_edit'];
-        break;
-
-      case 'refresh_table':
-        $updated_rows = array_values(explode(' ', $form_state->getValue('refresh_rows')));
-        $updated_columns = ['settings_summary', 'settings_edit'];
-        break;
-    }
+    $updated_rows = match ($op) {
+      'edit' => [$trigger['#field_name']],
+      'update', 'cancel' => [$trigger['#field_name']],
+      'refresh_table' => array_values(explode(' ', $form_state->getValue('refresh_rows')))
+    };
+    $updated_columns = match ($op) {
+      'edit' => ['plugin'],
+      'update', 'cancel' => ['plugin', 'settings_summary', 'settings_edit'],
+      'refresh_table' => ['settings_summary', 'settings_edit'],
+    };
 
     foreach ($updated_rows as $name) {
       foreach ($updated_columns as $key) {

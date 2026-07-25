@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workflows\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\workflows\Entity\Workflow;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test a predefined workflow based on something other than configuration.
- *
- * @group workflows
  */
+#[Group('workflows')]
+#[RunTestsInSeparateProcesses]
 class PredefinedWorkflowTypeTest extends KernelTestBase {
 
   /**
@@ -20,7 +24,7 @@ class PredefinedWorkflowTypeTest extends KernelTestBase {
   /**
    * Tests a predefined workflow type.
    */
-  public function testPredefinedWorkflowType() {
+  public function testPredefinedWorkflowType(): void {
     $workflow = Workflow::create([
       'id' => 'aces',
       'label' => 'Aces Workflow',

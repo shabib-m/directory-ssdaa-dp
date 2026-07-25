@@ -2,6 +2,7 @@
 
 namespace Drupal\search;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\DraggableListBuilder;
 use Drupal\Core\Entity\EntityInterface;
@@ -194,7 +195,6 @@ class SearchPageListBuilder extends DraggableListBuilder implements FormInterfac
       }
     }
 
-    $this->moduleHandler->loadAllIncludes('admin.inc');
     $count = $this->formatPlural($remaining, 'There is 1 item left to index.', 'There are @count items left to index.');
     $done = $total - $remaining;
     // Use floor() to calculate the percentage, so if it is not quite 100%, it
@@ -226,19 +226,17 @@ class SearchPageListBuilder extends DraggableListBuilder implements FormInterfac
     ];
     $form['indexing_throttle']['cron_limit'] = [
       '#type' => 'select',
-      '#title' => $this->t('Number of items to index per cron run'),
+      '#title' => $this->t('Number of items to index per run'),
       '#default_value' => $search_settings->get('index.cron_limit'),
       '#options' => $items,
-      '#description' => $this->t('The maximum number of items indexed in each run of the <a href=":cron">cron maintenance task</a>. If necessary, reduce the number of items to prevent timeouts and memory errors while indexing. Some search page types may have their own setting for this.', [':cron' => Url::fromRoute('system.cron_settings')->toString()]),
+      '#description' => $this->t('The maximum number of items processed per indexing run. If necessary, reduce the number of items to prevent timeouts and memory errors while indexing. Some search page types may have their own setting for this.'),
     ];
     // Indexing settings:
     $form['indexing_settings'] = [
       '#type' => 'details',
       '#title' => $this->t('Default indexing settings'),
       '#open' => TRUE,
-    ];
-    $form['indexing_settings']['info'] = [
-      '#markup' => $this->t("<p>Search pages that use an index may use the default index provided by the Search module, or they may use a different indexing mechanism. These settings are for the default index. <em>Changing these settings will cause the default search index to be rebuilt to reflect the new settings. Searching will continue to work, based on the existing index, but new content won't be indexed until all existing content has been re-indexed.</em></p><p><em>The default settings should be appropriate for the majority of sites.</em></p>"),
+      '#description' => $this->t('Changing these settings will cause the default search index to be rebuilt to reflect the new settings. Searching will continue to work, based on the existing index, but new content will not be indexed until all existing content has been re-indexed.'),
     ];
     $form['indexing_settings']['minimum_word_size'] = [
       '#type' => 'number',
@@ -316,9 +314,11 @@ class SearchPageListBuilder extends DraggableListBuilder implements FormInterfac
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOperations(EntityInterface $entity) {
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $args = func_get_args();
+    $cacheability = $args[1] ?? new CacheableMetadata();
     /** @var \Drupal\search\SearchPageInterface $entity */
-    $operations = parent::getDefaultOperations($entity);
+    $operations = parent::getDefaultOperations($entity, $cacheability);
 
     // Prevent the default search from being disabled or deleted.
     if ($entity->isDefaultSearch()) {

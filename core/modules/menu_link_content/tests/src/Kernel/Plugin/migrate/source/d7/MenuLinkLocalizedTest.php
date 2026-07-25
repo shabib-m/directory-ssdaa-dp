@@ -1,15 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_link_content\Kernel\Plugin\migrate\source\d7;
 
+use Drupal\menu_link_content\Plugin\migrate\source\d7\MenuLinkLocalized;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore mlid plid tsid
 /**
  * Tests menu link localized translation source plugin.
- *
- * @covers \Drupal\menu_link_content\Plugin\migrate\source\d7\MenuLinkLocalized
- * @group menu_link_content
  */
+#[CoversClass(MenuLinkLocalized::class)]
+#[Group('menu_link_content')]
+#[RunTestsInSeparateProcesses]
 class MenuLinkLocalizedTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -20,7 +27,7 @@ class MenuLinkLocalizedTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
     $tests[0]['source_data']['menu_links'] = [
       [
@@ -145,7 +152,7 @@ class MenuLinkLocalizedTest extends MigrateSqlSourceTestBase {
       ],
     ];
 
-    $tests[0]['expected_results'] = [
+    $tests[0]['expected_data'] = [
       [
         'menu_name' => 'menu-test-menu',
         'mlid' => 130,

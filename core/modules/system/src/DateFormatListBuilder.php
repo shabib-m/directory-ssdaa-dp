@@ -2,11 +2,13 @@
 
 namespace Drupal\system;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -16,12 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class DateFormatListBuilder extends ConfigEntityListBuilder {
 
-  /**
-   * The date formatter service.
-   *
-   * @var \Drupal\Core\Datetime\DateFormatterInterface
-   */
-  protected $dateFormatter;
+  use StringTranslationTrait;
 
   /**
    * Constructs a new DateFormatListBuilder object.
@@ -30,13 +27,18 @@ class DateFormatListBuilder extends ConfigEntityListBuilder {
    *   The entity type definition.
    * @param \Drupal\Core\Entity\EntityStorageInterface $storage
    *   The entity storage class.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
    *   The date formatter service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, DateFormatterInterface $date_formatter) {
+  public function __construct(
+    EntityTypeInterface $entity_type,
+    EntityStorageInterface $storage,
+    protected DateFormatterInterface $dateFormatter,
+    protected TimeInterface $time,
+  ) {
     parent::__construct($entity_type, $storage);
-
-    $this->dateFormatter = $date_formatter;
   }
 
   /**
@@ -46,7 +48,8 @@ class DateFormatListBuilder extends ConfigEntityListBuilder {
     return new static(
       $entity_type,
       $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('date.formatter')
+      $container->get('date.formatter'),
+      $container->get('datetime.time'),
     );
   }
 
@@ -54,8 +57,8 @@ class DateFormatListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header['label'] = t('Name');
-    $header['pattern'] = t('Pattern');
+    $header['label'] = $this->t('Name');
+    $header['pattern'] = $this->t('Pattern');
     return $header + parent::buildHeader();
   }
 
@@ -64,7 +67,7 @@ class DateFormatListBuilder extends ConfigEntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     $row['label'] = $entity->label();
-    $row['pattern'] = $this->dateFormatter->format(REQUEST_TIME, $entity->id());
+    $row['pattern'] = $this->dateFormatter->format($this->time->getRequestTime(), $entity->id());
     return $row + parent::buildRow($entity);
   }
 

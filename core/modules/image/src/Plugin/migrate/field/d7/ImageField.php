@@ -3,16 +3,18 @@
 namespace Drupal\image\Plugin\migrate\field\d7;
 
 use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate_drupal\Attribute\MigrateField;
 use Drupal\migrate_drupal\Plugin\migrate\field\FieldPluginBase;
 
 /**
- * @MigrateField(
- *   id = "image",
- *   core = {7},
- *   source_module = "image",
- *   destination_module = "image"
- * )
+ * Migrate field plugin for Drupal 7 image fields.
  */
+#[MigrateField(
+  id: 'image',
+  core: [7],
+  source_module: 'image',
+  destination_module: 'image',
+)]
 class ImageField extends FieldPluginBase {
 
   /**

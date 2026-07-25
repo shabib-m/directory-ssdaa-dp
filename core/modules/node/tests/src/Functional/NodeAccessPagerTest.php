@@ -1,18 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\comment\CommentInterface;
-use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\comment\Entity\Comment;
+use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\User;
+use Drupal\node\NodeAccessRebuild;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests access controlled node views have the right amount of comment pages.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeAccessPagerTest extends BrowserTestBase {
 
   use CommentTestTrait;
@@ -25,9 +30,7 @@ class NodeAccessPagerTest extends BrowserTestBase {
   protected User $webUser;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node', 'node_access_test', 'comment'];
 
@@ -42,7 +45,7 @@ class NodeAccessPagerTest extends BrowserTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    node_access_rebuild();
+    \Drupal::service(NodeAccessRebuild::class)->rebuild();
     $this->drupalCreateContentType(['type' => 'page', 'name' => 'Basic page']);
     $this->addDefaultCommentField('node', 'page');
     $this->webUser = $this->drupalCreateUser([
@@ -55,7 +58,7 @@ class NodeAccessPagerTest extends BrowserTestBase {
   /**
    * Tests the comment pager for nodes with multiple grants per realm.
    */
-  public function testCommentPager() {
+  public function testCommentPager(): void {
     // Create a node.
     $node = $this->drupalCreateNode();
 

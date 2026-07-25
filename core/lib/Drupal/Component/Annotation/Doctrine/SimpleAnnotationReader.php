@@ -26,8 +26,6 @@
 
 namespace Drupal\Component\Annotation\Doctrine;
 
-use Doctrine\Common\Annotations\Reader;
-
 /**
  * Simple Annotation Reader.
  *
@@ -36,7 +34,7 @@ use Doctrine\Common\Annotations\Reader;
  *
  * @internal
  */
-final class SimpleAnnotationReader implements Reader
+final class SimpleAnnotationReader
 {
 
     protected $ignoredAnnotations = [
@@ -94,7 +92,12 @@ final class SimpleAnnotationReader implements Reader
     }
 
     /**
-     * {@inheritDoc}
+     * Gets the annotations applied to a class.
+     *
+     * @param ReflectionClass $class The ReflectionClass of the class from which
+     * the class annotations should be read.
+     *
+     * @return array<object> An array of Annotations.
      */
     public function getClassAnnotations(\ReflectionClass $class)
     {
@@ -102,7 +105,12 @@ final class SimpleAnnotationReader implements Reader
     }
 
     /**
-     * {@inheritDoc}
+     * Gets the annotations applied to a method.
+     *
+     * @param ReflectionMethod $method The ReflectionMethod of the method from which
+     * the annotations should be read.
+     *
+     * @return array<object> An array of Annotations.
      */
     public function getMethodAnnotations(\ReflectionMethod $method)
     {
@@ -110,7 +118,12 @@ final class SimpleAnnotationReader implements Reader
     }
 
     /**
-     * {@inheritDoc}
+     * Gets the annotations applied to a property.
+     *
+     * @param ReflectionProperty $property The ReflectionProperty of the property
+     * from which the annotations should be read.
+     *
+     * @return array<object> An array of Annotations.
      */
     public function getPropertyAnnotations(\ReflectionProperty $property)
     {
@@ -118,13 +131,21 @@ final class SimpleAnnotationReader implements Reader
     }
 
     /**
-     * {@inheritDoc}
+     * Gets a class annotation.
+     *
+     * @param ReflectionClass $class          The ReflectionClass of the class from which
+     *          the class annotations should be read.
+     * @param class-string<T> $annotationName The name of the annotation.
+     *
+     * @return T|null The Annotation or NULL, if the requested annotation does not exist.
+     *
+     * @template T
      */
     public function getClassAnnotation(\ReflectionClass $class, $annotationName)
     {
-        foreach ($this->getClassAnnotations($class) as $annot) {
-            if ($annot instanceof $annotationName) {
-                return $annot;
+        foreach ($this->getClassAnnotations($class) as $annotation) {
+            if ($annotation instanceof $annotationName) {
+                return $annotation;
             }
         }
 
@@ -132,13 +153,20 @@ final class SimpleAnnotationReader implements Reader
     }
 
     /**
-     * {@inheritDoc}
+     * Gets a method annotation.
+     *
+     * @param ReflectionMethod $method         The ReflectionMethod to read the annotations from.
+     * @param class-string<T>  $annotationName The name of the annotation.
+     *
+     * @return T|null The Annotation or NULL, if the requested annotation does not exist.
+     *
+     * @template T
      */
     public function getMethodAnnotation(\ReflectionMethod $method, $annotationName)
     {
-        foreach ($this->getMethodAnnotations($method) as $annot) {
-            if ($annot instanceof $annotationName) {
-                return $annot;
+        foreach ($this->getMethodAnnotations($method) as $annotation) {
+            if ($annotation instanceof $annotationName) {
+                return $annotation;
             }
         }
 
@@ -146,13 +174,20 @@ final class SimpleAnnotationReader implements Reader
     }
 
     /**
-     * {@inheritDoc}
+     * Gets a property annotation.
+     *
+     * @param ReflectionProperty $property       The ReflectionProperty to read the annotations from.
+     * @param class-string<T>    $annotationName The name of the annotation.
+     *
+     * @return T|null The Annotation or NULL, if the requested annotation does not exist.
+     *
+     * @template T
      */
     public function getPropertyAnnotation(\ReflectionProperty $property, $annotationName)
     {
-        foreach ($this->getPropertyAnnotations($property) as $annot) {
-            if ($annot instanceof $annotationName) {
-                return $annot;
+        foreach ($this->getPropertyAnnotations($property) as $annotation) {
+            if ($annotation instanceof $annotationName) {
+                return $annotation;
             }
         }
 

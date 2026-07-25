@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\node\Entity\Node;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Create a node and test edit permissions.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class PageViewTest extends NodeTestBase {
 
   /**
@@ -17,9 +21,9 @@ class PageViewTest extends NodeTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * Tests an anonymous and unpermissioned user attempting to edit the node.
+   * Tests editing a node by users with various access permissions.
    */
-  public function testPageView() {
+  public function testPageView(): void {
     // Create a node to view.
     $node = $this->drupalCreateNode();
     $this->assertNotEmpty(Node::load($node->id()), 'Node created.');

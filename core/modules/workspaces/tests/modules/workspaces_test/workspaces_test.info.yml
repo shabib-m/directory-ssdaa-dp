@@ -1,0 +1,13 @@
+name: 'Workspace Test'
+type: module
+description: 'Provides supporting code for testing workspaces.'
+package: Testing
+# version: VERSION
+dependencies:
+  - drupal:entity_test
+  - drupal:workspaces
+
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
+project: 'drupal'
+datestamp: 1784141321

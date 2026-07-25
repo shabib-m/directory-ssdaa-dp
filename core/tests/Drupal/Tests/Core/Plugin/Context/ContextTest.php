@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\Plugin\Context\ContextTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Plugin\Context;
 
@@ -12,12 +9,15 @@ use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\Container;
 
 /**
- * @coversDefaultClass \Drupal\Core\Plugin\Context\Context
- * @group Plugin
+ * Tests Drupal\Core\Plugin\Context\Context.
  */
+#[CoversClass(Context::class)]
+#[Group('Plugin')]
 class ContextTest extends UnitTestCase {
 
   /**
@@ -51,9 +51,11 @@ class ContextTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getContextValue
+   * Tests default value.
+   *
+   * @legacy-covers ::getContextValue
    */
-  public function testDefaultValue() {
+  public function testDefaultValue(): void {
     $this->setUpDefaultValue('test');
 
     $context = new Context($this->contextDefinition);
@@ -62,9 +64,11 @@ class ContextTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getContextData
+   * Tests default data value.
+   *
+   * @legacy-covers ::getContextData
    */
-  public function testDefaultDataValue() {
+  public function testDefaultDataValue(): void {
     $this->setUpDefaultValue('test');
 
     $context = new Context($this->contextDefinition);
@@ -73,9 +77,11 @@ class ContextTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getContextData
+   * Tests null data value.
+   *
+   * @legacy-covers ::getContextData
    */
-  public function testNullDataValue() {
+  public function testNullDataValue(): void {
     $this->setUpDefaultValue(NULL);
 
     $context = new Context($this->contextDefinition);
@@ -84,13 +90,11 @@ class ContextTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setContextValue
+   * Tests set context value typed data.
    */
-  public function testSetContextValueTypedData() {
+  public function testSetContextValueTypedData(): void {
 
-    $this->contextDefinition = $this->getMockBuilder('Drupal\Core\Plugin\Context\ContextDefinitionInterface')
-      ->onlyMethods(['getDefaultValue', 'getDataDefinition'])
-      ->getMockForAbstractClass();
+    $this->contextDefinition = $this->createMock('Drupal\Core\Plugin\Context\ContextDefinitionInterface');
 
     $typed_data = $this->createMock('Drupal\Core\TypedData\TypedDataInterface');
     $context = new Context($this->contextDefinition, $typed_data);
@@ -98,9 +102,9 @@ class ContextTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setContextValue
+   * Tests set context value cacheable dependency.
    */
-  public function testSetContextValueCacheableDependency() {
+  public function testSetContextValueCacheableDependency(): void {
     $container = new Container();
     $cache_context_manager = $this->getMockBuilder('Drupal\Core\Cache\Context\CacheContextsManager')
       ->disableOriginalConstructor()
@@ -141,12 +145,10 @@ class ContextTest extends UnitTestCase {
    * @param mixed $default_value
    *   The default value to assign to the mock context definition.
    */
-  protected function setUpDefaultValue($default_value = NULL) {
+  protected function setUpDefaultValue($default_value = NULL): void {
     $mock_data_definition = $this->createMock('Drupal\Core\TypedData\DataDefinitionInterface');
 
-    $this->contextDefinition = $this->getMockBuilder('Drupal\Core\Plugin\Context\ContextDefinitionInterface')
-      ->onlyMethods(['getDefaultValue', 'getDataDefinition'])
-      ->getMockForAbstractClass();
+    $this->contextDefinition = $this->createMock('Drupal\Core\Plugin\Context\ContextDefinitionInterface');
 
     $this->contextDefinition->expects($this->once())
       ->method('getDefaultValue')

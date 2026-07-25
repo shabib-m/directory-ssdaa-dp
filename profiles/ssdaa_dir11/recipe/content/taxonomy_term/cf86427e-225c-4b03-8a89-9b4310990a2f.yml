@@ -1,0 +1,28 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: cf86427e-225c-4b03-8a89-9b4310990a2f
+  bundle: main
+  default_langcode: ar
+  depends:
+    296e04b3-7c17-4d65-8811-41db1a4ee043: taxonomy_term
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: تجميل
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      entity: 296e04b3-7c17-4d65-8811-41db1a4ee043
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

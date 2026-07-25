@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\FunctionalJavascript;
 
-use Drupal\Component\Utility\Html;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests related to media reference fields.
- *
- * @group media
  */
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaReferenceFieldHelpTest extends MediaJavascriptTestBase {
 
   /**
@@ -17,44 +20,54 @@ class MediaReferenceFieldHelpTest extends MediaJavascriptTestBase {
   protected $defaultTheme = 'stark';
 
   /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'block',
+    'field_ui',
+    'media',
+    'media_library',
+  ];
+
+  /**
    * Tests our custom help texts when creating a field.
    *
    * @see media_form_field_ui_field_storage_add_form_alter()
    */
-  public function testFieldCreationHelpText() {
+  public function testFieldCreationHelpText(): void {
+    $this->drupalPlaceBlock('local_actions_block');
     $assert_session = $this->assertSession();
-    $page = $this->getSession()->getPage();
 
     $type = $this->drupalCreateContentType([
       'type' => 'foo',
     ]);
-    $this->drupalGet("/admin/structure/types/manage/{$type->id()}/fields/add-field");
+    $this->drupalGet("/admin/structure/types/manage/{$type->id()}/fields");
+    $this->clickLink('Create a new field');
+    $this->assertSession()->assertWaitOnAjaxRequest();
 
-    $field_types = [
-      'file',
-      'image',
-      'field_ui:entity_reference:media',
+    $field_groups = [
+      'File upload',
+      'Media',
     ];
-    $description_ids = array_map(function ($item) {
-      return '#edit-description-' . Html::cleanCssIdentifier($item);
-    }, $field_types);
+
+    $help_text = 'Use Media reference fields for most files, images, audio, videos, and remote media. Use File or Image reference fields when creating your own media types, or for legacy files and images created before installing the Media module.';
 
     // Choose a boolean field, none of the description containers should be
     // visible.
-    $assert_session->optionExists('edit-new-storage-type', 'boolean');
-    $page->selectFieldOption('edit-new-storage-type', 'boolean');
-    foreach ($description_ids as $description_id) {
-      $this->assertFalse($assert_session->elementExists('css', $description_id)->isVisible());
-    }
-    // Select each of the file, image, and media fields and verify their
+    $this->clickLink('Boolean');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->pageTextNotContains($help_text);
+    $assert_session->buttonExists('Change field type')->press();
+    $assert_session->assertWaitOnAjaxRequest();
+
+    // Select each of the Reference, File upload field groups and verify their
     // descriptions are now visible and match the expected text.
-    $help_text = 'Use Media reference fields for most files, images, audio, videos, and remote media. Use File or Image reference fields when creating your own media types, or for legacy files and images created before enabling the Media module.';
-    foreach ($field_types as $field_name) {
-      $assert_session->optionExists('edit-new-storage-type', $field_name);
-      $page->selectFieldOption('edit-new-storage-type', $field_name);
-      $field_description_element = $assert_session->elementExists('css', '#edit-description-' . Html::cleanCssIdentifier($field_name));
-      $this->assertTrue($field_description_element->isVisible());
-      $this->assertSame($help_text, $field_description_element->getText());
+    foreach ($field_groups as $field_group) {
+      $this->clickLink($field_group);
+      $assert_session->assertWaitOnAjaxRequest();
+      $assert_session->pageTextContains($help_text);
+      $assert_session->buttonExists('Change field type')->press();
+      $assert_session->assertWaitOnAjaxRequest();
     }
   }
 

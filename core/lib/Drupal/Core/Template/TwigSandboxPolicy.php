@@ -3,6 +3,8 @@
 namespace Drupal\Core\Template;
 
 use Drupal\Core\Site\Settings;
+use Drupal\Core\Template\Attribute\TwigAllowed;
+use Twig\Extra\Html\Cva;
 use Twig\Sandbox\SecurityError;
 use Twig\Sandbox\SecurityPolicyInterface;
 
@@ -22,6 +24,7 @@ class TwigSandboxPolicy implements SecurityPolicyInterface {
    *
    * @var array
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $allowed_methods;
 
   /**
@@ -31,6 +34,7 @@ class TwigSandboxPolicy implements SecurityPolicyInterface {
    *
    * @var array
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $allowed_prefixes;
 
   /**
@@ -38,6 +42,7 @@ class TwigSandboxPolicy implements SecurityPolicyInterface {
    *
    * @var array
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $allowed_classes;
 
   /**
@@ -50,19 +55,13 @@ class TwigSandboxPolicy implements SecurityPolicyInterface {
       // Allow any operations on the Attribute object as it is intended to be
       // changed from a Twig template, for example calling addClass().
       'Drupal\Core\Template\Attribute',
+      // The CVA class's only public method is meant to be called by templates.
+      Cva::class,
     ]);
     // Flip the array so we can check using isset().
     $this->allowed_classes = array_flip($allowed_classes);
 
-    $allowed_methods = Settings::get('twig_sandbox_allowed_methods', [
-      // Only allow idempotent methods.
-      'id',
-      'label',
-      'bundle',
-      'get',
-      '__toString',
-      'toString',
-    ]);
+    $allowed_methods = static::getMethodsAllowedOnAllObjects();
     // Flip the array so we can check using isset().
     $this->allowed_methods = array_flip($allowed_methods);
 
@@ -106,7 +105,31 @@ class TwigSandboxPolicy implements SecurityPolicyInterface {
       }
     }
 
+    // Allow the method if it has a TwigAllowed attribute.
+    $reflectionMethod = new \ReflectionMethod($obj, $method);
+    if ($reflectionMethod->getAttributes(TwigAllowed::class)) {
+      return;
+    }
+
     throw new SecurityError(sprintf('Calling "%s" method on a "%s" object is not allowed.', $method, get_class($obj)));
+  }
+
+  /**
+   * Gets the list of allowed methods on all objects.
+   *
+   * @return string[]
+   *   The list of allowed methods on all objects.
+   */
+  public static function getMethodsAllowedOnAllObjects(): array {
+    return Settings::get('twig_sandbox_allowed_methods', [
+      // Only allow idempotent methods.
+      'id',
+      'label',
+      'bundle',
+      'get',
+      '__toString',
+      'toString',
+    ]);
   }
 
 }

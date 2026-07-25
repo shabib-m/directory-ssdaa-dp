@@ -1,0 +1,30 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 2879f400-51ba-47e2-b60d-63b1985b012e
+  bundle: main
+  default_langcode: ar
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'مواقع تعليميه'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_ayqwnt_alqsm:
+    -
+      value: |
+        fa fa-graduation-cap
+  field_sndwq_alaqsam:
+    -
+      value: true

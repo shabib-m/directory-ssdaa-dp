@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Theme;
 
 use Drupal\Core\Config\ConfigImporterException;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests installing and uninstalling of themes via configuration import.
- *
- * @group Extension
  */
+#[Group('Extension')]
+#[RunTestsInSeparateProcesses]
 class ConfigImportThemeInstallTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system'];
 
@@ -30,9 +32,11 @@ class ConfigImportThemeInstallTest extends KernelTestBase {
   /**
    * Tests config imports that install and uninstall a theme with dependencies.
    */
-  public function testConfigImportWithThemeWithModuleDependencies() {
-    $this->container->get('module_installer')->install(['test_module_required_by_theme', 'test_another_module_required_by_theme']);
-    $this->container->get('theme_installer')->install(['test_theme_depending_on_modules']);
+  public function testConfigImportWithThemeWithModuleDependencies(): void {
+    $this->container->get('module_installer')
+      ->install(['test_module_required_by_theme', 'test_another_module_required_by_theme']);
+    $this->container->get('theme_installer')
+      ->install(['test_theme_depending_on_modules']);
     $this->assertTrue($this->container->get('theme_handler')->themeExists('test_theme_depending_on_modules'), 'test_theme_depending_on_modules theme installed');
 
     $sync = $this->container->get('config.storage.sync');

@@ -1,0 +1,28 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 9030a9a2-f324-4ed1-8c31-6619c6943d44
+  bundle: main
+  default_langcode: ar
+  depends:
+    3cdfdc2f-e7c2-49fe-b8de-4171a44926f8: taxonomy_term
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'العلماء والدعاة'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      entity: 3cdfdc2f-e7c2-49fe-b8de-4171a44926f8
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

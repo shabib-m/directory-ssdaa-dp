@@ -1,18 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Kernel\ResourceType;
 
-use Drupal\Tests\jsonapi\Kernel\JsonapiKernelTestBase;
+use Drupal\Core\Database\Database;
+use Drupal\jsonapi\ResourceType\ResourceType;
+use Drupal\jsonapi\ResourceType\ResourceTypeRepository;
 use Drupal\node\Entity\NodeType;
-use PHPUnit\Framework\Error\Warning;
+use Drupal\Tests\jsonapi\Kernel\JsonapiKernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\jsonapi\ResourceType\ResourceType
- * @coversClass \Drupal\jsonapi\ResourceType\ResourceTypeRepository
- * @group jsonapi
+ * Tests Drupal\jsonapi\ResourceType\ResourceType.
  *
  * @internal
  */
+#[CoversClass(ResourceType::class)]
+#[CoversClass(ResourceTypeRepository::class)]
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class RelatedResourceTypesTest extends JsonapiKernelTestBase {
 
   /**
@@ -20,11 +30,10 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
    */
   protected static $modules = [
     'node',
-    'jsonapi',
     'serialization',
-    'system',
     'user',
     'field',
+    'dblog',
   ];
 
   /**
@@ -58,16 +67,18 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
     $this->installEntitySchema('user');
 
     // Add the additional table schemas.
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
     $this->installSchema('user', ['users_data']);
+    $this->installSchema('dblog', ['watchdog']);
 
     NodeType::create([
       'type' => 'foo',
+      'name' => 'Foo',
     ])->save();
 
     NodeType::create([
       'type' => 'bar',
+      'name' => 'Bar',
     ])->save();
 
     $this->createEntityReferenceField(
@@ -106,10 +117,10 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
   }
 
   /**
-   * @covers ::getRelatableResourceTypes
-   * @dataProvider getRelatableResourceTypesProvider
+   * Tests get relatable resource types.
    */
-  public function testGetRelatableResourceTypes($resource_type_name, $relatable_type_names) {
+  #[DataProvider('getRelatableResourceTypesProvider')]
+  public function testGetRelatableResourceTypes($resource_type_name, $relatable_type_names): void {
     // We're only testing the fields that we set up.
     $test_fields = [
       'field_ref_foo',
@@ -139,10 +150,12 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
   }
 
   /**
-   * @covers ::getRelatableResourceTypes
-   * @dataProvider getRelatableResourceTypesProvider
+   * Tests get relatable resource types provider.
+   *
+   * @legacy-covers ::getRelatableResourceTypes
    */
-  public function getRelatableResourceTypesProvider() {
+  #[DataProvider('getRelatableResourceTypesProvider')]
+  public static function getRelatableResourceTypesProvider() {
     return [
       [
         'node--foo',
@@ -157,10 +170,10 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
   }
 
   /**
-   * @covers ::getRelatableResourceTypesByField
-   * @dataProvider getRelatableResourceTypesByFieldProvider
+   * Tests get relatable resource types by field.
    */
-  public function testGetRelatableResourceTypesByField($entity_type_id, $bundle, $field) {
+  #[DataProvider('getRelatableResourceTypesByFieldProvider')]
+  public function testGetRelatableResourceTypesByField($entity_type_id, $bundle, $field): void {
     $resource_type = $this->resourceTypeRepository->get($entity_type_id, $bundle);
     $relatable_types = $resource_type->getRelatableResourceTypes();
     $this->assertSame(
@@ -172,7 +185,7 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
   /**
    * Provides cases to test getRelatableTypesByField.
    */
-  public function getRelatableResourceTypesByFieldProvider() {
+  public static function getRelatableResourceTypesByFieldProvider() {
     return [
       ['node', 'foo', 'field_ref_foo'],
       ['node', 'foo', 'field_ref_bar'],
@@ -183,13 +196,13 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
   /**
    * Ensure a graceful failure when a field can references a missing bundle.
    *
-   * @covers \Drupal\jsonapi\ResourceType\ResourceTypeRepository::all
-   * @covers \Drupal\jsonapi\ResourceType\ResourceTypeRepository::calculateRelatableResourceTypes
-   * @covers \Drupal\jsonapi\ResourceType\ResourceTypeRepository::getRelatableResourceTypesFromFieldDefinition
    *
    * @link https://www.drupal.org/project/drupal/issues/2996114
+   * @legacy-covers \Drupal\jsonapi\ResourceType\ResourceTypeRepository::all
+   * @legacy-covers \Drupal\jsonapi\ResourceType\ResourceTypeRepository::calculateRelatableResourceTypes
+   * @legacy-covers \Drupal\jsonapi\ResourceType\ResourceTypeRepository::getRelatableResourceTypesFromFieldDefinition
    */
-  public function testGetRelatableResourceTypesFromFieldDefinition() {
+  public function testGetRelatableResourceTypesFromFieldDefinition(): void {
     $field_config_storage = $this->container->get('entity_type.manager')->getStorage('field_config');
 
     static::assertCount(0, $this->resourceTypeRepository->get('node', 'foo')->getRelatableResourceTypesByField('field_relationship'));
@@ -198,17 +211,22 @@ class RelatedResourceTypesTest extends JsonapiKernelTestBase {
     ]);
     $fields = $field_config_storage->loadByProperties(['field_name' => 'field_ref_with_missing_bundle']);
     static::assertSame(['missing_bundle'], $fields['node.foo.field_ref_with_missing_bundle']->getItemDefinition()->getSetting('handler_settings')['target_bundles']);
-
-    try {
-      $this->resourceTypeRepository->get('node', 'foo')->getRelatableResourceTypesByField('field_ref_with_missing_bundle');
-      static::fail('The above code must produce a warning since the "missing_bundle" does not exist.');
-    }
-    catch (Warning $e) {
-      static::assertSame(
-        'The "field_ref_with_missing_bundle" at "node:foo" references the "node:missing_bundle" entity type that does not exist. Please take action.',
-        $e->getMessage()
-      );
-    }
+    $this->resourceTypeRepository->get('node', 'foo')->getRelatableResourceTypesByField('field_ref_with_missing_bundle');
+    static::assertSame(['missing_bundle'], $fields['node.foo.field_ref_with_missing_bundle']->getItemDefinition()->getSetting('handler_settings')['target_bundles']);
+    $arguments = [
+      '@name' => 'field_ref_with_missing_bundle',
+      '@target_entity_type_id' => 'node',
+      '@target_bundle' => 'foo',
+      '@entity_type_id' => 'node',
+      '@bundle' => 'missing_bundle',
+    ];
+    $logged = Database::getConnection()->select('watchdog')
+      ->fields('watchdog', ['variables'])
+      ->condition('type', 'jsonapi')
+      ->condition('message', 'The "@name" at "@target_entity_type_id:@target_bundle" references the "@entity_type_id:@bundle" entity type that does not exist.')
+      ->execute()
+      ->fetchField();
+    $this->assertEquals(serialize($arguments), $logged);
   }
 
 }

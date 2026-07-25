@@ -13,8 +13,8 @@ use Drupal\views\Plugin\views\HandlerBase;
  * Plugins that handle sorting for Views.
  *
  * Sort handlers extend \Drupal\views\Plugin\views\sort:SortPluginBase. They
- * must be annotated with \Drupal\views\Annotation\ViewsSort annotation, and
- * they must be in plugin directory Plugin\views\sort.
+ * must be attributed with the \Drupal\views\Attribute\ViewsSort attribute,
+ * and they must be in plugin directory Plugin\views\sort.
  *
  * @ingroup views_plugins
  * @see plugin_api
@@ -41,6 +41,9 @@ abstract class SortPluginBase extends HandlerBase implements CacheableDependency
     $this->query->addOrderBy($this->tableAlias, $this->realField, $this->options['order']);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
 
@@ -68,8 +71,8 @@ abstract class SortPluginBase extends HandlerBase implements CacheableDependency
       default:
         return $this->t('asc');
 
-      case 'DESC';
-      case 'desc';
+      case 'DESC':
+      case 'desc':
         return $this->t('desc');
     }
   }
@@ -97,7 +100,7 @@ abstract class SortPluginBase extends HandlerBase implements CacheableDependency
     $form['expose_button'] = [
       '#prefix' => '<div class="views-expose clearfix">',
       '#suffix' => '</div>',
-      // Should always come first
+      // Should always come first.
       '#weight' => -1000,
     ];
 
@@ -178,8 +181,10 @@ abstract class SortPluginBase extends HandlerBase implements CacheableDependency
     }
   }
 
+  // phpcs:ignore Drupal.Commenting.FunctionComment.Missing
   protected function sortValidate(&$form, FormStateInterface $form_state) {}
 
+  // phpcs:ignore Drupal.Commenting.FunctionComment.Missing
   public function sortSubmit(&$form, FormStateInterface $form_state) {}
 
   /**
@@ -194,6 +199,9 @@ abstract class SortPluginBase extends HandlerBase implements CacheableDependency
     ];
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildExposeForm(&$form, FormStateInterface $form_state) {
     // #flatten will move everything from $form['expose'][$key] to $form[$key]
     // prior to rendering. That's why the preRender for it needs to run first,
@@ -230,8 +238,8 @@ abstract class SortPluginBase extends HandlerBase implements CacheableDependency
       'expose',
       'field_identifier',
     ]);
-    if (!preg_match('/^[a-zA-z][a-zA-Z0-9_~.\-]*$/', $field_identifier)) {
-      $form_state->setErrorByName('expose][field_identifier', $this->t('This identifier has illegal characters.'));
+    if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_~.\-]*$/', $field_identifier)) {
+      $form_state->setErrorByName('expose][field_identifier', $this->t('This identifier has invalid characters.'));
       return;
     }
 

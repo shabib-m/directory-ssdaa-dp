@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Plugin\migrate\source\d7;
 
+use Drupal\taxonomy\Plugin\migrate\source\d7\TermEntityTranslation;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests taxonomy term entity translation source plugin.
- *
- * @covers \Drupal\taxonomy\Plugin\migrate\source\d7\TermEntityTranslation
- * @group taxonomy
  */
+#[CoversClass(TermEntityTranslation::class)]
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermEntityTranslationTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -20,7 +26,7 @@ class TermEntityTranslationTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.
@@ -295,7 +301,6 @@ class TermEntityTranslationTest extends MigrateSqlSourceTestBase {
         'description' => 'Term Description FR',
         'format' => 'full_html',
         'machine_name' => 'tags',
-        'is_container' => FALSE,
         'field_test' => [
           [
             'value' => 'French field',
@@ -318,7 +323,6 @@ class TermEntityTranslationTest extends MigrateSqlSourceTestBase {
         'description' => 'Term Description ES',
         'format' => 'full_html',
         'machine_name' => 'tags',
-        'is_container' => FALSE,
         'field_test' => [
           [
             'value' => 'Spanish field',

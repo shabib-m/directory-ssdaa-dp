@@ -2,24 +2,29 @@
 
 namespace Drupal\text\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\TypedData\DataDefinition;
 
 /**
  * Plugin implementation of the 'text_with_summary' field type.
- *
- * @FieldType(
- *   id = "text_with_summary",
- *   label = @Translation("Text (formatted, long, with summary)"),
- *   description = @Translation("This field stores long text with a format and an optional summary."),
- *   category = @Translation("Text"),
- *   default_widget = "text_textarea_with_summary",
- *   default_formatter = "text_default",
- *   list_class = "\Drupal\text\Plugin\Field\FieldType\TextFieldItemList"
- * )
  */
+#[FieldType(
+  id: "text_with_summary",
+  label: new TranslatableMarkup("Long text with summary"),
+  description: [
+    new TranslatableMarkup("Extends Long text"),
+    new TranslatableMarkup("Uses separate text areas (multiple rows) for input and summary"),
+    new TranslatableMarkup("Summary defaults to a trimmed value of the long text"),
+    new TranslatableMarkup("Recommended for content types that will be displayed in cards or teasers"),
+  ],
+  category: "formatted_text",
+  default_widget: "text_textarea_with_summary",
+  default_formatter: "text_default",
+  list_class: TextFieldItemList::class,
+)]
 class TextWithSummaryItem extends TextItemBase {
 
   /**
@@ -116,9 +121,11 @@ class TextWithSummaryItem extends TextItemBase {
     if ($this->getSetting('required_summary')) {
       $manager = $this->getTypedDataManager()->getValidationConstraintManager();
       $constraints[] = $manager->create('ComplexData', [
-        'summary' => [
-          'NotNull' => [
-            'message' => $this->t('The summary field is required for @name', ['@name' => $this->getFieldDefinition()->getLabel()]),
+        'properties' => [
+          'summary' => [
+            'NotNull' => [
+              'message' => $this->t('The summary field is required for @name', ['@name' => $this->getFieldDefinition()->getLabel()]),
+            ],
           ],
         ],
       ]);

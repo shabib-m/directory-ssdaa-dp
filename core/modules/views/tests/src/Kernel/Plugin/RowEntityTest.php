@@ -1,31 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Plugin;
 
 use Drupal\Core\Form\FormState;
 use Drupal\entity_test\Entity\EntityTest;
+use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\user\Entity\User;
 use Drupal\views\Views;
-use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the generic entity row plugin.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\row\EntityRow
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class RowEntityTest extends ViewsKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'entity_test',
-    'field',
-    'system',
-    'user',
   ];
 
   /**
@@ -48,7 +48,7 @@ class RowEntityTest extends ViewsKernelTestBase {
   /**
    * Tests the entity row handler.
    */
-  public function testEntityRow() {
+  public function testEntityRow(): void {
     $user = User::create([
       'name' => 'test user',
     ]);

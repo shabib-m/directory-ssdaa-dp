@@ -1,18 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Migrate\d7;
 
-use Drupal\Tests\SchemaCheckTestTrait;
-use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
-use Drupal\user\AccountSettingsForm;
 use Drupal\Core\Database\Database;
+use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use Drupal\Tests\SchemaCheckTestTrait;
+use Drupal\user\AccountSettingsForm;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests migration of user settings.
- *
- * @group migrate_drupal_7
  */
+#[Group('migrate_drupal_7')]
+#[RunTestsInSeparateProcesses]
 class MigrateUserSettingsTest extends MigrateDrupal7TestBase {
 
   use SchemaCheckTestTrait;
@@ -28,7 +32,7 @@ class MigrateUserSettingsTest extends MigrateDrupal7TestBase {
   /**
    * Tests the migration.
    */
-  public function testMigration() {
+  public function testMigration(): void {
     $config = $this->config('user.settings');
     $this->assertTrue($config->get('notify.status_blocked'));
     $this->assertTrue($config->get('notify.status_activated'));

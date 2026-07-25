@@ -1,15 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal\Kernel;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\migrate_drupal\Plugin\MigrateFieldPluginManager;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the field plugin manager.
- *
- * @group migrate_drupal
- * @coversDefaultClass \Drupal\migrate_drupal\Plugin\MigrateFieldPluginManager
  */
+#[CoversClass(MigrateFieldPluginManager::class)]
+#[Group('migrate_drupal')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class MigrateFieldPluginManagerTest extends MigrateDrupalTestBase {
 
   /**
@@ -24,12 +33,6 @@ class MigrateFieldPluginManagerTest extends MigrateDrupalTestBase {
    */
   protected static $modules = [
     'datetime',
-    'system',
-    'user',
-    'field',
-    'migrate_drupal',
-    'options',
-    'file',
     'image',
     'text',
     'link',
@@ -47,9 +50,9 @@ class MigrateFieldPluginManagerTest extends MigrateDrupalTestBase {
   /**
    * Tests that the correct MigrateField plugins are used.
    *
-   * @covers ::getPluginIdFromFieldType
+   * @legacy-covers ::getPluginIdFromFieldType
    */
-  public function testPluginSelection() {
+  public function testPluginSelection(): void {
     $this->assertSame('link', $this->pluginManager->getPluginIdFromFieldType('link', ['core' => 6]));
     $this->assertSame('link_field', $this->pluginManager->getPluginIdFromFieldType('link_field', ['core' => 7]));
     $this->assertSame('image', $this->pluginManager->getPluginIdFromFieldType('image', ['core' => 7]));
@@ -68,10 +71,10 @@ class MigrateFieldPluginManagerTest extends MigrateDrupalTestBase {
   /**
    * Tests that a PluginNotFoundException is thrown when a plugin isn't found.
    *
-   * @covers ::getPluginIdFromFieldType
-   * @dataProvider nonExistentPluginExceptionsData
+   * @legacy-covers ::getPluginIdFromFieldType
    */
-  public function testNonExistentPluginExceptions($core, $field_type) {
+  #[DataProvider('nonExistentPluginExceptionsData')]
+  public function testNonExistentPluginExceptions($core, $field_type): void {
     $this->expectException(PluginNotFoundException::class);
     $this->expectExceptionMessage(sprintf("Plugin ID '%s' was not found.", $field_type));
     $this->pluginManager->getPluginIdFromFieldType($field_type, ['core' => $core]);
@@ -83,7 +86,7 @@ class MigrateFieldPluginManagerTest extends MigrateDrupalTestBase {
    * @return array
    *   The data.
    */
-  public function nonExistentPluginExceptionsData() {
+  public static function nonExistentPluginExceptionsData() {
     return [
       'D7 Filefield' => [
         'core' => 7,
@@ -107,7 +110,7 @@ class MigrateFieldPluginManagerTest extends MigrateDrupalTestBase {
   /**
    * Tests that plugins with no explicit weight are given a weight of 0.
    */
-  public function testDefaultWeight() {
+  public function testDefaultWeight(): void {
     $definitions = $this->pluginManager->getDefinitions();
     $deprecated_plugins = [
       'date',

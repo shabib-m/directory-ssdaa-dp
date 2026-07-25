@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 3763f518-15c6-48de-a852-4fa47635b9bd
+  bundle: country
+  default_langcode: ar
+  depends:
+    1c797784-9227-4475-91b6-0f7d7fbd3c44: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: السودان
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 1c797784-9227-4475-91b6-0f7d7fbd3c44
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

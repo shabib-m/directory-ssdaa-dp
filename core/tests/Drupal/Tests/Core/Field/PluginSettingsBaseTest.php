@@ -1,25 +1,25 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\Field\PluginSettingsBaseTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Field;
 
 use Drupal\Core\Field\PluginSettingsBase;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Field\PluginSettingsBase
- * @group Field
+ * Tests Drupal\Core\Field\PluginSettingsBase.
  */
+#[CoversClass(PluginSettingsBase::class)]
+#[Group('Field')]
 class PluginSettingsBaseTest extends UnitTestCase {
 
   /**
-   * @covers ::getThirdPartySettings
+   * Tests get third party settings.
    */
-  public function testGetThirdPartySettings() {
+  public function testGetThirdPartySettings(): void {
     $plugin_settings = new TestPluginSettingsBase();
     $this->assertSame([], $plugin_settings->getThirdPartySettings());
     $this->assertSame([], $plugin_settings->getThirdPartySettings('test'));
@@ -30,6 +30,9 @@ class PluginSettingsBaseTest extends UnitTestCase {
 
 }
 
+/**
+ * Stub class for testing PluginSettingsBase.
+ */
 class TestPluginSettingsBase extends PluginSettingsBase {
 
   public function __construct() {

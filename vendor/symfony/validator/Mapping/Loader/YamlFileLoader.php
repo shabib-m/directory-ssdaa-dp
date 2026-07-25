@@ -24,12 +24,7 @@ use Symfony\Component\Yaml\Yaml;
  */
 class YamlFileLoader extends FileLoader
 {
-    /**
-     * An array of YAML class descriptions.
-     *
-     * @var array
-     */
-    protected $classes;
+    protected array $classes;
 
     public function __construct(string $file)
     {
@@ -43,7 +38,7 @@ class YamlFileLoader extends FileLoader
 
     public function loadClassMetadata(ClassMetadata $metadata): bool
     {
-        if (null === $this->classes) {
+        if (!isset($this->classes)) {
             $this->loadClassesFromYaml();
         }
 
@@ -61,11 +56,11 @@ class YamlFileLoader extends FileLoader
     /**
      * Return the names of the classes mapped in this file.
      *
-     * @return string[]
+     * @return class-string[]
      */
     public function getMappedClasses(): array
     {
-        if (null === $this->classes) {
+        if (!isset($this->classes)) {
             $this->loadClassesFromYaml();
         }
 
@@ -91,7 +86,15 @@ class YamlFileLoader extends FileLoader
                     $options = $this->parseNodes($options);
                 }
 
-                $values[] = $this->newConstraint(key($childNodes), $options);
+                if (null !== $options && (!\is_array($options) || array_is_list($options))) {
+                    trigger_deprecation('symfony/validator', '7.4', 'Not using a YAML mapping of constraint option names to their values to configure the "%s" constraint is deprecated.', key($childNodes));
+
+                    $options = [
+                        'value' => $options,
+                    ];
+                }
+
+                $values[] = $this->newConstraint(key($childNodes), $options, true);
             } else {
                 if (\is_array($childNodes)) {
                     $childNodes = $this->parseNodes($childNodes);
@@ -115,7 +118,7 @@ class YamlFileLoader extends FileLoader
         try {
             $classes = $this->yamlParser->parseFile($path, Yaml::PARSE_CONSTANT);
         } catch (ParseException $e) {
-            throw new \InvalidArgumentException(sprintf('The file "%s" does not contain valid YAML: ', $path).$e->getMessage(), 0, $e);
+            throw new \InvalidArgumentException(\sprintf('The file "%s" does not contain valid YAML: ', $path).$e->getMessage(), 0, $e);
         }
 
         // empty file
@@ -125,7 +128,7 @@ class YamlFileLoader extends FileLoader
 
         // not an array
         if (!\is_array($classes)) {
-            throw new \InvalidArgumentException(sprintf('The file "%s" must contain a YAML array.', $this->file));
+            throw new \InvalidArgumentException(\sprintf('The file "%s" must contain a YAML array.', $this->file));
         }
 
         return $classes;
@@ -150,6 +153,9 @@ class YamlFileLoader extends FileLoader
     private function loadClassMetadataFromYaml(ClassMetadata $metadata, array $classDescription): void
     {
         if (isset($classDescription['group_sequence_provider'])) {
+            if (\is_string($classDescription['group_sequence_provider'])) {
+                $metadata->setGroupProvider($classDescription['group_sequence_provider']);
+            }
             $metadata->setGroupSequenceProvider(
                 (bool) $classDescription['group_sequence_provider']
             );

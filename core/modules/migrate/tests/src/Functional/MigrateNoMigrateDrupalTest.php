@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Functional;
 
 use Drupal\node\Entity\Node;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Execute migration.
@@ -12,9 +16,9 @@ use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
  * This is intentionally a Functional test instead of a Kernel test because
  * Kernel tests have proven to not catch all edge cases that are encountered
  * via a Functional test.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class MigrateNoMigrateDrupalTest extends BrowserTestBase {
   use ContentTypeCreationTrait;
 
@@ -43,7 +47,7 @@ class MigrateNoMigrateDrupalTest extends BrowserTestBase {
   /**
    * Tests execution of a migration.
    */
-  public function testExecutionNoMigrateDrupal() {
+  public function testExecutionNoMigrateDrupal(): void {
     $this->drupalGet('/migrate_no_migrate_drupal_test/execute');
     $this->assertSession()->pageTextContains('Migration was successful.');
     $node_1 = Node::load(1);

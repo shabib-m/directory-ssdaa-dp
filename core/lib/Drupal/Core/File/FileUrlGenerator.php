@@ -119,9 +119,9 @@ class FileUrlGenerator implements FileUrlGeneratorInterface {
    */
   protected function generatePath(string $base_url, string $uri): string {
     // Allow for:
-    // - root-relative URIs (e.g. /foo.jpg in http://example.com/foo.jpg)
+    // - root-relative URIs (e.g. /foo.jpg in https://example.com/foo.jpg)
     // - protocol-relative URIs (e.g. //bar.jpg, which is expanded to
-    //   http://example.com/bar.jpg by the browser when viewing a page over
+    //   https://example.com/bar.jpg by the browser when viewing a page over
     //   HTTP and to https://example.com/bar.jpg when viewing a HTTPS page)
     // Both types of relative URIs are characterized by a leading slash, hence
     // we can use a single check.
@@ -160,9 +160,9 @@ class FileUrlGenerator implements FileUrlGeneratorInterface {
 
     if (!$scheme) {
       // Allow for:
-      // - root-relative URIs (e.g. /foo.jpg in http://example.com/foo.jpg)
+      // - root-relative URIs (e.g. /foo.jpg in https://example.com/foo.jpg)
       // - protocol-relative URIs (e.g. //bar.jpg, which is expanded to
-      //   http://example.com/bar.jpg by the browser when viewing a page over
+      //   https://example.com/bar.jpg by the browser when viewing a page over
       //   HTTP and to https://example.com/bar.jpg when viewing a HTTPS page)
       // Both types of relative URIs are characterized by a leading slash, hence
       // we can use a single check.
@@ -211,7 +211,6 @@ class FileUrlGenerator implements FileUrlGeneratorInterface {
     // instead of a port number.
     $request = $this->requestStack->getCurrentRequest();
     $host = $request->getHost();
-    $scheme = $request->getScheme();
     $port = $request->getPort() ?: 80;
 
     // Files may be accessible on a different port than the web request.
@@ -220,20 +219,15 @@ class FileUrlGenerator implements FileUrlGeneratorInterface {
       return $file_url;
     }
 
-    if (('http' == $scheme && $port == 80) || ('https' == $scheme && $port == 443)) {
-      $http_host = $host;
-    }
-    else {
-      $http_host = $host . ':' . $port;
-    }
-
     // If this should not be a root-relative path but relative to the drupal
     // base path, add it to the host to be removed from the URL as well.
-    if (!$root_relative) {
-      $http_host .= $request->getBasePath();
-    }
+    $base_path = !$root_relative ? $request->getBasePath() : '';
 
-    return preg_replace('|^https?://' . preg_quote($http_host, '|') . '|', '', $file_url);
+    $host = preg_quote($host, '@');
+    $port = preg_quote($port, '@');
+    $base_path = preg_quote($base_path, '@');
+
+    return preg_replace("@^https?://{$host}(:{$port})?{$base_path}($|/)@", '/', $file_url);
   }
 
 }

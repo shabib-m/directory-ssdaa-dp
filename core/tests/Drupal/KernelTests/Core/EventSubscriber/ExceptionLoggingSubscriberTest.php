@@ -1,17 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\EventSubscriber;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\ErrorHandler\BufferingLogger;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests that HTTP exceptions are logged correctly.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class ExceptionLoggingSubscriberTest extends KernelTestBase {
 
   /**
@@ -29,23 +35,9 @@ class ExceptionLoggingSubscriberTest extends KernelTestBase {
   /**
    * Tests \Drupal\Core\EventSubscriber\ExceptionLoggingSubscriber::onException().
    */
-  public function testExceptionLogging() {
+  #[DataProvider('exceptionDataProvider')]
+  public function testExceptionLogging(int $error_code, string $channel, int $log_level, string $exception = ''): void {
     $http_kernel = \Drupal::service('http_kernel');
-
-    $channel_map = [
-      400 => 'client error',
-      401 => 'client error',
-      403 => 'access denied',
-      404 => 'page not found',
-      405 => 'client error',
-      408 => 'client error',
-      // Do not check the 500 status code here because it would be caught by
-      // Drupal\Core\EventSubscriberExceptionTestSiteSubscriber which has lower
-      // priority.
-      501 => 'php',
-      502 => 'php',
-      503 => 'php',
-    ];
 
     // Ensure that noting is logged.
     $this->assertEmpty($this->container->get($this->testLogServiceName)->cleanLogs());
@@ -53,25 +45,48 @@ class ExceptionLoggingSubscriberTest extends KernelTestBase {
     // Temporarily disable error log as the ExceptionLoggingSubscriber logs 5xx
     // HTTP errors using error_log().
     $error_log = ini_set('error_log', '/dev/null');
-    foreach ($channel_map as $code => $channel) {
-      $request = Request::create('/test-http-response-exception/' . $code);
-      $http_kernel->handle($request);
+    $request = Request::create('/test-http-response-exception/' . $error_code);
+
+    if ($exception) {
+      $this->expectException($exception);
     }
+    $http_kernel->handle($request);
     ini_set('error_log', $error_log);
 
-    $expected_channels = array_values($channel_map);
-
     $logs = $this->container->get($this->testLogServiceName)->cleanLogs();
-    foreach ($expected_channels as $key => $expected_channel) {
-      $log_message = $logs[$key][2]['channel'];
-      $this->assertEquals($expected_channel, $log_message);
+    $this->assertEquals($channel, $logs[0][2]['channel']);
+    $this->assertEquals($log_level, $logs[0][0]);
+
+    // Verify that @backtrace_string is removed from client error.
+    if ($logs[0][2]['channel'] === 'client error') {
+      $this->assertArrayNotHasKey('@backtrace_string', $logs[0][2]);
     }
+  }
+
+  /**
+   * Returns data for testing exception logging.
+   */
+  public static function exceptionDataProvider(): array {
+    return [
+      [400, 'client error', RfcLogLevel::WARNING],
+      [401, 'client error', RfcLogLevel::WARNING],
+      [403, 'access denied', RfcLogLevel::WARNING],
+      [404, 'page not found', RfcLogLevel::WARNING],
+      [405, 'client error', RfcLogLevel::WARNING],
+      [408, 'client error', RfcLogLevel::WARNING],
+      // Do not check the 500 status code here because it would be caught by
+      // Drupal\Core\EventSubscriberExceptionTestSiteSubscriber which has lower
+      // priority.
+      [501, 'php', RfcLogLevel::ERROR],
+      [502, 'php', RfcLogLevel::ERROR],
+      [503, 'php', RfcLogLevel::ERROR],
+    ];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function register(ContainerBuilder $container) {
+  public function register(ContainerBuilder $container): void {
     parent::register($container);
     $container
       ->register($this->testLogServiceName, BufferingLogger::class)

@@ -1,22 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Functional;
 
 use Drupal\Core\Database\Database;
 use Drupal\search\SearchIndexInterface;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests search index is updated properly when nodes are removed or updated.
- *
- * @group search
  */
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchNodeUpdateAndDeletionTest extends BrowserTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['node', 'search'];
+  protected static $modules = ['node', 'search', 'search_node'];
 
   /**
    * {@inheritdoc}
@@ -49,7 +53,7 @@ class SearchNodeUpdateAndDeletionTest extends BrowserTestBase {
   /**
    * Tests that the search index info is properly updated when a node changes.
    */
-  public function testSearchIndexUpdateOnNodeChange() {
+  public function testSearchIndexUpdateOnNodeChange(): void {
     // Create a node.
     $node = $this->drupalCreateNode([
       'title' => 'Someone who says Ni!',
@@ -63,17 +67,17 @@ class SearchNodeUpdateAndDeletionTest extends BrowserTestBase {
     $search_index = \Drupal::service('search.index');
     assert($search_index instanceof SearchIndexInterface);
 
-    // Search the node to verify it appears in search results
+    // Search the node to verify it appears in search results.
     $edit = ['keys' => 'knights'];
     $this->drupalGet('search/node');
     $this->submitForm($edit, 'Search');
     $this->assertSession()->pageTextContains($node->label());
 
-    // Update the node
+    // Update the node.
     $node->body->value = "We want a shrubbery!";
     $node->save();
 
-    // Run indexer again
+    // Run indexer again.
     $node_search_plugin->updateIndex();
 
     // Search again to verify the new text appears in test results.
@@ -86,7 +90,7 @@ class SearchNodeUpdateAndDeletionTest extends BrowserTestBase {
   /**
    * Tests that the search index info is updated when a node is deleted.
    */
-  public function testSearchIndexUpdateOnNodeDeletion() {
+  public function testSearchIndexUpdateOnNodeDeletion(): void {
     // Create a node.
     $node = $this->drupalCreateNode([
       'title' => 'No dragons here',
@@ -98,7 +102,7 @@ class SearchNodeUpdateAndDeletionTest extends BrowserTestBase {
     // Update the search index.
     $node_search_plugin->updateIndex();
 
-    // Search the node to verify it appears in search results
+    // Search the node to verify it appears in search results.
     $edit = ['keys' => 'dragons'];
     $this->drupalGet('search/node');
     $this->submitForm($edit, 'Search');

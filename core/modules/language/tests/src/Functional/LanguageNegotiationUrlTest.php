@@ -1,13 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Functional;
 
+use Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl
- * @group language
+ * Tests Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl.
  */
+#[CoversClass(LanguageNegotiationUrl::class)]
+#[Group('language')]
+#[RunTestsInSeparateProcesses]
 class LanguageNegotiationUrlTest extends BrowserTestBase {
 
   /**
@@ -55,9 +63,11 @@ class LanguageNegotiationUrlTest extends BrowserTestBase {
   }
 
   /**
-   * @covers ::processInbound
+   * Tests domain.
+   *
+   * @legacy-covers ::processInbound
    */
-  public function testDomain() {
+  public function testDomain(): void {
     // Check if paths that contain language prefixes can be reached when
     // language is taken from the domain.
     $edit = [

@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal\Kernel;
 
 use Drupal\Core\Database\Database;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that a migration can be instantiated without a database connection.
- *
- * @group migrate_drupal
  */
+#[Group('migrate_drupal')]
+#[RunTestsInSeparateProcesses]
 class MigrateMissingDatabaseTest extends KernelTestBase {
 
   /**

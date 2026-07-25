@@ -21,10 +21,8 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
  *
  * @author Grégoire Pineau <lyrixx@lyrixx.info>
  * @author Kévin Dunglas <dunglas@gmail.com>
- *
- * @final since Symfony 6.3
  */
-class ConstraintViolationListNormalizer implements NormalizerInterface, CacheableSupportsMethodInterface
+final class ConstraintViolationListNormalizer implements NormalizerInterface
 {
     public const INSTANCE = 'instance';
     public const STATUS = 'status';
@@ -41,11 +39,11 @@ class ConstraintViolationListNormalizer implements NormalizerInterface, Cacheabl
     public function getSupportedTypes(?string $format): array
     {
         return [
-            ConstraintViolationListInterface::class => __CLASS__ === static::class || $this->hasCacheableSupportsMethod(),
+            ConstraintViolationListInterface::class => true,
         ];
     }
 
-    public function normalize(mixed $object, string $format = null, array $context = []): array
+    public function normalize(mixed $data, ?string $format = null, array $context = []): array
     {
         if (\array_key_exists(self::PAYLOAD_FIELDS, $context)) {
             $payloadFieldsToSerialize = $context[self::PAYLOAD_FIELDS];
@@ -61,8 +59,12 @@ class ConstraintViolationListNormalizer implements NormalizerInterface, Cacheabl
 
         $violations = [];
         $messages = [];
-        foreach ($object as $violation) {
-            $propertyPath = $this->nameConverter ? $this->nameConverter->normalize($violation->getPropertyPath(), null, $format, $context) : $violation->getPropertyPath();
+        foreach ($data as $violation) {
+            $propertyPath = $violation->getPropertyPath();
+
+            if (null !== $this->nameConverter) {
+                $propertyPath = $this->normalizePropertyPath($propertyPath, \is_object($violation->getRoot()) ? \get_class($violation->getRoot()) : null, $format, $context);
+            }
 
             $violationEntry = [
                 'propertyPath' => $propertyPath,
@@ -71,7 +73,7 @@ class ConstraintViolationListNormalizer implements NormalizerInterface, Cacheabl
                 'parameters' => $violation->getParameters(),
             ];
             if (null !== $code = $violation->getCode()) {
-                $violationEntry['type'] = sprintf('urn:uuid:%s', $code);
+                $violationEntry['type'] = \sprintf('urn:uuid:%s', $code);
             }
 
             $constraint = $violation->getConstraint();
@@ -87,7 +89,7 @@ class ConstraintViolationListNormalizer implements NormalizerInterface, Cacheabl
 
             $violations[] = $violationEntry;
 
-            $prefix = $propertyPath ? sprintf('%s: ', $propertyPath) : '';
+            $prefix = $propertyPath ? \sprintf('%s: ', $propertyPath) : '';
             $messages[] = $prefix.$violation->getMessage();
         }
 
@@ -108,21 +110,50 @@ class ConstraintViolationListNormalizer implements NormalizerInterface, Cacheabl
         return $result + ['violations' => $violations];
     }
 
-    /**
-     * @param array $context
-     */
-    public function supportsNormalization(mixed $data, string $format = null /* , array $context = [] */): bool
+    private function normalizePropertyPath(string $propertyPath, ?string $class, ?string $format, array $context): string
     {
-        return $data instanceof ConstraintViolationListInterface;
+        if (!str_contains($propertyPath, '.')) {
+            return $this->nameConverter->normalize($propertyPath, $class, $format, $context);
+        }
+
+        $result = [];
+        $currentClass = $class;
+
+        foreach (explode('.', $propertyPath) as $segment) {
+            $subscript = '';
+            $propertyName = $segment;
+            if (false !== $bracketPos = strpos($segment, '[')) {
+                $propertyName = substr($segment, 0, $bracketPos);
+                $subscript = substr($segment, $bracketPos);
+            }
+
+            $result[] = $this->nameConverter->normalize($propertyName, $currentClass, $format, $context).$subscript;
+
+            $currentClass = $this->getPropertyClassFromReflection($currentClass, $propertyName);
+        }
+
+        return implode('.', $result);
     }
 
-    /**
-     * @deprecated since Symfony 6.3, use "getSupportedTypes()" instead
-     */
-    public function hasCacheableSupportsMethod(): bool
+    private function getPropertyClassFromReflection(?string $class, string $property): ?string
     {
-        trigger_deprecation('symfony/serializer', '6.3', 'The "%s()" method is deprecated, implement "%s::getSupportedTypes()" instead.', __METHOD__, get_debug_type($this));
+        if (null === $class) {
+            return null;
+        }
 
-        return __CLASS__ === static::class;
+        try {
+            $type = (new \ReflectionProperty($class, $property))->getType();
+            if ($type instanceof \ReflectionNamedType && !$type->isBuiltin()) {
+                return $type->getName();
+            }
+        } catch (\ReflectionException) {
+        }
+
+        return null;
+    }
+
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
+    {
+        return $data instanceof ConstraintViolationListInterface;
     }
 }

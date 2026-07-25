@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workflows\Functional;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\workflows\Entity\Workflow;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test custom provided workflow access for state/transition operations.
- *
- * @group workflows
  */
+#[Group('workflows')]
+#[RunTestsInSeparateProcesses]
 class WorkflowCustomStateTransitionAccessTest extends BrowserTestBase {
 
   /**
@@ -56,7 +60,7 @@ class WorkflowCustomStateTransitionAccessTest extends BrowserTestBase {
   /**
    * Tests the custom state/transition operation access rules.
    */
-  public function testCustomWorkflowAccessOperations() {
+  public function testCustomWorkflowAccessOperations(): void {
     $this->drupalLogin($this->adminUser);
     $forbidden_paths = [
       'admin/config/workflow/workflows/manage/test_type/state/cannot_delete/delete',

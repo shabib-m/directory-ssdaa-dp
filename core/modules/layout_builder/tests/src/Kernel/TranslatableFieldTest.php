@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Kernel;
 
 use Drupal\entity_test\Entity\EntityTest;
@@ -11,12 +13,14 @@ use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Layout Builder with a translatable layout field.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class TranslatableFieldTest extends KernelTestBase {
 
   /**
@@ -27,7 +31,6 @@ class TranslatableFieldTest extends KernelTestBase {
     'layout_builder',
     'entity_test',
     'field',
-    'system',
     'user',
     'language',
   ];
@@ -64,7 +67,7 @@ class TranslatableFieldTest extends KernelTestBase {
   /**
    * Tests that sections on cleared when creating a new translation.
    */
-  public function testSectionsClearedOnCreateTranslation() {
+  public function testSectionsClearedOnCreateTranslation(): void {
     $section_data = [
       new Section('layout_onecol', [], [
         '10000000-0000-1000-a000-000000000000' => new SectionComponent('10000000-0000-1000-a000-000000000000', 'content', ['id' => 'foo']),

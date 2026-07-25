@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config\Functional;
 
 use Drupal\Core\Archiver\ArchiveTar;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the user interface for importing/exporting configuration.
@@ -13,9 +17,9 @@ use Drupal\Tests\BrowserTestBase;
  * Each testX method does a complete rebuild of a Drupal site, so values being
  * tested need to be stored in protected properties in order to survive until
  * the next rebuild.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigExportImportUITest extends BrowserTestBase {
 
   /**
@@ -39,7 +43,6 @@ class ConfigExportImportUITest extends BrowserTestBase {
    */
   protected $newSlogan;
 
-
   /**
    * Holds a content type.
    *
@@ -62,9 +65,7 @@ class ConfigExportImportUITest extends BrowserTestBase {
   protected $fieldStorage;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['config', 'node', 'field'];
 
@@ -78,17 +79,24 @@ class ConfigExportImportUITest extends BrowserTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    // The initial import must be done with uid 1 because if separately named
-    // roles are created then the role is lost after import. If the roles
-    // created have the same name then the sync will fail because they will
-    // have different UUIDs.
-    $this->drupalLogin($this->rootUser);
+    // Create a content type.
+    $this->contentType = $this->drupalCreateContentType(['type' => 'test']);
+
+    $this->drupalLogin($this->drupalCreateUser([
+      'export configuration',
+      'import configuration',
+      'synchronize configuration',
+      'access administration pages',
+      'administer site configuration',
+      'create test content',
+      'view the administration theme',
+    ]));
   }
 
   /**
    * Tests a simple site export import case.
    */
-  public function testExportImport() {
+  public function testExportImport(): void {
     // After installation there is no snapshot and nothing to import.
     $this->drupalGet('admin/config/development/configuration');
     $this->assertSession()->pageTextNotContains('Warning message');
@@ -102,11 +110,8 @@ class ConfigExportImportUITest extends BrowserTestBase {
       ->save();
     $this->assertEquals($this->newSlogan, $this->config('system.site')->get('slogan'));
 
-    // Create a content type.
-    $this->contentType = $this->drupalCreateContentType();
-
     // Create a field.
-    $this->fieldName = mb_strtolower($this->randomMachineName());
+    $this->fieldName = $this->randomMachineName();
     $this->fieldStorage = FieldStorageConfig::create([
       'field_name' => $this->fieldName,
       'entity_type' => 'node',
@@ -219,7 +224,7 @@ class ConfigExportImportUITest extends BrowserTestBase {
   /**
    * Tests an export and import of collections.
    */
-  public function testExportImportCollections() {
+  public function testExportImportCollections(): void {
 
     /** @var \Drupal\Core\Config\StorageInterface $active_storage */
     $active_storage = \Drupal::service('config.storage');

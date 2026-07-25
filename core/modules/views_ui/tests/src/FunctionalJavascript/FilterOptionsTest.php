@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the JavaScript filtering of options in add handler form.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class FilterOptionsTest extends WebDriverTestBase {
 
   /**
@@ -41,7 +45,7 @@ class FilterOptionsTest extends WebDriverTestBase {
   /**
    * Tests filtering options in the 'Add fields' dialog.
    */
-  public function testFilterOptionsAddFields() {
+  public function testFilterOptionsAddFields(): void {
     $this->drupalGet('admin/structure/views/view/content');
 
     $session = $this->getSession();

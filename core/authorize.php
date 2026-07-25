@@ -11,7 +11,7 @@
  * user interface which knows how to redirect the user to this script as part of
  * a multistep process. This script actually performs the selected operations
  * without loading all of Drupal, to be able to more gracefully recover from
- * errors. Access to the script is controlled by a global killswitch in
+ * errors. Access to the script is controlled by a global kill switch in
  * settings.php ('allow_authorize_operations') and via the 'administer software
  * updates' permission.
  *
@@ -30,6 +30,8 @@ use Drupal\Core\Site\Settings;
 use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Route;
 
+@trigger_error('authorize.php is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+
 // Change the directory to the Drupal root.
 chdir('..');
 
@@ -47,7 +49,7 @@ const MAINTENANCE_MODE = 'update';
 /**
  * Determines if the current user is allowed to run authorize.php.
  *
- * The killswitch in settings.php overrides all else, otherwise, the user must
+ * The kill switch in settings.php overrides all else, otherwise, the user must
  * have access to the 'administer software updates' permission.
  *
  * @param \Symfony\Component\HttpFoundation\Request $request
@@ -82,13 +84,6 @@ catch (HttpExceptionInterface $e) {
   $response->prepare($request)->send();
   exit;
 }
-
-// We have to enable the user and system modules, even to check access and
-// display errors via the maintenance theme.
-\Drupal::moduleHandler()->addModule('system', 'core/modules/system');
-\Drupal::moduleHandler()->addModule('user', 'core/modules/user');
-\Drupal::moduleHandler()->load('system');
-\Drupal::moduleHandler()->load('user');
 
 // Initialize the maintenance theme for this administrative script.
 drupal_maintenance_theme();

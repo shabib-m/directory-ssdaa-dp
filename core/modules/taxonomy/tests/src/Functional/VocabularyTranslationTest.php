@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests content translation for vocabularies.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class VocabularyTranslationTest extends TaxonomyTestBase {
 
   /**
@@ -54,14 +58,14 @@ class VocabularyTranslationTest extends TaxonomyTestBase {
   /**
    * Tests language settings for vocabularies.
    */
-  public function testVocabularyLanguage() {
+  public function testVocabularyLanguage(): void {
     $this->drupalGet('admin/structure/taxonomy/add');
 
     // Check that the field to enable content translation is available.
     $this->assertSession()->fieldExists('edit-default-language-content-translation');
 
     // Create the vocabulary.
-    $vid = mb_strtolower($this->randomMachineName());
+    $vid = $this->randomMachineName();
     $edit['name'] = $this->randomMachineName();
     $edit['description'] = $this->randomMachineName();
     $edit['langcode'] = 'en';
@@ -81,7 +85,7 @@ class VocabularyTranslationTest extends TaxonomyTestBase {
     $this->drupalGet('admin/structure/taxonomy/add');
 
     // Create the vocabulary.
-    $vid = mb_strtolower($this->randomMachineName());
+    $vid = $this->randomMachineName();
     $edit['name'] = $this->randomMachineName();
     $edit['description'] = $this->randomMachineName();
     $edit['langcode'] = 'en';

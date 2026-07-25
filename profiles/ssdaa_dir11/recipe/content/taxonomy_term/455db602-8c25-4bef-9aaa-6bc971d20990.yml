@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 455db602-8c25-4bef-9aaa-6bc971d20990
+  bundle: country
+  default_langcode: ar
+  depends:
+    696dcc1d-b2a8-46ca-af85-e261284003e2: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: العراق
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 696dcc1d-b2a8-46ca-af85-e261284003e2
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

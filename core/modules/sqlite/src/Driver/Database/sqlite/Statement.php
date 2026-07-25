@@ -73,7 +73,7 @@ class Statement extends StatementPrefetchIterator implements StatementInterface 
             // When replacing the placeholders, make sure we search for the
             // exact placeholder. For example, if searching for
             // ':db_placeholder_1', do not replace ':db_placeholder_11'.
-            $query = preg_replace('/' . preg_quote($placeholder) . '\b/', $value, $query);
+            $query = preg_replace('/' . preg_quote($placeholder, NULL) . '\b/', $value, $query);
           }
         }
       }
@@ -86,6 +86,10 @@ class Statement extends StatementPrefetchIterator implements StatementInterface 
    * {@inheritdoc}
    */
   public function execute($args = [], $options = []) {
+    if (isset($options['fetch']) && is_int($options['fetch'])) {
+      @trigger_error("Passing the 'fetch' key as an integer to \$options in execute() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Use a case of \Drupal\Core\Database\Statement\FetchAs enum instead. See https://www.drupal.org/node/3488338", E_USER_DEPRECATED);
+    }
+
     try {
       $return = parent::execute($args, $options);
     }
@@ -97,7 +101,8 @@ class Statement extends StatementPrefetchIterator implements StatementInterface 
       // @see http://www.sqlite.org/faq.html#q15
       // @see http://www.sqlite.org/rescode.html#schema
       if (!empty($e->errorInfo[1]) && $e->errorInfo[1] === 17) {
-        // The schema has changed. SQLite specifies that we must resend the query.
+        // The schema has changed. SQLite specifies that we must resend the
+        // query.
         $return = parent::execute($args, $options);
       }
       else {

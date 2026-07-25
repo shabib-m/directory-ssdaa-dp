@@ -1,19 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Kernel\Migrate\d6;
 
 use Drupal\node\Entity\Node;
-use Drupal\Tests\node\Kernel\Migrate\d6\MigrateNodeTestBase;
 use Drupal\Tests\file\Kernel\Migrate\d6\FileMigrationTestTrait;
+use Drupal\Tests\node\Kernel\Migrate\d6\MigrateNodeTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Image migration test.
  *
  * This extends the node test, because the D6 fixture has images; they just
  * need to be migrated into D8.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateImageTest extends MigrateNodeTestBase {
 
   use FileMigrationTestTrait;
@@ -38,7 +42,7 @@ class MigrateImageTest extends MigrateNodeTestBase {
   /**
    * Tests image migration from Drupal 6 to 8.
    */
-  public function testNode() {
+  public function testNode(): void {
     $node = Node::load(9);
     // Test the image field sub fields.
     $this->assertSame('2', $node->field_test_imagefield->target_id);

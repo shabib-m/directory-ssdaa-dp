@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\RequirementsPageTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests caches during updates.
- *
- * @group Update
  */
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
 class UpdateCacheTest extends BrowserTestBase {
   use RequirementsPageTrait;
 
@@ -25,7 +29,7 @@ class UpdateCacheTest extends BrowserTestBase {
    * @see \Drupal\Core\Update\UpdateServiceProvider
    * @see \Drupal\Core\Update\UpdateBackend
    */
-  public function testCaches() {
+  public function testCaches(): void {
     \Drupal::cache()->set('will_not_exist_after_update', TRUE);
     // The site might be broken at the time so logging in using the UI might
     // not work, so we use the API itself.

@@ -1,31 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config_translation\Functional;
 
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Translate settings and entities to various languages.
- *
- * @group config_translation
  */
+#[Group('config_translation')]
+#[RunTestsInSeparateProcesses]
 class ConfigTranslationCacheTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'block',
     'config_translation',
     'config_translation_test',
-    'contact',
-    'contact_test',
     'contextual',
     'entity_test',
     'field_test',
@@ -90,12 +91,10 @@ class ConfigTranslationCacheTest extends BrowserTestBase {
       'administer languages',
       'administer site configuration',
       'link to any page',
-      'administer contact forms',
       'administer filters',
       $filtered_html_format->getPermissionName(),
       $full_html_format->getPermissionName(),
       $filter_test_format->getPermissionName(),
-      'access site-wide contact form',
       'access contextual links',
       'administer account settings',
       'administer themes',
@@ -119,10 +118,10 @@ class ConfigTranslationCacheTest extends BrowserTestBase {
   /**
    * Tests the translation of field and field storage configuration.
    */
-  public function testFieldConfigTranslation() {
+  public function testFieldConfigTranslation(): void {
     // Add a test field which has a translatable field setting and a
     // translatable field storage setting.
-    $field_name = strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $field_storage = FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'entity_test',
@@ -133,8 +132,8 @@ class ConfigTranslationCacheTest extends BrowserTestBase {
     $field_storage->setSetting('translatable_storage_setting', $translatable_storage_setting);
     $field_storage->save();
 
-    $bundle = strtolower($this->randomMachineName());
-    entity_test_create_bundle($bundle);
+    $bundle = $this->randomMachineName();
+    EntityTestHelper::createBundle($bundle);
     $field = FieldConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'entity_test',

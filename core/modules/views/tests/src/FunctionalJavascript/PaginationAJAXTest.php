@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the click sorting AJAX functionality of Views exposed forms.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class PaginationAJAXTest extends WebDriverTestBase {
 
   use ContentTypeCreationTrait;
@@ -28,11 +32,17 @@ class PaginationAJAXTest extends WebDriverTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * @var array
    * Test Views to enable.
+   *
+   * @var array
    */
   public static $testViews = ['test_content_ajax'];
 
+  /**
+   * The test user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
   protected $user;
 
   /**
@@ -65,7 +75,7 @@ class PaginationAJAXTest extends WebDriverTestBase {
   /**
    * Tests if pagination via AJAX works for the "Content" View.
    */
-  public function testBasicPagination() {
+  public function testBasicPagination(): void {
     // Visit the content page.
     $this->drupalGet('test-content-ajax');
 
@@ -80,7 +90,7 @@ class PaginationAJAXTest extends WebDriverTestBase {
     $this->assertEquals($expected_view_path, current($settings['views']['ajaxViews'])['view_path']);
 
     // Set the number of items displayed per page to 5 using the exposed pager.
-    $page->selectFieldOption('edit-items-per-page', 5);
+    $page->selectFieldOption('edit-items-per-page', '5');
     $page->pressButton('Filter');
     $session_assert->assertWaitOnAjaxRequest();
 
@@ -105,7 +115,7 @@ class PaginationAJAXTest extends WebDriverTestBase {
     $this->assertNoDuplicateAssetsOnPage();
 
     // Test that no unwanted parameters are added to the URL.
-    $this->assertEquals('?status=All&type=All&title=&langcode=All&items_per_page=5&order=changed&sort=asc&page=2', $link->getAttribute('href'));
+    $this->assertEquals('?status=All&type=All&items_per_page=5&title=&order=changed&sort=asc&page=2', $link->getAttribute('href'));
 
     $this->clickLink('Go to page 3');
     $session_assert->assertWaitOnAjaxRequest();
@@ -142,7 +152,7 @@ class PaginationAJAXTest extends WebDriverTestBase {
   /**
    * Tests if pagination via AJAX works for the filter with default value.
    */
-  public function testDefaultFilterPagination() {
+  public function testDefaultFilterPagination(): void {
     // Add default value to the title filter.
     $view = \Drupal::configFactory()->getEditable('views.view.test_content_ajax');
     $display = $view->get('display');
@@ -164,7 +174,7 @@ class PaginationAJAXTest extends WebDriverTestBase {
     $this->assertEquals($expected_view_path, current($settings['views']['ajaxViews'])['view_path']);
 
     // Set the number of items displayed per page to 5 using the exposed pager.
-    $page->selectFieldOption('edit-items-per-page', 5);
+    $page->selectFieldOption('edit-items-per-page', '5');
     $page->pressButton('Filter');
     $session_assert->assertWaitOnAjaxRequest();
 
@@ -189,7 +199,7 @@ class PaginationAJAXTest extends WebDriverTestBase {
     $this->assertNoDuplicateAssetsOnPage();
 
     // Test that no unwanted parameters are added to the URL.
-    $this->assertEquals('?status=All&type=All&title=default_value&langcode=All&items_per_page=5&order=changed&sort=asc&page=0', $link->getAttribute('href'));
+    $this->assertEquals('?status=All&type=All&items_per_page=5&title=default_value&order=changed&sort=asc&page=0', $link->getAttribute('href'));
 
     // Set the title filter to empty string using the exposed pager.
     $page->fillField('title', '');
@@ -209,7 +219,7 @@ class PaginationAJAXTest extends WebDriverTestBase {
     $this->assertNoDuplicateAssetsOnPage();
 
     // Test that no unwanted parameters are added to the URL.
-    $this->assertEquals('?status=All&type=All&title=&langcode=All&items_per_page=5&page=0', $link->getAttribute('href'));
+    $this->assertEquals('?status=All&type=All&items_per_page=5&title=&page=0', $link->getAttribute('href'));
 
     // Navigate back to the first page.
     $this->clickLink('Go to first page');
@@ -250,6 +260,24 @@ class PaginationAJAXTest extends WebDriverTestBase {
       $this->assertNotContains($script->getAttribute('src'), $script_src);
       $script_src[] = $script->getAttribute('src');
     }
+  }
+
+  /**
+   * Tests when a user navigates directly using a page number parameter.
+   */
+  public function testPaginationAjaxWithTitleFilter(): void {
+    // Visit the page url /test-content-ajax-filter?page=3.
+    $this->drupalGet('test-content-ajax-filter', ['query' => ['page' => 3]]);
+    $session_assert = $this->assertSession();
+    $page = $this->getSession()->getPage();
+
+    // Filter by title using the exposed form.
+    $session_assert->elementExists('css', 'input[name="title"]')->setValue('Node 11 content');
+    $session_assert->elementExists('css', 'input[value="Filter"]')->click();
+    $session_assert->assertWaitOnAjaxRequest();
+
+    $rows = $page->findAll('css', 'tbody tr');
+    $this->assertStringContainsString('Node 11 content', $rows[0]->getHtml());
   }
 
 }

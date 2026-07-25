@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\responsive_image\Functional\Rest;
 
 use Drupal\responsive_image\Entity\ResponsiveImageStyle;
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 
 /**
- * ResourceTestBase for ResponsiveImageStyle entity.
+ * Resource test base for ResponsiveImageStyle entity.
  */
 abstract class ResponsiveImageStyleResourceTestBase extends ConfigEntityResourceTestBase {
 

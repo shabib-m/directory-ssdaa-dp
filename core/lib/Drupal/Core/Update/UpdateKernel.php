@@ -139,9 +139,7 @@ class UpdateKernel extends DrupalKernel {
    *   The incoming request.
    */
   protected function shutdownSession(Request $request) {
-    if ($request->hasSession()) {
-      $request->getSession()->save();
-    }
+    $request->getSession()->save();
   }
 
   /**
@@ -186,7 +184,7 @@ class UpdateKernel extends DrupalKernel {
     /** @var \Drupal\system\Access\DbUpdateAccessCheck $db_update_access */
     $db_update_access = $this->getContainer()->get('access_check.db_update');
 
-    if (!Settings::get('update_free_access', FALSE) && !$db_update_access->access($account)->isAllowed()) {
+    if (!$db_update_access->access($account)->isAllowed()) {
       throw new AccessDeniedHttpException('In order to run update.php you need to either have "Administer software updates" permission or have set $settings[\'update_free_access\'] in your settings.php.');
     }
   }

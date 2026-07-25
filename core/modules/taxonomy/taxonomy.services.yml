@@ -1,4 +1,9 @@
+parameters:
+  taxonomy.skip_procedural_hook_scan: true
+
 services:
+  _defaults:
+    autoconfigure: true
   taxonomy_term.breadcrumb:
     class: Drupal\taxonomy\TermBreadcrumbBuilder
     arguments: ['@entity_type.manager', '@entity.repository']

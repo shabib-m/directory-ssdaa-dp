@@ -6,6 +6,11 @@ use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
 
 /**
  * Provides the locale project storage system using a key value store.
+ *
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+ * \Drupal\locale\LocaleProjectRepository instead.
+ *
+ * @see https://www.drupal.org/node/3037033
  */
 class LocaleProjectStorage implements LocaleProjectStorageInterface {
 
@@ -24,19 +29,30 @@ class LocaleProjectStorage implements LocaleProjectStorageInterface {
   protected $cache = [];
 
   /**
+   * Memory cache for projects.
+   *
+   * @var object[]
+   */
+  protected $projectCache = [];
+
+  /**
    * Cache status flag.
    *
    * @var bool
    */
-  protected static $all = FALSE;
+  protected bool $all = FALSE;
 
   /**
-   * Constructs a State object.
+   * Sorted status flag.
    *
-   * @param \Drupal\Core\KeyValueStore\KeyValueFactoryInterface $key_value_factory
-   *   The key value store to use.
+   * @var bool
    */
-  public function __construct(KeyValueFactoryInterface $key_value_factory) {
+  protected bool $sorted = FALSE;
+
+  public function __construct(
+    KeyValueFactoryInterface $key_value_factory,
+  ) {
+    @trigger_error('The ' . __CLASS__ . ' is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Instead, use \Drupal\locale\LocaleProjectRepository. See https://www.drupal.org/node/3037033', E_USER_DEPRECATED);
     $this->keyValueStore = $key_value_factory->get('locale.project');
   }
 
@@ -98,6 +114,8 @@ class LocaleProjectStorage implements LocaleProjectStorageInterface {
       $this->cache[$key] = $value;
     }
     $this->keyValueStore->setMultiple($data);
+    $this->projectCache = [];
+    $this->sorted = FALSE;
   }
 
   /**
@@ -115,6 +133,7 @@ class LocaleProjectStorage implements LocaleProjectStorageInterface {
       $this->cache[$key] = NULL;
     }
     $this->keyValueStore->deleteMultiple($keys);
+    $this->projectCache = [];
   }
 
   /**
@@ -122,7 +141,8 @@ class LocaleProjectStorage implements LocaleProjectStorageInterface {
    */
   public function resetCache() {
     $this->cache = [];
-    static::$all = FALSE;
+    $this->projectCache = [];
+    $this->sorted = $this->all = FALSE;
   }
 
   /**
@@ -140,8 +160,8 @@ class LocaleProjectStorage implements LocaleProjectStorageInterface {
     $projects = $this->keyValueStore->getAll();
     foreach (array_keys($projects) as $key) {
       $projects[$key]['status'] = 0;
-      if (isset($cache[$key])) {
-        $cache[$key] = $projects[$key];
+      if (isset($this->cache[$key])) {
+        $this->cache[$key] = $projects[$key];
       }
     }
     $this->keyValueStore->setMultiple($projects);
@@ -159,11 +179,54 @@ class LocaleProjectStorage implements LocaleProjectStorageInterface {
    * {@inheritdoc}
    */
   public function getAll() {
-    if (!static::$all) {
+    if (!$this->all) {
       $this->cache = $this->keyValueStore->getAll();
-      static::$all = TRUE;
+      $this->all = TRUE;
     }
-    return $this->cache;
+    if (!$this->sorted) {
+      // Work around PHP 8.3.0 - 8.3.3 bug by assigning $this->cache to a local
+      // variable, see https://github.com/php/php-src/pull/13285.
+      $cache = $this->cache;
+      uksort($this->cache, function ($a, $b) use ($cache) {
+        // Sort by weight, if available, and then by key. This allows locale
+        // projects to set a weight, if required, and keeps the order consistent
+        // regardless of whether the list is built from code or retrieve from
+        // the database.
+        $sort = (int) ($cache[$a]['weight'] ?? 0) <=> (int) ($cache[$b]['weight'] ?? 0);
+        return $sort ?: strcmp($a, $b);
+      });
+      $this->sorted = TRUE;
+    }
+    // Remove any NULL values as these are not valid projects.
+    return array_filter($this->cache, fn ($value) => $value !== NULL);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProjects(array $project_names = []): array {
+    if (empty($this->projectCache)) {
+      // Get project data from the database.
+      $row_count = $this->countProjects();
+      // https://www.drupal.org/node/1777106 is a follow-up issue to make the
+      // check for possible out-of-date project information more robust.
+      if ($row_count == 0) {
+        \Drupal::moduleHandler()->loadInclude('locale', 'inc', 'locale.compare');
+        // At least the core project should be in the database, so we build the
+        // data if none are found.
+        \Drupal::service(LocaleProjectRepository::class)->buildProjects();
+      }
+      $this->projectCache = $this->getAll();
+      array_walk($this->projectCache, function (&$project) {
+        $project = (object) $project;
+      });
+    }
+
+    // Return the requested project names or all projects.
+    if ($project_names) {
+      return array_intersect_key($this->projectCache, array_combine($project_names, $project_names));
+    }
+    return $this->projectCache;
   }
 
 }

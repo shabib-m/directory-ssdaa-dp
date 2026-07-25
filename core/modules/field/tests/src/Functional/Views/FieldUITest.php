@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Functional\Views;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the UI of the field handler.
  *
- * @group field
  * @see \Drupal\field\Plugin\views\field\Field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class FieldUITest extends FieldTestBase {
 
   /**
@@ -22,9 +27,7 @@ class FieldUITest extends FieldTestBase {
   public static $testViews = ['test_view_fieldapi'];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['views_ui'];
 
@@ -56,7 +59,7 @@ class FieldUITest extends FieldTestBase {
   /**
    * Tests basic field handler settings in the UI.
    */
-  public function testHandlerUI() {
+  public function testHandlerUI(): void {
     $url = "admin/structure/views/nojs/handler/test_view_fieldapi/default/field/field_name_0";
     $this->drupalGet($url);
 
@@ -105,7 +108,7 @@ class FieldUITest extends FieldTestBase {
   /**
    * Tests the basic field handler form when aggregation is enabled.
    */
-  public function testHandlerUIAggregation() {
+  public function testHandlerUIAggregation(): void {
     // Enable aggregation.
     $edit = ['group_by' => '1'];
     $this->drupalGet('admin/structure/views/nojs/display/test_view_fieldapi/default/group_by');
@@ -127,7 +130,7 @@ class FieldUITest extends FieldTestBase {
   /**
    * Tests adding a boolean field filter handler.
    */
-  public function testBooleanFilterHandler() {
+  public function testBooleanFilterHandler(): void {
     // Create a boolean field.
     $field_name = 'field_boolean';
     $field_storage = FieldStorageConfig::create([

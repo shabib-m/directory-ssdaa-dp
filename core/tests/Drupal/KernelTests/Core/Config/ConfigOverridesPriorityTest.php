@@ -1,9 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\Core\Language\Language;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that config overrides are applied in the correct order.
@@ -13,32 +17,32 @@ use Drupal\KernelTests\KernelTestBase;
  * - Language overrides.
  * - Module overrides.
  * - settings.php overrides.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigOverridesPriorityTest extends KernelTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'system',
-    'config',
     'config_override_test',
     'language',
   ];
 
-  public function testOverridePriorities() {
+  /**
+   * Tests the order of config overrides.
+   */
+  public function testOverridePriorities(): void {
     $GLOBALS['config_test_run_module_overrides'] = FALSE;
 
     $non_overridden_mail = 'site@example.com';
     $language_overridden_mail = 'french@example.com';
 
     $language_overridden_name = 'French site name';
-    $module_overridden_name = 'ZOMG overridden site name';
-    $non_overridden_name = 'ZOMG this name is on disk mkay';
+    $module_overridden_name = 'Wow overridden site name';
+    $non_overridden_name = 'Wow this name is on disk mkay';
 
     $module_overridden_slogan = 'Yay for overrides!';
     $non_overridden_slogan = 'Yay for defaults!';
@@ -51,6 +55,9 @@ class ConfigOverridesPriorityTest extends KernelTestBase {
       ->set('slogan', $non_overridden_slogan)
       ->set('mail', $non_overridden_mail)
       ->set('weight_select_max', 50)
+      // `name` and `slogan` are translatable, hence a `langcode` is required.
+      // @see \Drupal\Core\Config\Plugin\Validation\Constraint\LangcodeRequiredIfTranslatableValuesConstraint
+      ->set('langcode', 'en')
       ->save();
 
     // Ensure that no overrides are applying.

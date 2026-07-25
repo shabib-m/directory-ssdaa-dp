@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 91e24eac-493f-49e0-bdc8-03ec31c3c2a9
+  bundle: country
+  default_langcode: ar
+  depends:
+    6fbbb192-919f-409a-8e8b-7a757197c24c: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: اليمن
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 6fbbb192-919f-409a-8e8b-7a757197c24c
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

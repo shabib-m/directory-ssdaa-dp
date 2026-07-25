@@ -2,6 +2,7 @@
 
 namespace Drupal\views_ui;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -78,8 +79,8 @@ abstract class ViewFormBase extends EntityForm {
    *
    * This function can be called from hook_menu_local_tasks_alter() to implement
    * these tabs as secondary local tasks, or it can be called from elsewhere if
-   * having them as secondary local tasks isn't desired. The caller is responsible
-   * for setting the active tab's #active property to TRUE.
+   * having them as secondary local tasks isn't desired. The caller is
+   * responsible for setting the active tab's #active property to TRUE.
    *
    * @param \Drupal\views_ui\ViewUI $view
    *   The ViewUI entity.
@@ -119,7 +120,8 @@ abstract class ViewFormBase extends EntityForm {
       }
     }
 
-    // If the default display isn't supposed to be shown, don't display its tab, unless it's the only display.
+    // If the default display isn't supposed to be shown, don't display its tab,
+    // unless it's the only display.
     if ((!$this->isDefaultDisplayShown($view) && $display_id != 'default') && count($tabs) > 1) {
       $tabs['default']['#access'] = FALSE;
     }
@@ -140,13 +142,13 @@ abstract class ViewFormBase extends EntityForm {
   }
 
   /**
-   * Controls whether or not the default display should have its own tab on edit.
+   * Returns whether or not the default display should have its own tab on edit.
    */
   public function isDefaultDisplayShown(ViewUI $view) {
     // Always show the default display for advanced users who prefer that mode.
     $advanced_mode = \Drupal::config('views.settings')->get('ui.show.default_display');
-    // For other users, show the default display only if there are no others, and
-    // hide it if there's at least one "real" display.
+    // For other users, show the default display only if there are no others,
+    // and hide it if there's at least one "real" display.
     $additional_displays = (count($view->getExecutable()->displayHandlers) == 1);
 
     return $advanced_mode || $additional_displays;
@@ -160,7 +162,7 @@ abstract class ViewFormBase extends EntityForm {
   public function getDisplayLabel(ViewUI $view, $display_id, $check_changed = TRUE) {
     $display = $view->get('display');
     $title = $display_id == 'default' ? $this->t('Default') : $display[$display_id]['display_title'];
-    $title = views_ui_truncate($title, 25);
+    $title = Unicode::truncate($title, 25, FALSE, TRUE);
 
     if ($check_changed && !empty($view->changed_display[$display_id])) {
       $changed = '*';

@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\Core\Config\StorageComparer;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests config snapshot creation and updating.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigSnapshotTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['config_test', 'system'];
 
@@ -34,7 +36,7 @@ class ConfigSnapshotTest extends KernelTestBase {
   /**
    * Tests config snapshot creation and updating.
    */
-  public function testSnapshot() {
+  public function testSnapshot(): void {
     $active = $this->container->get('config.storage');
     $sync = $this->container->get('config.storage.sync');
     $snapshot = $this->container->get('config.storage.snapshot');

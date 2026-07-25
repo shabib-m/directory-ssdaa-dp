@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel\Migrate\d6;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the migration of comment field instances from Drupal 6.
- *
- * @group comment
- * @group migrate_drupal_6
  */
+#[Group('comment')]
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateCommentFieldInstanceTest extends MigrateDrupal6TestBase {
 
   /**
@@ -73,7 +77,7 @@ class MigrateCommentFieldInstanceTest extends MigrateDrupal6TestBase {
   /**
    * Tests the migrated field instance values.
    */
-  public function testMigration() {
+  public function testMigration(): void {
     $this->assertEntity('article', 'comment_node_article', 2, 1, 50, 0, FALSE, 1);
     $this->assertEntity('company', 'comment_node_company', 2, 1, 50, 0, FALSE, 1);
     $this->assertEntity('employee', 'comment_node_employee', 2, 1, 50, 0, FALSE, 1);

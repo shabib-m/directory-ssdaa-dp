@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the core Drupal\views\Plugin\views\argument\StringArgument handler.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ArgumentStringTest extends ViewsKernelTestBase {
 
   /**
@@ -29,10 +33,13 @@ class ArgumentStringTest extends ViewsKernelTestBase {
   /**
    * Tests the glossary feature.
    */
-  public function testGlossary() {
+  public function testGlossary(): void {
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
-    NodeType::create(['type' => 'page'])->save();
+    NodeType::create([
+      'type' => 'page',
+      'name' => 'Page',
+    ])->save();
 
     // Setup some nodes, one with a, two with b and three with c.
     $counter = 1;

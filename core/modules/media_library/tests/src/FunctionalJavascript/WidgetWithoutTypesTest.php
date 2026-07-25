@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media_library\FunctionalJavascript;
 
 use Drupal\Core\Url;
 use Drupal\field_ui\FieldUI;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the media library widget when no media types are available.
- *
- * @group media_library
  */
+#[Group('media_library')]
+#[RunTestsInSeparateProcesses]
 class WidgetWithoutTypesTest extends MediaLibraryTestBase {
 
   /**
@@ -25,7 +29,7 @@ class WidgetWithoutTypesTest extends MediaLibraryTestBase {
   /**
    * Tests that the widget works as expected when media types are deleted.
    */
-  public function testWidgetWithoutMediaTypes() {
+  public function testWidgetWithoutMediaTypes(): void {
     $assert_session = $this->assertSession();
 
     $user = $this->drupalCreateUser([
@@ -37,7 +41,7 @@ class WidgetWithoutTypesTest extends MediaLibraryTestBase {
     ]);
     $this->drupalLogin($user);
 
-    $default_message = 'There are no allowed media types configured for this field. Please contact the site administrator.';
+    $default_message = 'There are no allowed media types configured for this field. Contact the site administrator.';
 
     $this->drupalGet('node/add/basic_page');
 
@@ -134,7 +138,7 @@ class WidgetWithoutTypesTest extends MediaLibraryTestBase {
     // Visit a node create page.
     $this->drupalGet('node/add/basic_page');
 
-    $field_ui_uninstalled_message = 'There are no allowed media types configured for this field. Please contact the site administrator.';
+    $field_ui_uninstalled_message = 'There are no allowed media types configured for this field. Contact the site administrator.';
 
     // Assert the link is now longer part of the message.
     $assert_session->elementNotExists('named', ['link', 'Edit the field settings']);

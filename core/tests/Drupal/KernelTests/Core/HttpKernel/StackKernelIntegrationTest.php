@@ -1,31 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\HttpKernel;
 
 use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * Tests the stacked kernel functionality.
- *
- * @group Routing
  */
+#[Group('Routing')]
+#[RunTestsInSeparateProcesses]
 class StackKernelIntegrationTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  protected static $modules = ['httpkernel_test', 'system'];
+  protected static $modules = ['http_kernel_test', 'system'];
 
   /**
    * Tests a request.
    */
-  public function testRequest() {
-    $request = Request::create((new Url('httpkernel_test.empty'))->toString());
+  public function testRequest(): void {
+    $request = Request::create((new Url('http_kernel_test.empty'))->toString());
     /** @var \Symfony\Component\HttpKernel\HttpKernelInterface $http_kernel */
     $http_kernel = \Drupal::service('http_kernel');
     $http_kernel->handle($request, HttpKernelInterface::MAIN_REQUEST, FALSE);
@@ -35,22 +37,19 @@ class StackKernelIntegrationTest extends KernelTestBase {
   }
 
   /**
-   * Tests that late middlewares are automatically flagged lazy.
+   * Tests that service closure middleware avoids creation of http kernel.
    */
-  public function testLazyLateMiddlewares() {
-    $this->assertFalse($this->container->getDefinition('http_middleware.reverse_proxy')->isLazy(), 'lazy flag on http_middleware.reverse_proxy definition is not set');
-    $this->assertFalse($this->container->getDefinition('http_middleware.kernel_pre_handle')->isLazy(), 'lazy flag on http_middleware.kernel_pre_handle definition is not set');
-    $this->assertFalse($this->container->getDefinition('http_middleware.session')->isLazy(), 'lazy flag on http_middleware.session definition is not set');
-    $this->assertFalse($this->container->getDefinition('http_kernel.basic')->isLazy(), 'lazy flag on http_kernel.basic definition is not set');
+  public function testServiceClosureMiddlewares(): void {
+    $this->assertFalse(\Drupal::getContainer()->initialized('http_kernel.basic'));
+    \Drupal::service('http_kernel');
+    $this->assertTrue(\Drupal::getContainer()->initialized('http_kernel.basic'));
 
+    // Page cache provides a service closure middleware.
     \Drupal::service('module_installer')->install(['page_cache']);
-    $this->container = \Drupal::service('kernel')->rebuildContainer();
 
-    $this->assertFalse($this->container->getDefinition('http_middleware.reverse_proxy')->isLazy(), 'lazy flag on http_middleware.reverse_proxy definition is not set');
-    $this->assertFalse($this->container->getDefinition('http_middleware.page_cache')->isLazy(), 'lazy flag on http_middleware.page_cache definition is not set');
-    $this->assertTrue($this->container->getDefinition('http_middleware.kernel_pre_handle')->isLazy(), 'lazy flag on http_middleware.kernel_pre_handle definition is automatically set if page_cache is enabled.');
-    $this->assertTrue($this->container->getDefinition('http_middleware.session')->isLazy(), 'lazy flag on http_middleware.session definition is automatically set if page_cache is enabled.');
-    $this->assertTrue($this->container->getDefinition('http_kernel.basic')->isLazy(), 'lazy flag on http_kernel.basic definition is automatically set if page_cache is enabled.');
+    $this->assertFalse(\Drupal::getContainer()->initialized('http_kernel.basic'));
+    \Drupal::service('http_kernel');
+    $this->assertFalse(\Drupal::getContainer()->initialized('http_kernel.basic'));
   }
 
 }

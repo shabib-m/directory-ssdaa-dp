@@ -5,6 +5,8 @@
  * Contains functions for testing calling deprecated functions in tests.
  */
 
+declare(strict_types=1);
+
 /**
  * A deprecated function.
  *
@@ -17,6 +19,7 @@
  * @see https://www.drupal.org/project/drupal/issues/2870194
  */
 function deprecation_test_function() {
+  // phpcs:ignore Drupal.Semantics.FunctionTriggerError
   @trigger_error('This is the deprecation message for deprecation_test_function().', E_USER_DEPRECATED);
   return 'known_return_value';
 }
@@ -24,13 +27,13 @@ function deprecation_test_function() {
 /**
  * Implements hook_deprecated_hook().
  */
-function deprecation_test_deprecated_hook($arg) {
+function deprecation_test_deprecated_hook($arg): mixed {
   return $arg;
 }
 
 /**
  * Implements hook_deprecated_alter_alter().
  */
-function deprecation_test_deprecated_alter_alter(&$data, $context1, $context2) {
+function deprecation_test_deprecated_alter_alter(&$data, $context1, $context2): void {
   $data = [$context1, $context2];
 }

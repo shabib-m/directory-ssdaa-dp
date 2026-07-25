@@ -1,17 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal\Core\Entity\Routing\RevisionHtmlRouteProvider;
 use Drupal\entity_test\Entity\EntityTestRev;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests revision route provider.
- *
- * @coversDefaultClass \Drupal\Core\Entity\Routing\RevisionHtmlRouteProvider
- * @group Entity
  */
+#[CoversClass(RevisionHtmlRouteProvider::class)]
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class RevisionRouteProviderTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -62,10 +69,10 @@ class RevisionRouteProviderTest extends KernelTestBase {
    * @param string $entityLabel
    *   Access is granted via specially named entity label passed to
    *   EntityTestAccessControlHandler.
-   *
-   * @dataProvider providerOperationAccessRevisionRoutes
    */
+  #[DataProvider('providerOperationAccessRevisionRoutes')]
   public function testOperationAccessRevisionRoutes(string $linkTemplate, string $entityLabel): void {
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $entityStorage */
     $entityStorage = \Drupal::entityTypeManager()->getStorage('entity_test_rev');
 
     $entity = EntityTestRev::create()
@@ -103,7 +110,7 @@ class RevisionRouteProviderTest extends KernelTestBase {
    * @return array
    *   Data for testing.
    */
-  public function providerOperationAccessRevisionRoutes(): array {
+  public static function providerOperationAccessRevisionRoutes(): array {
     $data = [];
 
     $data['view revision'] = [

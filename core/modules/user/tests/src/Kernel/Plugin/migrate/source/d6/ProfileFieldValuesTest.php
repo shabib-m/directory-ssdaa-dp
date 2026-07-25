@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Plugin\migrate\source\d6;
 
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use Drupal\user\Plugin\migrate\source\d6\ProfileFieldValues;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the d6_profile_field_values source plugin.
- *
- * @covers \Drupal\user\Plugin\migrate\source\d6\ProfileFieldValues
- * @group user
  */
+#[CoversClass(ProfileFieldValues::class)]
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class ProfileFieldValuesTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -20,7 +26,7 @@ class ProfileFieldValuesTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.
@@ -33,7 +39,7 @@ class ProfileFieldValuesTest extends MigrateSqlSourceTestBase {
       [
         'fid' => '9',
         'uid' => '2',
-        'value' => 'Lorem ipsum dolor sit amet...',
+        'value' => 'The quick brown fox ...',
       ],
     ];
 
@@ -74,7 +80,7 @@ class ProfileFieldValuesTest extends MigrateSqlSourceTestBase {
     $tests[0]['expected_data'] = [
       [
         'profile_color' => ['red'],
-        'profile_biography' => ['Lorem ipsum dolor sit amet...'],
+        'profile_biography' => ['The quick brown fox ...'],
         'uid' => '2',
       ],
     ];

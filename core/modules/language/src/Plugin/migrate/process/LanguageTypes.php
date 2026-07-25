@@ -2,6 +2,7 @@
 
 namespace Drupal\language\Plugin\migrate\process;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
@@ -10,12 +11,21 @@ use Drupal\migrate\Row;
 /**
  * Processes the array for the language types.
  *
- * @MigrateProcessPlugin(
- *   id = "language_types",
- *   handle_multiples = TRUE
- * )
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3533560
  */
+#[MigrateProcess(
+  id: "language_types",
+  handle_multiples: TRUE,
+)]
 class LanguageTypes extends ProcessPluginBase {
+
+  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560', E_USER_DEPRECATED);
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
   /**
    * {@inheritdoc}

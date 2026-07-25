@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Controller;
 
 use Drupal\Core\Render\MainContent\AjaxRenderer;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @coversDefaultClass \Drupal\Core\Render\MainContent\AjaxRenderer
- * @group Ajax
+ * Tests Drupal\Core\Render\MainContent\AjaxRenderer.
  */
+#[CoversClass(AjaxRenderer::class)]
+#[Group('Ajax')]
 class AjaxRendererTest extends UnitTestCase {
 
   /**
@@ -64,9 +69,9 @@ class AjaxRendererTest extends UnitTestCase {
   /**
    * Tests the content method.
    *
-   * @covers ::renderResponse
+   * @legacy-covers ::renderResponse
    */
-  public function testRenderWithFragmentObject() {
+  public function testRenderWithFragmentObject(): void {
     $main_content = ['#markup' => 'example content'];
     $request = new Request();
     $route_match = $this->createMock('Drupal\Core\Routing\RouteMatchInterface');

@@ -21,7 +21,6 @@
 
   & .button {
     display: inline-block;
-    width: 100%;
     height: auto;
     margin: 0 0 10px;
     padding: var(--off-canvas-button-padding);
@@ -105,7 +104,7 @@
     }
   }
 
-  @nest .no-touchevents & .button--small {
+  .no-touchevents & .button--small {
     padding: 2px 1em;
     font-size: 13px;
   }

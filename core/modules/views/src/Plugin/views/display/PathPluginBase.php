@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Plugin\views\display;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -9,8 +10,6 @@ use Drupal\Core\State\StateInterface;
 use Drupal\Core\Routing\RouteCompiler;
 use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Core\Url;
-use Drupal\views\Views;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Route;
@@ -43,7 +42,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Routing\RouteProviderInterface $route_provider
@@ -56,19 +55,6 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
 
     $this->routeProvider = $route_provider;
     $this->state = $state;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('router.route_provider'),
-      $container->get('state')
-    );
   }
 
   /**
@@ -102,7 +88,10 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
   }
 
   /**
-   * Overrides \Drupal\views\Plugin\views\display\DisplayPluginBase:defineOptions().
+   * Overrides view display plugin base.
+   *
+   * Overrides display plugin definition options with
+   * \Drupal\views\Plugin\views\display\DisplayPluginBase:defineOptions().
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
@@ -196,7 +185,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
     $access_plugin = $this->getPlugin('access');
     if (!isset($access_plugin)) {
       // @todo Do we want to support a default plugin in getPlugin itself?
-      $access_plugin = Views::pluginManager('access')->createInstance('none');
+      $access_plugin = \Drupal::service('plugin.manager.views.access')->createInstance('none');
     }
     $access_plugin->alterRouteDefinition($route);
 
@@ -209,7 +198,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
     // Store whether the view will return a response.
     $route->setOption('returns_response', !empty($this->getPluginDefinition()['returns_response']));
 
-    // Symfony 4 requires that UTF-8 route patterns have the "utf8" option set
+    // Symfony 4 requires that UTF-8 route patterns have the "utf8" option set.
     $route->setOption('utf8', TRUE);
 
     return $route;
@@ -263,7 +252,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
    *   TRUE, when the view should override the given route.
    */
   protected function overrideAppliesPathAndMethod($view_path, Route $view_route, Route $route) {
-    // Find all paths which match the path of the current display..
+    // Find all paths which match the path of the current display.
     $route_path = RouteCompiler::getPathWithoutDefaults($route);
     $route_path = RouteCompiler::getPatternOutline($route_path);
 
@@ -426,7 +415,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
     $options['path'] = [
       'category' => 'page',
       'title' => $this->t('Path'),
-      'value' => views_ui_truncate($path, 24),
+      'value' => Unicode::truncate($path, 24, FALSE, TRUE),
     ];
   }
 
@@ -517,7 +506,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
         && is_numeric($matches[1]));
     });
     if (!empty($numeric_placeholders)) {
-      $errors[] = $this->t("Numeric placeholders may not be used. Please use plain placeholders (%).");
+      $errors[] = $this->t("Numeric placeholders may not be used. Use plain placeholders (%).");
     }
     return $errors;
   }

@@ -4,22 +4,39 @@ namespace Drupal\migrate\Plugin\migrate\destination;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Field\FieldTypePluginManagerInterface;
+use Drupal\Core\Session\AccountSwitcherInterface;
+use Drupal\migrate\Attribute\MigrateDestination;
 use Drupal\migrate\EntityFieldDefinitionTrait;
+use Drupal\migrate\Plugin\Derivative\MigrateEntityComplete;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
 
 /**
  * Provides a destination for migrating the entire entity revision table.
  *
- * @MigrateDestination(
- *   id = "entity_complete",
- *   deriver = "Drupal\migrate\Plugin\Derivative\MigrateEntityComplete"
- * )
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3533565
  */
+#[MigrateDestination(
+  id: 'entity_complete',
+  deriver: MigrateEntityComplete::class
+)]
 class EntityContentComplete extends EntityContentBase {
 
   use EntityFieldDefinitionTrait;
+
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, EntityStorageInterface $storage, array $bundles, EntityFieldManagerInterface $entity_field_manager, FieldTypePluginManagerInterface $field_type_manager, ?AccountSwitcherInterface $account_switcher = NULL, ?EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533565', E_USER_DEPRECATED);
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $migration, $storage, $bundles, $entity_field_manager, $field_type_manager, $account_switcher, $entity_type_bundle_info);
+  }
 
   /**
    * {@inheritdoc}
@@ -59,10 +76,15 @@ class EntityContentComplete extends EntityContentBase {
       : $row->getDestinationProperty($this->getKey('revision'));
     // If we are re-running a migration with set revision IDs and the
     // destination revision ID already exists then do not create a new revision.
-    if (!empty($revision_id) && ($entity = $this->storage->loadRevision($revision_id))) {
-      $entity->setNewRevision(FALSE);
+    $entity = NULL;
+    if (!empty($revision_id)) {
+      /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+      $storage = $this->storage;
+      if ($entity = $storage->loadRevision($revision_id)) {
+        $entity->setNewRevision(FALSE);
+      }
     }
-    elseif (($entity_id = $row->getDestinationProperty($this->getKey('id'))) && ($entity = $this->storage->load($entity_id))) {
+    if ($entity === NULL && ($entity_id = $row->getDestinationProperty($this->getKey('id'))) && ($entity = $this->storage->load($entity_id))) {
       // We want to create a new entity. Set enforceIsNew() FALSE is  necessary
       // to properly save a new entity while setting the ID. Without it, the
       // system would see that the ID is already set and assume it is an update.
@@ -71,7 +93,7 @@ class EntityContentComplete extends EntityContentBase {
       // not be necessary, it is done for clarity.
       $entity->setNewRevision(TRUE);
     }
-    else {
+    if ($entity === NULL) {
       // Attempt to set the bundle.
       if ($bundle = $this->getBundle($row)) {
         $row->setDestinationProperty($this->getKey('bundle'), $bundle);

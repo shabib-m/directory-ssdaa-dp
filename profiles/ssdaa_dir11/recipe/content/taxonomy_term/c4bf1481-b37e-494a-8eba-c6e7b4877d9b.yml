@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: c4bf1481-b37e-494a-8eba-c6e7b4877d9b
+  bundle: country
+  default_langcode: ar
+  depends:
+    80d4c86b-64f9-4a5a-ad65-e06967b48fef: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'جزر القمر'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 80d4c86b-64f9-4a5a-ad65-e06967b48fef
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

@@ -2,23 +2,24 @@
 
 namespace Drupal\Core\Menu\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Menu\LocalTaskManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides a "Tabs" block to display the local tasks.
- *
- * @Block(
- *   id = "local_tasks_block",
- *   admin_label = @Translation("Tabs"),
- * )
  */
+#[Block(
+  id: "local_tasks_block",
+  admin_label: new TranslatableMarkup("Tabs")
+)]
 class LocalTasksBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -41,7 +42,7 @@ class LocalTasksBlock extends BlockBase implements ContainerFactoryPluginInterfa
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Menu\LocalTaskManagerInterface $local_task_manager
@@ -58,22 +59,9 @@ class LocalTasksBlock extends BlockBase implements ContainerFactoryPluginInterfa
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('plugin.manager.menu.local_task'),
-      $container->get('current_route_match')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function defaultConfiguration() {
     return [
-      'label_display' => FALSE,
+      'label_display' => '0',
       'primary' => TRUE,
       'secondary' => TRUE,
     ];
@@ -86,6 +74,15 @@ class LocalTasksBlock extends BlockBase implements ContainerFactoryPluginInterfa
     $config = $this->configuration;
     $cacheability = new CacheableMetadata();
     $cacheability->addCacheableDependency($this->localTaskManager);
+    // If the current route belongs to an entity, include cache tags of that
+    // entity as well.
+    $route_parameters = $this->routeMatch->getParameters()->all();
+    foreach ($route_parameters as $parameter) {
+      if ($parameter instanceof CacheableDependencyInterface) {
+        $cacheability->addCacheableDependency($parameter);
+      }
+    }
+
     $tabs = [
       '#theme' => 'menu_local_tasks',
     ];
@@ -152,6 +149,13 @@ class LocalTasksBlock extends BlockBase implements ContainerFactoryPluginInterfa
     $levels = $form_state->getValue('levels');
     $this->configuration['primary'] = $levels['primary'];
     $this->configuration['secondary'] = $levels['secondary'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function createPlaceholder(): bool {
+    return TRUE;
   }
 
 }

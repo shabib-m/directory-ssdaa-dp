@@ -1,23 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_ui\Functional;
 
 use Drupal\Core\Entity\Entity\EntityFormMode;
 use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the entity display modes UI.
- *
- * @group field_ui
  */
+#[Group('field_ui')]
+#[RunTestsInSeparateProcesses]
 class EntityDisplayModeTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var string[]
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'entity_test', 'field_ui', 'node'];
 
@@ -45,7 +47,7 @@ class EntityDisplayModeTest extends BrowserTestBase {
   /**
    * Tests the EntityViewMode user interface.
    */
-  public function testEntityViewModeUI() {
+  public function testEntityViewModeUI(): void {
     // Test the listing page.
     $this->drupalGet('admin/structure/display-modes/view');
     $this->assertSession()->statusCodeEquals(403);
@@ -64,8 +66,10 @@ class EntityDisplayModeTest extends BrowserTestBase {
 
     // Test adding a view mode including dots in machine_name.
     $this->clickLink('Test entity');
+    // Check if 'Name' field is required.
+    $this->assertTrue($this->getSession()->getPage()->findField('label')->hasClass('required'));
     $edit = [
-      'id' => strtolower($this->randomMachineName()) . '.' . strtolower($this->randomMachineName()),
+      'id' => $this->randomMachineName() . '.' . $this->randomMachineName(),
       'label' => $this->randomString(),
     ];
     $this->submitForm($edit, 'Save');
@@ -73,7 +77,7 @@ class EntityDisplayModeTest extends BrowserTestBase {
 
     // Test adding a view mode.
     $edit = [
-      'id' => strtolower($this->randomMachineName()),
+      'id' => $this->randomMachineName(),
       'label' => $this->randomString(),
     ];
     $this->submitForm($edit, 'Save');
@@ -100,7 +104,7 @@ class EntityDisplayModeTest extends BrowserTestBase {
   /**
    * Tests the EntityFormMode user interface.
    */
-  public function testEntityFormModeUI() {
+  public function testEntityFormModeUI(): void {
     // Test the listing page.
     $this->drupalGet('admin/structure/display-modes/form');
     $this->assertSession()->statusCodeEquals(403);
@@ -118,8 +122,10 @@ class EntityDisplayModeTest extends BrowserTestBase {
 
     // Test adding a view mode including dots in machine_name.
     $this->clickLink('Test entity');
+    // Check if 'Name' field is required.
+    $this->assertTrue($this->getSession()->getPage()->findField('label')->hasClass('required'));
     $edit = [
-      'id' => strtolower($this->randomMachineName()) . '.' . strtolower($this->randomMachineName()),
+      'id' => $this->randomMachineName() . '.' . $this->randomMachineName(),
       'label' => $this->randomString(),
     ];
     $this->submitForm($edit, 'Save');
@@ -127,8 +133,9 @@ class EntityDisplayModeTest extends BrowserTestBase {
 
     // Test adding a form mode.
     $edit = [
-      'id' => strtolower($this->randomMachineName()),
+      'id' => $this->randomMachineName(),
       'label' => $this->randomString(),
+      'description' => $this->randomString(),
     ];
     $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains("Saved the {$edit['label']} form mode.");
@@ -158,7 +165,7 @@ class EntityDisplayModeTest extends BrowserTestBase {
    *
    * @see https://www.drupal.org/node/2858569
    */
-  public function testAlphabeticalDisplaySettings() {
+  public function testAlphabeticalDisplaySettings(): void {
     $this->drupalLogin($this->drupalCreateUser([
       'access administration pages',
       'administer content types',
@@ -169,45 +176,61 @@ class EntityDisplayModeTest extends BrowserTestBase {
       'administer node form display',
       'view the administration theme',
     ]));
+    // Enable "Full content" view mode for testing.
+    $display = \Drupal::entityTypeManager()->getStorage('entity_view_display')->create([
+      'targetEntityType' => 'node',
+      'bundle' => 'article',
+      'mode' => 'full',
+      'status' => TRUE,
+    ]);
+    $display->save();
+
     $this->drupalGet('admin/structure/types/manage/article/display');
     // Verify that the order of view modes is alphabetical by visible label.
     // Since the default view modes all have machine names which coincide with
     // the English labels, they should appear in alphabetical order, by default
     // if viewing the site in English and if no changes have been made. We will
     // verify this first.
-    $page_text = $this->getTextContent();
-    $start = strpos($page_text, 'view modes');
+    $enabled_text = $this->getSession()->getPage()->find('css', '#enabled-display-modes-wrapper')->getText();
+    $start = strpos($enabled_text, 'Display mode') ?: 0;
     $pos = $start;
-    $list = ['Full content', 'RSS', 'Search index', 'Search result', 'Teaser'];
-    // Verify that the order of the view modes is correct on the page.
-    foreach ($list as $name) {
-      $new_pos = strpos($page_text, $name, $start);
-      $this->assertGreaterThan($pos, $new_pos);
+    $enabled_list = ['Full content', 'Teaser'];
+    foreach ($enabled_list as $name) {
+      $new_pos = strpos($enabled_text, $name, $start);
+      $this->assertGreaterThan($pos, $new_pos, "View mode '$name' should appear after the previous one in alphabetical order in enabled table. Previous position: $pos, current position: $new_pos");
+      $pos = $new_pos;
+    }
+    $disabled_text = $this->getSession()->getPage()->find('css', '#disabled-display-modes-wrapper')->getText();
+    $start = strpos($disabled_text, 'Display mode') ?: 0;
+    $pos = $start;
+    $disabled_list = ['RSS'];
+    foreach ($disabled_list as $name) {
+      $new_pos = strpos($disabled_text, $name, $start);
+      $this->assertGreaterThan($pos, $new_pos, "View mode '$name' should appear after the previous one in alphabetical order in disabled table. Previous position: $pos, current position: $new_pos");
       $pos = $new_pos;
     }
     // Now that we have verified the original display order, we can change the
-    // label for one of the view modes. If we rename "Teaser" to "Breezer", it
+    // label for one of the view modes. If we rename "Teaser" to "Breezier", it
     // should appear as the first of the listed view modes:
     // Set new values and enable test plugins.
     $edit = [
-      'label' => 'Breezer',
+      'label' => 'Breezier',
     ];
     $this->drupalGet('admin/structure/display-modes/view/manage/node.teaser');
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->pageTextContains('Saved the Breezer view mode.');
+    $this->assertSession()->pageTextContains('Saved the Breezier view mode.');
 
     // Re-open the display settings for the article content type and verify
-    // that changing "Teaser" to "Breezer" makes it appear before "Full
+    // that changing "Teaser" to "Breezier" makes it appear before "Full
     // content".
     $this->drupalGet('admin/structure/types/manage/article/display');
-    $page_text = $this->getTextContent();
-    $start = strpos($page_text, 'view modes');
+    $enabled_text = $this->getSession()->getPage()->find('css', '#enabled-display-modes-wrapper')->getText();
+    $start = strpos($enabled_text, 'Display mode') ?: 0;
     $pos = $start;
-    $list = ['Breezer', 'Full content'];
-    // Verify that the order of the view modes is correct on the page.
-    foreach ($list as $name) {
-      $new_pos = strpos($page_text, $name, $start);
-      $this->assertGreaterThan($pos, $new_pos);
+    $enabled_list = ['Breezier', 'Full content'];
+    foreach ($enabled_list as $name) {
+      $new_pos = strpos($enabled_text, $name, $start);
+      $this->assertGreaterThan($pos, $new_pos, "View mode '$name' should appear after the previous one in alphabetical order in enabled table. Previous position: $pos, current position: $new_pos");
       $pos = $new_pos;
     }
   }

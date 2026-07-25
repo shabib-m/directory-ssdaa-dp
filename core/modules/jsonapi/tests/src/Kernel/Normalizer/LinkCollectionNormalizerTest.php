@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Kernel\Normalizer;
 
 use Drupal\Core\Cache\CacheableMetadata;
@@ -13,13 +15,19 @@ use Drupal\jsonapi\Normalizer\Value\CacheableNormalization;
 use Drupal\jsonapi\ResourceType\ResourceType;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\jsonapi\Normalizer\LinkCollectionNormalizer
- * @group jsonapi
+ * Tests Drupal\jsonapi\Normalizer\LinkCollectionNormalizer.
  *
  * @internal
  */
+#[CoversClass(LinkCollectionNormalizer::class)]
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class LinkCollectionNormalizerTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -49,9 +57,9 @@ class LinkCollectionNormalizerTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'file',
     'jsonapi',
     'serialization',
-    'system',
     'user',
   ];
 
@@ -63,7 +71,6 @@ class LinkCollectionNormalizerTest extends KernelTestBase {
     // Add the entity schemas.
     $this->installEntitySchema('user');
     // Add the additional table schemas.
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('user', ['users_data']);
     // Set the user IDs to something higher than 1 so these users cannot be
     // mistaken for the site admin.
@@ -75,7 +82,7 @@ class LinkCollectionNormalizerTest extends KernelTestBase {
   /**
    * Tests the link collection normalizer.
    */
-  public function testNormalize() {
+  public function testNormalize(): void {
     $link_context = new ResourceObject(new CacheableMetadata(), new ResourceType('n/a', 'n/a', 'n/a'), 'n/a', NULL, [], new LinkCollection([]));
     $link_collection = (new LinkCollection([]))
       ->withLink('related', new Link(new CacheableMetadata(), Url::fromUri('http://example.com/post/42'), 'related', ['title' => 'Most viewed']))
@@ -105,10 +112,9 @@ class LinkCollectionNormalizerTest extends KernelTestBase {
 
   /**
    * Tests the link collection normalizer.
-   *
-   * @dataProvider linkAccessTestData
    */
-  public function testLinkAccess($current_user_id, $edit_form_uid, $expected_link_keys, $expected_cache_contexts) {
+  #[DataProvider('linkAccessTestData')]
+  public function testLinkAccess($current_user_id, $edit_form_uid, $expected_link_keys, $expected_cache_contexts): void {
     // Get the current user and an edit-form URL.
     foreach ($this->testUsers as $user) {
       $uid = (int) $user->id();
@@ -167,20 +173,21 @@ class LinkCollectionNormalizerTest extends KernelTestBase {
    * Provides test cases for testing link access checking.
    *
    * @return array[]
+   *   An array of test cases for testLinkAccess().
    */
-  public function linkAccessTestData() {
+  public static function linkAccessTestData() {
     return [
       'the edit-form link is present because uid 2 has access to the targeted resource (its own edit form)' => [
-        'uid' => 2,
-        'edit-form uid' => 2,
-        'expected link keys' => ['edit-form'],
-        'expected cache contexts' => ['url.site', 'user'],
+        'current_user_id' => 2,
+        'edit_form_uid' => 2,
+        'expected_link_keys' => ['edit-form'],
+        'expected_cache_contexts' => ['url.site', 'user'],
       ],
       "the edit-form link is omitted because uid 3 doesn't have access to the targeted resource (another account's edit form)" => [
-        'uid' => 3,
-        'edit-form uid' => 2,
-        'expected link keys' => [],
-        'expected cache contexts' => ['url.site', 'user'],
+        'current_user_id' => 3,
+        'edit_form_uid' => 2,
+        'expected_link_keys' => [],
+        'expected_cache_contexts' => ['url.site', 'user'],
       ],
     ];
   }
@@ -188,7 +195,7 @@ class LinkCollectionNormalizerTest extends KernelTestBase {
   /**
    * Get an instance of the normalizer to test.
    */
-  protected function getNormalizer(AccountInterface $current_user = NULL) {
+  protected function getNormalizer(?AccountInterface $current_user = NULL) {
     if (is_null($current_user)) {
       $current_user = $this->setUpCurrentUser();
     }

@@ -1,0 +1,56 @@
+_meta:
+  version: '1.0'
+  entity_type: node
+  uuid: 9aa7baee-c319-43e7-8475-e1ce5d2ac17d
+  bundle: directory
+  default_langcode: ar
+  depends:
+    2ad0bcbc-6fef-4fff-8846-7085d2db7e61: taxonomy_term
+    2cae2af5-834a-4da5-9afa-9b7335740bd3: file
+default:
+  revision_uid:
+    -
+      target_id: 0
+  status:
+    -
+      value: true
+  uid:
+    -
+      target_id: 0
+  title:
+    -
+      value: 'موقع الشيخ محمد امان الجامي'
+  created:
+    -
+      value: 1784748879
+  promote:
+    -
+      value: true
+  sticky:
+    -
+      value: false
+  path:
+    -
+      alias: /website/eljame
+      langcode: ar
+  body:
+    -
+      value: |
+        <p>موقع الامام الشيخ عبدالعزيز بن باز رحمة الله رحمة واسعة ورفع درجاته</p>
+      format: full_html
+      summary: ''
+  field_aldwlh:
+    -
+      entity: 2ad0bcbc-6fef-4fff-8846-7085d2db7e61
+  field_image:
+    -
+      entity: 2cae2af5-834a-4da5-9afa-9b7335740bd3
+      alt: ''
+      title: ''
+      width: 600
+      height: 354
+  field_url_website:
+    -
+      uri: 'https://www.eljame.com/'
+      title: ''
+      options: {  }

@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the handling of requests containing 'index.php'.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class IndexPhpTest extends BrowserTestBase {
 
   /**
@@ -17,16 +21,9 @@ class IndexPhpTest extends BrowserTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-  }
-
-  /**
    * Tests index.php handling.
    */
-  public function testIndexPhpHandling() {
+  public function testIndexPhpHandling(): void {
     $index_php = $GLOBALS['base_url'] . '/index.php';
 
     $this->drupalGet($index_php, ['external' => TRUE]);

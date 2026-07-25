@@ -1,0 +1,12 @@
+name: 'Block content storage body field tests'
+type: module
+description: 'Tests the block_content_storage_body_field deprecated module.'
+package: Testing
+# version: VERSION
+dependencies:
+  - drupal:block_content_storage_body_field
+
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
+project: 'drupal'
+datestamp: 1784141322

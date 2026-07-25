@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\content_moderation\StateTransitionValidationInterface;
+use Drupal\Core\Form\WorkspaceSafeFormInterface;
 use Drupal\workflows\Transition;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -17,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @internal
  */
-class EntityModerationForm extends FormBase {
+class EntityModerationForm extends FormBase implements WorkspaceSafeFormInterface {
 
   /**
    * The moderation information service.
@@ -77,7 +78,7 @@ class EntityModerationForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ContentEntityInterface $entity = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?ContentEntityInterface $entity = NULL) {
     $current_state = $entity->moderation_state->value;
     $workflow = $this->moderationInfo->getWorkflowForEntity($entity);
 

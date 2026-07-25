@@ -1,0 +1,18 @@
+<?php
+
+use Drupal\Core\Recipe\Recipe;
+use Drupal\Core\Recipe\RecipeRunner;
+
+/**
+ * Implements hook_install().
+ */
+function ssdaa_dir11_install() {
+  // تحديد مسار مجلد الـ recipe المدمج داخل البروفايل
+  $recipe_path = __DIR__ . '/recipe';
+
+  if (file_exists($recipe_path . '/recipe.yml')) {
+    // تشغيل الـ Recipe الشامل لبناء كامل محتوى وتكوين الموقع تلقائياً
+    $recipe = Recipe::createFromDirectory($recipe_path);
+    RecipeRunner::processRecipe($recipe);
+  }
+}

@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel;
 
 use Drupal\Core\Database\Database;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that appropriate query tags are added.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TaxonomyQueryAlterTest extends KernelTestBase {
 
   use TaxonomyTestTrait;
@@ -29,7 +33,7 @@ class TaxonomyQueryAlterTest extends KernelTestBase {
   /**
    * Tests that appropriate tags are added when querying the database.
    */
-  public function testTaxonomyQueryAlter() {
+  public function testTaxonomyQueryAlter(): void {
     $this->installEntitySchema('taxonomy_term');
 
     // Create a new vocabulary and add a few terms to it.
@@ -117,7 +121,7 @@ class TaxonomyQueryAlterTest extends KernelTestBase {
   /**
    * Sets up the hooks in the test module.
    */
-  protected function setupQueryTagTestHooks() {
+  protected function setupQueryTagTestHooks(): void {
     $this->container->get('entity_type.manager')->getStorage('taxonomy_term')->resetCache();
     $state = $this->container->get('state');
     $state->set('taxonomy_test_query_alter', 0);

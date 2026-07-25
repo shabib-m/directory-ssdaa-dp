@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the 'managed_file' element type.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileManagedFileElementTest extends WebDriverTestBase {
 
   /**
@@ -52,7 +56,7 @@ class FileManagedFileElementTest extends WebDriverTestBase {
   /**
    * Tests the managed_file element type.
    */
-  public function testManagedFile() {
+  public function testManagedFile(): void {
     // Perform the tests with all permutations of $form['#tree'],
     // $element['#extended'], and $element['#multiple'].
     $filename = \Drupal::service('file_system')->tempnam('temporary://', "testManagedFile") . '.txt';

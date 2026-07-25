@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\block\Entity\Block;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Verifies that the installer does not generate theme blocks.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerThemesBlocksProfileTest extends InstallerTestBase {
 
   /**
@@ -24,7 +28,7 @@ class InstallerThemesBlocksProfileTest extends InstallerTestBase {
   /**
    * Verify that there is no automatic block generation.
    */
-  public function testInstaller() {
+  public function testInstaller(): void {
 
     // Account menu is a block that testing_theme_required_blocks provides,
     // but not testing_theme_optional_blocks. There shouldn't be a account menu

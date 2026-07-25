@@ -1,16 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Datetime;
 
 use Drupal\Core\Datetime\DateHelper;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Language\Language;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Datetime\DateHelper
- * @group Datetime
+ * Tests Drupal\Core\Datetime\DateHelper.
  */
+#[CoversClass(DateHelper::class)]
+#[Group('Datetime')]
 class DateHelperTest extends UnitTestCase {
 
   /**
@@ -29,25 +36,26 @@ class DateHelperTest extends UnitTestCase {
     $container = new ContainerBuilder();
     $config = ['system.date' => ['first_day' => 'Sunday']];
     $container->set('config.factory', $this->getConfigFactoryStub($config));
+    $container->set('string_translation', $this->getStringTranslationStub());
 
     $this->languageManager = $this->createMock('\Drupal\Core\Language\LanguageManagerInterface');
     $language = new Language(['langcode' => 'en']);
     $this->languageManager->expects($this->any())
       ->method('getDefaultLanguage')
-      ->will($this->returnValue($language));
+      ->willReturn($language);
     $this->languageManager->expects($this->any())
       ->method('getCurrentLanguage')
-      ->will($this->returnValue($language));
+      ->willReturn($language);
     $container->set('language_manager', $this->languageManager);
 
     \Drupal::setContainer($container);
   }
 
   /**
-   * @covers ::weekDaysOrdered
-   * @dataProvider providerTestWeekDaysOrdered
+   * Tests week days ordered.
    */
-  public function testWeekDaysOrdered($first_day, $expected) {
+  #[DataProvider('providerTestWeekDaysOrdered')]
+  public function testWeekDaysOrdered($first_day, $expected): void {
     $container = new ContainerBuilder();
     $config = ['system.date' => ['first_day' => $first_day]];
     $container->set('config.factory', $this->getConfigFactoryStub($config));
@@ -58,7 +66,7 @@ class DateHelperTest extends UnitTestCase {
     $this->assertSame($expected, DateHelper::weekDaysOrdered($weekdays));
   }
 
-  public function providerTestWeekDaysOrdered() {
+  public static function providerTestWeekDaysOrdered(): array {
     $data = [];
     $data[] = [
       0,
@@ -160,9 +168,9 @@ class DateHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::daysInMonth
+   * Tests days in month.
    */
-  public function testDaysInMonth() {
+  public function testDaysInMonth(): void {
     // @todo Consider deprecating passing NULL in
     //   https://www.drupal.org/project/drupal/issues/3299788
     // Passing NULL, FALSE, or an empty string should default to now. Just
@@ -185,9 +193,9 @@ class DateHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::daysInYear
+   * Tests days in year.
    */
-  public function testDaysInYear() {
+  public function testDaysInYear(): void {
     // Passing NULL, FALSE, or an empty string should default to now. Just
     // check these are NOT null to avoid copying the implementation here.
     $this->assertNotNull(DateHelper::daysInYear());
@@ -209,9 +217,9 @@ class DateHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::dayOfWeek
+   * Tests day of week.
    */
-  public function testDayOfWeek() {
+  public function testDayOfWeek(): void {
     // Passing NULL, FALSE, or an empty string should default to now. Just
     // check these are NOT null to avoid copying the implementation here.
     $this->assertNotNull(DateHelper::dayOfWeek());
@@ -234,14 +242,17 @@ class DateHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::dayOfWeekName
+   * Tests day of week name.
    */
-  public function testDayOfWeekName() {
+  public function testDayOfWeekName(): void {
     // Passing NULL, FALSE, or an empty string should default to now. Just
     // check these are NOT null to avoid copying the implementation here.
     $this->assertNotNull(DateHelper::dayOfWeekName());
     $this->assertNotNull(DateHelper::dayOfWeekName(FALSE));
     $this->assertNotNull(DateHelper::dayOfWeekName(''));
+
+    // Ensure proper return value type.
+    $this->assertInstanceOf(TranslatableMarkup::class, DateHelper::dayOfWeekName());
 
     // Pass nothing and expect to get NULL.
     $this->assertNull(DateHelper::dayOfWeekName(0));

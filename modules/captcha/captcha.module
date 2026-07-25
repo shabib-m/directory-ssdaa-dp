@@ -9,9 +9,6 @@
  * to solve.
  */
 
-use Drupal\captcha\Constants\CaptchaConstants;
-use Drupal\captcha\Element\Captcha;
-use Drupal\captcha\Entity\CaptchaPoint;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Form\BaseFormIdInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -19,6 +16,9 @@ use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
+use Drupal\captcha\Constants\CaptchaConstants;
+use Drupal\captcha\Element\Captcha;
+use Drupal\captcha\Entity\CaptchaPoint;
 
 /**
  * Implements hook_help().
@@ -208,9 +208,8 @@ function captcha_form_alter(array &$form, FormStateInterface $form_state, $form_
         ];
 
         // Get placement in form and insert in form.
-        if ($captcha_placement = _captcha_get_captcha_placement($form_id, $form)) {
-          $captchaService->insertCaptchaElement($form, $captcha_placement, $captcha_element);
-        }
+        $captcha_placement = _captcha_get_captcha_placement($form_id, $form);
+        $captchaService->insertCaptchaElement($form, $captcha_placement, $captcha_element);
       }
     }
   }
@@ -242,14 +241,14 @@ function captcha_form_alter(array &$form, FormStateInterface $form_state, $form_
 
       if ($captcha_point !== NULL && $captcha_point->getCaptchaType()) {
         $captcha_element['#title'] = $captcha_point->status() ? t('CAPTCHA: challenge "@type" enabled', ['@type' => $captcha_point->getCaptchaType()]) : t('CAPTCHA: challenge "@type" disabled', ['@type' => $captcha_point->getCaptchaType()]);
-        $captcha_point->status() ? $captchaElementDescription = t('Users without the "skip CAPTCHA" permission will see a CAPTCHA here (<a href="@settings">general CAPTCHA settings</a>).',
-        [
-          '@settings' => Url::fromRoute('captcha_settings')
-            ->toString(),
-        ]) : $captchaElementDescription = t('CAPTCHA disabled, Untrusted users won\'t see the captcha (<a href="@settings">general CAPTCHA settings</a>).',
-          ['@settings' => Url::fromRoute('captcha_settings')->toString()]
-        );
+        $captcha_point->status() ? $captchaElementDescription = t('Users without the "skip CAPTCHA" permission will see a CAPTCHA here.') : $captchaElementDescription = t("CAPTCHA disabled, Untrusted users won't see the captcha.");
         $captcha_element['#description'] = $captchaElementDescription;
+        $captcha_element['settings_link'] = [
+          '#markup' => Link::fromTextAndUrl(
+            t('general CAPTCHA settings'),
+            Url::fromRoute('captcha_settings')
+          )->toString(),
+        ];
         $captcha_element['challenge'] = [
           '#type' => 'item',
           '#title' => t('Enabled challenge'),
@@ -273,9 +272,8 @@ function captcha_form_alter(array &$form, FormStateInterface $form_state, $form_
       }
 
       // Get placement in form and insert in form.
-      if ($captcha_placement = _captcha_get_captcha_placement($form_id, $form)) {
-        $captchaService->insertCaptchaElement($form, $captcha_placement, $captcha_element);
-      };
+      $captcha_placement = _captcha_get_captcha_placement($form_id, $form);
+      $captchaService->insertCaptchaElement($form, $captcha_placement, $captcha_element);
     }
     // If the user has the "skip Captcha" permission, but the
     // administration_mode is not enabled, simply do nothing and therefore
@@ -453,11 +451,11 @@ function _captcha_get_posted_captcha_info(array $element, FormStateInterface $fo
         }
         catch (\Exception $e) {
           \Drupal::logger('captcha')->debug(
-            'CAPTCHA session reuse attack detected on @form_id <br/>Posted CAPTCHA token: @posted_captcha_token <br/>Expected captcha token: @expected_captcha_token',
+            'CAPTCHA session reuse attack detected on %form_id. Posted CAPTCHA token: %posted_captcha_token. Expected captcha token: %expected_captcha_token',
             [
-              '@form_id' => $this_form_id,
-              '@expected_captcha_token' => var_export($expected_captcha_token, TRUE),
-              '@posted_captcha_token' => var_export($posted_captcha_token, TRUE),
+              '%form_id' => $this_form_id,
+              '%expected_captcha_token' => var_export($expected_captcha_token, TRUE),
+              '%posted_captcha_token' => var_export($posted_captcha_token, TRUE),
             ]
           );
           // Invalidate the CAPTCHA session.
@@ -542,12 +540,23 @@ function captcha_validate($element, FormStateInterface &$form_state) {
     }
   }
   else {
-    $solution = \Drupal::database()
+    // Retrieve the solution for the CAPTCHA session.
+    // @see https://www.drupal.org/project/captcha/issues/3558256
+    $captcha_persistence = \Drupal::config('captcha.settings')
+      ->get('persistence');
+    $query = \Drupal::database()
       ->select('captcha_sessions', 'cs')
       ->fields('cs', ['solution'])
-      ->condition('csid', $csid)
-      ->execute()
-      ->fetchField();
+      ->condition('csid', $csid);
+    // For non-"show always" persistence, prevent retrieval of solutions for
+    // solved sessions to block replay attacks. Once a CAPTCHA is solved, its
+    // solution can no longer be retrieved, requiring each form submission to
+    // solve a fresh CAPTCHA. For "show always", the session must remain
+    // readable since the CAPTCHA is shown on every form submission.
+    if ($captcha_persistence != CaptchaConstants::CAPTCHA_PERSISTENCE_SHOW_ALWAYS) {
+      $query->condition('status', CaptchaConstants::CAPTCHA_STATUS_SOLVED, '<>');
+    }
+    $solution = $query->execute()->fetchField();
 
     if ($solution !== FALSE) {
       // Get CAPTCHA validate function or fall back on strict equality.
@@ -561,10 +570,6 @@ function captcha_validate($element, FormStateInterface &$form_state) {
       // arrays for more advanced use cases.
       if ($captcha_validate($solution, $captcha_response, $element, $form_state)) {
 
-        // Get the CAPTCHA persistence setting.
-        $captcha_persistence = \Drupal::config('captcha.settings')
-          ->get('persistence');
-
         if (in_array($captcha_persistence,
           [
             CaptchaConstants::CAPTCHA_PERSISTENCE_SKIP_ONCE_SUCCESSFUL,
@@ -576,10 +581,14 @@ function captcha_validate($element, FormStateInterface &$form_state) {
           $_SESSION['captcha_success_form_ids'][$form_id] = $form_id;
         }
 
-        // Record success.
+        // Record success and invalidate token to prevent replay attacks.
+        // @see https://www.drupal.org/project/captcha/issues/3558256
         \Drupal::database()->update('captcha_sessions')
           ->condition('csid', $csid)
-          ->fields(['status' => CaptchaConstants::CAPTCHA_STATUS_SOLVED])
+          ->fields([
+            'status' => CaptchaConstants::CAPTCHA_STATUS_SOLVED,
+            'token' => NULL,
+          ])
           ->expression('attempts', 'attempts + 1')
           ->execute();
       }
@@ -667,9 +676,8 @@ function captcha_captcha($op, $captcha_type = '') {
         // or string overrides.
         $result['form']['captcha_response'] = [
           '#type' => 'textfield',
-          '#title' => t('Math question'),
+          '#title' => t('Math question (@x + @y =)', ['@x' => $x, '@y' => $y]),
           '#description' => t('Solve this simple math problem and enter the result. E.g. for 1+3, enter 4.'),
-          '#field_prefix' => t('@x + @y =', ['@x' => $x, '@y' => $y]),
           '#size' => 4,
           '#maxlength' => 2,
           '#required' => TRUE,
@@ -731,7 +739,7 @@ function captcha_whitelist_ips_parse_values($whitelist_ips_value) {
   $value_rows = explode("\n", $whitelist_ips_value);
   foreach ($value_rows as $value_row) {
     $value_row = trim($value_row);
-    if (strpos($value_row, '-') !== FALSE) {
+    if (!empty($value_row) && strpos($value_row, '-') !== FALSE) {
       $whitelist_ips[CaptchaConstants::CAPTCHA_WHITELIST_IP_RANGE][] = $value_row;
     }
     else {

@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Form;
 
 use Drupal\form_test\FormTestObject;
 use Drupal\KernelTests\ConfigFormTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests building a form from an object.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class FormObjectTest extends ConfigFormTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['form_test'];
 
@@ -25,7 +27,7 @@ class FormObjectTest extends ConfigFormTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->form = new FormTestObject($this->container->get('config.factory'));
+    $this->form = new FormTestObject($this->container->get('config.factory'), $this->container->get('config.typed'));
     $this->values = [
       'bananas' => [
         '#value' => $this->randomString(10),

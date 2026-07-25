@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Kernel\Condition;
 
-use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the language condition plugin.
- *
- * @group language
  */
+#[Group('language')]
+#[RunTestsInSeparateProcesses]
 class LanguageConditionTest extends KernelTestBase {
 
   /**
@@ -27,9 +31,7 @@ class LanguageConditionTest extends KernelTestBase {
   protected $languageManager;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system', 'language'];
 
@@ -49,7 +51,7 @@ class LanguageConditionTest extends KernelTestBase {
   /**
    * Tests the language condition.
    */
-  public function testConditions() {
+  public function testConditions(): void {
     // Grab the language condition and configure it to check the content
     // language.
     $language = \Drupal::languageManager()->getLanguage('en');
@@ -66,7 +68,7 @@ class LanguageConditionTest extends KernelTestBase {
     // Check for the proper summary.
     $this->assertEquals('The language is Italian.', $condition->summary());
 
-    // Negate the condition
+    // Negate the condition.
     $condition->setConfig('negate', TRUE);
     $this->assertTrue($condition->execute(), 'Language condition passes as expected.');
     // Check for the proper summary.
@@ -89,7 +91,7 @@ class LanguageConditionTest extends KernelTestBase {
     // Check for the proper summary.
     $this->assertEquals('The language is Italian.', $condition->summary());
 
-    // Negate the condition
+    // Negate the condition.
     $condition->setConfig('negate', TRUE);
     $this->assertFalse($condition->execute(), 'Language condition fails as expected.');
     // Check for the proper summary.

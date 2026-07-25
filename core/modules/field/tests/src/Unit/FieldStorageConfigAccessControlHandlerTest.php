@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Unit;
 
 use Drupal\Component\Uuid\UuidInterface;
@@ -13,14 +15,14 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\FieldStorageConfigAccessControlHandler;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the field storage config access controller.
- *
- * @group field
- *
- * @coversDefaultClass \Drupal\field\FieldStorageConfigAccessControlHandler
  */
+#[CoversClass(FieldStorageConfigAccessControlHandler::class)]
+#[Group('field')]
 class FieldStorageConfigAccessControlHandlerTest extends UnitTestCase {
 
   /**
@@ -174,7 +176,7 @@ class FieldStorageConfigAccessControlHandlerTest extends UnitTestCase {
   /**
    * Ensures field storage config access is working properly.
    */
-  public function testAccess() {
+  public function testAccess(): void {
     $this->assertAllowOperations([], $this->anon);
     $this->assertAllowOperations(['view', 'update', 'delete'], $this->member);
 

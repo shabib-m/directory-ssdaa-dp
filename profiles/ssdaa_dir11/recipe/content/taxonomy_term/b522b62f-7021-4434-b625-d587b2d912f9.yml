@@ -1,0 +1,30 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: b522b62f-7021-4434-b625-d587b2d912f9
+  bundle: main
+  default_langcode: ar
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'كمبيوتر وبرامج'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_ayqwnt_alqsm:
+    -
+      value: |
+        fa fa-laptop
+  field_sndwq_alaqsam:
+    -
+      value: true

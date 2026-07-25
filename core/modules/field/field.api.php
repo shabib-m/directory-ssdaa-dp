@@ -2,6 +2,16 @@
 
 /**
  * @file
+ */
+
+use Drupal\field\FieldStorageConfigInterface;
+use Drupal\Core\Entity\Exception\FieldStorageDefinitionUpdateForbiddenException;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\field\Entity\FieldConfig;
+
+/**
+ * @file
  * Field API documentation.
  */
 
@@ -20,8 +30,8 @@
  * and so on. The data type(s) accepted by a field are defined in the class
  * implementing \Drupal\Core\Field\FieldItemInterface::schema() method.
  *
- * Field types are plugins annotated with class
- * \Drupal\Core\Field\Annotation\FieldType, and implement plugin interface
+ * Field types are plugins with \Drupal\Core\Field\Attribute\FieldType
+ * attributes and implement plugin interface
  * \Drupal\Core\Field\FieldItemInterface. Field Type plugins are managed by the
  * \Drupal\Core\Field\FieldTypePluginManager class. Field type classes usually
  * extend base class \Drupal\Core\Field\FieldItemBase. Field-type plugins need
@@ -46,14 +56,34 @@
 /**
  * Perform alterations on Field API field types.
  *
- * @param $info
+ * @param array $info
  *   Array of information on field types as collected by the "field type" plugin
  *   manager.
  */
 function hook_field_info_alter(&$info) {
   // Change the default widget for fields of type 'foo'.
   if (isset($info['foo'])) {
-    $info['foo']['default_widget'] = 'mymodule_widget';
+    $info['foo']['default_widget'] = 'my_module_widget';
+  }
+}
+
+/**
+ * Alters the UI field definitions.
+ *
+ * This hook can be used for altering field definitions available in the UI
+ * dynamically per entity type. For example, it can be used to hide field types
+ * that are incompatible with an entity type.
+ *
+ * @param array $ui_definitions
+ *   Definition of all field types that can be added via UI.
+ * @param string $entity_type_id
+ *   The entity type id.
+ *
+ * @see \Drupal\Core\Field\FieldTypePluginManagerInterface::getEntityTypeUiDefinitions
+ */
+function hook_field_info_entity_type_ui_definitions_alter(array &$ui_definitions, string $entity_type_id) {
+  if ($entity_type_id === 'node') {
+    unset($ui_definitions['field_type_not_compatible_with_node']);
   }
 }
 
@@ -104,14 +134,14 @@ function hook_field_ui_preconfigured_options_alter(array &$options, $field_type)
  *
  * @see entity_crud
  */
-function hook_field_storage_config_update_forbid(\Drupal\field\FieldStorageConfigInterface $field_storage, \Drupal\field\FieldStorageConfigInterface $prior_field_storage) {
+function hook_field_storage_config_update_forbid(FieldStorageConfigInterface $field_storage, FieldStorageConfigInterface $prior_field_storage): void {
   if ($field_storage->getTypeProvider() == 'options' && $field_storage->hasData()) {
     // Forbid any update that removes allowed values with actual data.
     $allowed_values = $field_storage->getSetting('allowed_values');
     $prior_allowed_values = $prior_field_storage->getSetting('allowed_values');
     $lost_keys = array_keys(array_diff_key($prior_allowed_values, $allowed_values));
     if (_options_values_in_use($field_storage->getTargetEntityTypeId(), $field_storage->getName(), $lost_keys)) {
-      throw new \Drupal\Core\Entity\Exception\FieldStorageDefinitionUpdateForbiddenException("A list field '{$field_storage->getName()}' with existing data cannot have its keys changed.");
+      throw new FieldStorageDefinitionUpdateForbiddenException("A list field '{$field_storage->getName()}' with existing data cannot have its keys changed.");
     }
   }
 }
@@ -131,11 +161,11 @@ function hook_field_storage_config_update_forbid(\Drupal\field\FieldStorageConfi
  * which widget to use.
  *
  * Widgets are Plugins managed by the
- * \Drupal\Core\Field\WidgetPluginManager class. A widget is a plugin annotated
- * with class \Drupal\Core\Field\Annotation\FieldWidget that implements
- * \Drupal\Core\Field\WidgetInterface (in most cases, by
- * subclassing \Drupal\Core\Field\WidgetBase). Widget plugins need to be in the
- * namespace \Drupal\{your_module}\Plugin\Field\FieldWidget.
+ * \Drupal\Core\Field\WidgetPluginManager class. A widget is a plugin
+ * attributed with class \Drupal\Core\Field\Attribute\FieldWidget that
+ * implements \Drupal\Core\Field\WidgetInterface (in most cases, by subclassing
+ * \Drupal\Core\Field\WidgetBase). Widget plugins need to be in the namespace
+ * \Drupal\{your_module}\Plugin\Field\FieldWidget.
  *
  * Widgets are @link form_api Form API @endlink elements with additional
  * processing capabilities. The methods of the WidgetInterface object are
@@ -153,7 +183,7 @@ function hook_field_storage_config_update_forbid(\Drupal\field\FieldStorageConfi
  *
  * @param array $info
  *   An array of information on existing widget types, as collected by the
- *   annotation discovery mechanism.
+ *   plugin discovery mechanism.
  */
 function hook_field_widget_info_alter(array &$info) {
   // Let a new field type re-use an existing widget.
@@ -190,7 +220,7 @@ function hook_field_widget_info_alter(array &$info) {
  * @see hook_field_widget_complete_form_alter()
  * @see https://www.drupal.org/node/3180429
  */
-function hook_field_widget_single_element_form_alter(array &$element, \Drupal\Core\Form\FormStateInterface $form_state, array $context) {
+function hook_field_widget_single_element_form_alter(array &$element, FormStateInterface $form_state, array $context) {
   // Add a css class to widget form elements for all fields of type my_type.
   $field_definition = $context['items']->getFieldDefinition();
   if ($field_definition->getType() == 'my_type') {
@@ -227,22 +257,22 @@ function hook_field_widget_single_element_form_alter(array &$element, \Drupal\Co
  * @see hook_field_widget_single_element_form_alter()
  * @see hook_field_widget_complete_WIDGET_TYPE_form_alter()
  */
-function hook_field_widget_single_element_WIDGET_TYPE_form_alter(array &$element, \Drupal\Core\Form\FormStateInterface $form_state, array $context) {
+function hook_field_widget_single_element_WIDGET_TYPE_form_alter(array &$element, FormStateInterface $form_state, array $context) {
   // Code here will only act on widgets of type WIDGET_TYPE.  For example,
-  // hook_field_widget_single_element_mymodule_autocomplete_form_alter() will
-  // only act on widgets of type 'mymodule_autocomplete'.
-  $element['#autocomplete_route_name'] = 'mymodule.autocomplete_route';
+  // hook_field_widget_single_element_my_module_autocomplete_form_alter() will
+  // only act on widgets of type 'my_module_autocomplete'.
+  $element['#autocomplete_route_name'] = 'my_module.autocomplete_route';
 }
 
 /**
  * Alter the complete form for field widgets provided by other modules.
  *
- * @param $field_widget_complete_form
+ * @param array $field_widget_complete_form
  *   The field widget form element as constructed by
  *   \Drupal\Core\Field\WidgetBaseInterface::form().
- * @param $form_state
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
  *   The current state of the form.
- * @param $context
+ * @param array $context
  *   An associative array containing the following key-value pairs:
  *   - form: The form structure to which widgets are being attached. This may be
  *     a full form structure, or a sub-element of a larger form.
@@ -258,7 +288,7 @@ function hook_field_widget_single_element_WIDGET_TYPE_form_alter(array &$element
  * @see hook_field_widget_complete_WIDGET_TYPE_form_alter()
  * @see https://www.drupal.org/node/3180429
  */
-function hook_field_widget_complete_form_alter(&$field_widget_complete_form, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
+function hook_field_widget_complete_form_alter(&$field_widget_complete_form, FormStateInterface $form_state, $context) {
   $field_widget_complete_form['#attributes']['class'][] = 'my-class';
 }
 
@@ -269,12 +299,12 @@ function hook_field_widget_complete_form_alter(&$field_widget_complete_form, \Dr
  * to modify a specific widget form, rather than using
  * hook_field_widget_complete_form_alter() and checking the widget type.
  *
- * @param $field_widget_complete_form
+ * @param array $field_widget_complete_form
  *   The field widget form element as constructed by
  *   \Drupal\Core\Field\WidgetBaseInterface::form().
- * @param $form_state
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
  *   The current state of the form.
- * @param $context
+ * @param array $context
  *   An associative array containing the following key-value pairs:
  *   - form: The form structure to which widgets are being attached. This may be
  *     a full form structure, or a sub-element of a larger form.
@@ -290,7 +320,7 @@ function hook_field_widget_complete_form_alter(&$field_widget_complete_form, \Dr
  * @see hook_field_widget_complete_form_alter()
  * @see https://www.drupal.org/node/3180429
  */
-function hook_field_widget_complete_WIDGET_TYPE_form_alter(&$field_widget_complete_form, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
+function hook_field_widget_complete_WIDGET_TYPE_form_alter(&$field_widget_complete_form, FormStateInterface $form_state, $context) {
   $field_widget_complete_form['#attributes']['class'][] = 'my-class';
 }
 
@@ -312,7 +342,7 @@ function hook_field_widget_complete_WIDGET_TYPE_form_alter(&$field_widget_comple
  *
  * Formatters are Plugins managed by the
  * \Drupal\Core\Field\FormatterPluginManager class. A formatter is a plugin
- * annotated with class \Drupal\Core\Field\Annotation\FieldFormatter that
+ * attributed with class \Drupal\Core\Field\Attribute\FieldFormatter that
  * implements \Drupal\Core\Field\FormatterInterface (in most cases, by
  * subclassing \Drupal\Core\Field\FormatterBase). Formatter plugins need to be
  * in the namespace \Drupal\{your_module}\Plugin\Field\FieldFormatter.
@@ -328,7 +358,7 @@ function hook_field_widget_complete_WIDGET_TYPE_form_alter(&$field_widget_comple
  *
  * @param array $info
  *   An array of information on existing formatter types, as collected by the
- *   annotation discovery mechanism.
+ *   plugin discovery mechanism.
  */
 function hook_field_formatter_info_alter(array &$info) {
   // Let a new field type re-use an existing formatter.
@@ -379,15 +409,15 @@ function hook_field_info_max_weight($entity_type, $bundle, $context, $context_mo
 /**
  * Acts when a field storage definition is being purged.
  *
- * In field_purge_field_storage(), after the storage definition has been removed
- * from the system, the entity storage has purged stored field data, and the
- * field definitions cache has been cleared, this hook is invoked on all modules
- * to allow them to respond to the field storage being purged.
+ * In FieldPurger::purgeFieldStorageDefinition(), after the storage definition
+ * has been removed from the system, the entity storage has purged stored field
+ * data, and the field definitions cache has been cleared, this hook is invoked
+ * on all modules to allow them to respond to the field storage being purged.
  *
- * @param $field_storage \Drupal\field\Entity\FieldStorageConfig
+ * @param \Drupal\field\Entity\FieldStorageConfig $field_storage
  *   The field storage being purged.
  */
-function hook_field_purge_field_storage(\Drupal\field\Entity\FieldStorageConfig $field_storage) {
+function hook_field_purge_field_storage(FieldStorageConfig $field_storage) {
   \Drupal::database()->delete('my_module_field_storage_info')
     ->condition('uuid', $field_storage->uuid())
     ->execute();
@@ -401,10 +431,10 @@ function hook_field_purge_field_storage(\Drupal\field\Entity\FieldStorageConfig 
  * field info cache has been cleared, this hook is invoked on all modules to
  * allow them to respond to the field being purged.
  *
- * @param $field
+ * @param \Drupal\field\Entity\FieldConfig $field
  *   The field being purged.
  */
-function hook_field_purge_field(\Drupal\field\Entity\FieldConfig $field) {
+function hook_field_purge_field(FieldConfig $field) {
   \Drupal::database()->delete('my_module_field_info')
     ->condition('id', $field->id())
     ->execute();
@@ -413,6 +443,31 @@ function hook_field_purge_field(\Drupal\field\Entity\FieldConfig $field) {
 /**
  * @} End of "addtogroup field_purge".
  */
+
+/**
+ * Allows modules to alter the field type category information.
+ *
+ * This hook provides a way for modules to modify or add to the existing
+ * category information. Modules can use this hook to modify the properties of
+ * existing categories. It can also be used to define custom field type
+ * categories although the use of YAML-based plugins should be preferred over
+ * the hook.
+ *
+ * @param array &$categories
+ *   An associative array of field type categories, keyed by category machine
+ *    name.
+ *
+ * @see \Drupal\Core\Field\FieldTypeCategoryManager
+ */
+function hook_field_type_category_info_alter(array &$categories) {
+  // Modify or add field type categories.
+  $categories['my_custom_category'] = [
+    'label' => 'My Custom Category',
+    'description' => 'This is a custom category for my field types.',
+  ];
+  // Modify the properties of an existing category.
+  $categories['text']['description'] = 'Modified Text';
+}
 
 /**
  * @} End of "addtogroup hooks".

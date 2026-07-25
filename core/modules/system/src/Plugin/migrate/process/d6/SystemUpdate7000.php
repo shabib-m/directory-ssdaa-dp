@@ -2,6 +2,7 @@
 
 namespace Drupal\system\Plugin\migrate\process\d6;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
@@ -9,16 +10,23 @@ use Drupal\migrate\Row;
 /**
  * Rename blog and forum permissions to be consistent with other content types.
  *
- * @MigrateProcessPlugin(
- *   id = "system_update_7000"
- * )
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3533560
  */
+#[MigrateProcess('system_update_7000')]
 class SystemUpdate7000 extends ProcessPluginBase {
+
+  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560', E_USER_DEPRECATED);
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
   /**
    * {@inheritdoc}
    *
-   * Rename blog and forum permissions to be consistent with other content types.
+   * Makes blog and forum permissions to be consistent with other content types.
    */
   public function transform($value, MigrateExecutableInterface $migrate_executable, Row $row, $destination_property) {
     $value = preg_replace('/(?<=^|,\ )create\ blog\ entries(?=,|$)/', 'create blog content', $value);

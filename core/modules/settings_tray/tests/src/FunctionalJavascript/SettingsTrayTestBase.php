@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\settings_tray\FunctionalJavascript;
 
 use Drupal\block\Entity\Block;
@@ -9,7 +11,7 @@ use Drupal\Tests\system\FunctionalJavascript\OffCanvasTestBase;
 /**
  * Base class for Settings Tray tests.
  */
-class SettingsTrayTestBase extends OffCanvasTestBase {
+abstract class SettingsTrayTestBase extends OffCanvasTestBase {
 
   use ContextualLinkClickTrait;
 
@@ -46,9 +48,11 @@ class SettingsTrayTestBase extends OffCanvasTestBase {
     $this->assertNotEmpty($contextual_link);
     // When page first loads Edit Mode is not triggered until first contextual
     // link is added.
-    $this->assertElementVisibleAfterWait('css', '.dialog-off-canvas-main-canvas.js-settings-tray-edit-mode');
-    // Ensure that all other Ajax activity is completed.
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertNotEmpty($this->assertSession()->waitForElementVisible('css', '.dialog-off-canvas-main-canvas.js-settings-tray-edit-mode'));
+    // @todo https://www.drupal.org/project/drupal/issues/3317520 Work why the
+    //   sleep is necessary in.
+    usleep(100000);
+
     $block = $this->getSession()->getPage()->find('css', $block_selector);
     $block->mouseOver();
     $block->click();
@@ -68,7 +72,6 @@ class SettingsTrayTestBase extends OffCanvasTestBase {
    * Disables edit mode by pressing edit button in the toolbar.
    */
   protected function disableEditMode() {
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->pressToolbarEditButton();
     $this->assertEditModeDisabled();
   }
@@ -122,7 +125,8 @@ class SettingsTrayTestBase extends OffCanvasTestBase {
     $web_assert->elementNotExists('css', '.contextual .trigger.visually-hidden');
     // The toolbar edit button should read "Editing".
     $web_assert->elementContains('css', static::TOOLBAR_EDIT_LINK_SELECTOR, 'Editing');
-    // The main canvas element should have the "js-settings-tray-edit-mode" class.
+    // The main canvas element should have the "js-settings-tray-edit-mode"
+    // class.
     $web_assert->elementExists('css', '.dialog-off-canvas-main-canvas.js-settings-tray-edit-mode');
   }
 
@@ -153,7 +157,7 @@ class SettingsTrayTestBase extends OffCanvasTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getTestThemes() {
+  protected static function getTestThemes(): array {
     // Remove 'claro' theme. Settings Tray "Edit Mode" will not work with this
     // theme because it removes all contextual links.
     return array_filter(parent::getTestThemes(), function ($theme) {
@@ -180,7 +184,7 @@ class SettingsTrayTestBase extends OffCanvasTestBase {
    * @return bool
    *   TRUE if the label is visible, FALSE if it is not.
    */
-  protected function isLabelInputVisible() {
+  protected function isLabelInputVisible(): bool {
     return $this->getSession()->getPage()->find('css', static::LABEL_INPUT_SELECTOR)->isVisible();
   }
 

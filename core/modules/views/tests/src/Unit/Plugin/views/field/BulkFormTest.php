@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Unit\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -9,12 +11,15 @@ use Drupal\views\Plugin\views\field\BulkForm;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
- * @coversDefaultClass \Drupal\views\Plugin\views\field\BulkForm
- * @group Views
+ * Tests Drupal\views\Plugin\views\field\BulkForm.
  */
+#[CoversClass(BulkForm::class)]
+#[Group('Views')]
 class BulkFormTest extends UnitTestCase {
 
   /**
@@ -27,7 +32,7 @@ class BulkFormTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::viewsForm
+   * Tests views form.
    */
   public function testViewsForm(): void {
     $row = new ResultRow();

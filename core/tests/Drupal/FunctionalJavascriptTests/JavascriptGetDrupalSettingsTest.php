@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Drupal settings retrieval in WebDriverTestBase tests.
- *
- * @group javascript
  */
+#[Group('javascript')]
+#[RunTestsInSeparateProcesses]
 class JavascriptGetDrupalSettingsTest extends WebDriverTestBase {
 
   /**
@@ -24,7 +29,7 @@ class JavascriptGetDrupalSettingsTest extends WebDriverTestBase {
    *
    * @see \Drupal\FunctionalJavascriptTests\WebDriverTestBase::getDrupalSettings()
    */
-  public function testGetDrupalSettings() {
+  public function testGetDrupalSettings(): void {
     $this->drupalLogin($this->drupalCreateUser());
     $this->drupalGet('test-page');
 

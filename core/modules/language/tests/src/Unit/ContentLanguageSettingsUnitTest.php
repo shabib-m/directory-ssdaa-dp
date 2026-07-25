@@ -1,19 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Unit;
 
-use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeRepositoryInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\Tests\UnitTestCase;
 use Drupal\TestTools\Random;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\language\Entity\ContentLanguageSettings
- * @group language
+ * Tests Drupal\language\Entity\ContentLanguageSettings.
  */
+#[CoversClass(ContentLanguageSettings::class)]
+#[Group('language')]
 class ContentLanguageSettingsUnitTest extends UnitTestCase {
 
   /**
@@ -52,7 +58,7 @@ class ContentLanguageSettingsUnitTest extends UnitTestCase {
   protected $typedConfigManager;
 
   /**
-   * The typed configuration manager used for testing.
+   * The config entity storage used for testing.
    *
    * @var \Drupal\Core\Config\Entity\ConfigEntityStorage|\PHPUnit\Framework\MockObject\MockObject
    */
@@ -84,9 +90,9 @@ class ContentLanguageSettingsUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::calculateDependencies
+   * Tests calculate dependencies.
    */
-  public function testCalculateDependencies() {
+  public function testCalculateDependencies(): void {
     // Mock the interfaces necessary to create a dependency on a bundle entity.
     $target_entity_type = $this->createMock('\Drupal\Core\Entity\EntityTypeInterface');
     $target_entity_type->expects($this->any())
@@ -107,9 +113,9 @@ class ContentLanguageSettingsUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::id
+   * Tests id.
    */
-  public function testId() {
+  public function testId(): void {
     $config = new ContentLanguageSettings([
       'target_entity_type_id' => 'test_entity_type',
       'target_bundle' => 'test_bundle',
@@ -118,9 +124,11 @@ class ContentLanguageSettingsUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getTargetEntityTypeId
+   * Tests target entity type id.
+   *
+   * @legacy-covers ::getTargetEntityTypeId
    */
-  public function testTargetEntityTypeId() {
+  public function testTargetEntityTypeId(): void {
     $config = new ContentLanguageSettings([
       'target_entity_type_id' => 'test_entity_type',
       'target_bundle' => 'test_bundle',
@@ -129,9 +137,11 @@ class ContentLanguageSettingsUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getTargetBundle
+   * Tests target bundle.
+   *
+   * @legacy-covers ::getTargetBundle
    */
-  public function testTargetBundle() {
+  public function testTargetBundle(): void {
     $config = new ContentLanguageSettings([
       'target_entity_type_id' => 'test_entity_type',
       'target_bundle' => 'test_bundle',
@@ -140,15 +150,19 @@ class ContentLanguageSettingsUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getDefaultLangcode
-   * @covers ::setDefaultLangcode
+   * Tests default langcode.
    *
-   * @dataProvider providerDefaultLangcode
+   * @legacy-covers ::getDefaultLangcode
+   * @legacy-covers ::setDefaultLangcode
    */
-  public function testDefaultLangcode(ContentLanguageSettings $config, $expected) {
+  #[DataProvider('providerDefaultLangcode')]
+  public function testDefaultLangcode(ContentLanguageSettings $config, $expected): void {
     $this->assertSame($expected, $config->getDefaultLangcode());
   }
 
+  /**
+   * Provides data to testDefaultLangcode().
+   */
   public static function providerDefaultLangcode() {
     $langcode = Random::machineName();
     $config = new ContentLanguageSettings([
@@ -169,16 +183,20 @@ class ContentLanguageSettingsUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setLanguageAlterable
-   * @covers ::isLanguageAlterable
+   * Tests language alterable.
    *
-   * @dataProvider providerLanguageAlterable
+   * @legacy-covers ::setLanguageAlterable
+   * @legacy-covers ::isLanguageAlterable
    */
-  public function testLanguageAlterable(ContentLanguageSettings $config, $expected) {
+  #[DataProvider('providerLanguageAlterable')]
+  public function testLanguageAlterable(ContentLanguageSettings $config, $expected): void {
     $this->assertSame($expected, $config->isLanguageAlterable());
   }
 
-  public function providerLanguageAlterable() {
+  /**
+   * Provides data to testLanguageAlterable().
+   */
+  public static function providerLanguageAlterable() {
     $alterableConfig = new ContentLanguageSettings([
       'target_entity_type_id' => 'test_entity_type',
       'target_bundle' => 'test_bundle',
@@ -204,14 +222,16 @@ class ContentLanguageSettingsUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::isDefaultConfiguration
-   *
-   * @dataProvider providerIsDefaultConfiguration
+   * Tests is default configuration.
    */
-  public function testIsDefaultConfiguration(ContentLanguageSettings $config, $expected) {
+  #[DataProvider('providerIsDefaultConfiguration')]
+  public function testIsDefaultConfiguration(ContentLanguageSettings $config, $expected): void {
     $this->assertSame($expected, $config->isDefaultConfiguration());
   }
 
+  /**
+   * Provides data to testIsDefaultConfiguration().
+   */
   public static function providerIsDefaultConfiguration() {
     $alteredLanguage = new ContentLanguageSettings([
       'target_entity_type_id' => 'test_entity_type',
@@ -238,11 +258,10 @@ class ContentLanguageSettingsUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::loadByEntityTypeBundle
-   *
-   * @dataProvider providerLoadByEntityTypeBundle
+   * Tests load by entity type bundle.
    */
-  public function testLoadByEntityTypeBundle($config_id, ContentLanguageSettings $existing_config = NULL, $expected_langcode, $expected_language_alterable) {
+  #[DataProvider('providerLoadByEntityTypeBundle')]
+  public function testLoadByEntityTypeBundle($config_id, ?ContentLanguageSettings $existing_config, $expected_langcode, $expected_language_alterable): void {
     [$type, $bundle] = explode('.', $config_id);
 
     $nullConfig = new ContentLanguageSettings([
@@ -265,7 +284,7 @@ class ContentLanguageSettingsUnitTest extends UnitTestCase {
       ->with('language_content_settings')
       ->willReturn($this->configEntityStorageInterface);
 
-    $entity_type_repository = $this->getMockForAbstractClass(EntityTypeRepositoryInterface::class);
+    $entity_type_repository = $this->createMock(EntityTypeRepositoryInterface::class);
     $entity_type_repository->expects($this->any())
       ->method('getEntityTypeFromClass')
       ->with(ContentLanguageSettings::class)
@@ -279,6 +298,9 @@ class ContentLanguageSettingsUnitTest extends UnitTestCase {
     $this->assertSame($expected_language_alterable, $config->isLanguageAlterable());
   }
 
+  /**
+   * Provides data to testLoadByEntityTypeBundle().
+   */
   public static function providerLoadByEntityTypeBundle() {
     $alteredLanguage = new ContentLanguageSettings([
       'target_entity_type_id' => 'test_entity_type',

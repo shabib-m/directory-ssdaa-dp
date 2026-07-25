@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Component\Uuid\Uuid;
-use Drupal\Component\Render\FormattableMarkup;
+use Drupal\entity_test\EntityTestHelper;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests default values for entity fields.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityFieldDefaultValueTest extends EntityKernelTestBase {
 
   /**
@@ -31,9 +35,9 @@ class EntityFieldDefaultValueTest extends EntityKernelTestBase {
   /**
    * Tests default values on entities and fields.
    */
-  public function testDefaultValues() {
+  public function testDefaultValues(): void {
     // All entity variations have to have the same results.
-    foreach (entity_test_entity_types() as $entity_type) {
+    foreach (EntityTestHelper::getEntityTypes() as $entity_type) {
       $this->assertDefaultValues($entity_type);
     }
   }
@@ -52,18 +56,18 @@ class EntityFieldDefaultValueTest extends EntityKernelTestBase {
       ->create();
     $definition = $this->entityTypeManager->getDefinition($entity_type_id);
     $langcode_key = $definition->getKey('langcode');
-    $this->assertEquals('en', $entity->{$langcode_key}->value, new FormattableMarkup('%entity_type: Default language', ['%entity_type' => $entity_type_id]));
-    $this->assertTrue(Uuid::isValid($entity->uuid->value), new FormattableMarkup('%entity_type: Default UUID', ['%entity_type' => $entity_type_id]));
+    $this->assertEquals('en', $entity->{$langcode_key}->value, "$entity_type_id: Default language");
+    $this->assertTrue(Uuid::isValid($entity->uuid->value), "$entity_type_id: Default UUID");
     $this->assertEquals([], $entity->name->getValue(), 'Field has one empty value by default.');
   }
 
   /**
    * Tests custom default value callbacks.
    */
-  public function testDefaultValueCallback() {
+  public function testDefaultValueCallback(): void {
     $entity = $this->entityTypeManager->getStorage('entity_test_default_value')->create();
     // The description field has a default value callback for testing, see
-    // entity_test_field_default_value().
+    // \Drupal\entity_test\Entity\EntityTestDefaultValue::descriptionDefaultValue().
     $string = 'description_' . $entity->language()->getId();
     $expected = [
       [

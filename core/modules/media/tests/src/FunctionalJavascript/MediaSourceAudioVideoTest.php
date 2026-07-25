@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\FunctionalJavascript;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Audio and Video media sources.
- *
- * @group media
  */
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaSourceAudioVideoTest extends MediaSourceTestBase {
 
   /**
@@ -22,7 +26,7 @@ class MediaSourceAudioVideoTest extends MediaSourceTestBase {
   /**
    * Check the Audio source functionality.
    */
-  public function testAudioTypeCreation() {
+  public function testAudioTypeCreation(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -71,7 +75,7 @@ class MediaSourceAudioVideoTest extends MediaSourceTestBase {
   /**
    * Check the Video source functionality.
    */
-  public function testVideoTypeCreation() {
+  public function testVideoTypeCreation(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 

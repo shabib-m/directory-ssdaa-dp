@@ -1,50 +1,67 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\DrupalKernel;
 
 use Composer\Autoload\ClassLoader;
+use Drupal\Core\Config\ConfigInstallerInterface;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\DrupalKernelInterface;
 use Drupal\KernelTests\KernelTestBase;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\TestWith;
 use Prophecy\Argument;
 use Symfony\Component\HttpFoundation\Request;
 
+// cspell:ignore äöüßαβγδεζηθικλμνξοσὠ
 /**
  * Tests DIC compilation to disk.
- *
- * @group DrupalKernel
- * @coversDefaultClass \Drupal\Core\DrupalKernel
  */
+#[CoversClass(DrupalKernel::class)]
+#[Group('DrupalKernel')]
+#[RunTestsInSeparateProcesses]
 class DrupalKernelTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp(): void {
-    // Do not invoke KernelTestBase::setUp(), since that would set up further
-    // environment aspects, which would distort this test, because it tests the
-    // DrupalKernel (re-)building itself.
-    $this->root = static::getDrupalRoot();
-    $this->bootEnvironment();
+  protected function tearDown(): void {
+    if (get_error_handler() === '_drupal_error_handler') {
+      restore_error_handler();
+    }
+    parent::tearDown();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function bootKernel(): void {
+    // Do not boot the kernel, because we are testing aspects of this process.
   }
 
   /**
    * Build a kernel for testings.
    *
    * Because the bootstrap is in DrupalKernel::boot and that involved loading
-   * settings from the filesystem we need to go to extra lengths to build a kernel
-   * for testing.
+   * settings from the filesystem we need to go to extra lengths to build a
+   * kernel for testing.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   A request object to use in booting the kernel.
    * @param array $modules_enabled
-   *   A list of modules to enable on the kernel.
+   *   A list of modules to install on the kernel.
    *
    * @return \Drupal\Core\DrupalKernel
    *   New kernel for testing.
    */
-  protected function getTestKernel(Request $request, array $modules_enabled = NULL) {
+  protected function getTestKernel(Request $request, ?array $modules_enabled = NULL) {
     // Manually create kernel to avoid replacing settings.
     $class_loader = require $this->root . '/autoload.php';
     $kernel = DrupalKernel::createFromRequest($request, $class_loader, 'testing');
@@ -61,8 +78,8 @@ class DrupalKernelTest extends KernelTestBase {
   /**
    * Tests DIC compilation.
    */
-  public function testCompileDIC() {
-    // @todo: write a memory based storage backend for testing.
+  public function testCompileDIC(): void {
+    // @todo Write a memory based storage backend for testing.
     $modules_enabled = [
       'system' => 'system',
       'user' => 'user',
@@ -132,7 +149,14 @@ class DrupalKernelTest extends KernelTestBase {
     // Check that the location of the new module is registered.
     $modules = $container->getParameter('container.modules');
     $module_extension_list = $container->get('extension.list.module');
-    $this->assertEquals(['type' => 'module', 'pathname' => $module_extension_list->getPathname('service_provider_test'), 'filename' => NULL], $modules['service_provider_test']);
+    $this->assertEquals(
+      [
+        'type' => 'module',
+        'pathname' => $module_extension_list->getPathname('service_provider_test'),
+        'filename' => NULL,
+      ],
+      $modules['service_provider_test']
+    );
 
     // Check that the container itself is not among the persist IDs because it
     // does not make sense to persist the container itself.
@@ -141,9 +165,32 @@ class DrupalKernelTest extends KernelTestBase {
   }
 
   /**
+   * Tests that dot-prefixed build parameters are removed from the container.
+   *
+   * Build parameters (e.g. '.hook_data') are used to pass data between
+   * compiler passes. RemoveBuildParametersPass strips them so they don't
+   * bloat the cached container definition with data that is only needed at
+   * build time.
+   */
+  public function testBuildParametersRemoved(): void {
+    $request = Request::createFromGlobals();
+    $kernel = $this->getTestKernel($request);
+    $container = $kernel->getContainer();
+
+    $build_only = array_filter(
+      array_keys($container->getParameterBag()->all()),
+      fn(string $name) => str_starts_with($name, '.'),
+    );
+    $this->assertEmpty($build_only, sprintf(
+      'Dot-prefixed build parameters should not be in the compiled container, but found: %s',
+      implode(', ', $build_only),
+    ));
+  }
+
+  /**
    * Tests repeated loading of compiled DIC with different environment.
    */
-  public function testRepeatedBootWithDifferentEnvironment() {
+  public function testRepeatedBootWithDifferentEnvironment(): void {
     $request = Request::createFromGlobals();
     $class_loader = require $this->root . '/autoload.php';
 
@@ -165,8 +212,8 @@ class DrupalKernelTest extends KernelTestBase {
   /**
    * Tests setting of site path after kernel boot.
    */
-  public function testPreventChangeOfSitePath() {
-    // @todo: write a memory based storage backend for testing.
+  public function testPreventChangeOfSitePath(): void {
+    // @todo Write a memory based storage backend for testing.
     $modules_enabled = [
       'system' => 'system',
       'user' => 'user',
@@ -178,7 +225,7 @@ class DrupalKernelTest extends KernelTestBase {
     try {
       $kernel->setSitePath('/dev/null');
     }
-    catch (\LogicException $e) {
+    catch (\LogicException) {
       $pass = TRUE;
     }
     $this->assertTrue($pass, 'Throws LogicException if DrupalKernel::setSitePath() is called after boot');
@@ -191,9 +238,12 @@ class DrupalKernelTest extends KernelTestBase {
 
   /**
    * Data provider for self::testClassLoaderAutoDetect.
+   *
    * @return array
+   *   An array of test cases. Each test case is an array containing a single boolean value
+   *   that represents the class_loader_auto_detect setting to be tested.
    */
-  public function providerClassLoaderAutoDetect() {
+  public static function providerClassLoaderAutoDetect(): array {
     return [
       'TRUE' => [TRUE],
       'FALSE' => [FALSE],
@@ -206,15 +256,15 @@ class DrupalKernelTest extends KernelTestBase {
    * This test runs in a separate process since it registers class loaders and
    * results in statics being set.
    *
-   * @runInSeparateProcess
-   * @preserveGlobalState disabled
-   * @covers ::boot
-   * @dataProvider providerClassLoaderAutoDetect
-   *
    * @param bool $value
    *   The value to set class_loader_auto_detect to.
+   *
+   * @legacy-covers ::boot
    */
-  public function testClassLoaderAutoDetect($value) {
+  #[DataProvider('providerClassLoaderAutoDetect')]
+  #[PreserveGlobalState(FALSE)]
+  #[RunInSeparateProcess]
+  public function testClassLoaderAutoDetect($value): void {
     // Create a virtual file system containing items that should be
     // excluded. Exception being modules directory.
     vfsStream::setup('root', NULL, [
@@ -235,7 +285,7 @@ class DrupalKernelTest extends KernelTestBase {
     $classloader = $this->prophesize(ClassLoader::class);
 
     // Assert that we call the setApcuPrefix on the classloader if
-    // class_loader_auto_detect is set to TRUE;
+    // class_loader_auto_detect is set to TRUE.
     if ($value) {
       $classloader->setApcuPrefix(Argument::type('string'))->shouldBeCalled();
     }
@@ -247,6 +297,90 @@ class DrupalKernelTest extends KernelTestBase {
     $kernel = new DrupalKernel('test', $classloader->reveal(), FALSE, vfsStream::url('root'));
     $kernel->setSitePath(vfsStream::url('root/sites/default'));
     $kernel->boot();
+  }
+
+  /**
+   * Tests reset container.
+   */
+  #[TestWith([TRUE])]
+  #[TestWith([FALSE])]
+  public function testResetContainer(bool $config_installer_syncing): void {
+    $modules_enabled = [
+      'system' => 'system',
+      'user' => 'user',
+    ];
+
+    $request = Request::createFromGlobals();
+    $kernel = $this->getTestKernel($request, $modules_enabled);
+    $container = $kernel->getContainer();
+
+    // Ensure services are reset when ::resetContainer is called.
+    $this->assertFalse($container->initialized('renderer'));
+    $renderer = $container->get('renderer');
+    $this->assertTrue($container->initialized('renderer'));
+
+    // Ensure the current user is maintained through a container reset.
+    $this->assertSame(0, $container->get('current_user')->id());
+    $container->get('current_user')->setInitialAccountId(2);
+
+    // Ensure messages are maintained through a container reset.
+    $this->assertEmpty($container->get('messenger')->messagesByType('Container reset'));
+    $container->get('messenger')->addMessage('Test reset', 'Container reset');
+    $this->assertSame(['Test reset'], $container->get('messenger')->messagesByType('Container reset'));
+
+    // Ensure config installer isSyncing status is maintained through a
+    // container reset.
+    \Drupal::service(ConfigInstallerInterface::class)->setSyncing($config_installer_syncing);
+
+    // Ensure persisted services are persisted.
+    $request_stack = $container->get('request_stack');
+
+    $container->get('stream_wrapper_manager')->register();
+    $stream_wrappers = array_keys($container->get('stream_wrapper_manager')->getWrappers());
+    $this->assertSame([
+      'assets',
+      'public',
+      'temporary',
+      'module',
+      'theme',
+    ], $stream_wrappers);
+
+    $kernel->resetContainer();
+
+    // Ensure services are reset when ::resetContainer is called.
+    $this->assertFalse($container->initialized('renderer'));
+    $this->assertNotSame($renderer, $container->get('renderer'));
+    $this->assertTrue($container->initialized('renderer'));
+    $this->assertSame($kernel, $container->get('kernel'));
+
+    // Ensure the current user is maintained through a container reset.
+    $this->assertSame(2, $container->get('current_user')->id());
+
+    // Ensure messages are maintained through a container reset.
+    $this->assertSame(['Test reset'], $container->get('messenger')->messagesByType('Container reset'));
+
+    // Ensure config installer isSyncing status is maintained through a
+    // container reset.
+    $this->assertSame($config_installer_syncing, \Drupal::service(ConfigInstallerInterface::class)->isSyncing());
+
+    // Ensure persisted services are persisted.
+    $this->assertSame($request_stack, $container->get('request_stack'));
+
+    // Ensure stream wrappers are registered.
+    $this->assertSame($stream_wrappers, array_keys($container->get('stream_wrapper_manager')->getWrappers()));
+  }
+
+  /**
+   * Tests system locale.
+   */
+  public function testLocale(): void {
+    $utf8_string = 'äöüßαβγδεζηθικλμνξοσὠ';
+    // Test environment locale should be UTF-8.
+    $this->assertSame($utf8_string, escapeshellcmd($utf8_string));
+    $request = Request::createFromGlobals();
+    $this->getTestKernel($request);
+    // Kernel environment locale should be UTF-8.
+    $this->assertSame($utf8_string, escapeshellcmd($utf8_string));
   }
 
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Block\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Block\BlockPluginTrait;
 use Drupal\Core\Cache\CacheableDependencyTrait;
@@ -9,17 +10,16 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Defines a fallback plugin for missing block plugins.
- *
- * @Block(
- *   id = "broken",
- *   admin_label = @Translation("Broken/Missing"),
- *   category = @Translation("Block"),
- * )
  */
+#[Block(
+  id: "broken",
+  admin_label: new TranslatableMarkup("Broken/Missing"),
+  category: new TranslatableMarkup("Block")
+)]
 class Broken extends PluginBase implements BlockPluginInterface, ContainerFactoryPluginInterface {
 
   use BlockPluginTrait;
@@ -44,21 +44,14 @@ class Broken extends PluginBase implements BlockPluginInterface, ContainerFactor
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   The current user.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, AccountInterface $current_user) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    AccountInterface $current_user,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->currentUser = $current_user;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('current_user')
-    );
   }
 
   /**
@@ -87,7 +80,7 @@ class Broken extends PluginBase implements BlockPluginInterface, ContainerFactor
    */
   protected function brokenMessage() {
     $build['message'] = [
-      '#markup' => $this->t('This block is broken or missing. You may be missing content or you might need to enable the original module.'),
+      '#markup' => $this->t('This block is broken or missing. You may be missing content or you might need to install the original module.'),
     ];
 
     return $build;

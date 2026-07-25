@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 3c03cbcf-4fc3-4960-9225-f990a56128cd
+  bundle: country
+  default_langcode: ar
+  depends:
+    7952abe9-95d8-4691-b265-12d6690afdd4: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: ليبيا
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 7952abe9-95d8-4691-b265-12d6690afdd4
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

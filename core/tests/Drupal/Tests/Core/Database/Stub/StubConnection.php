@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Database\Stub;
 
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\ExceptionHandler;
 use Drupal\Core\Database\Log;
-use Drupal\Core\Database\StatementWrapper;
+use Drupal\Core\Database\StatementWrapperIterator;
+use Drupal\Tests\Core\Database\Stub\Driver\Schema;
 
 /**
  * A stub of the abstract Connection class for testing purposes.
@@ -16,7 +20,7 @@ class StubConnection extends Connection {
   /**
    * {@inheritdoc}
    */
-  protected $statementWrapperClass = StatementWrapper::class;
+  protected $statementWrapperClass = StatementWrapperIterator::class;
 
   /**
    * Public property so we can test driver loading mechanism.
@@ -44,14 +48,14 @@ class StubConnection extends Connection {
   /**
    * {@inheritdoc}
    */
-  public static function open(array &$connection_options = []) {
+  public static function open(array &$connection_options = []): \stdClass {
     return new \stdClass();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function queryRange($query, $from, $count, array $args = [], array $options = []) {
+  public function queryRange($query, $from, $count, array $args = [], array $options = []): NULL {
     return NULL;
   }
 
@@ -65,7 +69,7 @@ class StubConnection extends Connection {
   /**
    * {@inheritdoc}
    */
-  public function databaseType() {
+  public function databaseType(): string {
     return 'stub';
   }
 
@@ -77,15 +81,8 @@ class StubConnection extends Connection {
   /**
    * {@inheritdoc}
    */
-  public function mapConditionOperator($operator) {
+  public function mapConditionOperator($operator): NULL {
     return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function nextId($existing_id = 0) {
-    return 0;
   }
 
   /**
@@ -96,6 +93,37 @@ class StubConnection extends Connection {
    */
   public function testLogCaller() {
     return (new Log())->findCaller();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function exceptionHandler(): ExceptionHandler {
+    return new ExceptionHandler();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function upsert($table, array $options = []): StubUpsert {
+    return new StubUpsert($this, $table, $options);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function schema() {
+    if (empty($this->schema)) {
+      $this->schema = new Schema();
+    }
+    return $this->schema;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function condition($conjunction): StubCondition {
+    return new StubCondition($conjunction);
   }
 
 }

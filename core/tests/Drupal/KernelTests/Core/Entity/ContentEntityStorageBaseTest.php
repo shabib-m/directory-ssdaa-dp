@@ -1,14 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal\Core\Entity\ContentEntityStorageBase;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\Core\Entity\ContentEntityStorageBase
- *
- * @group Entity
+ * Tests Drupal\Core\Entity\ContentEntityStorageBase.
  */
+#[CoversClass(ContentEntityStorageBase::class)]
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class ContentEntityStorageBaseTest extends KernelTestBase {
 
   /**
@@ -27,11 +35,10 @@ class ContentEntityStorageBaseTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::create
-   *
-   * @dataProvider providerTestCreate
+   * Tests create.
    */
-  public function testCreate($bundle) {
+  #[DataProvider('providerTestCreate')]
+  public function testCreate(string|array $bundle): void {
     $storage = $this->container->get('entity_type.manager')->getStorage('entity_test');
 
     $entity = $storage->create(['type' => $bundle]);
@@ -41,18 +48,18 @@ class ContentEntityStorageBaseTest extends KernelTestBase {
   /**
    * Provides test data for testCreate().
    */
-  public function providerTestCreate() {
-    return [
-      ['scalar' => 'test_bundle'],
-      ['array keyed by delta' => [0 => ['value' => 'test_bundle']]],
-      ['array keyed by main property name' => ['value' => 'test_bundle']],
-    ];
+  public static function providerTestCreate(): \Generator {
+    yield 'scalar' => ['bundle' => 'test_bundle'];
+    yield 'array keyed by delta' => ['bundle' => [0 => ['value' => 'test_bundle']]];
+    yield 'array keyed by main property name' => ['bundle' => ['value' => 'test_bundle']];
   }
 
   /**
-   * @covers ::create
+   * Tests re create.
+   *
+   * @legacy-covers ::create
    */
-  public function testReCreate() {
+  public function testReCreate(): void {
     $storage = $this->container->get('entity_type.manager')->getStorage('entity_test');
 
     $values = $storage->create(['type' => 'test_bundle'])->toArray();

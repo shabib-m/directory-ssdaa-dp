@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Session;
 
 use Drupal\Core\Url;
 use Drupal\Tests\basic_auth\Traits\BasicAuthTestTrait;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests if sessions are correctly handled when a user authenticates.
- *
- * @group Session
  */
+#[Group('Session')]
+#[RunTestsInSeparateProcesses]
 class SessionAuthenticationTest extends BrowserTestBase {
 
   use BasicAuthTestTrait;
@@ -48,7 +52,7 @@ class SessionAuthenticationTest extends BrowserTestBase {
    * Regression test for a bug that caused a session initiated by basic
    * authentication to persist over subsequent unauthorized requests.
    */
-  public function testSessionFromBasicAuthenticationDoesNotLeak() {
+  public function testSessionFromBasicAuthenticationDoesNotLeak(): void {
     // This route is authorized through basic_auth only, not cookie.
     $protected_url = Url::fromRoute('session_test.get_session_basic_auth');
 
@@ -83,7 +87,7 @@ class SessionAuthenticationTest extends BrowserTestBase {
   /**
    * Tests if a session can be initiated through basic authentication.
    */
-  public function testBasicAuthSession() {
+  public function testBasicAuthSession(): void {
     // Set a session value on a request through basic auth.
     $test_value = 'alpaca';
     $response = $this->basicAuthGet('session-test/set-session/' . $test_value, $this->user->getAccountName(), $this->user->pass_raw);
@@ -117,7 +121,7 @@ class SessionAuthenticationTest extends BrowserTestBase {
   /**
    * Tests that a session is not started automatically by basic authentication.
    */
-  public function testBasicAuthNoSession() {
+  public function testBasicAuthNoSession(): void {
     // A route that is authorized through basic_auth only, not cookie.
     $no_cookie_url = Url::fromRoute('session_test.get_session_basic_auth');
 

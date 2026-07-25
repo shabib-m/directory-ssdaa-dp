@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media_library\Unit;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -11,14 +13,17 @@ use Drupal\views\Plugin\views\display\DefaultDisplay;
 use Drupal\views\Plugin\ViewsPluginManager;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @coversDefaultClass \Drupal\media_library\Plugin\views\field\MediaLibrarySelectForm
- * @group media_library
+ * Tests Drupal\media_library\Plugin\views\field\MediaLibrarySelectForm.
  */
+#[CoversClass(MediaLibrarySelectForm::class)]
+#[Group('media_library')]
 class MediaLibrarySelectFormTest extends UnitTestCase {
 
   /**
@@ -31,7 +36,7 @@ class MediaLibrarySelectFormTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::viewsForm
+   * Tests views form.
    */
   public function testViewsForm(): void {
     $row = new ResultRow();
@@ -48,18 +53,10 @@ class MediaLibrarySelectFormTest extends UnitTestCase {
     $container->set('string_translation', $this->createMock(TranslationInterface::class));
     \Drupal::setContainer($container);
 
-    $query = $this->getMockBuilder(ParameterBag::class)
-      ->onlyMethods(['all'])
-      ->disableOriginalConstructor()
-      ->getMock();
-    $query->expects($this->any())
-      ->method('all')
-      ->willReturn([]);
-
     $request = $this->getMockBuilder(Request::class)
       ->disableOriginalConstructor()
       ->getMock();
-    $request->query = $query;
+    $request->query = new InputBag();
 
     $view = $this->getMockBuilder(ViewExecutable::class)
       ->onlyMethods(['getRequest', 'initStyle', 'getDisplay'])

@@ -42,6 +42,7 @@ class ConfigEntityUpdater implements ContainerInjectionInterface {
 
   /**
    * The number of entities to process in each batch.
+   *
    * @var int
    */
   protected $batchSize;
@@ -106,7 +107,7 @@ class ConfigEntityUpdater implements ContainerInjectionInterface {
    *   Thrown when used twice in the same update function for different entity
    *   types. This method should only be called once per update function.
    */
-  public function update(array &$sandbox, $entity_type_id, callable $callback = NULL, bool $continue_on_error = FALSE) {
+  public function update(array &$sandbox, $entity_type_id, ?callable $callback = NULL, bool $continue_on_error = FALSE) {
     $storage = $this->entityTypeManager->getStorage($entity_type_id);
 
     if (isset($sandbox[self::SANDBOX_KEY]) && $sandbox[self::SANDBOX_KEY]['entity_type'] !== $entity_type_id) {
@@ -188,7 +189,6 @@ class ConfigEntityUpdater implements ContainerInjectionInterface {
    */
   protected function doOne(ConfigEntityInterface $entity, callable $callback) {
     if (call_user_func($callback, $entity)) {
-      $entity->trustData();
       $entity->save();
     }
   }

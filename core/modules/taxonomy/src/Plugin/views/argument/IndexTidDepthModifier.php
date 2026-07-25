@@ -3,6 +3,7 @@
 namespace Drupal\taxonomy\Plugin\views\argument;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsArgument;
 use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
 
 /**
@@ -12,15 +13,25 @@ use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
  * because it uses a subquery to find nodes with.
  *
  * @ingroup views_argument_handlers
- *
- * @ViewsArgument("taxonomy_index_tid_depth_modifier")
  */
+#[ViewsArgument(
+  id: 'taxonomy_index_tid_depth_modifier',
+)]
 class IndexTidDepthModifier extends ArgumentPluginBase {
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {}
 
+  /**
+   * {@inheritdoc}
+   */
   public function query($group_by = FALSE) {}
 
+  /**
+   * {@inheritdoc}
+   */
   public function preQuery() {
     // We don't know our argument yet, but it's based upon our position:
     $argument = $this->view->args[$this->position] ?? NULL;
@@ -36,7 +47,7 @@ class IndexTidDepthModifier extends ArgumentPluginBase {
       $argument = -10;
     }
 
-    // figure out which argument preceded us.
+    // Figure out which argument preceded us.
     $keys = array_reverse(array_keys($this->view->argument));
     $skip = TRUE;
     foreach ($keys as $key) {

@@ -29,7 +29,7 @@ interface AssetResolverInterface {
    * - CSS_COMPONENT
    * - CSS_STATE
    * - CSS_THEME
-   * @see https://www.drupal.org/node/1887918#separate-concerns
+   *
    * This ensures proper cascading of styles so themes can easily override
    * module styles through CSS selectors.
    *
@@ -50,8 +50,10 @@ interface AssetResolverInterface {
    *
    * @return array
    *   A (possibly optimized) collection of CSS assets.
+   *
+   * @see https://www.drupal.org/node/1887918#separate-concerns
    */
-  public function getCssAssets(AttachedAssetsInterface $assets, $optimize, LanguageInterface $language = NULL);
+  public function getCssAssets(AttachedAssetsInterface $assets, $optimize, ?LanguageInterface $language = NULL);
 
   /**
    * Returns the JavaScript assets for the current response's libraries.
@@ -83,6 +85,19 @@ interface AssetResolverInterface {
    *   - at index one: the (possibly optimized) collection of JavaScript assets
    *     for the bottom of the page
    */
-  public function getJsAssets(AttachedAssetsInterface $assets, $optimize, LanguageInterface $language = NULL);
+  public function getJsAssets(AttachedAssetsInterface $assets, $optimize, ?LanguageInterface $language = NULL);
+
+  /**
+   * Returns the fonts for the current response's libraries.
+   *
+   * @param \Drupal\Core\Asset\AttachedAssetsInterface $assets
+   *   The assets attached to the current response.
+   * @param \Drupal\Core\Language\LanguageInterface $language
+   *   (optional) The interface language the assets will be rendered with.
+   *
+   * @return array
+   *   An array of font assets.
+   */
+  public function getFontAssets(AttachedAssetsInterface $assets, ?LanguageInterface $language = NULL): array;
 
 }

@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional\Views;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test the "approve_comment" views field for approving comments.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentApproveLinkTest extends CommentTestBase {
 
   /**
@@ -41,7 +46,7 @@ class CommentApproveLinkTest extends CommentTestBase {
   /**
    * Tests that "approve comment" link exists and works as expected.
    */
-  public function testCommentApproveLink() {
+  public function testCommentApproveLink(): void {
     $this->drupalLogin($this->drupalCreateUser(['administer comments']));
     // Set the comment status to unpublished.
     $this->comment->setUnpublished();

@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Functional;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Media module's requirements checks.
- *
- * @group media
  */
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaRequirementsTest extends MediaFunctionalTestBase {
 
   /**
@@ -17,7 +22,7 @@ class MediaRequirementsTest extends MediaFunctionalTestBase {
   /**
    * Tests that the requirements check can handle a missing source field.
    */
-  public function testMissingSourceFieldDefinition() {
+  public function testMissingSourceFieldDefinition(): void {
     $media_type = $this->createMediaType('test');
     /** @var \Drupal\field\FieldConfigInterface $field_definition */
     $field_definition = $media_type->getSource()
@@ -28,7 +33,10 @@ class MediaRequirementsTest extends MediaFunctionalTestBase {
     $field_storage_definition->delete();
     $valid_media_type = $this->createMediaType('test');
 
-    $this->drupalLogin($this->rootUser);
+    $permissions = [
+      'administer site configuration',
+    ];
+    $this->drupalLogin($this->drupalCreateUser($permissions));
     $this->drupalGet('/admin/reports/status');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains("The source field definition for the {$media_type->label()} media type is missing.");

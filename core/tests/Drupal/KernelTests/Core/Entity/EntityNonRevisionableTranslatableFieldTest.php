@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\entity_test\Entity\EntityTestMulRev;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore hola
 /**
  * Tests translating a non-revisionable field.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityNonRevisionableTranslatableFieldTest extends EntityKernelTestBase {
 
   /**
@@ -18,7 +23,6 @@ class EntityNonRevisionableTranslatableFieldTest extends EntityKernelTestBase {
   protected static $modules = [
     'entity_test',
     'language',
-    'content_translation',
   ];
 
   /**
@@ -35,7 +39,7 @@ class EntityNonRevisionableTranslatableFieldTest extends EntityKernelTestBase {
   /**
    * Tests translating a non-revisionable field.
    */
-  public function testTranslatingNonRevisionableField() {
+  public function testTranslatingNonRevisionableField(): void {
     /** @var \Drupal\Core\Entity\ContentEntityBase $entity */
     $entity = EntityTestMulRev::create();
     $entity->set('non_rev_field', 'Hello');

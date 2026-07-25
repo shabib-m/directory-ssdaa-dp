@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\entity_test;
 
 use Drupal\Component\Utility\Random;
@@ -32,11 +34,11 @@ class EntityTestForm extends ContentEntityForm {
     $form = parent::form($form, $form_state);
     $entity = $this->entity;
 
-    // @todo: Is there a better way to check if an entity type is revisionable?
+    // @todo Is there a better way to check if an entity type is revisionable?
     if ($entity->getEntityType()->hasKey('revision') && !$entity->isNew()) {
       $form['revision'] = [
         '#type' => 'checkbox',
-        '#title' => t('Create new revision'),
+        '#title' => $this->t('Create new revision'),
         '#default_value' => $entity->isNewRevision(),
       ];
     }
@@ -60,10 +62,16 @@ class EntityTestForm extends ContentEntityForm {
       $status = $entity->save();
 
       if ($is_new) {
-        $message = t('%entity_type @id has been created.', ['@id' => $entity->id(), '%entity_type' => $entity->getEntityTypeId()]);
+        $message = $this->t('%entity_type @id has been created.', [
+          '@id' => $entity->id(),
+          '%entity_type' => $entity->getEntityTypeId(),
+        ]);
       }
       else {
-        $message = t('%entity_type @id has been updated.', ['@id' => $entity->id(), '%entity_type' => $entity->getEntityTypeId()]);
+        $message = $this->t('%entity_type @id has been updated.', [
+          '@id' => $entity->id(),
+          '%entity_type' => $entity->getEntityTypeId(),
+        ]);
       }
       $this->messenger()->addStatus($message);
 
@@ -80,7 +88,7 @@ class EntityTestForm extends ContentEntityForm {
         $form_state->setRebuild();
       }
     }
-    catch (\AssertionError $e) {
+    catch (\Exception $e) {
       \Drupal::state()->set('entity_test.form.save.exception', get_class($e) . ': ' . $e->getMessage());
     }
     return $status ?? FALSE;

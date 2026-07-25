@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the taxonomy RSS display.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class RssTest extends TaxonomyTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node', 'field_ui', 'views'];
 
@@ -59,7 +61,7 @@ class RssTest extends TaxonomyTestBase {
       ],
       'auto_create' => TRUE,
     ];
-    $this->createEntityReferenceField('node', 'article', $this->fieldName, NULL, 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+    $this->createEntityReferenceField('node', 'article', $this->fieldName, '', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
     $display_repository = \Drupal::service('entity_display.repository');
@@ -81,7 +83,7 @@ class RssTest extends TaxonomyTestBase {
    *
    * Create a node and assert that taxonomy terms appear in rss.xml.
    */
-  public function testTaxonomyRss() {
+  public function testTaxonomyRss(): void {
     // Create two taxonomy terms.
     $term1 = $this->createTerm($this->vocabulary);
 
@@ -101,6 +103,7 @@ class RssTest extends TaxonomyTestBase {
     $node = $this->drupalCreateNode([
       'type' => 'article',
       $this->fieldName => $term1->id(),
+      'promote' => TRUE,
     ]);
 
     // Check that the term is displayed when the RSS feed is viewed.

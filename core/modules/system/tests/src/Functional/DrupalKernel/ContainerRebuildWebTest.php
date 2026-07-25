@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\DrupalKernel;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Ensures that the container rebuild works as expected.
- *
- * @group DrupalKernel
  */
+#[Group('DrupalKernel')]
+#[RunTestsInSeparateProcesses]
 class ContainerRebuildWebTest extends BrowserTestBase {
 
   /**
@@ -24,14 +28,21 @@ class ContainerRebuildWebTest extends BrowserTestBase {
   /**
    * Sets a different deployment identifier.
    */
-  public function testSetContainerRebuildWithDifferentDeploymentIdentifier() {
+  public function testSetContainerRebuildWithDifferentDeploymentIdentifier(): void {
     $assert = $this->assertSession();
 
     // Ensure the parameter is not set.
     $this->drupalGet('<front>');
     $assert->responseHeaderEquals('container_rebuild_indicator', NULL);
 
-    $this->writeSettings(['settings' => ['deployment_identifier' => (object) ['value' => 'new-identifier', 'required' => TRUE]]]);
+    $this->writeSettings([
+      'settings' => [
+        'deployment_identifier' => (object) [
+          'value' => 'new-identifier',
+          'required' => TRUE,
+        ],
+      ],
+    ]);
 
     $this->drupalGet('<front>');
 
@@ -41,7 +52,7 @@ class ContainerRebuildWebTest extends BrowserTestBase {
   /**
    * Tests container invalidation.
    */
-  public function testContainerInvalidation() {
+  public function testContainerInvalidation(): void {
     $assert = $this->assertSession();
 
     // Ensure that parameter is not set.
@@ -50,7 +61,14 @@ class ContainerRebuildWebTest extends BrowserTestBase {
 
     // Ensure that after setting the parameter, without a container rebuild the
     // parameter is still not set.
-    $this->writeSettings(['settings' => ['container_rebuild_test_parameter' => (object) ['value' => 'rebuild_me_please', 'required' => TRUE]]]);
+    $this->writeSettings([
+      'settings' => [
+        'container_rebuild_test_parameter' => (object) [
+          'value' => 'rebuild_me',
+          'required' => TRUE,
+        ],
+      ],
+    ]);
 
     $this->drupalGet('<front>');
     $assert->responseHeaderEquals('container_rebuild_test_parameter', NULL);
@@ -58,7 +76,7 @@ class ContainerRebuildWebTest extends BrowserTestBase {
     // Ensure that after container invalidation the parameter is set.
     \Drupal::service('kernel')->invalidateContainer();
     $this->drupalGet('<front>');
-    $assert->responseHeaderEquals('container_rebuild_test_parameter', 'rebuild_me_please');
+    $assert->responseHeaderEquals('container_rebuild_test_parameter', 'rebuild_me');
   }
 
 }

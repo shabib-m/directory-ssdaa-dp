@@ -14,7 +14,7 @@ use Drupal\Core\Plugin\PluginBase;
  * handle table joins.
  *
  * Views join handlers extend \Drupal\views\Plugin\views\join\JoinPluginBase.
- * They must be annotated with \Drupal\views\Annotation\ViewsJoin annotation,
+ * They must be attributed with \Drupal\views\Attribute\ViewsJoin attribute,
  * and they must be in namespace directory Plugin\views\join.
  *
  * Here are some examples of configuration for the join plugins.
@@ -25,14 +25,14 @@ use Drupal\Core\Plugin\PluginBase;
  * @endcode
  * Use this configuration:
  * @code
- * $configuration = array(
+ * $configuration = [
  *   'table' => 'two',
  *   'field' => 'field_b',
  *   'left_table' => 'one',
  *   'left_field' => 'field_a',
  *   'operator' => '=',
- * );
- * $join = Views::pluginManager('join')->createInstance('standard', $configuration);
+ * ];
+ * $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $configuration);
  * @endcode
  * Note that the default join type is a LEFT join when 'type' is not supplied in
  * the join plugin configuration.
@@ -45,20 +45,20 @@ use Drupal\Core\Plugin\PluginBase;
  * @endcode
  * Use this configuration:
  * @code
- * $configuration = array(
+ * $configuration = [
  *   'table' => 'two',
  *   'field' => 'field_b',
  *   'left_table' => 'one',
  *   'left_formula' => 'MAX(one.field_a)',
  *   'operator' => '=',
- *   'extra' => array(
- *     0 => array(
+ *   'extra' => [
+ *     0 => [
  *       'left_field' => 'field_c',
  *       'value' => 'some_val',
- *     ),
- *   ),
- * );
- * $join = Views::pluginManager('join')->createInstance('standard', $configuration);
+ *     ],
+ *   ],
+ * ];
+ * $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $configuration);
  * @endcode
  *
  * For this SQL:
@@ -67,21 +67,21 @@ use Drupal\Core\Plugin\PluginBase;
  * @endcode
  * Use this configuration:
  * @code
- * $configuration = array(
+ * $configuration = [
  *   'type' => 'INNER',
  *   'table' => 'two',
  *   'field' => 'field_b',
  *   'left_table' => 'one',
  *   'left_field' => 'field_a',
  *   'operator' => '=',
- *   'extra' => array(
- *     0 => array(
+ *   'extra' => [
+ *     0 => [
  *       'left_field' => 'field_c',
  *       'value' => 'some_val',
- *     ),
- *   ),
- * );
- * $join = Views::pluginManager('join')->createInstance('standard', $configuration);
+ *     ],
+ *   ],
+ * ];
+ * $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $configuration);
  * @endcode
  *
  * For this SQL:
@@ -90,21 +90,21 @@ use Drupal\Core\Plugin\PluginBase;
  * @endcode
  * Use this configuration:
  * @code
- * $configuration = array(
+ * $configuration = [
  *   'type' => 'INNER',
  *   'table' => 'two',
  *   'field' => 'field_b',
  *   'left_table' => 'one',
  *   'left_field' => 'field_a',
  *   'operator' => '=',
- *   'extra' => array(
- *     0 => array(
+ *   'extra' => [
+ *     0 => [
  *       'field' => 'field_d',
  *       'value' => 'other_val',
- *     ),
- *   ),
- * );
- * $join = Views::pluginManager('join')->createInstance('standard', $configuration);
+ *     ],
+ *   ],
+ * ];
+ * $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $configuration);
  * @endcode
  *
  * For this SQL:
@@ -113,21 +113,21 @@ use Drupal\Core\Plugin\PluginBase;
  * @endcode
  * Use this configuration:
  * @code
- * $configuration = array(
+ * $configuration = [
  *   'type' => 'INNER',
  *   'table' => 'two',
  *   'field' => 'field_b',
  *   'left_table' => 'one',
  *   'left_field' => 'field_a',
  *   'operator' => '=',
- *   'extra' => array(
- *     0 => array(
+ *   'extra' => [
+ *     0 => [
  *       'left_field' => 'field_c',
  *       'field' => 'field_d',
- *     ),
- *   ),
- * );
- * $join = Views::pluginManager('join')->createInstance('standard', $configuration);
+ *     ],
+ *   ],
+ * ];
+ * $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $configuration);
  * @endcode
  *
  * Here is an example of a more complex join:
@@ -203,9 +203,9 @@ class JoinPluginBase extends PluginBase implements JoinPluginInterface {
    *   - value: Must be set. If an array, operator will be defaulted to IN.
    *   - numeric: If true, the value will not be surrounded in quotes.
    *
-   * @see SelectQueryInterface::addJoin()
-   *
    * @var array
+   *
+   * @see SelectQueryInterface::addJoin()
    */
   public $extra;
 
@@ -306,7 +306,8 @@ class JoinPluginBase extends PluginBase implements JoinPluginInterface {
       $left_field = $this->leftFormula ?: "$left_table[alias].$this->leftField";
     }
     else {
-      // This can be used if left_field is a formula or something. It should be used only *very* rarely.
+      // This can be used if left_field is a formula or something. It should be
+      // used only *very* rarely.
       $left_field = $this->leftField;
       $left_table = NULL;
     }
@@ -397,7 +398,7 @@ class JoinPluginBase extends PluginBase implements JoinPluginInterface {
     }
 
     // Convert a single-valued array of values to the single-value case,
-    // and transform from IN() notation to = notation
+    // and transform from IN() notation to = notation.
     if (is_array($info['value']) && count($info['value']) == 1) {
       $info['value'] = array_shift($info['value']);
     }

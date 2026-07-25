@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal\Kernel;
 
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test that no dummy migrate_map tables are created.
- *
- * @group migrate_drupal
  */
+#[Group('migrate_drupal')]
+#[RunTestsInSeparateProcesses]
 class IdMapTableNoDummyTest extends MigrateDrupal6TestBase {
 
   /**
@@ -30,7 +34,7 @@ class IdMapTableNoDummyTest extends MigrateDrupal6TestBase {
   /**
    * Tests that dummy map tables do not exist.
    */
-  public function testNoDummyTables() {
+  public function testNoDummyTables(): void {
     $database = \Drupal::database();
     $tables = $database->schema()->findTables('%migrate_map%');
     $dummy_tables = preg_grep("/.*migrate_map_([0-9a-fA-F]){13}/", $tables);

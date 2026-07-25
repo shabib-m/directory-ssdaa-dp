@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: a5c5cd3c-ddf6-43f0-83dd-87ecd57e21d5
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: binbaz.png
+  uri:
+    -
+      value: 'public://website-images/2026-07/binbaz.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 138151
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

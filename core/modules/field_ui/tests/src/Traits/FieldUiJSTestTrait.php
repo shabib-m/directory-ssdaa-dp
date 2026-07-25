@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_ui\Traits;
 
 /**
  * Provides common functionality for the Field UI tests that depend on JS.
  */
 trait FieldUiJSTestTrait {
+  use FieldUiTestTrait;
 
   /**
    * Creates a new field through the Field UI.
@@ -19,30 +22,49 @@ trait FieldUiJSTestTrait {
    * @param string $field_type
    *   (optional) The field type of the new field storage. Defaults to
    *   'test_field'.
+   * @param bool $save_settings
+   *   (optional) Parameter for conditional execution of second and third step
+   *   (Saving the storage settings and field settings). Defaults to 'TRUE'.
    */
-  public function fieldUIAddNewFieldJS(?string $bundle_path, string $field_name, ?string $label = NULL, string $field_type = 'test_field'): void {
+  public function fieldUIAddNewFieldJS(?string $bundle_path, string $field_name, ?string $label = NULL, string $field_type = 'test_field', bool $save_settings = TRUE): void {
+    $this->getSession()->resizeWindow(1200, 800);
     $label = $label ?: $field_name;
 
     // Allow the caller to set a NULL path in case they navigated to the right
     // page before calling this method.
     if ($bundle_path !== NULL) {
-      $bundle_path = "$bundle_path/fields/add-field";
+      $bundle_path = "$bundle_path/fields";
       $this->drupalGet($bundle_path);
+      $this->getSession()->getPage()->clickLink('Create a new field');
+      $this->assertSession()->assertWaitOnAjaxRequest();
     }
 
     // First step: 'Add field' page.
-    $session = $this->getSession();
+    $field_group = $this->getFieldFromGroup($field_type);
+    if ($field_group !== 'General') {
+      // The field type is in a group. Select the group and then the field type.
+      $this->clickLink($field_group);
+      $this->assertSession()->assertWaitOnAjaxRequest();
+      $this->assertSession()->fieldExists('field_options_wrapper')->selectOption($field_type);
+    }
+    else {
+      // The field type is not in a group. Select the field type directly.
+      /** @var \Drupal\Core\Field\FieldTypePluginManagerInterface $field_type_plugin_manager */
+      $field_type_plugin_manager = \Drupal::service('plugin.manager.field.field_type');
+      $field_definitions = $field_type_plugin_manager->getUiDefinitions();
+      $field_type_label = (string) $field_definitions[$field_type]['label'];
+      $this->clickLink($field_type_label);
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
 
-    $page = $session->getPage();
+    $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
-
-    $field_new_storage_type = $page->findField('new_storage_type');
-    $field_new_storage_type->setValue($field_type);
 
     $field_label = $page->findField('label');
     $this->assertTrue($field_label->isVisible());
+    $field_label = $page->find('css', 'input[data-drupal-selector="edit-label"]');
     $field_label->setValue($label);
-    $machine_name = $assert_session->waitForElementVisible('css', '[name="label"] + * .machine-name-value');
+    $machine_name = $assert_session->waitForElementVisible('css', '[data-drupal-selector="edit-label"] + * .machine-name-value');
     $this->assertNotEmpty($machine_name);
     $page->findButton('Edit')->press();
 
@@ -50,25 +72,21 @@ trait FieldUiJSTestTrait {
     $this->assertTrue($field_field_name->isVisible());
     $field_field_name->setValue($field_name);
 
-    $page->findButton('Save and continue')->click();
+    $this->assertSession()->elementExists('xpath', '//button[text()="Continue"]')->press();
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->waitForElementVisible('css', '#drupal-modal');
 
-    $assert_session->pageTextContains("These settings apply to the $label field everywhere it is used.");
-    $breadcrumb_link = $page->findLink($label);
+    $assert_session->waitForText("These settings apply to the $label field everywhere it is used.");
+    if ($save_settings) {
+      // Second step: Save field settings.
+      $save_button = $page->find('css', '.ui-dialog-buttonpane')->findButton('Save');
+      $save_button->click();
+      $assert_session->assert($assert_session->waitForText("Saved $label configuration."), 'text not found');
 
-    // Test breadcrumb.
-    $this->assertTrue($breadcrumb_link->isVisible());
-
-    // Second step: 'Storage settings' form.
-    $page->findButton('Save field settings')->click();
-    $assert_session->pageTextContains("Updated field $label field settings.");
-
-    // Third step: 'Field settings' form.
-    $page->findButton('Save settings')->click();
-    $assert_session->pageTextContains("Saved $label configuration.");
-
-    // Check that the field appears in the overview form.
-    $row = $page->find('css', '#field-' . $field_name);
-    $this->assertNotEmpty($row, 'Field was created and appears in the overview page.');
+      // Check that the field appears in the overview form.
+      $row = $page->find('css', '#field-' . $field_name);
+      $this->assertNotEmpty($row, 'Field was created and appears in the overview page.');
+    }
   }
 
   /**
@@ -95,7 +113,7 @@ trait FieldUiJSTestTrait {
     $this->assertSession()->linkExists('Re-use an existing field');
     $this->clickLink('Re-use an existing field');
     // Wait for the modal to open.
-    $this->assertSession()->waitForElementVisible('css', '#drupal-modal');
+    $this->assertNotEmpty($this->assertSession()->waitForElementVisible('css', '#drupal-modal'));
     $this->assertSession()->elementExists('css', "input[value=Re-use][name=$existing_storage_name]");
     $this->click("input[value=Re-use][name=$existing_storage_name]");
 
@@ -107,13 +125,10 @@ trait FieldUiJSTestTrait {
 
     // Second step: 'Field settings' form.
     $this->submitForm($field_edit, 'Save settings');
-    $this->assertSession()->pageTextContains("Saved $label configuration.");
+    $this->assertSession()->assert($this->assertSession()->waitForText("Saved $label configuration."), 'text not found');
 
     // Check that the field appears in the overview form.
-    $xpath = $this->assertSession()->buildXPathQuery("//table[@id=\"field-overview\"]//tr/td[1 and text() = :label]", [
-      ':label' => $label,
-    ]);
-    $this->assertSession()->elementExists('xpath', $xpath);
+    $this->assertFieldExistsOnOverview($label);
   }
 
 }

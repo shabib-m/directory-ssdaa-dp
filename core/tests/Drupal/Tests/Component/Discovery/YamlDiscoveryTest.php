@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Discovery;
 
 use Drupal\Component\Discovery\YamlDiscovery;
@@ -8,13 +10,13 @@ use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamDirectory;
 use org\bovigo\vfs\vfsStreamWrapper;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * YamlDiscovery component unit tests.
- *
- * @group Discovery
  */
+#[Group('Discovery')]
 class YamlDiscoveryTest extends TestCase {
 
   /**
@@ -28,7 +30,7 @@ class YamlDiscoveryTest extends TestCase {
   /**
    * Tests the YAML file discovery.
    */
-  public function testDiscovery() {
+  public function testDiscovery(): void {
     vfsStreamWrapper::register();
     $root = new vfsStreamDirectory('modules');
     vfsStreamWrapper::setRoot($root);
@@ -71,7 +73,7 @@ class YamlDiscoveryTest extends TestCase {
   /**
    * Tests if filename is output for a broken YAML file.
    */
-  public function testForBrokenYml() {
+  public function testForBrokenYml(): void {
     vfsStreamWrapper::register();
     $root = new vfsStreamDirectory('modules');
     vfsStreamWrapper::setRoot($root);

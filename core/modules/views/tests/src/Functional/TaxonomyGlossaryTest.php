@@ -1,23 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional;
 
 use Drupal\Core\Url;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests glossary functionality of taxonomy views.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class TaxonomyGlossaryTest extends ViewTestBase {
 
   use TaxonomyTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['taxonomy'];
 
@@ -59,7 +61,7 @@ class TaxonomyGlossaryTest extends ViewTestBase {
   /**
    * Tests a taxonomy glossary view.
    */
-  public function testTaxonomyGlossaryView() {
+  public function testTaxonomyGlossaryView(): void {
     $initials = [];
     foreach ($this->taxonomyTerms as $term) {
       $char = mb_strtolower(substr($term->label(), 0, 1));

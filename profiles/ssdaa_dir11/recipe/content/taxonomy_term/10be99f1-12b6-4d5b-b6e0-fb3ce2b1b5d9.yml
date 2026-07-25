@@ -1,0 +1,28 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 10be99f1-12b6-4d5b-b6e0-fb3ce2b1b5d9
+  bundle: main
+  default_langcode: ar
+  depends:
+    0f280d4e-497e-4364-9860-ede472ea7fa3: taxonomy_term
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'منتديات أدبيه'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      entity: 0f280d4e-497e-4364-9860-ede472ea7fa3
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

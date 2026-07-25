@@ -1,16 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filter\Unit;
 
+use Drupal\filter\FilterProcessResult;
+use Drupal\filter\FilterUninstallValidator;
+use Drupal\filter\Plugin\FilterBase;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\filter\FilterUninstallValidator
- * @group filter
+ * Tests Drupal\filter\FilterUninstallValidator.
  */
+#[CoversClass(FilterUninstallValidator::class)]
+#[Group('filter')]
 class FilterUninstallValidatorTest extends UnitTestCase {
 
   /**
+   * The filter uninstall validator.
+   *
    * @var \Drupal\filter\FilterUninstallValidator|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $filterUninstallValidator;
@@ -28,9 +38,9 @@ class FilterUninstallValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::validate
+   * Tests validate no plugins.
    */
-  public function testValidateNoPlugins() {
+  public function testValidateNoPlugins(): void {
     $this->filterUninstallValidator->expects($this->once())
       ->method('getFilterDefinitionsByProvider')
       ->willReturn([]);
@@ -44,9 +54,9 @@ class FilterUninstallValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::validate
+   * Tests validate no formats.
    */
-  public function testValidateNoFormats() {
+  public function testValidateNoFormats(): void {
     $this->filterUninstallValidator->expects($this->once())
       ->method('getFilterDefinitionsByProvider')
       ->willReturn([
@@ -66,9 +76,9 @@ class FilterUninstallValidatorTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::validate
+   * Tests validate no matching formats.
    */
-  public function testValidateNoMatchingFormats() {
+  public function testValidateNoMatchingFormats(): void {
     $this->filterUninstallValidator->expects($this->once())
       ->method('getFilterDefinitionsByProvider')
       ->willReturn([
@@ -90,8 +100,8 @@ class FilterUninstallValidatorTest extends UnitTestCase {
         ],
       ]);
 
-    $filter_plugin_enabled = $this->getMockForAbstractClass('Drupal\filter\Plugin\FilterBase', [['status' => TRUE], '', ['provider' => 'filter_test']]);
-    $filter_plugin_disabled = $this->getMockForAbstractClass('Drupal\filter\Plugin\FilterBase', [['status' => FALSE], '', ['provider' => 'filter_test']]);
+    $filter_plugin_enabled = new FilterBaseTestableClass(['status' => TRUE], '', ['provider' => 'filter_test']);
+    $filter_plugin_disabled = new FilterBaseTestableClass(['status' => FALSE], '', ['provider' => 'filter_test']);
 
     // The first format has 2 matching and enabled filters, but the loop breaks
     // after finding the first one.
@@ -158,6 +168,20 @@ class FilterUninstallValidatorTest extends UnitTestCase {
     ];
     $reasons = $this->filterUninstallValidator->validate($this->randomMachineName());
     $this->assertEquals($expected, $reasons);
+  }
+
+}
+
+/**
+ * A class extending FilterBase for testing purposes.
+ */
+class FilterBaseTestableClass extends FilterBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function process($text, $langcode) {
+    return new FilterProcessResult();
   }
 
 }

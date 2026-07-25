@@ -3,6 +3,7 @@
 namespace Drupal\Core\Render\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Component\Utility\Html as HtmlUtility;
 
 /**
@@ -14,12 +15,12 @@ use Drupal\Component\Utility\Html as HtmlUtility;
  *
  * Usage example:
  * @code
- * $form['settings']['active'] = array(
+ * $form['settings']['active'] = [
  *   '#type' => 'radios',
  *   '#title' => $this->t('Poll status'),
  *   '#default_value' => 1,
- *   '#options' => array(0 => $this->t('Closed'), 1 => $this->t('Active')),
- * );
+ *   '#options' => [0 => $this->t('Closed'), 1 => $this->t('Active')],
+ * ];
  * @endcode
  *
  * Element properties may be set on single option items as follows.
@@ -31,10 +32,9 @@ use Drupal\Component\Utility\Html as HtmlUtility;
  * @see \Drupal\Core\Render\Element\Checkboxes
  * @see \Drupal\Core\Render\Element\Radio
  * @see \Drupal\Core\Render\Element\Select
- *
- * @FormElement("radios")
  */
-class Radios extends FormElement {
+#[FormElement('radios')]
+class Radios extends FormElementBase {
 
   use CompositeFormElementTrait;
 
@@ -42,15 +42,14 @@ class Radios extends FormElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#input' => TRUE,
       '#process' => [
-        [$class, 'processRadios'],
+        [static::class, 'processRadios'],
       ],
       '#theme_wrappers' => ['radios'],
       '#pre_render' => [
-        [$class, 'preRenderCompositeFormElement'],
+        [static::class, 'preRenderCompositeFormElement'],
       ],
     ];
   }
@@ -61,6 +60,13 @@ class Radios extends FormElement {
   public static function processRadios(&$element, FormStateInterface $form_state, &$complete_form) {
     if (count($element['#options']) > 0) {
       $weight = 0;
+      $child_attributes = $element['#attributes'];
+      // Prevent child elements from inheriting an aria-describedby attribute.
+      // The individual children won't have descriptions and the attribute will
+      // be invalid.
+      if (isset($child_attributes['aria-describedby'])) {
+        unset($child_attributes['aria-describedby']);
+      }
       foreach ($element['#options'] as $key => $choice) {
         // Maintain order of options as defined in #options, in case the element
         // defines custom option sub-elements, but does not define all option
@@ -74,13 +80,13 @@ class Radios extends FormElement {
         $element[$key] += [
           '#type' => 'radio',
           '#title' => $choice,
-          // The key is sanitized in Drupal\Core\Template\Attribute during output
-          // from the theme function.
+          // The key is sanitized in Drupal\Core\Template\Attribute during
+          // output from the theme function.
           '#return_value' => $key,
-          // Use default or FALSE. A value of FALSE means that the radio button is
-          // not 'checked'.
+          // Use default or FALSE. A value of FALSE means that the radio button
+          // is not 'checked'.
           '#default_value' => $element['#default_value'] ?? FALSE,
-          '#attributes' => $element['#attributes'],
+          '#attributes' => $child_attributes,
           '#parents' => $element['#parents'],
           '#id' => HtmlUtility::getUniqueId('edit-' . implode('-', $parents_for_id)),
           '#ajax' => $element['#ajax'] ?? NULL,

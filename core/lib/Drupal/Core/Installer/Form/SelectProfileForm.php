@@ -39,8 +39,8 @@ class SelectProfileForm extends FormBase {
     foreach ($install_state['profiles'] as $profile) {
       /** @var \Drupal\Core\Extension\Extension $profile */
       $details = install_profile_info($profile->getName());
-      // Don't show hidden profiles. This is used by to hide the testing profile,
-      // which only exists to speed up test runs.
+      // Don't show hidden profiles. This is used by to hide the testing
+      // profile, which only exists to speed up test runs.
       if ($details['hidden'] === TRUE && !drupal_valid_test_ua()) {
         continue;
       }
@@ -57,9 +57,9 @@ class SelectProfileForm extends FormBase {
     natcasesort($names);
     if (isset($names['minimal'])) {
       // If the expert ("Minimal") core profile is present, put it in front of
-      // any non-core profiles rather than including it with them alphabetically,
-      // since the other profiles might be intended to group together in a
-      // particular way.
+      // any non-core profiles rather than including it with them
+      // alphabetically, since the other profiles might be intended to group
+      // together in a particular way.
       $names = ['minimal' => $names['minimal']] + $names;
     }
     if (isset($names['standard'])) {
@@ -80,6 +80,7 @@ class SelectProfileForm extends FormBase {
       '#default_value' => 'standard',
     ];
     foreach (array_keys($names) as $profile_name) {
+      // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
       $form['profile'][$profile_name]['#description'] = isset($profiles[$profile_name]['description']) ? $this->t($profiles[$profile_name]['description']) : '';
     }
 
@@ -88,18 +89,29 @@ class SelectProfileForm extends FormBase {
       $sync = new FileStorage($config_sync_directory);
       $extensions = $sync->read('core.extension');
       $site = $sync->read('system.site');
-      if (isset($site['name']) && isset($extensions['profile']) && in_array($extensions['profile'], array_keys($names), TRUE)) {
-        // Ensure the profile can be installed from configuration. Install
-        // profile's which implement hook_INSTALL() are not supported.
-        // @todo https://www.drupal.org/project/drupal/issues/2982052 Remove
-        //   this restriction.
-        $root = \Drupal::root();
-        include_once $root . '/core/includes/install.inc';
-        $file = $root . '/' . $install_state['profiles'][$extensions['profile']]->getPath() . "/{$extensions['profile']}.install";
-        if (is_file($file)) {
-          require_once $file;
+      if (isset($site['name'])) {
+        $install_from_config = FALSE;
+        if (isset($extensions['profile']) && array_key_exists($extensions['profile'], $names)) {
+          // Ensure the profile can be installed from configuration. Install
+          // profile's which implement hook_INSTALL() are not supported.
+          // @todo https://www.drupal.org/project/drupal/issues/2982052 Remove
+          //   this restriction.
+          $root = \Drupal::root();
+          include_once $root . '/core/includes/install.inc';
+          $file = $root . '/' . $install_state['profiles'][$extensions['profile']]->getPath() . "/{$extensions['profile']}.install";
+          if (is_file($file)) {
+            require_once $file;
+          }
+          if (!function_exists($extensions['profile'] . '_install')) {
+            $install_from_config = TRUE;
+          }
         }
-        if (!function_exists($extensions['profile'] . '_install')) {
+        elseif (empty($extensions['profile'])) {
+          // Allow sites without a profile to be installed.
+          $install_from_config = TRUE;
+        }
+
+        if ($install_from_config) {
           $form['profile']['#options'][static::CONFIG_INSTALL_PROFILE_KEY] = $this->t('Use existing configuration');
           $form['profile'][static::CONFIG_INSTALL_PROFILE_KEY]['#description'] = [
             'description' => [
@@ -139,7 +151,7 @@ class SelectProfileForm extends FormBase {
     $profile = $form_state->getValue('profile');
     if ($profile === static::CONFIG_INSTALL_PROFILE_KEY) {
       $sync = new FileStorage(Settings::get('config_sync_directory'));
-      $profile = $sync->read('core.extension')['profile'];
+      $profile = $sync->read('core.extension')['profile'] ?? FALSE;
       $install_state['parameters']['existing_config'] = TRUE;
     }
     $install_state['parameters']['profile'] = $profile;

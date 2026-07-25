@@ -1,27 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Diff\Engine;
 
 use Drupal\Component\Diff\Engine\HWLDFWordAccumulator;
+// cspell:ignore HWLDFWordAccumulator
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+// cspell:ignore wordword
 /**
  * Test HWLDFWordAccumulator.
- *
- * @coversDefaultClass \Drupal\Component\Diff\Engine\HWLDFWordAccumulator
- *
- * @group Diff
  */
+#[CoversClass(HWLDFWordAccumulator::class)]
+#[Group('Diff')]
 class HWLDFWordAccumulatorTest extends TestCase {
 
   /**
    * Verify that we only get back a NBSP from an empty accumulator.
    *
-   * @covers ::getLines
-   *
    * @see Drupal\Component\Diff\Engine\HWLDFWordAccumulator::NBSP
    */
-  public function testGetLinesEmpty() {
+  public function testGetLinesEmpty(): void {
     $acc = new HWLDFWordAccumulator();
     $this->assertEquals(['&#160;'], $acc->getLines());
   }
@@ -32,7 +35,7 @@ class HWLDFWordAccumulatorTest extends TestCase {
    *   - Array of strings for the $words parameter to addWords().
    *   - String tag for the $tag parameter to addWords().
    */
-  public function provideAddWords() {
+  public static function provideAddWords(): array {
     return [
       [['wordword2'], ['word', 'word2'], 'tag'],
       [['word', 'word2'], ['word', "\nword2"], 'tag'],
@@ -41,10 +44,10 @@ class HWLDFWordAccumulatorTest extends TestCase {
   }
 
   /**
-   * @covers ::addWords
-   * @dataProvider provideAddWords
+   * Tests add words.
    */
-  public function testAddWords($expected, $words, $tag) {
+  #[DataProvider('provideAddWords')]
+  public function testAddWords($expected, $words, $tag): void {
     $acc = new HWLDFWordAccumulator();
     $acc->addWords($words, $tag);
     $this->assertEquals($expected, $acc->getLines());

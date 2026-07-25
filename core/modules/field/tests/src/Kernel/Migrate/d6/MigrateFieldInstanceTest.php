@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Migrate\d6;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\link\LinkItemInterface;
-use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 use Drupal\node\Entity\Node;
+use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrate field instances.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateFieldInstanceTest extends MigrateDrupal6TestBase {
 
   /**
@@ -22,7 +26,7 @@ class MigrateFieldInstanceTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of file variables to file.settings.yml.
    */
-  public function testFieldInstanceMigration() {
+  public function testFieldInstanceMigration(): void {
     $this->migrateFields();
     $this->installConfig(['comment']);
     $this->executeMigration('d6_comment_type');
@@ -177,7 +181,7 @@ class MigrateFieldInstanceTest extends MigrateDrupal6TestBase {
   /**
    * Tests migrating fields into non-existent content types.
    */
-  public function testMigrateFieldIntoUnknownNodeType() {
+  public function testMigrateFieldIntoUnknownNodeType(): void {
     $this->sourceDatabase->delete('node_type')
       ->condition('type', 'test_planet')
       ->execute();

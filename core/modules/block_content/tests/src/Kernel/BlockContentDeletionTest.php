@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Kernel;
 
 use Drupal\block_content\Entity\BlockContent;
@@ -7,12 +9,14 @@ use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\block\Traits\BlockCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that deleting a block clears the cached definitions.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class BlockContentDeletionTest extends KernelTestBase {
 
   use BlockCreationTrait;
@@ -20,7 +24,7 @@ class BlockContentDeletionTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['block', 'block_content', 'system', 'user'];
+  protected static $modules = ['block', 'block_content', 'field', 'system', 'text', 'user'];
 
   /**
    * {@inheritdoc}
@@ -29,17 +33,19 @@ class BlockContentDeletionTest extends KernelTestBase {
     parent::setUp();
     $this->installEntitySchema('user');
     $this->installEntitySchema('block_content');
+    $this->installConfig(['block_content']);
+    $this->container->get('theme_installer')->install(['stark']);
   }
 
   /**
    * Tests deleting a block_content updates the discovered block plugin.
    */
-  public function testDeletingBlockContentShouldClearPluginCache() {
+  public function testDeletingBlockContentShouldClearPluginCache(): void {
     // Create a block content type.
     $block_content_type = BlockContentType::create([
       'id' => 'spiffy',
-      'label' => 'Mucho spiffy',
-      'description' => "Provides a block type that increases your site's spiffiness by upto 11%",
+      'label' => 'Very spiffy',
+      'description' => "Provides a block type that increases your site's spiffy rating by upto 11%",
     ]);
     $block_content_type->save();
     // And a block content entity.
@@ -69,7 +75,7 @@ class BlockContentDeletionTest extends KernelTestBase {
     $block_content->save();
 
     $plugin_id = 'block_content' . PluginBase::DERIVATIVE_SEPARATOR . $block_content->uuid();
-    $block = $this->placeBlock($plugin_id, ['region' => 'content']);
+    $block = $this->placeBlock($plugin_id, ['region' => 'content', 'theme' => 'stark']);
 
     // Delete it via storage.
     $storage = $this->container->get('entity_type.manager')->getStorage('block_content');

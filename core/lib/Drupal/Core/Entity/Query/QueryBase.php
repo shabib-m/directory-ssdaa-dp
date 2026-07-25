@@ -193,8 +193,8 @@ abstract class QueryBase implements QueryInterface {
    * {@inheritdoc}
    */
   public function range($start = NULL, $length = NULL) {
-    $this->range = [
-      'start' => $start,
+    $this->range = is_null($start) && is_null($length) ? [] : [
+      'start' => $start ?? 0,
       'length' => $length,
     ];
     return $this;
@@ -343,10 +343,13 @@ abstract class QueryBase implements QueryInterface {
   }
 
   /**
-   * Makes sure that the Condition object is cloned as well.
+   * Makes sure that condition objects are cloned as well.
    */
   public function __clone() {
     $this->condition = clone $this->condition;
+    if (isset($this->conditionAggregate)) {
+      $this->conditionAggregate = clone $this->conditionAggregate;
+    }
   }
 
   /**
@@ -368,14 +371,14 @@ abstract class QueryBase implements QueryInterface {
    * {@inheritdoc}
    */
   public function hasAllTags() {
-    return !(boolean) array_diff(func_get_args(), array_keys($this->alterTags));
+    return !(bool) array_diff(func_get_args(), array_keys($this->alterTags));
   }
 
   /**
    * {@inheritdoc}
    */
   public function hasAnyTag() {
-    return (boolean) array_intersect(func_get_args(), array_keys($this->alterTags));
+    return (bool) array_intersect(func_get_args(), array_keys($this->alterTags));
   }
 
   /**
@@ -473,7 +476,7 @@ abstract class QueryBase implements QueryInterface {
    * is useful for locating classes in a hierarchy of namespaces, such as when
    * searching for the appropriate query class for an entity type.
    *
-   * @param $object
+   * @param object $object
    *   An object within a namespace.
    *
    * @return array
@@ -498,7 +501,7 @@ abstract class QueryBase implements QueryInterface {
    * @param string $short_class_name
    *   A class name without namespace.
    *
-   * @return string
+   * @return string|null
    *   The fully qualified name of the class.
    */
   public static function getClass(array $namespaces, $short_class_name) {
@@ -508,6 +511,32 @@ abstract class QueryBase implements QueryInterface {
         return $class;
       }
     }
+    return NULL;
+  }
+
+  /**
+   * Invoke hooks to allow modules to alter the entity query.
+   *
+   * Modules may alter all queries or only those having a particular tag.
+   * Alteration happens before the query is prepared for execution, so that
+   * the alterations then get prepared in the same way.
+   *
+   * @return $this
+   *   Returns the called object.
+   */
+  protected function alter(): QueryInterface {
+    $hooks = ['entity_query', 'entity_query_' . $this->getEntityTypeId()];
+    if ($this->alterTags) {
+      foreach ($this->alterTags as $tag => $value) {
+        // Tags and entity type ids may well contain single underscores, and
+        // 'tag' is a possible entity type id. Therefore use double underscores
+        // to avoid collisions.
+        $hooks[] = 'entity_query_tag__' . $tag;
+        $hooks[] = 'entity_query_tag__' . $this->getEntityTypeId() . '__' . $tag;
+      }
+    }
+    \Drupal::moduleHandler()->alter($hooks, $this);
+    return $this;
   }
 
 }

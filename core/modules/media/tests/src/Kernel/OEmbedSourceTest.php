@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Kernel;
 
 use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Render\RenderContext;
 use Drupal\media\Entity\Media;
 use Drupal\media\OEmbed\Resource;
 use Drupal\media\OEmbed\ResourceFetcherInterface;
@@ -13,13 +17,18 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\media\Plugin\media\Source\OEmbed
- *
- * @group media
+ * Tests Drupal\media\Plugin\media\Source\OEmbed.
  */
+#[CoversClass(OEmbed::class)]
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class OEmbedSourceTest extends MediaKernelTestBase {
 
   /**
@@ -28,9 +37,9 @@ class OEmbedSourceTest extends MediaKernelTestBase {
   protected static $modules = ['media'];
 
   /**
-   * @covers ::getMetadata
+   * Tests get metadata.
    */
-  public function testGetMetadata() {
+  public function testGetMetadata(): void {
     $configuration = [
       'source_field' => 'field_test_oembed',
     ];
@@ -50,7 +59,7 @@ class OEmbedSourceTest extends MediaKernelTestBase {
    * @return array
    *   Sets of arguments to pass to the test method.
    */
-  public function providerThumbnailUri(): array {
+  public static function providerThumbnailUri(): array {
     return [
       'no query string, extension in URL' => [
         'internal:/core/misc/druplicon.png',
@@ -99,10 +108,9 @@ class OEmbedSourceTest extends MediaKernelTestBase {
    * @param string $expected_extension
    *   The extension that the downloaded thumbnail should have.
    *
-   * @covers ::getLocalThumbnailUri
-   *
-   * @dataProvider providerThumbnailUri
+   * @legacy-covers ::getLocalThumbnailUri
    */
+  #[DataProvider('providerThumbnailUri')]
   public function testThumbnailUri(string $remote_thumbnail_url, array $thumbnail_headers, string $expected_extension): void {
     // Create a fake resource with the given thumbnail URL.
     $resource = Resource::rich('<html></html>', 16, 16, NULL, 'Test resource', NULL, NULL, NULL, $remote_thumbnail_url, 16, 16);
@@ -124,7 +132,7 @@ class OEmbedSourceTest extends MediaKernelTestBase {
     // The source plugin will try to fetch the remote thumbnail, so mock the
     // HTTP client to ensure that request returns a response with some valid
     // image data.
-    $data = Utils::tryFopen($this->getDrupalRoot() . '/core/misc/druplicon.png', 'r');
+    $data = Utils::tryFopen($this->root . '/core/misc/druplicon.png', 'r');
     $response = new Response(200, $thumbnail_headers, Utils::streamFor($data));
     $handler = new MockHandler([$response]);
     $client = new Client([
@@ -170,6 +178,16 @@ class OEmbedSourceTest extends MediaKernelTestBase {
     /** @var \Drupal\Core\Image\Image $image */
     $image = $this->container->get('image.factory')->get($expected_uri);
     $this->assertTrue($image->isValid());
+
+    // Check that the current date token as per the default configuration of the
+    // oEmbed source plugin doesn't make a render context uncacheable.
+    $context = new RenderContext();
+    \Drupal::service('renderer')->executeInRenderContext($context, function () use ($source, $media) {
+      return $source->getMetadata($media, 'thumbnail_uri');
+    });
+    /** @var \Drupal\Core\Render\BubbleableMetadata $bubbleable_metadata */
+    $bubbleable_metadata = $context->pop();
+    $this->assertSame(Cache::PERMANENT, $bubbleable_metadata->getCacheMaxAge());
   }
 
 }

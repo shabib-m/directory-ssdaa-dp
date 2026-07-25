@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 use Drupal\views\Entity\View;
 
+/**
+ * Resource test base for the view entity.
+ */
 abstract class ViewResourceTestBase extends ConfigEntityResourceTestBase {
 
   /**
@@ -85,6 +90,15 @@ abstract class ViewResourceTestBase extends ConfigEntityResourceTestBase {
   protected function getNormalizedPostEntity() {
     // @todo Update in https://www.drupal.org/node/2300677.
     return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getExpectedCacheContexts() {
+    // 'session' is bubbled by URL generation for CSRF-protected routes
+    // referenced in the response normalization.
+    return array_merge(['session'], parent::getExpectedCacheContexts());
   }
 
 }

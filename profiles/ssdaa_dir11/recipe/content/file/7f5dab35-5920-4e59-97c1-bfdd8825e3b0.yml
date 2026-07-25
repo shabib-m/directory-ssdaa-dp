@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 7f5dab35-5920-4e59-97c1-bfdd8825e3b0
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: alalbany.png
+  uri:
+    -
+      value: 'public://website-images/2026-07/alalbany.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 208516
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

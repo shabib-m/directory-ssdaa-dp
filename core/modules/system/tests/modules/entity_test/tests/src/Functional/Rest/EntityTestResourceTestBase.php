@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\entity_test\Functional\Rest;
 
 use Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface;
@@ -8,6 +10,9 @@ use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 use Drupal\Tests\system\Functional\Entity\Traits\EntityDefinitionTestTrait;
 use Drupal\user\Entity\User;
 
+/**
+ * Resource test base for the EntityTest entity.
+ */
 abstract class EntityTestResourceTestBase extends ConfigEntityResourceTestBase {
 
   use EntityDefinitionTestTrait;
@@ -156,7 +161,7 @@ abstract class EntityTestResourceTestBase extends ConfigEntityResourceTestBase {
       ],
       'name' => [
         [
-          'value' => 'Dramallama',
+          'value' => 'Drama llama',
         ],
       ],
     ];

@@ -22,7 +22,7 @@ class OpenOffCanvasDialogCommand extends OpenDialogCommand {
    * behaviors. Drupal provides a built-in off-canvas dialog for this purpose,
    * so the selector is hard-coded in the call to the parent constructor.
    *
-   * @param string $title
+   * @param string|\Stringable|null $title
    *   The title of the dialog.
    * @param string|array $content
    *   The content that will be placed in the dialog, either a render array
@@ -37,7 +37,20 @@ class OpenOffCanvasDialogCommand extends OpenDialogCommand {
    * @param string $position
    *   (optional) The position to render the off-canvas dialog.
    */
-  public function __construct($title, $content, array $dialog_options = [], $settings = NULL, $position = 'side') {
+  public function __construct(string|\Stringable|null $title, $content, array $dialog_options = [], $settings = NULL, $position = 'side') {
+    $classes = [];
+    if (isset($dialog_options['classes']['ui-dialog'])) {
+      $classes[] = $dialog_options['classes']['ui-dialog'];
+    }
+    if (isset($dialog_options['dialogClass'])) {
+      @trigger_error('Passing $dialog_options[\'dialogClass\'] to OpenOffCanvasDialogCommand::__construct() is deprecated in drupal:10.3.0 and will be removed in drupal:12.0.0. Use $dialog_options[\'classes\'] instead. See https://www.drupal.org/node/3440844', E_USER_DEPRECATED);
+      $classes[] = $dialog_options['dialogClass'];
+      unset($dialog_options['dialogClass']);
+    }
+    $classes[] = 'ui-dialog-off-canvas';
+    $classes[] = "ui-dialog-position-$position";
+    $dialog_options['classes']['ui-dialog'] = implode(' ', $classes);
+
     parent::__construct('#drupal-off-canvas', $title, $content, $dialog_options, $settings);
     $this->dialogOptions['modal'] = FALSE;
     $this->dialogOptions['autoResize'] = FALSE;
@@ -45,12 +58,7 @@ class OpenOffCanvasDialogCommand extends OpenDialogCommand {
     $this->dialogOptions['draggable'] = FALSE;
     $this->dialogOptions['drupalAutoButtons'] = FALSE;
     $this->dialogOptions['drupalOffCanvasPosition'] = $position;
-    // @todo drupal.ajax.js does not respect drupalAutoButtons properly, pass an
-    //   empty set of buttons until https://www.drupal.org/node/2793343 is in.
-    $this->dialogOptions['buttons'] = [];
-    if (empty($dialog_options['dialogClass'])) {
-      $this->dialogOptions['dialogClass'] = "ui-dialog-off-canvas ui-dialog-position-$position";
-    }
+
     // Add CSS class to #drupal-off-canvas element. This enables developers to
     // select previous versions of off-canvas styles by using custom selector:
     // #drupal-off-canvas:not(.drupal-off-canvas-reset).

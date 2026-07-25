@@ -46,9 +46,9 @@ class MigrateUpgradeImportBatch {
   /**
    * The maximum length in seconds to allow processing in a request.
    *
-   * @see self::run()
-   *
    * @var int
+   *
+   * @see self::run()
    */
   protected static $maxExecTime;
 
@@ -134,7 +134,7 @@ class MigrateUpgradeImportBatch {
       static::$messages = new MigrateMessageCapture();
       $executable = new MigrateExecutable($migration, static::$messages);
 
-      $migration_name = $migration->label() ? $migration->label() : $migration_id;
+      $migration_name = $migration->label() ?: $migration_id;
 
       try {
         $migration_status = $executable->import();
@@ -230,7 +230,7 @@ class MigrateUpgradeImportBatch {
       if (!empty($context['sandbox']['migration_ids'])) {
         $migration_id = reset($context['sandbox']['migration_ids']);
         $migration = \Drupal::service('plugin.manager.migration')->createInstance($migration_id);
-        $migration_name = $migration->label() ? $migration->label() : $migration_id;
+        $migration_name = $migration->label() ?: $migration_id;
         $context['message'] = (string) new TranslatableMarkup('Currently upgrading @migration (@current of @max total tasks)', [
           '@migration' => $migration_name,
           '@current' => $context['sandbox']['current'],
@@ -293,7 +293,8 @@ class MigrateUpgradeImportBatch {
    */
   public static function onPostRowSave(MigratePostRowSaveEvent $event) {
     // We want to interrupt this batch and start a fresh one.
-    if ((time() - REQUEST_TIME) > static::$maxExecTime) {
+    $time = \Drupal::time();
+    if (($time->getCurrentTime() - $time->getRequestTime()) > static::$maxExecTime) {
       $event->getMigration()->interruptMigration(MigrationInterface::RESULT_INCOMPLETE);
     }
   }
@@ -324,7 +325,8 @@ class MigrateUpgradeImportBatch {
    */
   public static function onPostRowDelete(MigrateRowDeleteEvent $event) {
     // We want to interrupt this batch and start a fresh one.
-    if ((time() - REQUEST_TIME) > static::$maxExecTime) {
+    $time = \Drupal::time();
+    if (($time->getCurrentTime() - $time->getRequestTime()) > static::$maxExecTime) {
       $event->getMigration()->interruptMigration(MigrationInterface::RESULT_INCOMPLETE);
     }
   }
@@ -362,8 +364,13 @@ class MigrateUpgradeImportBatch {
     else {
       $type = 'error';
     }
+    $migration_id = $event->getMigration()->getPluginId();
     $source_id_string = implode(',', $event->getSourceIdValues());
-    $message = t('Source ID @source_id: @message', ['@source_id' => $source_id_string, '@message' => $event->getMessage()]);
+    $message = t('Migration @migration_id: Source ID @source_id: @message', [
+      '@migration_id' => $migration_id,
+      '@source_id' => $source_id_string,
+      '@message' => $event->getMessage(),
+    ]);
     static::$messages->display($message, $type);
   }
 

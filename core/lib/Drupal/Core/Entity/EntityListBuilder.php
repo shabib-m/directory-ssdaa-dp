@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Entity;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Url;
@@ -49,6 +50,14 @@ class EntityListBuilder extends EntityHandlerBase implements EntityListBuilderIn
    * @var int|false
    */
   protected $limit = 50;
+
+  /**
+   * The entity key to sort the list by.
+   *
+   * This can be overridden in child classes to sort the list by a different
+   * entity key.
+   */
+  protected const SORT_KEY = 'id';
 
   /**
    * {@inheritdoc}
@@ -108,7 +117,7 @@ class EntityListBuilder extends EntityHandlerBase implements EntityListBuilderIn
   protected function getEntityListQuery(): QueryInterface {
     $query = $this->getStorage()->getQuery()
       ->accessCheck(TRUE)
-      ->sort($this->entityType->getKey('id'));
+      ->sort($this->entityType->getKey(static::SORT_KEY));
 
     // Only add the pager if a limit is specified.
     if ($this->limit) {
@@ -120,10 +129,12 @@ class EntityListBuilder extends EntityHandlerBase implements EntityListBuilderIn
   /**
    * {@inheritdoc}
    */
-  public function getOperations(EntityInterface $entity) {
-    $operations = $this->getDefaultOperations($entity);
-    $operations += $this->moduleHandler()->invokeAll('entity_operation', [$entity]);
-    $this->moduleHandler->alter('entity_operation', $operations, $entity);
+  public function getOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $args = func_get_args();
+    $cacheability = $args[1] ?? new CacheableMetadata();
+    $operations = $this->getDefaultOperations($entity, $cacheability);
+    $operations += $this->moduleHandler()->invokeAll('entity_operation', [$entity, $cacheability]);
+    $this->moduleHandler->alter('entity_operation', $operations, $entity, $cacheability);
     uasort($operations, '\Drupal\Component\Utility\SortArray::sortByWeightElement');
 
     return $operations;
@@ -134,21 +145,57 @@ class EntityListBuilder extends EntityHandlerBase implements EntityListBuilderIn
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity the operations are for.
+   * phpcs:disable Drupal.Commenting
+   * @todo Uncomment new method parameters before drupal:12.0.0.
+   * @see https://www.drupal.org/project/drupal/issues/3533078
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   The cacheable metadata to add to if your operations vary by or depend on
+   *   something.
+   * phpcs:enable
    *
    * @return array
    *   The array structure is identical to the return value of
    *   self::getOperations().
    */
-  protected function getDefaultOperations(EntityInterface $entity) {
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $args = func_get_args();
+    $cacheability = $args[1] ?? new CacheableMetadata();
     $operations = [];
-    if ($entity->access('update') && $entity->hasLinkTemplate('edit-form')) {
+    $variables = [
+      '@entity_label' => $entity->label() ?? '',
+      '@entity_bundle' => $entity->bundle(),
+      '@entity_id' => $entity->id(),
+    ];
+
+    $update_access = $entity->access('update', return_as_object: TRUE);
+    $cacheability->addCacheableDependency($update_access);
+    if ($update_access->isAllowed() && $entity->hasLinkTemplate('edit-form')) {
+      $edit_url = $this->ensureDestination($entity->toUrl('edit-form'));
+      $label = $entity->label()
+        ? $this->t('Edit @entity_label', $variables)
+        : $this->t('Edit @entity_bundle @entity_id', $variables);
+      $attributes = $edit_url->getOption('attributes') ?: [];
+      $attributes += ['aria-label' => $label];
+      $edit_url->setOption('attributes', $attributes);
+
       $operations['edit'] = [
         'title' => $this->t('Edit'),
         'weight' => 10,
-        'url' => $this->ensureDestination($entity->toUrl('edit-form')),
+        'url' => $edit_url,
       ];
     }
-    if ($entity->access('delete') && $entity->hasLinkTemplate('delete-form')) {
+
+    $delete_access = $entity->access('delete', return_as_object: TRUE);
+    $cacheability->addCacheableDependency($delete_access);
+    if ($delete_access->isAllowed() && $entity->hasLinkTemplate('delete-form')) {
+      $delete_url = $this->ensureDestination($entity->toUrl('delete-form'));
+      $label = $entity->label()
+        ? $this->t('Delete @entity_label', $variables)
+        : $this->t('Delete @entity_bundle @entity_id', $variables);
+      $attributes = $delete_url->getOption('attributes') ?: [];
+      $attributes += ['aria-label' => $label];
+      $delete_url->setOption('attributes', $attributes);
+
       $operations['delete'] = [
         'title' => $this->t('Delete'),
         'weight' => 100,
@@ -159,7 +206,25 @@ class EntityListBuilder extends EntityHandlerBase implements EntityListBuilderIn
             'width' => 880,
           ]),
         ],
-        'url' => $this->ensureDestination($entity->toUrl('delete-form')),
+        'url' => $delete_url,
+      ];
+    }
+
+    $view_access = $entity->access('view', return_as_object: TRUE);
+    $cacheability->addCacheableDependency($view_access);
+    if ($view_access->isAllowed() && $entity->hasLinkTemplate('canonical')) {
+      $view_url = $entity->toUrl('canonical');
+      $label = $entity->label()
+        ? $this->t('View @entity_label', $variables)
+        : $this->t('View @entity_bundle @entity_id', $variables);
+      $attributes = $view_url->getOption('attributes') ?: [];
+      $attributes += ['aria-label' => $label];
+      $view_url->setOption('attributes', $attributes);
+
+      $operations['view'] = [
+        'title' => $this->t('View'),
+        'url' => $view_url,
+        'weight' => 200,
       ];
     }
 
@@ -207,15 +272,16 @@ class EntityListBuilder extends EntityHandlerBase implements EntityListBuilderIn
    * @see \Drupal\Core\Entity\EntityListBuilder::buildRow()
    */
   public function buildOperations(EntityInterface $entity) {
+    $cacheability = new CacheableMetadata();
     $build = [
       '#type' => 'operations',
-      '#links' => $this->getOperations($entity),
+      '#links' => $this->getOperations($entity, $cacheability),
       // Allow links to use modals.
       '#attached' => [
         'library' => ['core/drupal.dialog.ajax'],
       ],
     ];
-
+    $cacheability->applyTo($build);
     return $build;
   }
 

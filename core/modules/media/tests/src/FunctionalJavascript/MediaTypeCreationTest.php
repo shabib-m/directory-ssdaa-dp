@@ -1,14 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\FunctionalJavascript;
 
 use Drupal\Component\Utility\Html;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore pastafazoul
 /**
  * Tests the media type creation.
- *
- * @group media
  */
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaTypeCreationTest extends MediaJavascriptTestBase {
 
   /**
@@ -19,7 +24,7 @@ class MediaTypeCreationTest extends MediaJavascriptTestBase {
   /**
    * Tests the source field behavior on the add media type form.
    */
-  public function testSourceChangeOnMediaTypeCreationForm() {
+  public function testSourceChangeOnMediaTypeCreationForm(): void {
     $session = $this->getSession();
     $page = $session->getPage();
     $assert_session = $this->assertSession();
@@ -44,7 +49,7 @@ class MediaTypeCreationTest extends MediaJavascriptTestBase {
     // Change the media source.
     $assert_session->selectExists('Media source')->selectOption('test');
     $this->assertNotEmpty(
-      $assert_session->waitForElement('css', 'fieldset[data-drupal-selector="edit-source-configuration"] .fieldset-wrapper .placeholder:contains("Text (plain)")')
+      $assert_session->waitForElement('css', 'fieldset[data-drupal-selector="edit-source-configuration"] .fieldset-wrapper .placeholder:contains("Short text")')
     );
 
     $page->pressButton('Save');
@@ -58,7 +63,7 @@ class MediaTypeCreationTest extends MediaJavascriptTestBase {
   /**
    * Tests the media type creation form.
    */
-  public function testMediaTypeCreationFormWithDefaultField() {
+  public function testMediaTypeCreationFormWithDefaultField(): void {
     $session = $this->getSession();
     $page = $session->getPage();
     $assert_session = $this->assertSession();
@@ -89,9 +94,12 @@ class MediaTypeCreationTest extends MediaJavascriptTestBase {
     $this->drupalGet("admin/structure/media/manage/{$mediaTypeMachineName}/fields");
 
     // Check 2nd column of first data row, to be machine name for field name.
-    $assert_session->elementContains('xpath', '(//table[@id="field-overview"]//tr)[2]//td[2]', 'field_media_test');
-    // Check 3rd column of first data row, to be correct field type.
-    $assert_session->elementTextContains('xpath', '(//table[@id="field-overview"]//tr)[2]//td[3]', 'Text (plain)');
+    $cells = $assert_session->elementExists('css', 'table#field-overview tr#field-media-test')
+      ->findAll('css', 'td');
+    // The machine name should be in the first column.
+    $this->assertStringContainsString('field_media_test', $cells[0]->getText());
+    // The second column should contain the field type.
+    $this->assertSame('Short text', $assert_session->elementExists('css', '.field-type-label', $cells[1])->getText());
 
     // Check that the source field is correctly assigned to media type.
     $this->drupalGet("admin/structure/media/manage/{$mediaTypeMachineName}");
@@ -103,11 +111,13 @@ class MediaTypeCreationTest extends MediaJavascriptTestBase {
     $assert_session->pageTextContains('The media source cannot be changed after the media type is created.');
 
     // Check that the field map options are sorted alphabetically.
+    // Source field should not be included.
     $options = $this->xpath('//select[@name="field_map[attribute_1]"]/option');
-    $this->assertGreaterThanOrEqual(3, count($options));
+    $this->assertGreaterThanOrEqual(2, count($options));
     $this->assertSame('- Skip field -', $options[0]->getText());
     $this->assertSame('Name', $options[1]->getText());
-    $this->assertSame('Test source', $options[2]->getText());
+    // It should not be possible to map the source field.
+    $assert_session->optionNotExists('field_map[attribute_1]', 'Test source');
 
     // Open up the media add form and verify that the source field is right
     // after the name, and before the vertical tabs.
@@ -137,13 +147,13 @@ class MediaTypeCreationTest extends MediaJavascriptTestBase {
     $page->selectFieldOption('Media source', 'test');
     $assert_session->assertWaitOnAjaxRequest();
     $page->pressButton('Save');
-    $assert_session->pageTextContains('The machine-readable name is already in use. It must be unique.');
+    $assert_session->statusMessageContains('The machine-readable name is already in use. It must be unique.', 'error');
   }
 
   /**
    * Tests creation of media type, reusing an existing source field.
    */
-  public function testMediaTypeCreationReuseSourceField() {
+  public function testMediaTypeCreationReuseSourceField(): void {
     $session = $this->getSession();
     $page = $session->getPage();
     $assert_session = $this->assertSession();

@@ -1,21 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\mysql\Functional;
 
 use Drupal\Core\Database\Database;
 use Drupal\FunctionalTests\Installer\InstallerExistingSettingsTest;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the isolation_level setting with existing database settings.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerIsolationLevelExistingSettingsTest extends InstallerExistingSettingsTest {
 
   /**
    * {@inheritdoc}
    */
-  protected function prepareEnvironment() {
+  protected function prepareEnvironment(): void {
     parent::prepareEnvironment();
 
     $connection_info = Database::getConnectionInfo();
@@ -28,7 +32,7 @@ class InstallerIsolationLevelExistingSettingsTest extends InstallerExistingSetti
   /**
    * Verifies that isolation_level is not set in the database settings.
    */
-  public function testInstaller() {
+  public function testInstaller(): void {
     $contents = file_get_contents($this->container->getParameter('app.root') . '/' . $this->siteDirectory . '/settings.php');
 
     // Test that isolation_level was not set.
@@ -43,6 +47,9 @@ class InstallerIsolationLevelExistingSettingsTest extends InstallerExistingSetti
     unset($driver_test_connection['isolation_level']);
     unset($driver_test_connection['init_commands']);
 
+    $connection = Database::getConnection('default', 'default');
+    $query = $connection->isMariaDb() ? 'SELECT @@SESSION.tx_isolation' : 'SELECT @@SESSION.transaction_isolation';
+    $original_transaction_level = $connection->query($query)->fetchField();
     Database::renameConnection('default', 'original_database_connection');
     Database::addConnectionInfo('default', 'default', $driver_test_connection);
     // Close and reopen the database connection, so the database init commands
@@ -50,16 +57,8 @@ class InstallerIsolationLevelExistingSettingsTest extends InstallerExistingSetti
     Database::closeConnection('default', 'default');
     $connection = Database::getConnection('default', 'default');
 
-    $query = 'SELECT @@SESSION.tx_isolation';
-    // The database variable "tx_isolation" has been removed in MySQL v8.0 and
-    // has been replaced by "transaction_isolation".
-    // @see https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_tx_isolation
-    if (!$connection->isMariaDb() && version_compare($connection->version(), '8.0.0-AnyName', '>')) {
-      $query = 'SELECT @@SESSION.transaction_isolation';
-    }
-
-    // Test that transaction level is REPEATABLE READ.
-    $this->assertEquals('REPEATABLE-READ', $connection->query($query)->fetchField());
+    // Test that transaction level has not changed.
+    $this->assertEquals($original_transaction_level, $connection->query($query)->fetchField());
 
     // Restore the old database connection.
     Database::addConnectionInfo('default', 'default', $connection_info['default']);

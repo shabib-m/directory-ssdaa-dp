@@ -1,11 +1,11 @@
-name: 'Update Manager'
+name: 'Update Status'
 type: module
-description: 'Checks for updates and allows users to manage them through a user interface.'
+description: 'Checks for updates and can notify users if there are new releases available.'
 # version: VERSION
 package: Core
 configure: update.settings
 
-# Information added by Drupal.org packaging script on 2023-11-01
-version: '10.1.6'
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
 project: 'drupal'
-datestamp: 1698841355
+datestamp: 1784141321

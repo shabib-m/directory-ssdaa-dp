@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Migrate\d7;
 
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate_drupal\NodeMigrateType;
 use Drupal\node\Entity\Node;
@@ -10,12 +13,15 @@ use Drupal\Tests\file\Kernel\Migrate\d7\FileMigrationSetupTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 use Drupal\Tests\migrate_drupal\Traits\CreateTestContentEntitiesTrait;
 use Drupal\Tests\migrate_drupal\Traits\NodeMigrateTypeTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test class for a complete node migration for Drupal 7.
- *
- * @group migrate_drupal_7
  */
+#[Group('migrate_drupal_7')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
 
   use FileMigrationSetupTrait;
@@ -43,7 +49,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
   /**
    * The entity storage for node.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Entity\RevisionableStorageInterface
    */
   protected $nodeStorage;
 
@@ -62,7 +68,6 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
     $this->installEntitySchema('taxonomy_term');
     $this->installSchema('comment', ['comment_entity_statistics']);
     $this->installSchema('node', ['node_access']);
-    $this->installSchema('system', ['sequences']);
 
     $this->createContent();
 
@@ -86,10 +91,10 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getFileMigrationInfo() {
+  protected function getFileMigrationInfo(): array {
     return [
       'path' => 'public://sites/default/files/cube.jpeg',
-      'size' => '3620',
+      'size' => 3620,
       'base_path' => 'public://',
       'plugin_id' => 'd7_file',
     ];
@@ -98,7 +103,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
   /**
    * Tests the complete node migration.
    */
-  public function testNodeCompleteMigration() {
+  public function testNodeCompleteMigration(): void {
     // Confirm there are only complete node migration map tables. This shows
     // that only the complete migration ran.
     $results = $this->nodeMigrateMapTableCount('7');
@@ -111,14 +116,14 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
       ->orderBy('vid')
       ->orderBy('langcode')
       ->execute()
-      ->fetchAll(\PDO::FETCH_ASSOC));
+      ->fetchAll(FetchAs::Associative));
     $this->assertEquals($this->expectedNodeFieldDataTable(), $db->select('node_field_data', 'nr')
       ->fields('nr')
       ->orderBy('nid')
       ->orderBy('vid')
       ->orderBy('langcode')
       ->execute()
-      ->fetchAll(\PDO::FETCH_ASSOC));
+      ->fetchAll(FetchAs::Associative));
 
     // Load and test each revision.
     $data = $this->expectedRevisionEntityData()[0];
@@ -160,7 +165,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
   /**
    * Tests rollback of the complete node migration.
    */
-  public function testRollbackNodeComplete() {
+  public function testRollbackNodeComplete(): void {
     $db = \Drupal::database();
     $node_types = [
       'article',
@@ -220,7 +225,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
    * @return array
    *   The expected table rows.
    */
-  protected function expectedNodeFieldDataTable() {
+  protected function expectedNodeFieldDataTable(): array {
     return [
       0 =>
         [
@@ -465,7 +470,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
    * @return array
    *   The table.
    */
-  protected function expectedNodeFieldRevisionTable() {
+  protected function expectedNodeFieldRevisionTable(): array {
     return [
       0 =>
         [
@@ -1003,9 +1008,9 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
    * @return array
    *   Selected properties and fields on the revision.
    */
-  protected function expectedRevisionEntityData() {
+  protected function expectedRevisionEntityData(): array {
     return [
-      $revision_data = [
+      [
         // Node 1, revision 1, en.
         0 =>
           [

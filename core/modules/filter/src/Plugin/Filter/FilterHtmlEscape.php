@@ -2,26 +2,29 @@
 
 namespace Drupal\filter\Plugin\Filter;
 
+use Drupal\Component\Utility\Html;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\filter\Attribute\Filter;
 use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
+use Drupal\filter\Plugin\FilterInterface;
 
 /**
  * Provides a filter to display any HTML as plain text.
- *
- * @Filter(
- *   id = "filter_html_escape",
- *   title = @Translation("Display any HTML as plain text"),
- *   type = Drupal\filter\Plugin\FilterInterface::TYPE_HTML_RESTRICTOR,
- *   weight = -10
- * )
  */
+#[Filter(
+  id: "filter_html_escape",
+  title: new TranslatableMarkup("Display any HTML as plain text"),
+  type: FilterInterface::TYPE_HTML_RESTRICTOR,
+  weight: -10
+)]
 class FilterHtmlEscape extends FilterBase {
 
   /**
    * {@inheritdoc}
    */
   public function process($text, $langcode) {
-    return new FilterProcessResult(_filter_html_escape($text));
+    return new FilterProcessResult(trim(Html::escape($text)));
   }
 
   /**

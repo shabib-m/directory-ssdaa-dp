@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 1a0f0a61-3c0e-421d-9405-eab274b1276b
+  bundle: country
+  default_langcode: ar
+  depends:
+    c0c00bee-fd74-4730-8c6d-9431018f598a: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: مالي
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: c0c00bee-fd74-4730-8c6d-9431018f598a
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: true

@@ -1,16 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config_translation\Kernel\Migrate\d6;
 
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Upgrade i18n_strings site variables to system.*.yml.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateSystemSiteTranslationTest extends MigrateDrupal6TestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = [
     'language',
     'config_translation',
@@ -31,7 +38,7 @@ class MigrateSystemSiteTranslationTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of system (site) variables to system.site.yml.
    */
-  public function testSystemSite() {
+  public function testSystemSite(): void {
     $config_translation = \Drupal::service('language_manager')->getLanguageConfigOverride('fr', 'system.site');
     $this->assertSame('fr site name', $config_translation->get('name'));
     $this->assertSame('fr_site_mail@example.com', $config_translation->get('mail'));

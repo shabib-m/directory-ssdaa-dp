@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Plugin\Discovery;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Plugin\Discovery\HookDiscovery;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Plugin\Discovery\HookDiscovery
- * @group Plugin
+ * Tests Drupal\Core\Plugin\Discovery\HookDiscovery.
  */
+#[CoversClass(HookDiscovery::class)]
+#[Group('Plugin')]
 class HookDiscoveryTest extends UnitTestCase {
 
   /**
@@ -41,7 +46,7 @@ class HookDiscoveryTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Plugin\Discovery::getDefinitions()
    */
-  public function testGetDefinitionsWithoutPlugins() {
+  public function testGetDefinitionsWithoutPlugins(): void {
     $this->assertCount(0, $this->hookDiscovery->getDefinitions());
   }
 
@@ -50,11 +55,11 @@ class HookDiscoveryTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Plugin\Discovery::getDefinitions()
    */
-  public function testGetDefinitions() {
+  public function testGetDefinitions(): void {
     $this->moduleHandler->expects($this->atLeastOnce())
       ->method('invokeAllWith')
       ->with('test_plugin')
-      ->willReturnCallback(function (string $hook, callable $callback) {
+      ->willReturnCallback(function (string $hook, callable $callback): void {
         $callback(\Closure::fromCallable([$this, 'hookDiscoveryTestTestPlugin']), 'hook_discovery_test');
         $callback(\Closure::fromCallable([$this, 'hookDiscoveryTest2TestPlugin']), 'hook_discovery_test2');
       });
@@ -79,11 +84,11 @@ class HookDiscoveryTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Plugin\Discovery::getDefinition()
    */
-  public function testGetDefinition() {
+  public function testGetDefinition(): void {
     $this->moduleHandler->expects($this->exactly(4))
       ->method('invokeAllWith')
       ->with('test_plugin')
-      ->willReturnCallback(function (string $hook, callable $callback) {
+      ->willReturnCallback(function (string $hook, callable $callback): void {
         $callback(\Closure::fromCallable([$this, 'hookDiscoveryTestTestPlugin']), 'hook_discovery_test');
         $callback(\Closure::fromCallable([$this, 'hookDiscoveryTest2TestPlugin']), 'hook_discovery_test2');
       });
@@ -108,19 +113,19 @@ class HookDiscoveryTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Plugin\Discovery::getDefinition()
    */
-  public function testGetDefinitionWithUnknownID() {
+  public function testGetDefinitionWithUnknownID(): void {
     $this->expectException(PluginNotFoundException::class);
     $this->hookDiscovery->getDefinition('test_non_existent', TRUE);
   }
 
-  protected function hookDiscoveryTestTestPlugin() {
+  protected function hookDiscoveryTestTestPlugin(): array {
     return [
       'test_id_1' => ['class' => 'Drupal\plugin_test\Plugin\plugin_test\fruit\Apple'],
       'test_id_2' => ['class' => 'Drupal\plugin_test\Plugin\plugin_test\fruit\Orange'],
     ];
   }
 
-  protected function hookDiscoveryTest2TestPlugin() {
+  protected function hookDiscoveryTest2TestPlugin(): array {
     return [
       'test_id_3' => ['class' => 'Drupal\plugin_test\Plugin\plugin_test\fruit\Cherry'],
     ];

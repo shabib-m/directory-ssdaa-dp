@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\TestSite\Commands;
 
 use Drupal\Core\Test\TestDatabase;
@@ -20,7 +22,7 @@ class TestSiteReleaseLocksCommand extends Command {
   /**
    * {@inheritdoc}
    */
-  protected function configure() {
+  protected function configure(): void {
     $this->setName('release-locks')
       ->setDescription('Releases all test site locks')
       ->setHelp('The locks ensure test site database prefixes are not reused.');
@@ -30,6 +32,8 @@ class TestSiteReleaseLocksCommand extends Command {
    * {@inheritdoc}
    */
   protected function execute(InputInterface $input, OutputInterface $output): int {
+    $root = dirname(__DIR__, 5);
+    chdir($root);
     TestDatabase::releaseAllTestLocks();
     $output->writeln('<info>Successfully released all the test database locks</info>');
     return 0;

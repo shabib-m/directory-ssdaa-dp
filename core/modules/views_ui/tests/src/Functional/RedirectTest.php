@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the redirecting after saving a views.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class RedirectTest extends UITestBase {
 
   /**
@@ -24,7 +29,7 @@ class RedirectTest extends UITestBase {
   /**
    * Tests the redirecting.
    */
-  public function testRedirect() {
+  public function testRedirect(): void {
     $view_name = 'test_view';
 
     $random_destination = $this->randomMachineName();

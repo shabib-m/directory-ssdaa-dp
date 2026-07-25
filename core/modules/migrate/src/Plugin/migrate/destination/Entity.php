@@ -3,21 +3,28 @@
 namespace Drupal\migrate\Plugin\migrate\destination;
 
 use Drupal\Component\Plugin\DependentPluginInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\DependencyTrait;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\migrate\Attribute\MigrateDestination;
 use Drupal\migrate\EntityFieldDefinitionTrait;
+use Drupal\migrate\Plugin\Derivative\MigrateEntity;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+
+// cspell:ignore tnid
 
 /**
  * Provides a generic destination to import entities.
  *
  * Available configuration keys:
  * - default_bundle: (optional) The bundle to use for this row if 'bundle' is
- *   not defined on the row.
+ *   not defined on the row. Setting this also allows the fields() method to
+ *   return bundle fields as well as base fields.
  *
  * Examples:
  *
@@ -53,12 +60,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @endcode
  *
  * This will save the processed, migrated row as a node of type 'custom'.
- *
- * @MigrateDestination(
- *   id = "entity",
- *   deriver = "Drupal\migrate\Plugin\Derivative\MigrateEntity"
- * )
  */
+#[MigrateDestination(
+  id: 'entity',
+  deriver: MigrateEntity::class
+)]
 abstract class Entity extends DestinationBase implements ContainerFactoryPluginInterface, DependentPluginInterface {
 
   use DependencyTrait;
@@ -89,7 +95,7 @@ abstract class Entity extends DestinationBase implements ContainerFactoryPluginI
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\migrate\Plugin\MigrationInterface $migration
@@ -113,7 +119,7 @@ abstract class Entity extends DestinationBase implements ContainerFactoryPluginI
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     $entity_type_id = static::getEntityTypeId($plugin_id);
     return new static(
       $configuration,
@@ -144,7 +150,7 @@ abstract class Entity extends DestinationBase implements ContainerFactoryPluginI
    * {@inheritdoc}
    */
   public function fields() {
-    // TODO: Implement fields() method.
+    return [];
   }
 
   /**
@@ -181,6 +187,35 @@ abstract class Entity extends DestinationBase implements ContainerFactoryPluginI
   }
 
   /**
+   * Updates an entity with the new values from row.
+   *
+   * This method should be implemented in extending classes.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to update.
+   * @param \Drupal\migrate\Row $row
+   *   The row object to update from.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface
+   *   An updated entity from row values.
+   *
+   * @throws \LogicException
+   *   Thrown for config entities, if the destination is for translations and
+   *   either the "property" or "translation" property does not exist.
+   */
+  abstract protected function updateEntity(EntityInterface $entity, Row $row);
+
+  /**
+   * Populates as much of the stub row as possible.
+   *
+   * This method can be implemented in extending classes when needed.
+   *
+   * @param \Drupal\migrate\Row $row
+   *   The row of data.
+   */
+  protected function processStubRow(Row $row) {}
+
+  /**
    * Gets the entity ID of the row.
    *
    * @param \Drupal\migrate\Row $row
@@ -199,7 +234,7 @@ abstract class Entity extends DestinationBase implements ContainerFactoryPluginI
    * @param string $key
    *   The name of the entity key to return.
    *
-   * @return string|bool
+   * @return string|false
    *   The entity key, or FALSE if it does not exist.
    *
    * @see \Drupal\Core\Entity\EntityTypeInterface::getKeys()
@@ -215,6 +250,9 @@ abstract class Entity extends DestinationBase implements ContainerFactoryPluginI
     // Delete the specified entity from Drupal if it exists.
     $entity = $this->storage->load(reset($destination_identifier));
     if ($entity) {
+      if ($entity instanceof ContentEntityInterface) {
+        $entity->setSyncing(TRUE);
+      }
       $entity->delete();
     }
   }

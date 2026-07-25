@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Composer\Generator;
 
 use Drupal\Composer\Generator\Util\DrupalCoreComposer;
@@ -15,7 +17,7 @@ class Fixtures {
    * @return \Drupal\Composer\Generator\Util\DrupalCoreComposer
    *   DrupalCoreComposer fixture.
    */
-  public function drupalCoreComposerFixture() {
+  public function drupalCoreComposerFixture(): DrupalCoreComposer {
     return new DrupalCoreComposer($this->composerJson(), $this->composerLock());
   }
 
@@ -25,7 +27,7 @@ class Fixtures {
    * @return array
    *   composer.json fixture data.
    */
-  protected function composerJson() {
+  protected function composerJson(): array {
     return [
       'name' => 'drupal/project-fixture',
       'description' => 'A fixture for testing the metapackage generator.',
@@ -50,7 +52,7 @@ class Fixtures {
    * @return array
    *   composer.lock fixture data.
    */
-  protected function composerLock() {
+  protected function composerLock(): array {
     return [
       '_readme' =>
       [

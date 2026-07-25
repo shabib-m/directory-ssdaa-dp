@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal\Traits;
 
 use Drupal\migrate_drupal\NodeMigrateType;
@@ -28,7 +30,7 @@ trait NodeMigrateTypeTestTrait {
    *   An associative array with the total number of complete and classic
    *   node migrate_map tables.
    */
-  protected function nodeMigrateMapTableCount($version) {
+  protected function nodeMigrateMapTableCount($version): array {
     $results = [];
     $bases = ['node', 'node_complete'];
     $tables = \Drupal::database()->schema()
@@ -182,7 +184,7 @@ trait NodeMigrateTypeTestTrait {
       foreach ($keys as $key) {
         unset($fields[$key]);
         unset($values[$key]);
-        if (strstr($key, 'sourceid')) {
+        if (str_contains($key, 'sourceid')) {
           $index_key = substr($key, -1) - 1;
           unset($indexes['source'][$index_key]);
         }

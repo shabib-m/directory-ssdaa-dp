@@ -1,28 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Theme;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Claro theme.
- *
- * @group claro
  */
+#[Group('claro')]
+#[RunTestsInSeparateProcesses]
 class ClaroTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * Install the shortcut module so that claro.settings has its schema checked.
-   * There's currently no way for Claro to provide a default and have valid
-   * configuration as themes cannot react to a module install.
+   * Modules to install.
    *
    * Install dblog and pager_test for testing of pager attributes.
    *
    * @var string[]
    */
-  protected static $modules = ['dblog', 'shortcut', 'pager_test'];
+  protected static $modules = ['dblog', 'pager_test'];
 
   /**
    * {@inheritdoc}
@@ -34,7 +34,7 @@ class ClaroTest extends BrowserTestBase {
    *
    * @see claro.info.yml
    */
-  public function testRegressionMissingElementsCss() {
+  public function testRegressionMissingElementsCss(): void {
     $this->drupalGet('');
     $this->assertSession()->statusCodeEquals(200);
     // This can be any CSS file from the global library.
@@ -44,8 +44,11 @@ class ClaroTest extends BrowserTestBase {
   /**
    * Tests Claro's configuration schema.
    */
-  public function testConfigSchema() {
-    $this->drupalLogin($this->rootUser);
+  public function testConfigSchema(): void {
+    $permissions = [
+      'administer modules',
+    ];
+    $this->drupalLogin($this->drupalCreateUser($permissions));
     $this->drupalGet('admin/modules');
     $this->assertSession()->elementNotExists('css', '#block-claro-help');
 
@@ -61,12 +64,13 @@ class ClaroTest extends BrowserTestBase {
   /**
    * Tests that the Claro theme can be uninstalled.
    */
-  public function testIsUninstallable() {
+  public function testIsUninstallable(): void {
     $this->drupalLogin($this->drupalCreateUser(['access administration pages', 'administer themes']));
 
     $this->drupalGet('admin/appearance');
     $this->cssSelect('a[title="Install <strong>Test theme</strong> as default theme"]')[0]->click();
     $this->cssSelect('a[title="Uninstall Claro theme"]')[0]->click();
+    $this->submitForm([], 'Uninstall');
     $this->assertSession()->pageTextContains('The Claro theme has been uninstalled.');
   }
 

@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\mysql\Kernel\mysql;
 
 use Drupal\Component\Utility\Environment;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\KernelTests\Core\Database\DriverSpecificDatabaseTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests handling of large queries.
- *
- * @group Database
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class LargeQueryTest extends DriverSpecificDatabaseTestBase {
 
   /**

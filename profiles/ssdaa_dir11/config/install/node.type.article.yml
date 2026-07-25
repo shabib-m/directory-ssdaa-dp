@@ -1,0 +1,11 @@
+uuid: b1a6c783-4aaa-449c-8e93-d09facd6ee43
+langcode: ar
+status: true
+dependencies: {  }
+name: مقال
+type: article
+description: 'استخدم <em>المقال</em> للمحتويات المتغيرة كالأخبار، والنشرات الصحفية أو ملاحظات المدونة.'
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: true

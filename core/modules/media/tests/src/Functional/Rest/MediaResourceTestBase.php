@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Functional\Rest;
 
 use Drupal\Component\Utility\NestedArray;
@@ -14,12 +16,15 @@ use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
 use GuzzleHttp\RequestOptions;
 
+/**
+ * Resource test base for the media entity.
+ */
 abstract class MediaResourceTestBase extends EntityResourceTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['media'];
+  protected static $modules = ['content_translation', 'media'];
 
   /**
    * {@inheritdoc}
@@ -47,7 +52,7 @@ abstract class MediaResourceTestBase extends EntityResourceTestBase {
     \Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)
-      ->save(TRUE);
+      ->save();
 
     // Provisioning the Media REST resource without the File REST resource does
     // not make sense.
@@ -97,7 +102,7 @@ abstract class MediaResourceTestBase extends EntityResourceTestBase {
     if (!MediaType::load('camelids')) {
       // Create a "Camelids" media type.
       $media_type = MediaType::create([
-        'name' => 'Camelids',
+        'label' => 'Camelids',
         'id' => 'camelids',
         'description' => 'Camelids are large, strictly herbivorous animals with slender necks and long legs.',
         'source' => 'file',
@@ -245,7 +250,6 @@ abstract class MediaResourceTestBase extends EntityResourceTestBase {
           'url' => base_path() . 'user/' . $author->id(),
         ],
       ],
-      'revision_log_message' => [],
       'revision_translation_affected' => [
         [
           'value' => TRUE,
@@ -266,7 +270,7 @@ abstract class MediaResourceTestBase extends EntityResourceTestBase {
       ],
       'name' => [
         [
-          'value' => 'Dramallama',
+          'value' => 'Drama llama',
         ],
       ],
       'field_media_file' => [
@@ -291,7 +295,7 @@ abstract class MediaResourceTestBase extends EntityResourceTestBase {
    */
   protected function getExpectedUnauthorizedAccessMessage($method) {
     switch ($method) {
-      case 'GET';
+      case 'GET':
         return "The 'view media' permission is required when the media item is published.";
 
       case 'POST':
@@ -311,7 +315,18 @@ abstract class MediaResourceTestBase extends EntityResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function testPost() {
+  protected function getExpectedCacheContexts() {
+    return [
+      'languages:language_interface',
+      'url.site',
+      'user.permissions',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function doTestPost(): void {
     $file_storage = $this->container->get('entity_type.manager')->getStorage('file');
 
     // Step 1: upload file, results in File entity marked temporary.
@@ -321,7 +336,7 @@ abstract class MediaResourceTestBase extends EntityResourceTestBase {
     $this->assertFalse($file->isPermanent());
 
     // Step 2: create Media entity using the File, makes File entity permanent.
-    parent::testPost();
+    parent::doTestPost();
     $file = $file_storage->loadUnchanged(3);
     $this->assertFalse($file->isTemporary());
     $this->assertTrue($file->isPermanent());
@@ -376,11 +391,14 @@ abstract class MediaResourceTestBase extends EntityResourceTestBase {
     static::recursiveKSort($actual);
     $this->assertSame($expected, $actual);
 
+    // Make sure the role save below properly invalidates cache tags.
+    $this->refreshVariables();
+
     // To still run the complete test coverage for POSTing a Media entity, we
     // must revoke the additional permissions that we granted.
     $role = Role::load(static::$auth ? RoleInterface::AUTHENTICATED_ID : RoleInterface::ANONYMOUS_ID);
     $role->revokePermission('create camelids media');
-    $role->trustData()->save();
+    $role->save();
   }
 
   /**

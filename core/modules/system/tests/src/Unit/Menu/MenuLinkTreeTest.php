@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Unit\Menu;
 
 use Drupal\Core\Access\AccessResult;
@@ -9,13 +11,18 @@ use Drupal\Core\Menu\MenuLinkTree;
 use Drupal\Core\Menu\MenuLinkTreeElement;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
+use Drupal\Core\Utility\CallableResolver;
 use Drupal\Tests\Core\Menu\MenuLinkMock;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Menu\MenuLinkTree
- * @group Menu
+ * Tests Drupal\Core\Menu\MenuLinkTree.
  */
+#[CoversClass(MenuLinkTree::class)]
+#[Group('Menu')]
 class MenuLinkTreeTest extends UnitTestCase {
 
   /**
@@ -36,7 +43,7 @@ class MenuLinkTreeTest extends UnitTestCase {
       $this->createMock('\Drupal\Core\Menu\MenuLinkManagerInterface'),
       $this->createMock('\Drupal\Core\Routing\RouteProviderInterface'),
       $this->createMock('\Drupal\Core\Menu\MenuActiveTrailInterface'),
-      $this->createMock('\Drupal\Core\Controller\ControllerResolverInterface')
+      $this->createMock(CallableResolver::class)
     );
 
     $cache_contexts_manager = $this->getMockBuilder('Drupal\Core\Cache\Context\CacheContextsManager')
@@ -49,7 +56,7 @@ class MenuLinkTreeTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::build
+   * Tests build cacheability.
    *
    * MenuLinkTree::build() gathers both:
    * 1. the tree's access cacheability: the cacheability of the access result
@@ -93,10 +100,9 @@ class MenuLinkTreeTest extends UnitTestCase {
    * template's link() function invocation). It also has its own test coverage.
    *
    * @see \Drupal\menu_link_content\Tests\MenuLinkContentCacheabilityBubblingTest
-   *
-   * @dataProvider providerTestBuildCacheability
    */
-  public function testBuildCacheability($description, $tree, $expected_build, $access, array $access_cache_contexts = []) {
+  #[DataProvider('providerTestBuildCacheability')]
+  public function testBuildCacheability($description, $tree, $expected_build, $access, array $access_cache_contexts = []): void {
     if ($access !== NULL) {
       $access->addCacheContexts($access_cache_contexts);
     }
@@ -112,7 +118,7 @@ class MenuLinkTreeTest extends UnitTestCase {
    *
    * @see testBuildCacheability
    */
-  public function providerTestBuildCacheability() {
+  public static function providerTestBuildCacheability() {
     $base_expected_build_empty = [
       '#cache' => [
         'contexts' => [],
@@ -172,12 +178,31 @@ class MenuLinkTreeTest extends UnitTestCase {
     $cache_defaults = ['cache_max_age' => Cache::PERMANENT, 'cache_tags' => []];
     $links_scenarios = [
       [
-        MenuLinkMock::create(['id' => 'test.example1', 'route_name' => 'example1', 'title' => 'Example 1']),
-        MenuLinkMock::create(['id' => 'test.example2', 'route_name' => 'example1', 'title' => 'Example 2', 'metadata' => ['cache_contexts' => ['llama']] + $cache_defaults]),
+        MenuLinkMock::createMock([
+          'id' => 'test.example1',
+          'route_name' => 'example1',
+          'title' => 'Example 1',
+        ]),
+        MenuLinkMock::createMock([
+          'id' => 'test.example2',
+          'route_name' => 'example1',
+          'title' => 'Example 2',
+          'metadata' => ['cache_contexts' => ['llama']] + $cache_defaults,
+        ]),
       ],
       [
-        MenuLinkMock::create(['id' => 'test.example1', 'route_name' => 'example1', 'title' => 'Example 1', 'metadata' => ['cache_contexts' => ['foo']] + $cache_defaults]),
-        MenuLinkMock::create(['id' => 'test.example2', 'route_name' => 'example1', 'title' => 'Example 2', 'metadata' => ['cache_contexts' => ['bar']] + $cache_defaults]),
+        MenuLinkMock::createMock([
+          'id' => 'test.example1',
+          'route_name' => 'example1',
+          'title' => 'Example 1',
+          'metadata' => ['cache_contexts' => ['foo']] + $cache_defaults,
+        ]),
+        MenuLinkMock::createMock([
+          'id' => 'test.example2',
+          'route_name' => 'example1',
+          'title' => 'Example 2',
+          'metadata' => ['cache_contexts' => ['bar']] + $cache_defaults,
+        ]),
       ],
     ];
 
@@ -240,9 +265,21 @@ class MenuLinkTreeTest extends UnitTestCase {
         ];
 
         // Multi-level tree.
-        $multi_level_root_a = MenuLinkMock::create(['id' => 'test.root_a', 'route_name' => 'root_a', 'title' => 'Root A']);
-        $multi_level_root_b = MenuLinkMock::create(['id' => 'test.root_b', 'route_name' => 'root_b', 'title' => 'Root B']);
-        $multi_level_parent_c = MenuLinkMock::create(['id' => 'test.parent_c', 'route_name' => 'parent_c', 'title' => 'Parent C']);
+        $multi_level_root_a = MenuLinkMock::createMock([
+          'id' => 'test.root_a',
+          'route_name' => 'root_a',
+          'title' => 'Root A',
+        ]);
+        $multi_level_root_b = MenuLinkMock::createMock([
+          'id' => 'test.root_b',
+          'route_name' => 'root_b',
+          'title' => 'Root B',
+        ]);
+        $multi_level_parent_c = MenuLinkMock::createMock([
+          'id' => 'test.parent_c',
+          'route_name' => 'parent_c',
+          'title' => 'Parent C',
+        ]);
         $tree = [
           new MenuLinkTreeElement($multi_level_root_a, TRUE, 0, FALSE, [
             new MenuLinkTreeElement($multi_level_parent_c, TRUE, 0, FALSE, [

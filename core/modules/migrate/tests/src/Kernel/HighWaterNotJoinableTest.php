@@ -1,28 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
+
+use Drupal\migrate_high_water_test\Plugin\migrate\source\HighWaterTest;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the high water handling.
- *
- * @covers \Drupal\migrate_high_water_test\Plugin\migrate\source\HighWaterTest
- * @group migrate
  */
+#[CoversClass(HighWaterTest::class)]
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class HighWaterNotJoinableTest extends MigrateSqlSourceTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'migrate',
-    'migrate_drupal',
     'migrate_high_water_test',
   ];
 
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // Test high water when the map is not joinable.

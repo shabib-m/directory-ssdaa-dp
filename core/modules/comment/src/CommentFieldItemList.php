@@ -30,8 +30,7 @@ class CommentFieldItemList extends FieldItemList {
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function offsetExists($offset) {
+  public function offsetExists($offset): bool {
     // For consistency with what happens in get(), we force offsetExists() to
     // be TRUE for delta 0.
     if ($offset === 0) {
@@ -43,7 +42,7 @@ class CommentFieldItemList extends FieldItemList {
   /**
    * {@inheritdoc}
    */
-  public function access($operation = 'view', AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($operation = 'view', ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     if ($operation === 'edit') {
       // Only users with administer comments permission can edit the comment
       // status field.

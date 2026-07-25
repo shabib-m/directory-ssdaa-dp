@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\syslog\Kernel\Migrate\d6;
 
-use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use Drupal\Tests\SchemaCheckTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Upgrade variables to syslog.settings.yml.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateSyslogConfigsTest extends MigrateDrupal6TestBase {
 
   use SchemaCheckTestTrait;
@@ -35,7 +39,7 @@ class MigrateSyslogConfigsTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of syslog variables to syslog.settings.yml.
    */
-  public function testSyslogSettings() {
+  public function testSyslogSettings(): void {
     $config = $this->config('syslog.settings');
     $this->assertSame('drupal', $config->get('identity'));
     $this->assertSame(128, $config->get('facility'));

@@ -3,6 +3,7 @@
 namespace Drupal\Core\Render\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 use Drupal\Component\Utility\Color as ColorUtility;
 
@@ -14,32 +15,30 @@ use Drupal\Component\Utility\Color as ColorUtility;
  *
  * Example usage:
  * @code
- * $form['color'] = array(
+ * $form['color'] = [
  *   '#type' => 'color',
  *   '#title' => $this->t('Color'),
  *   '#default_value' => '#ffffff',
- * );
+ * ];
  * @endcode
- *
- * @FormElement("color")
  */
-class Color extends FormElement {
+#[FormElement('color')]
+class Color extends FormElementBase {
 
   /**
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#input' => TRUE,
       '#process' => [
-        [$class, 'processAjaxForm'],
+        [static::class, 'processAjaxForm'],
       ],
       '#element_validate' => [
-        [$class, 'validateColor'],
+        [static::class, 'validateColor'],
       ],
       '#pre_render' => [
-        [$class, 'preRenderColor'],
+        [static::class, 'preRenderColor'],
       ],
       '#theme' => 'input__color',
       '#theme_wrappers' => ['form_element'],
@@ -53,7 +52,7 @@ class Color extends FormElement {
     $value = trim($element['#value']);
 
     // Default to black if no value is given.
-    // @see http://www.w3.org/TR/html5/number-state.html#color-state
+    // @see https://www.w3.org/TR/html5/number-state.html#color-state
     if ($value === '') {
       $form_state->setValueForElement($element, '#000000');
     }
@@ -62,7 +61,7 @@ class Color extends FormElement {
       try {
         $form_state->setValueForElement($element, ColorUtility::rgbToHex(ColorUtility::hexToRgb($value)));
       }
-      catch (\InvalidArgumentException $e) {
+      catch (\InvalidArgumentException) {
         $form_state->setError($element, t('%name must be a valid color.', ['%name' => empty($element['#title']) ? $element['#parents'][0] : $element['#title']]));
       }
     }

@@ -3,21 +3,31 @@
 namespace Drupal\dblog\Plugin\views\filter;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\dblog\DbLogFilters;
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\views\filter\InOperator;
 
 /**
  * Exposes log types to views module.
- *
- * @ViewsFilter("dblog_types")
  */
+#[ViewsFilter("dblog_types")]
 class DblogTypes extends InOperator {
+
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    protected readonly DbLogFilters $dbLogFilters,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
   /**
    * {@inheritdoc}
    */
   public function getValueOptions() {
     if (!isset($this->valueOptions)) {
-      $this->valueOptions = _dblog_get_message_types();
+      $this->valueOptions = $this->dbLogFilters->getMessageTypes();
     }
     return $this->valueOptions;
   }

@@ -1,18 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel\Views;
 
 use Drupal\Core\Render\RenderContext;
 use Drupal\file\Entity\File;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
-use Drupal\views\Views;
 use Drupal\views\Tests\ViewTestData;
+use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the core Drupal\file\Plugin\views\field\Extension handler.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class ExtensionViewsFieldTest extends ViewsKernelTestBase {
 
   /**
@@ -64,7 +68,7 @@ class ExtensionViewsFieldTest extends ViewsKernelTestBase {
   /**
    * Tests file extension views field handler extension_detect_tar option.
    */
-  public function testFileExtensionTarOption() {
+  public function testFileExtensionTarOption(): void {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = \Drupal::service('renderer');
 

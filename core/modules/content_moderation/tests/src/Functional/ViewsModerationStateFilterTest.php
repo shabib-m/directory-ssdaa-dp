@@ -1,21 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Functional;
 
-use Drupal\node\Entity\NodeType;
+use Drupal\content_moderation\Plugin\views\filter\ModerationStateFilter;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Entity\View;
 use Drupal\views\ViewEntityInterface;
 use Drupal\workflows\Entity\Workflow;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the views 'moderation_state_filter' filter plugin.
- *
- * @coversDefaultClass \Drupal\content_moderation\Plugin\views\filter\ModerationStateFilter
- *
- * @group content_moderation
  */
+#[CoversClass(ModerationStateFilter::class)]
+#[Group('content_moderation')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class ViewsModerationStateFilterTest extends ViewTestBase {
 
   use ContentModerationTestTrait;
@@ -45,15 +51,15 @@ class ViewsModerationStateFilterTest extends ViewTestBase {
   protected function setUp($import_test_views = TRUE, $modules = []): void {
     parent::setUp(FALSE, $modules);
 
-    NodeType::create([
+    $this->drupalCreateContentType([
       'type' => 'example_a',
-    ])->save();
-    NodeType::create([
+    ]);
+    $this->drupalCreateContentType([
       'type' => 'example_b',
-    ])->save();
-    NodeType::create([
+    ]);
+    $this->drupalCreateContentType([
       'type' => 'example_c',
-    ])->save();
+    ]);
 
     $this->createEditorialWorkflow();
 
@@ -80,10 +86,10 @@ class ViewsModerationStateFilterTest extends ViewTestBase {
   /**
    * Tests the dependency handling of the moderation state filter.
    *
-   * @covers ::calculateDependencies
-   * @covers ::onDependencyRemoval
+   * @legacy-covers ::calculateDependencies
+   * @legacy-covers ::onDependencyRemoval
    */
-  public function testModerationStateFilterDependencyHandling() {
+  public function testModerationStateFilterDependencyHandling(): void {
     // First, check that the view doesn't have any config dependency when there
     // are no states configured in the filter.
     $view_id = 'test_content_moderation_state_filter_base_table';
@@ -165,10 +171,9 @@ class ViewsModerationStateFilterTest extends ViewTestBase {
 
   /**
    * Tests the moderation state filter when the configured workflow is changed.
-   *
-   * @dataProvider providerTestWorkflowChanges
    */
-  public function testWorkflowChanges($view_id) {
+  #[DataProvider('providerTestWorkflowChanges')]
+  public function testWorkflowChanges($view_id): void {
     // First, apply the Editorial workflow to both of our content types.
     $this->drupalGet('admin/config/workflow/workflows/manage/editorial/type/node');
     $this->submitForm([
@@ -201,7 +206,11 @@ class ViewsModerationStateFilterTest extends ViewTestBase {
     // Check that only the archived nodes from both bundles are displayed by the
     // view.
     $view = $this->loadViewUnchanged($view_id);
-    $this->executeAndAssertIdenticalResultset($view, [['nid' => $archived_node_a->id()], ['nid' => $archived_node_b->id()]], ['nid' => 'nid']);
+    $this->executeAndAssertIdenticalResultset(
+      $view,
+      [['nid' => $archived_node_a->id()], ['nid' => $archived_node_b->id()]],
+      ['nid' => 'nid'],
+    );
 
     // Remove the Editorial workflow from one of the bundles.
     $this->drupalGet('admin/config/workflow/workflows/manage/editorial/type/node');
@@ -249,7 +258,7 @@ class ViewsModerationStateFilterTest extends ViewTestBase {
    *   An associative array mapping the columns of the result set from the view
    *   (as keys) and the expected result set (as values).
    */
-  protected function executeAndAssertIdenticalResultset(ViewEntityInterface $view_entity, $expected, $column_map) {
+  protected function executeAndAssertIdenticalResultset(ViewEntityInterface $view_entity, $expected, $column_map): void {
     $executable = $this->container->get('views.executable')->get($view_entity);
     $this->executeView($executable);
     $this->assertIdenticalResultset($executable, $expected, $column_map);
@@ -261,7 +270,7 @@ class ViewsModerationStateFilterTest extends ViewTestBase {
    * @return string[]
    *   An array of view IDs.
    */
-  public function providerTestWorkflowChanges() {
+  public static function providerTestWorkflowChanges() {
     return [
       'view on base table, filter on base table' => [
         'test_content_moderation_state_filter_base_table',
@@ -275,7 +284,7 @@ class ViewsModerationStateFilterTest extends ViewTestBase {
   /**
    * Tests the content moderation state filter caching is correct.
    */
-  public function testFilterRenderCache() {
+  public function testFilterRenderCache(): void {
     // Initially all states of the workflow are displayed.
     $this->drupalGet('admin/config/workflow/workflows/manage/editorial/type/node');
     $this->submitForm(['bundles[example_a]' => TRUE], 'Save');
@@ -293,7 +302,16 @@ class ViewsModerationStateFilterTest extends ViewTestBase {
     // Adding a second workflow to nodes will also show new states.
     $this->drupalGet('admin/config/workflow/workflows/manage/new_workflow/type/node');
     $this->submitForm(['bundles[example_b]' => TRUE], 'Save');
-    $this->assertFilterStates(['All', 'editorial-draft', 'editorial-published', 'editorial-archived', 'editorial-foo', 'new_workflow-draft', 'new_workflow-published', 'new_workflow-bar']);
+    $this->assertFilterStates([
+      'All',
+      'editorial-draft',
+      'editorial-published',
+      'editorial-archived',
+      'editorial-foo',
+      'new_workflow-draft',
+      'new_workflow-published',
+      'new_workflow-bar',
+    ]);
 
     // Add a few more states and change the exposed filter to allow multiple
     // selections so we can check that the size of the select element does not
@@ -316,7 +334,17 @@ class ViewsModerationStateFilterTest extends ViewTestBase {
     $this->drupalGet("admin/structure/views/view/{$view_id}");
     $this->submitForm([], 'Save');
 
-    $this->assertFilterStates(['editorial-draft', 'editorial-published', 'editorial-archived', 'editorial-foo', 'editorial-foo2', 'editorial-foo3', 'new_workflow-draft', 'new_workflow-published', 'new_workflow-bar'], TRUE);
+    $this->assertFilterStates([
+      'editorial-draft',
+      'editorial-published',
+      'editorial-archived',
+      'editorial-foo',
+      'editorial-foo2',
+      'editorial-foo3',
+      'new_workflow-draft',
+      'new_workflow-published',
+      'new_workflow-bar',
+    ], TRUE);
   }
 
   /**
@@ -341,7 +369,7 @@ class ViewsModerationStateFilterTest extends ViewTestBase {
     // Check that the size of the select element does not exceed 8 options.
     if ($check_size) {
       $this->assertGreaterThan(8, count($states));
-      $assert_session->elementAttributeContains('css', '#edit-default-revision-state', 'size', 8);
+      $assert_session->elementAttributeContains('css', '#edit-default-revision-state', 'size', '8');
     }
 
     // Check that an option exists for each of the expected states.

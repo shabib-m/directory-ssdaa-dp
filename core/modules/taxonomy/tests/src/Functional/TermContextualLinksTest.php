@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests views contextual links on terms.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermContextualLinksTest extends TaxonomyTestBase {
 
   /**
@@ -24,7 +29,7 @@ class TermContextualLinksTest extends TaxonomyTestBase {
   /**
    * Tests contextual links.
    */
-  public function testTermContextualLinks() {
+  public function testTermContextualLinks(): void {
     $vocabulary = $this->createVocabulary();
     $term = $this->createTerm($vocabulary);
 

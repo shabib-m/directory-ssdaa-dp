@@ -3,7 +3,6 @@
 namespace Drupal\Composer\Plugin\Scaffold;
 
 use Composer\Composer;
-use Composer\EventDispatcher\EventDispatcher;
 use Composer\Installer\PackageEvent;
 use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
@@ -143,8 +142,8 @@ class Handler {
     }
 
     // Call any pre-scaffold scripts that may be defined.
-    $dispatcher = new EventDispatcher($this->composer, $this->io);
-    $dispatcher->dispatch(self::PRE_DRUPAL_SCAFFOLD_CMD);
+    $dispatcher = $this->composer->getEventDispatcher();
+    $dispatcher->dispatchScript(self::PRE_DRUPAL_SCAFFOLD_CMD);
 
     // Fetch the list of file mappings from each allowed package and normalize
     // them.
@@ -173,13 +172,18 @@ class Handler {
     if (!GenerateAutoloadReferenceFile::autoloadFileCommitted($this->io, $this->rootPackageName(), $web_root)) {
       $scaffold_results[] = GenerateAutoloadReferenceFile::generateAutoload($this->io, $this->rootPackageName(), $web_root, $this->getVendorPath());
     }
+    // The same is done for the autoload_runtime file that loads the Symfony
+    // runtime.
+    if (!GenerateAutoloadRuntimeReferenceFile::autoloadRuntimeFileCommitted($this->io, $this->rootPackageName(), $web_root)) {
+      $scaffold_results[] = GenerateAutoloadRuntimeReferenceFile::generateAutoloadRuntime($this->io, $this->rootPackageName(), $web_root, $this->getVendorPath());
+    }
 
     // Add the managed scaffold files to .gitignore if applicable.
     $gitIgnoreManager = new ManageGitIgnore($this->io, getcwd());
     $gitIgnoreManager->manageIgnored($scaffold_results, $scaffold_options);
 
     // Call post-scaffold scripts.
-    $dispatcher->dispatch(self::POST_DRUPAL_SCAFFOLD_CMD);
+    $dispatcher->dispatchScript(self::POST_DRUPAL_SCAFFOLD_CMD);
   }
 
   /**
@@ -197,7 +201,7 @@ class Handler {
   /**
    * Gets a consolidated list of file mappings from all allowed packages.
    *
-   * @param \Composer\Package\Package[] $allowed_packages
+   * @param \Composer\Package\PackageInterface[] $allowed_packages
    *   A multidimensional array of file mappings, as returned by
    *   self::getAllowedPackages().
    *

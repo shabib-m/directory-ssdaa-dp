@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Plugin\Discovery;
 
 use Drupal\Component\Plugin\Discovery\StaticDiscovery;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that plugins using static discovery are correctly discovered.
- *
- * @group Plugin
  */
+#[Group('Plugin')]
+#[RunTestsInSeparateProcesses]
 class StaticDiscoveryTest extends DiscoveryTestBase {
 
   /**

@@ -1,0 +1,26 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 3cdfdc2f-e7c2-49fe-b8de-4171a44926f8
+  bundle: main
+  default_langcode: ar
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'مواقع إسلامية'
+  weight:
+    -
+      value: -18
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

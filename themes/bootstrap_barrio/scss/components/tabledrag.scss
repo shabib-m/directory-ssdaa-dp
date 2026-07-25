@@ -4,18 +4,24 @@
  */
 
 tr.drag {
-    background-color: #fffff0;
+  background-color: #fffff0;
 }
 
 tr.drag-previous {
-    background-color: #ffd;
+  background-color: #ffd;
 }
 
-body div.tabledrag-changed-warning {
-    margin-bottom: calc($spacer / 2);
+.tabledrag-changed.warning {
+  margin-bottom: calc($spacer / 2);
+  color: var(--bs-warning);
 }
 
 a.tabledrag-handle .handle {
-    width: 25px;
-    height: 25px;
+  width: 25px;
+  height: 25px;
+}
+
+.tabledrag-cell-content>* {
+  display: table-cell;
+  vertical-align: middle;
 }

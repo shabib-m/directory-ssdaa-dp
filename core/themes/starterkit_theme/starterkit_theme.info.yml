@@ -1,8 +1,7 @@
-name: starterkit_theme
+name: Starterkit theme
 type: theme
-'base theme': stable9
+'base theme': false
 hidden: true
-starterkit: true
 # version: VERSION
 libraries:
   - starterkit_theme/base
@@ -17,10 +16,14 @@ libraries-extend:
     - starterkit_theme/dialog
   file/drupal.file:
     - starterkit_theme/file
+  core/drupal.item-list:
+    - starterkit_theme/item-list
   core/drupal.progress:
     - starterkit_theme/progress
+  core/drupal.tablesort:
+    - starterkit_theme/drupal.tablesort
 
-# Information added by Drupal.org packaging script on 2023-11-01
-version: '10.1.6'
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
 project: 'drupal'
-datestamp: 1698841355
+datestamp: 1784141321

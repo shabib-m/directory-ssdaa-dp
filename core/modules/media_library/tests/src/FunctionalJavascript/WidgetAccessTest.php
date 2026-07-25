@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media_library\FunctionalJavascript;
 
 use Drupal\field\Entity\FieldConfig;
@@ -7,12 +9,14 @@ use Drupal\media\Entity\Media;
 use Drupal\media_library\MediaLibraryState;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the media library UI access.
- *
- * @group media_library
  */
+#[Group('media_library')]
+#[RunTestsInSeparateProcesses]
 class WidgetAccessTest extends MediaLibraryTestBase {
 
   /**
@@ -23,7 +27,7 @@ class WidgetAccessTest extends MediaLibraryTestBase {
   /**
    * Tests that the widget access works as expected.
    */
-  public function testWidgetAccess() {
+  public function testWidgetAccess(): void {
     $assert_session = $this->assertSession();
     $session = $this->getSession();
 
@@ -140,7 +144,7 @@ class WidgetAccessTest extends MediaLibraryTestBase {
   /**
    * Tests the widget with a required field that the user can't access.
    */
-  public function testRequiredFieldNoAccess() {
+  public function testRequiredFieldNoAccess(): void {
     // Make field_single_media_type required.
     $fieldConfig = FieldConfig::loadByName('node', 'basic_page', 'field_single_media_type');
     assert($fieldConfig instanceof FieldConfig);

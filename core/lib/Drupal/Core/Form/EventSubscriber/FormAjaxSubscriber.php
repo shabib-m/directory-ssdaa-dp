@@ -10,6 +10,7 @@ use Drupal\Core\Form\FormAjaxException;
 use Drupal\Core\Form\FormAjaxResponseBuilderInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -86,7 +87,9 @@ class FormAjaxSubscriber implements EventSubscriberInterface {
     // Render a nice error message in case we have a file upload which exceeds
     // the configured upload limit.
     if ($exception instanceof BrokenPostRequestException && $request->query->has(FormBuilderInterface::AJAX_FORM_REQUEST)) {
-      $this->messenger->addError($this->t('An unrecoverable error occurred. The uploaded file likely exceeded the maximum file size (@size) that this server supports.', ['@size' => $this->formatSize($exception->getSize())]));
+      $this->messenger->addError($this->t('An unrecoverable error occurred. The uploaded file likely exceeded the maximum file size (@size) that this server supports.', [
+        '@size' => ByteSizeMarkup::create((int) $exception->getSize()),
+      ]));
       $response = new AjaxResponse(NULL, 200);
       $status_messages = ['#type' => 'status_messages'];
       $response->addCommand(new PrependCommand(NULL, $status_messages));
@@ -141,16 +144,6 @@ class FormAjaxSubscriber implements EventSubscriberInterface {
       $e = $e->getPrevious();
     }
     return $exception;
-  }
-
-  /**
-   * Wraps format_size()
-   *
-   * @return string
-   *   The formatted size.
-   */
-  protected function formatSize($size) {
-    return format_size($size);
   }
 
   /**

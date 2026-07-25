@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
@@ -7,19 +9,20 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\user\OneTimeAuthentication;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests registration of user under different configurations.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserRegistrationTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['field_test'];
 
@@ -28,7 +31,10 @@ class UserRegistrationTest extends BrowserTestBase {
    */
   protected $defaultTheme = 'stark';
 
-  public function testRegistrationWithEmailVerification() {
+  /**
+   * Tests user registration with email verification enabled.
+   */
+  public function testRegistrationWithEmailVerification(): void {
     $config = $this->config('user.settings');
     // Require email verification.
     $config->set('verify_mail', TRUE)->save();
@@ -53,7 +59,7 @@ class UserRegistrationTest extends BrowserTestBase {
     $accounts = $storage->loadByProperties(['name' => $name, 'mail' => $mail]);
     $new_user = reset($accounts);
     $this->assertTrue($new_user->isActive(), 'New account is active after registration.');
-    $resetURL = user_pass_reset_url($new_user);
+    $resetURL = \Drupal::service(OneTimeAuthentication::class)->generateOneTimeLoginUrl($new_user)->toString();
     $this->drupalGet($resetURL);
     $this->assertSession()->titleEquals('Set password | Drupal');
 
@@ -70,7 +76,10 @@ class UserRegistrationTest extends BrowserTestBase {
     $this->assertFalse($new_user->isActive(), 'New account is blocked until approved by an administrator.');
   }
 
-  public function testRegistrationWithoutEmailVerification() {
+  /**
+   * Tests user registration without email verification.
+   */
+  public function testRegistrationWithoutEmailVerification(): void {
     $config = $this->config('user.settings');
     // Don't require email verification and allow registration by site visitors
     // without administrator approval.
@@ -142,7 +151,10 @@ class UserRegistrationTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('Member for');
   }
 
-  public function testRegistrationEmailDuplicates() {
+  /**
+   * Tests user registration with email duplicates.
+   */
+  public function testRegistrationEmailDuplicates(): void {
     // Don't require email verification and allow registration by site visitors
     // without administrator approval.
     $this->config('user.settings')
@@ -162,7 +174,8 @@ class UserRegistrationTest extends BrowserTestBase {
     $this->submitForm($edit, 'Create new account');
     $this->assertSession()->pageTextContains('The email address ' . $duplicate_user->getEmail() . ' is already taken.');
 
-    // Attempt to bypass duplicate email registration validation by adding spaces.
+    // Attempt to bypass duplicate email registration validation by adding
+    // spaces.
     $edit['mail'] = '   ' . $duplicate_user->getEmail() . '   ';
 
     $this->drupalGet('user/register');
@@ -176,7 +189,7 @@ class UserRegistrationTest extends BrowserTestBase {
    * This is a regression test for https://www.drupal.org/node/2500527 to ensure
    * that the form is not cached on GET requests.
    */
-  public function testUuidFormState() {
+  public function testUuidFormState(): void {
     \Drupal::service('module_installer')->install(['image']);
 
     // Add a picture field in order to ensure that no form cache is written,
@@ -240,7 +253,10 @@ class UserRegistrationTest extends BrowserTestBase {
     $this->assertNotEmpty($user_storage->loadByProperties(['name' => $edit['name']]));
   }
 
-  public function testRegistrationDefaultValues() {
+  /**
+   * Tests user registration with default values.
+   */
+  public function testRegistrationDefaultValues(): void {
     // Don't require email verification and allow registration by site visitors
     // without administrator approval.
     $config_user_settings = $this->config('user.settings')
@@ -272,7 +288,7 @@ class UserRegistrationTest extends BrowserTestBase {
     $this->assertEquals($name, $new_user->getAccountName(), 'Username matches.');
     $this->assertEquals($mail, $new_user->getEmail(), 'Email address matches.');
     // Verify that the creation time is correct.
-    $this->assertGreaterThan(REQUEST_TIME - 20, $new_user->getCreatedTime());
+    $this->assertGreaterThan(\Drupal::time()->getRequestTime() - 20, $new_user->getCreatedTime());
     $this->assertEquals($config_user_settings->get('register') == UserInterface::REGISTER_VISITORS ? 1 : 0, $new_user->isActive(), 'Correct status field.');
     $this->assertEquals($config_system_date->get('timezone.default'), $new_user->getTimezone(), 'Correct time zone field.');
     $this->assertEquals(\Drupal::languageManager()->getDefaultLanguage()->getId(), $new_user->langcode->value, 'Correct language field.');
@@ -286,7 +302,7 @@ class UserRegistrationTest extends BrowserTestBase {
    * @see \Drupal\user\Plugin\Validation\Constraint\UserNameUnique
    * @see \Drupal\user\Plugin\Validation\Constraint\UserMailUnique
    */
-  public function testUniqueFields() {
+  public function testUniqueFields(): void {
     $account = $this->drupalCreateUser();
 
     $edit = ['mail' => 'test@example.com', 'name' => $account->getAccountName()];
@@ -303,7 +319,7 @@ class UserRegistrationTest extends BrowserTestBase {
   /**
    * Tests Field API fields on user registration forms.
    */
-  public function testRegistrationWithUserFields() {
+  public function testRegistrationWithUserFields(): void {
     // Create a field on 'user' entity type.
     $field_storage = FieldStorageConfig::create([
       'field_name' => 'test_user_field',

@@ -1,19 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Migrate\d7;
 
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
+use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\file\Kernel\Migrate\d7\FileMigrationSetupTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
-use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests node migration.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class MigrateNodeTest extends MigrateDrupal7TestBase {
 
   use FileMigrationSetupTrait;
@@ -60,8 +64,8 @@ class MigrateNodeTest extends MigrateDrupal7TestBase {
       'd7_language_content_settings',
       'd7_comment_field',
       'd7_comment_field_instance',
-      'd7_node',
       'd7_node_translation',
+      'd7_node',
       'd7_entity_translation_settings',
       'd7_taxonomy_term_entity_translation',
       'd7_node_entity_translation',
@@ -71,10 +75,10 @@ class MigrateNodeTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getFileMigrationInfo() {
+  protected function getFileMigrationInfo(): array {
     return [
       'path' => 'public://sites/default/files/cube.jpeg',
-      'size' => '3620',
+      'size' => 3620,
       'base_path' => 'public://',
       'plugin_id' => 'd7_file',
     ];
@@ -106,7 +110,7 @@ class MigrateNodeTest extends MigrateDrupal7TestBase {
    *
    * @internal
    */
-  protected function assertEntity(string $id, string $type, string $langcode, string $title, int $uid, bool $status, int $created, int $changed, bool $promoted, bool $sticky): void {
+  protected function assertEntity(int $id, string $type, string $langcode, string $title, int $uid, bool $status, int $created, int $changed, bool $promoted, bool $sticky): void {
     /** @var \Drupal\node\NodeInterface $node */
     $node = Node::load($id);
     $this->assertInstanceOf(NodeInterface::class, $node);
@@ -151,15 +155,15 @@ class MigrateNodeTest extends MigrateDrupal7TestBase {
   /**
    * Tests node migration from Drupal 7 to 8.
    */
-  public function testNode() {
+  public function testNode(): void {
     // Confirm there are only classic node migration map tables. This shows
     // that only the classic migration ran.
     $results = $this->nodeMigrateMapTableCount('7');
     $this->assertSame(9, $results['node']);
     $this->assertSame(0, $results['node_complete']);
 
-    $this->assertEntity(1, 'test_content_type', 'en', 'An English Node', '2', TRUE, '1421727515', '1441032132', TRUE, FALSE);
-    $this->assertRevision(1, 'An English Node', '1', NULL, '1441032132');
+    $this->assertEntity(1, 'test_content_type', 'en', 'An English Node', 2, TRUE, 1421727515, 1441032132, TRUE, FALSE);
+    $this->assertRevision(1, 'An English Node', 1, NULL, 1441032132);
 
     $node = Node::load(1);
     $this->assertNotEmpty($node->field_boolean->value);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media_library\Kernel;
 
 use Drupal\Core\Cache\Cache;
@@ -7,16 +9,19 @@ use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\media_library\MediaLibraryState;
 use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Tests the media library state value object.
- *
- * @group media_library
- *
- * @coversDefaultClass \Drupal\media_library\MediaLibraryState
  */
+#[CoversClass(MediaLibraryState::class)]
+#[Group('media_library')]
+#[RunTestsInSeparateProcesses]
 class MediaLibraryStateTest extends KernelTestBase {
 
   use MediaTypeCreationTrait;
@@ -44,7 +49,6 @@ class MediaLibraryStateTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installSchema('file', 'file_usage');
-    $this->installSchema('system', 'sequences');
     $this->installEntitySchema('media');
     $this->installConfig([
       'field',
@@ -64,7 +68,7 @@ class MediaLibraryStateTest extends KernelTestBase {
   /**
    * Tests the media library state methods.
    */
-  public function testMethods() {
+  public function testMethods(): void {
     $opener_id = 'test';
     $allowed_media_type_ids = ['document', 'image'];
     $selected_media_type_id = 'image';
@@ -95,11 +99,9 @@ class MediaLibraryStateTest extends KernelTestBase {
    *   library.
    * @param string $exception_message
    *   The expected exception message.
-   *
-   * @covers ::create
-   * @dataProvider providerCreate
    */
-  public function testCreate($opener_id, array $allowed_media_type_ids, $selected_type_id, $remaining_slots, $exception_message = '') {
+  #[DataProvider('providerCreate')]
+  public function testCreate($opener_id, array $allowed_media_type_ids, $selected_type_id, $remaining_slots, $exception_message = ''): void {
     if ($exception_message) {
       $this->expectException(\InvalidArgumentException::class);
       $this->expectExceptionMessage($exception_message);
@@ -119,7 +121,7 @@ class MediaLibraryStateTest extends KernelTestBase {
    * @return array
    *   The data sets to test.
    */
-  public function providerCreate() {
+  public static function providerCreate() {
     $test_data = [];
 
     // Assert no exception is thrown when we add the parameters as expected.
@@ -273,11 +275,9 @@ class MediaLibraryStateTest extends KernelTestBase {
    *   The query parameters to override.
    * @param bool $exception_expected
    *   Whether an AccessDeniedHttpException is expected or not.
-   *
-   * @covers ::fromRequest
-   * @dataProvider providerFromRequest
    */
-  public function testFromRequest(array $query_overrides, $exception_expected) {
+  #[DataProvider('providerFromRequest')]
+  public function testFromRequest(array $query_overrides, $exception_expected): void {
     // Override the query parameters and verify an exception is thrown when
     // required state parameters are changed.
     $query = MediaLibraryState::create('test', ['file', 'image'], 'image', 2)->all();
@@ -292,9 +292,9 @@ class MediaLibraryStateTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::fromRequest
+   * Tests from request query less.
    */
-  public function testFromRequestQueryLess() {
+  public function testFromRequestQueryLess(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('The opener ID parameter is required and must be a string.');
     $state = MediaLibraryState::fromRequest(new Request());
@@ -307,7 +307,7 @@ class MediaLibraryStateTest extends KernelTestBase {
    * @return array
    *   The data sets to test.
    */
-  public function providerFromRequest() {
+  public static function providerFromRequest() {
     $test_data = [];
 
     // Assert no exception is thrown when we use valid state parameters.
@@ -363,9 +363,11 @@ class MediaLibraryStateTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::getOpenerParameters
+   * Tests opener parameters.
+   *
+   * @legacy-covers ::getOpenerParameters
    */
-  public function testOpenerParameters() {
+  public function testOpenerParameters(): void {
     $state = MediaLibraryState::create('test', ['file'], 'file', -1, [
       'foo' => 'baz',
     ]);
@@ -375,7 +377,7 @@ class MediaLibraryStateTest extends KernelTestBase {
   /**
    * Tests that hash is unaffected by allowed media type order.
    */
-  public function testHashUnaffectedByMediaTypeOrder() {
+  public function testHashUnaffectedByMediaTypeOrder(): void {
     $state1 = MediaLibraryState::create('test', ['file', 'image'], 'image', 2);
     $state2 = MediaLibraryState::create('test', ['image', 'file'], 'image', 2);
     $this->assertSame($state1->getHash(), $state2->getHash());
@@ -384,7 +386,7 @@ class MediaLibraryStateTest extends KernelTestBase {
   /**
    * Tests that hash is unaffected by opener parameter order.
    */
-  public function testHashUnaffectedByOpenerParamOrder() {
+  public function testHashUnaffectedByOpenerParamOrder(): void {
     $state1 = MediaLibraryState::create('test', ['file'], 'file', -1, [
       'foo' => 'baz',
       'baz' => 'foo',

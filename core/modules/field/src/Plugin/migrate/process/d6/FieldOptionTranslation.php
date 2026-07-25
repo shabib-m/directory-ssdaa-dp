@@ -2,6 +2,8 @@
 
 namespace Drupal\field\Plugin\migrate\process\d6;
 
+use Drupal\Component\Utility\FilterArray;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
@@ -9,12 +11,21 @@ use Drupal\migrate\Row;
 /**
  * Determines the allowed values translation for select lists.
  *
- * @MigrateProcessPlugin(
- *   id = "d6_field_option_translation",
- *   handle_multiples = TRUE
- * )
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3533560
  */
+#[MigrateProcess(
+  id: "d6_field_option_translation",
+  handle_multiples: TRUE,
+)]
 class FieldOptionTranslation extends ProcessPluginBase {
+
+  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560', E_USER_DEPRECATED);
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
   /**
    * {@inheritdoc}
@@ -29,7 +40,7 @@ class FieldOptionTranslation extends ProcessPluginBase {
     if (isset($global_settings['allowed_values'])) {
       $list = explode("\n", $global_settings['allowed_values']);
       $list = array_map('trim', $list);
-      $list = array_filter($list, 'strlen');
+      $list = FilterArray::removeEmptyStrings($list);
       switch ($field_type) {
         case 'list_string':
         case 'list_integer':

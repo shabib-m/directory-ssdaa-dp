@@ -1,0 +1,11 @@
+name: 'Test hook_module_implements_alter'
+type: module
+description: 'Support module for module system testing.'
+package: Testing
+# version: VERSION
+core_version_requirement: '*'
+
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
+project: 'drupal'
+datestamp: 1784141321

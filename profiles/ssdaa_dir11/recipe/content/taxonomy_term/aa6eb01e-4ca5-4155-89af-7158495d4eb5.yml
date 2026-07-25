@@ -1,0 +1,28 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: aa6eb01e-4ca5-4155-89af-7158495d4eb5
+  bundle: main
+  default_langcode: ar
+  depends:
+    0f280d4e-497e-4364-9860-ede472ea7fa3: taxonomy_term
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'منتديات إسلاميه'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      entity: 0f280d4e-497e-4364-9860-ede472ea7fa3
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

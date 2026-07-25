@@ -2,34 +2,37 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\DataReferenceDefinition;
 use Drupal\Core\TypedData\OptionsProviderInterface;
 
 /**
  * Defines the 'language' entity field item.
- *
- * @FieldType(
- *   id = "language",
- *   label = @Translation("Language"),
- *   description = @Translation("An entity field referencing a language."),
- *   default_widget = "language_select",
- *   default_formatter = "language",
- *   no_ui = TRUE,
- *   constraints = {
- *     "ComplexData" = {
- *       "value" = {
- *         "Length" = {"max" = 12}
- *       }
- *     }
- *   }
- * )
  */
+#[FieldType(
+  id: "language",
+  label: new TranslatableMarkup("Language"),
+  description: new TranslatableMarkup("An entity field referencing a language."),
+  default_widget: "language_select",
+  default_formatter: "language",
+  no_ui: TRUE,
+  constraints: [
+    "ComplexData" => [
+      "properties" => [
+        "value" => [
+          "Length" => ["max" => 12],
+        ],
+      ],
+    ],
+  ]
+)]
 class LanguageItem extends FieldItemBase implements OptionsProviderInterface {
 
   /**
@@ -111,7 +114,8 @@ class LanguageItem extends FieldItemBase implements OptionsProviderInterface {
    */
   public static function generateSampleValue(FieldDefinitionInterface $field_definition) {
     // Defer to the callback in the item definition as it can be overridden.
-    $constraint = $field_definition->getItemDefinition()->getConstraint('ComplexData');
+    $complex_data_constraint = $field_definition->getItemDefinition()->getConstraint('ComplexData') ?: [];
+    $constraint = $complex_data_constraint['properties'] ?? $complex_data_constraint;
     if (isset($constraint['value']['AllowedValues']['callback'])) {
       $languages = call_user_func($constraint['value']['AllowedValues']['callback']);
     }
@@ -125,14 +129,14 @@ class LanguageItem extends FieldItemBase implements OptionsProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPossibleValues(AccountInterface $account = NULL) {
+  public function getPossibleValues(?AccountInterface $account = NULL) {
     return array_keys(\Drupal::languageManager()->getLanguages(LanguageInterface::STATE_ALL));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getPossibleOptions(AccountInterface $account = NULL) {
+  public function getPossibleOptions(?AccountInterface $account = NULL) {
     $languages = \Drupal::languageManager()->getLanguages(LanguageInterface::STATE_ALL);
     return array_map(function (LanguageInterface $language) {
       return $language->getName();
@@ -142,14 +146,14 @@ class LanguageItem extends FieldItemBase implements OptionsProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getSettableValues(AccountInterface $account = NULL) {
+  public function getSettableValues(?AccountInterface $account = NULL) {
     return $this->getPossibleValues($account);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getSettableOptions(AccountInterface $account = NULL) {
+  public function getSettableOptions(?AccountInterface $account = NULL) {
     return $this->getPossibleValues($account);
   }
 

@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel;
 
 use Drupal\Core\Field\BaseFieldDefinition;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the field formatter plugin manager.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class FormatterPluginManagerTest extends FieldKernelTestBase {
 
   /**
@@ -16,7 +20,7 @@ class FormatterPluginManagerTest extends FieldKernelTestBase {
    *
    * @see \Drupal\field\Tests\WidgetPluginManagerTest::testNotApplicableFallback()
    */
-  public function testNotApplicableFallback() {
+  public function testNotApplicableFallback(): void {
     /** @var \Drupal\Core\Field\FormatterPluginManager $formatter_plugin_manager */
     $formatter_plugin_manager = \Drupal::service('plugin.manager.field.formatter');
 

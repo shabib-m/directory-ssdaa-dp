@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Component\Utility\Crypt;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests installation when a config_sync_directory is set up but does not exist.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerConfigDirectorySetNoDirectoryErrorTest extends InstallerTestBase {
 
   /**
@@ -26,7 +30,7 @@ class InstallerConfigDirectorySetNoDirectoryErrorTest extends InstallerTestBase 
   /**
    * {@inheritdoc}
    */
-  protected function prepareEnvironment() {
+  protected function prepareEnvironment(): void {
     parent::prepareEnvironment();
     $this->configDirectory = $this->publicFilesDirectory . '/config_' . Crypt::randomBytesBase64();
     $this->settings['settings']['config_sync_directory'] = (object) [
@@ -42,7 +46,7 @@ class InstallerConfigDirectorySetNoDirectoryErrorTest extends InstallerTestBase 
   /**
    * Installer step: Configure settings.
    */
-  protected function setUpSettings() {
+  protected function setUpSettings(): void {
     // This step should not appear as we had a failure prior to the settings
     // screen.
   }
@@ -50,7 +54,7 @@ class InstallerConfigDirectorySetNoDirectoryErrorTest extends InstallerTestBase 
   /**
    * {@inheritdoc}
    */
-  protected function setUpRequirementsProblem() {
+  protected function setUpRequirementsProblem(): void {
     // The parent method asserts that there are no requirements errors, but
     // this test expects a requirements error in the test method below.
     // Therefore, we override this method to suppress the parent's assertions.
@@ -59,7 +63,7 @@ class InstallerConfigDirectorySetNoDirectoryErrorTest extends InstallerTestBase 
   /**
    * {@inheritdoc}
    */
-  protected function setUpSite() {
+  protected function setUpSite(): void {
     // This step should not appear as we had a failure prior to the settings
     // screen.
   }
@@ -67,7 +71,7 @@ class InstallerConfigDirectorySetNoDirectoryErrorTest extends InstallerTestBase 
   /**
    * Verifies that installation failed.
    */
-  public function testError() {
+  public function testError(): void {
     $this->assertSession()->pageTextContains("An automated attempt to create the directory {$this->configDirectory}/sync failed, possibly due to a permissions problem.");
     $this->assertDirectoryDoesNotExist($this->configDirectory . '/sync');
   }

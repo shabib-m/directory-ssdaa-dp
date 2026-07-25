@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Unit;
 
 use Drupal\Core\KeyValueStore\KeyValueMemoryFactory;
-use Drupal\Core\Logger\LoggerChannelFactory;
-use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\media\OEmbed\ProviderException;
 use Drupal\media\OEmbed\ProviderRepository;
 use Drupal\Tests\UnitTestCase;
@@ -12,13 +13,15 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
-use Prophecy\Argument;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\media\OEmbed\ProviderRepository
- *
- * @group media
+ * Tests Drupal\media\OEmbed\ProviderRepository.
  */
+#[CoversClass(ProviderRepository::class)]
+#[Group('media')]
 class ProviderRepositoryTest extends UnitTestCase {
 
   /**
@@ -76,8 +79,8 @@ class ProviderRepositoryTest extends UnitTestCase {
     $time->getCurrentTime()->willReturn($this->currentTime);
 
     $this->logger = $this->prophesize('\Psr\Log\LoggerInterface');
-    $logger_factory = new LoggerChannelFactory();
-    $logger_factory->addLogger($this->logger->reveal());
+    $logger_factory = $this->prophesize(LoggerChannelFactoryInterface::class);
+    $logger_factory->get('media')->willReturn($this->logger);
 
     $this->responses = new MockHandler();
     $client = new Client([
@@ -88,7 +91,7 @@ class ProviderRepositoryTest extends UnitTestCase {
       $config_factory,
       $time->reveal(),
       $key_value_factory,
-      $logger_factory
+      $logger_factory->reveal()
     );
   }
 
@@ -133,9 +136,8 @@ END;
    * @param int $expiration_offset
    *   An offset to add to the current time to determine when the primed data,
    *   if any, expires.
-   *
-   * @dataProvider providerInvalidResponse
    */
+  #[DataProvider('providerInvalidResponse')]
   public function testInvalidResponse(int $expiration_offset): void {
     $provider = $this->prophesize('\Drupal\media\OEmbed\Provider')
       ->reveal();
@@ -164,7 +166,7 @@ END;
    * @return array[]
    *   Sets of arguments to pass to the test method.
    */
-  public function providerInvalidResponse(): array {
+  public static function providerInvalidResponse(): array {
     return [
       'expired' => [
         -86400,
@@ -231,10 +233,8 @@ END;
     $this->responses->append($response);
 
     // The corrupt provider should cause a warning to be logged.
-    $this->logger->log(
-      RfcLogLevel::WARNING,
+    $this->logger->warning(
       "Provider Uncle Rico's football videos does not define a valid external URL.",
-      Argument::type('array')
     )->shouldBeCalled();
 
     $youtube = $this->repository->get('YouTube');

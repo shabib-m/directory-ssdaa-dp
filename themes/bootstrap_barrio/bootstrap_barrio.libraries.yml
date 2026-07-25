@@ -4,7 +4,7 @@ global-styling:
     js/barrio.js: {}
   css:
     component:
-      css/components/variables: { weight: -20 }
+      css/components/variables.css: { weight: -20 }
       css/components/affix.css: {}
       css/components/book.css: {}
       css/components/contextual.css: {}
@@ -17,7 +17,7 @@ global-styling:
       css/components/image-button.css: {}
       css/components/item-list.css: {}
       css/components/list-group.css: {}
-      css/components/media.css: {}      
+      css/components/media.css: {}
       css/components/page.css: {}
       css/components/search-form.css: {}
       css/components/shortcut.css: {}
@@ -151,6 +151,10 @@ maintenance_page:
     - system/maintenance
     - bootstrap_barrio/global-styling
 
+messages:
+  js:
+    js/messages.js: {}
+
 navigation:
   version: VERSION
   css:
@@ -176,6 +180,11 @@ sidebar_collapse:
   css:
     component:
       css/components/sidebar-collapse.css: {}
+
+tabledrag:
+  version: VERSION
+  js:
+    js/tabledrag.js: {}
 
 tabs:
   version: VERSION

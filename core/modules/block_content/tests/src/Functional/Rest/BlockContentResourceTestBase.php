@@ -1,21 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Functional\Rest;
 
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Core\Cache\Cache;
+use Drupal\Tests\block_content\Traits\BlockContentCreationTrait;
 use Drupal\Tests\rest\Functional\EntityResource\EntityResourceTestBase;
 
 /**
- * ResourceTestBase for BlockContent entity.
+ * Resource test base for BlockContent entity.
  */
 abstract class BlockContentResourceTestBase extends EntityResourceTestBase {
+
+  use BlockContentCreationTrait;
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['block_content'];
+  protected static $modules = ['block_content', 'content_translation'];
 
   /**
    * {@inheritdoc}
@@ -45,11 +50,11 @@ abstract class BlockContentResourceTestBase extends EntityResourceTestBase {
         break;
 
       case 'POST':
-        $this->grantPermissionsToTestedRole(['access block library', 'create basic block content']);
+        $this->grantPermissionsToTestedRole(['create basic block content']);
         break;
 
       case 'DELETE':
-        $this->grantPermissionsToTestedRole(['access block library', 'delete any basic block content']);
+        $this->grantPermissionsToTestedRole(['delete any basic block content']);
         break;
 
       default:
@@ -63,13 +68,11 @@ abstract class BlockContentResourceTestBase extends EntityResourceTestBase {
    */
   protected function createEntity() {
     if (!BlockContentType::load('basic')) {
-      $block_content_type = BlockContentType::create([
+      $this->createBlockContentType([
         'id' => 'basic',
         'label' => 'basic',
         'revision' => TRUE,
-      ]);
-      $block_content_type->save();
-      block_content_add_body_field($block_content_type->id());
+      ], TRUE);
     }
 
     // Create a "Llama" content block.
@@ -160,7 +163,6 @@ abstract class BlockContentResourceTestBase extends EntityResourceTestBase {
         [
           'value' => 'The name "llama" was adopted by European settlers from native Peruvians.',
           'format' => 'plain_text',
-          'summary' => NULL,
           'processed' => "<p>The name &quot;llama&quot; was adopted by European settlers from native Peruvians.</p>\n",
         ],
       ],
@@ -184,7 +186,7 @@ abstract class BlockContentResourceTestBase extends EntityResourceTestBase {
       ],
       'info' => [
         [
-          'value' => 'Dramallama',
+          'value' => 'Drama llama',
         ],
       ],
     ];
@@ -196,17 +198,17 @@ abstract class BlockContentResourceTestBase extends EntityResourceTestBase {
   protected function getExpectedUnauthorizedAccessMessage($method) {
     if (!$this->resourceConfigStorage->load(static::$resourceConfigId)) {
       return match ($method) {
-        'GET', 'PATCH' => "The following permissions are required: 'access block library' AND 'edit any basic block content'.",
-        'POST' => "The following permissions are required: 'create basic block content' AND 'access block library'.",
-        'DELETE' => "The following permissions are required: 'access block library' AND 'delete any basic block content'.",
+        'GET', 'PATCH' => "The 'edit any basic block content' permission is required.",
+        'POST' => "The following permissions are required: 'create basic block content' OR 'administer block content'.",
+        'DELETE' => "The 'delete any basic block content' permission is required.",
         default => parent::getExpectedUnauthorizedAccessMessage($method),
       };
     }
     return match ($method) {
-      'GET' => "The 'access block library' permission is required.",
-      'PATCH' => "The following permissions are required: 'access block library' AND 'edit any basic block content'.",
-      'POST' => "The following permissions are required: 'create basic block content' AND 'access block library'.",
-      'DELETE' => "The following permissions are required: 'access block library' AND 'delete any basic block content'.",
+      'GET' => "The following permissions are required: 'access block library' OR 'view unpublished block content'.",
+      'PATCH' => "The 'edit any basic block content' permission is required.",
+      'POST' => "The following permissions are required: 'create basic block content' OR 'administer block content'.",
+      'DELETE' => "The 'delete any basic block content' permission is required.",
       default => parent::getExpectedUnauthorizedAccessMessage($method),
     };
   }

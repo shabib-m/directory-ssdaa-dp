@@ -1,29 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\options\Kernel\Views;
 
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests file views data.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileViewsDataTest extends ViewsKernelTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'file',
-    'views',
     'entity_test',
-    'user',
     'field',
   ];
 
@@ -42,7 +42,7 @@ class FileViewsDataTest extends ViewsKernelTestBase {
    * @see file_field_views_data()
    * @see file_field_views_data_views_data_alter()
    */
-  public function testRelationshipViewsData() {
+  public function testRelationshipViewsData(): void {
     // Create file field to entity_test.
     FieldStorageConfig::create([
       'entity_type' => 'entity_test',

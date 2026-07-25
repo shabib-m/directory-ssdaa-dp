@@ -1,16 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Plugin\migrate\source\d6;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\taxonomy\Plugin\migrate\source\d6\VocabularyPerType;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests D6 vocabulary per type source plugin.
- *
- * @covers \Drupal\taxonomy\Plugin\migrate\source\d6\VocabularyPerType
- * @group taxonomy
  */
+#[CoversClass(VocabularyPerType::class)]
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class VocabularyPerTypeTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -21,7 +27,7 @@ class VocabularyPerTypeTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.

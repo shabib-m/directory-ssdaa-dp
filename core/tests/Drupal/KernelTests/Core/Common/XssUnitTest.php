@@ -1,9 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Common;
 
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests XSS filtering.
@@ -11,15 +16,15 @@ use Drupal\KernelTests\KernelTestBase;
  * @see \Drupal\Component\Utility\Xss::filter()
  * @see \Drupal\Component\Utility\UrlHelper::filterBadProtocol
  * @see \Drupal\Component\Utility\UrlHelper::stripDangerousProtocols
- *
- * @group Common
  */
+#[Group('Common')]
+#[RunTestsInSeparateProcesses]
 class XssUnitTest extends KernelTestBase {
 
+  use StringTranslationTrait;
+
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['filter', 'system'];
 
@@ -34,19 +39,19 @@ class XssUnitTest extends KernelTestBase {
   /**
    * Tests t() functionality.
    */
-  public function testT() {
-    $text = t('Simple text');
+  public function testT(): void {
+    $text = $this->t('Simple text');
     $this->assertSame('Simple text', (string) $text, 't leaves simple text alone.');
-    $text = t('Escaped text: @value', ['@value' => '<script>']);
+    $text = $this->t('Escaped text: @value', ['@value' => '<script>']);
     $this->assertSame('Escaped text: &lt;script&gt;', (string) $text, 't replaces and escapes string.');
-    $text = t('Placeholder text: %value', ['%value' => '<script>']);
+    $text = $this->t('Placeholder text: %value', ['%value' => '<script>']);
     $this->assertSame('Placeholder text: <em class="placeholder">&lt;script&gt;</em>', (string) $text, 't replaces, escapes and themes string.');
   }
 
   /**
    * Checks that harmful protocols are stripped.
    */
-  public function testBadProtocolStripping() {
+  public function testBadProtocolStripping(): void {
     // Ensure that check_url() strips out harmful protocols, and encodes for
     // HTML.
     // Ensure \Drupal\Component\Utility\UrlHelper::stripDangerousProtocols() can

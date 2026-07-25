@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Unit;
 
 use Drupal\Core\Routing\RouteBuildEvent;
@@ -8,15 +10,17 @@ use Drupal\layout_builder\SectionStorage\SectionStorageDefinition;
 use Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
- * @coversDefaultClass \Drupal\layout_builder\Routing\LayoutBuilderRoutes
- *
- * @group layout_builder
+ * Tests Drupal\layout_builder\Routing\LayoutBuilderRoutes.
  */
+#[CoversClass(LayoutBuilderRoutes::class)]
+#[Group('layout_builder')]
 class LayoutBuilderRoutesTest extends UnitTestCase {
 
   /**
@@ -44,9 +48,9 @@ class LayoutBuilderRoutesTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::onAlterRoutes
+   * Tests on alter routes.
    */
-  public function testOnAlterRoutes() {
+  public function testOnAlterRoutes(): void {
     $expected = [
       'test_route1' => new Route('/test/path1'),
       'test_route_shared' => new Route('/test/path/shared2'),

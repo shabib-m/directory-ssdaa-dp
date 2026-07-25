@@ -2,60 +2,65 @@
 
 namespace Drupal\contact\Entity;
 
-use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
+use Drupal\contact\ContactFormAccessControlHandler;
+use Drupal\contact\ContactFormEditForm;
 use Drupal\contact\ContactFormInterface;
+use Drupal\contact\ContactFormListBuilder;
+use Drupal\Core\Config\Action\Attribute\ActionMethod;
+use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
+use Drupal\Core\Entity\Attribute\ConfigEntityType;
+use Drupal\Core\Entity\EntityDeleteForm;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\user\Entity\EntityPermissionsRouteProvider;
 
 /**
  * Defines the contact form entity.
- *
- * @ConfigEntityType(
- *   id = "contact_form",
- *   label = @Translation("Contact form"),
- *   label_collection = @Translation("Contact forms"),
- *   label_singular = @Translation("contact form"),
- *   label_plural = @Translation("contact forms"),
- *   label_count = @PluralTranslation(
- *     singular = "@count contact form",
- *     plural = "@count contact forms",
- *   ),
- *   handlers = {
- *     "access" = "Drupal\contact\ContactFormAccessControlHandler",
- *     "list_builder" = "Drupal\contact\ContactFormListBuilder",
- *     "form" = {
- *       "add" = "Drupal\contact\ContactFormEditForm",
- *       "edit" = "Drupal\contact\ContactFormEditForm",
- *       "delete" = "Drupal\Core\Entity\EntityDeleteForm"
- *     },
- *     "route_provider" = {
- *       "permissions" = "Drupal\user\Entity\EntityPermissionsRouteProviderWithCheck",
- *     }
- *   },
- *   config_prefix = "form",
- *   admin_permission = "administer contact forms",
- *   bundle_of = "contact_message",
- *   entity_keys = {
- *     "id" = "id",
- *     "label" = "label"
- *   },
- *   links = {
- *     "delete-form" = "/admin/structure/contact/manage/{contact_form}/delete",
- *     "edit-form" = "/admin/structure/contact/manage/{contact_form}",
- *     "entity-permissions-form" = "/admin/structure/contact/manage/{contact_form}/permissions",
- *     "collection" = "/admin/structure/contact",
- *     "canonical" = "/contact/{contact_form}",
- *   },
- *   config_export = {
- *     "id",
- *     "label",
- *     "recipients",
- *     "reply",
- *     "weight",
- *     "message",
- *     "redirect",
- *   }
- * )
  */
+#[ConfigEntityType(
+  id: 'contact_form',
+  label: new TranslatableMarkup('Contact form'),
+  label_collection: new TranslatableMarkup('Contact forms'),
+  label_singular: new TranslatableMarkup('contact form'),
+  label_plural: new TranslatableMarkup('contact forms'),
+  config_prefix: 'form',
+  entity_keys: [
+    'id' => 'id',
+    'label' => 'label',
+  ],
+  handlers: [
+    'access' => ContactFormAccessControlHandler::class,
+    'list_builder' => ContactFormListBuilder::class,
+    'form' => [
+      'add' => ContactFormEditForm::class,
+      'edit' => ContactFormEditForm::class,
+      'delete' => EntityDeleteForm::class,
+    ],
+    'route_provider' => ['permissions' => EntityPermissionsRouteProvider::class],
+  ],
+  links: [
+    'delete-form' => '/admin/structure/contact/manage/{contact_form}/delete',
+    'edit-form' => '/admin/structure/contact/manage/{contact_form}',
+    'entity-permissions-form' => '/admin/structure/contact/manage/{contact_form}/permissions',
+    'collection' => '/admin/structure/contact',
+    'canonical' => '/contact/{contact_form}',
+  ],
+  admin_permission: 'administer contact forms',
+  bundle_of: 'contact_message',
+  label_count: [
+    'singular' => '@count contact form',
+    'plural' => '@count contact forms',
+  ],
+  config_export: [
+    'id',
+    'label',
+    'recipients',
+    'reply',
+    'weight',
+    'message',
+    'redirect',
+  ],
+)]
 class ContactForm extends ConfigEntityBundleBase implements ContactFormInterface {
 
   /**
@@ -117,6 +122,7 @@ class ContactForm extends ConfigEntityBundleBase implements ContactFormInterface
   /**
    * {@inheritdoc}
    */
+  #[ActionMethod(adminLabel: new TranslatableMarkup('Set contact form message'), pluralize: FALSE)]
   public function setMessage($message) {
     $this->message = $message;
     return $this;
@@ -132,6 +138,7 @@ class ContactForm extends ConfigEntityBundleBase implements ContactFormInterface
   /**
    * {@inheritdoc}
    */
+  #[ActionMethod(adminLabel: new TranslatableMarkup('Set recipients'), pluralize: FALSE)]
   public function setRecipients($recipients) {
     $this->recipients = $recipients;
     return $this;
@@ -160,6 +167,7 @@ class ContactForm extends ConfigEntityBundleBase implements ContactFormInterface
   /**
    * {@inheritdoc}
    */
+  #[ActionMethod(adminLabel: new TranslatableMarkup('Set redirect path'), pluralize: FALSE)]
   public function setRedirectPath($redirect) {
     $this->redirect = $redirect;
     return $this;
@@ -175,6 +183,7 @@ class ContactForm extends ConfigEntityBundleBase implements ContactFormInterface
   /**
    * {@inheritdoc}
    */
+  #[ActionMethod(adminLabel: new TranslatableMarkup('Set auto-reply message'), pluralize: FALSE)]
   public function setReply($reply) {
     $this->reply = $reply;
     return $this;
@@ -190,6 +199,7 @@ class ContactForm extends ConfigEntityBundleBase implements ContactFormInterface
   /**
    * {@inheritdoc}
    */
+  #[ActionMethod(adminLabel: new TranslatableMarkup('Set weight'), pluralize: FALSE)]
   public function setWeight($weight) {
     $this->weight = $weight;
     return $this;

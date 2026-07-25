@@ -1,23 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Form;
 
 use Drupal\Core\Form\FormStateValuesTrait;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Form\FormStateValuesTrait
- *
- * @group Form
+ * Tests Drupal\Core\Form\FormStateValuesTrait.
  */
+#[CoversClass(FormStateValuesTrait::class)]
+#[Group('Form')]
 class FormStateValuesTraitTest extends UnitTestCase {
 
   /**
    * Tests that setting the value for an element adds to the values.
-   *
-   * @covers ::setValueForElement
    */
-  public function testSetValueForElement() {
+  public function testSetValueForElement(): void {
     $element = [
       '#parents' => [
         'foo',
@@ -37,11 +40,10 @@ class FormStateValuesTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getValue
-   *
-   * @dataProvider providerGetValue
+   * Tests get value.
    */
-  public function testGetValue($key, $expected, $default = NULL) {
+  #[DataProvider('providerGetValue')]
+  public function testGetValue($key, $expected, $default = NULL): void {
     $form_state = (new FormStateValuesTraitStub())->setValues([
       'foo' => 'one',
       'bar' => [
@@ -60,7 +62,7 @@ class FormStateValuesTraitTest extends UnitTestCase {
    *   - The expected value (mixed).
    *   - The default value (mixed).
    */
-  public function providerGetValue() {
+  public static function providerGetValue(): array {
     $data = [];
     $data[] = [
       'foo', 'one',
@@ -87,9 +89,9 @@ class FormStateValuesTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getValue
+   * Tests get value modify return.
    */
-  public function testGetValueModifyReturn() {
+  public function testGetValueModifyReturn(): void {
     $initial_values = $values = [
       'foo' => 'one',
       'bar' => [
@@ -107,11 +109,10 @@ class FormStateValuesTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setValue
-   *
-   * @dataProvider providerSetValue
+   * Tests set value.
    */
-  public function testSetValue($key, $value, $expected) {
+  #[DataProvider('providerSetValue')]
+  public function testSetValue($key, $value, $expected): void {
     $form_state = (new FormStateValuesTraitStub())->setValues([
       'bar' => 'wrong',
     ]);
@@ -128,7 +129,7 @@ class FormStateValuesTraitTest extends UnitTestCase {
    *   - The new value to set (mixed).
    *   - The expected form state values after setting the new value (mixed[]).
    */
-  public function providerSetValue() {
+  public static function providerSetValue(): array {
     $data = [];
     $data[] = [
       'foo', 'one', ['bar' => 'wrong', 'foo' => 'one'],
@@ -143,11 +144,10 @@ class FormStateValuesTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::hasValue
-   *
-   * @dataProvider providerHasValue
+   * Tests has value.
    */
-  public function testHasValue($key, $expected) {
+  #[DataProvider('providerHasValue')]
+  public function testHasValue($key, $expected): void {
     $form_state = (new FormStateValuesTraitStub())->setValues([
       'foo' => 'one',
       'bar' => [
@@ -168,7 +168,7 @@ class FormStateValuesTraitTest extends UnitTestCase {
    *   - The key to check for in the form state (string)
    *   - Whether the form state has an item with that key (bool).
    */
-  public function providerHasValue() {
+  public static function providerHasValue(): array {
     $data = [];
     $data[] = [
       'foo', TRUE,
@@ -192,11 +192,10 @@ class FormStateValuesTraitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::isValueEmpty
-   *
-   * @dataProvider providerIsValueEmpty
+   * Tests is value empty.
    */
-  public function testIsValueEmpty($key, $expected) {
+  #[DataProvider('providerIsValueEmpty')]
+  public function testIsValueEmpty($key, $expected): void {
     $form_state = (new FormStateValuesTraitStub())->setValues([
       'foo' => 'one',
       'bar' => [
@@ -217,7 +216,7 @@ class FormStateValuesTraitTest extends UnitTestCase {
    *   - The key to check for in the form state (string)
    *   - Whether the value is empty or not (bool).
    */
-  public function providerIsValueEmpty() {
+  public static function providerIsValueEmpty(): array {
     $data = [];
     $data[] = [
       'foo', FALSE,
@@ -242,6 +241,9 @@ class FormStateValuesTraitTest extends UnitTestCase {
 
 }
 
+/**
+ * Stub class with trait for testing.
+ */
 class FormStateValuesTraitStub {
 
   use FormStateValuesTrait;

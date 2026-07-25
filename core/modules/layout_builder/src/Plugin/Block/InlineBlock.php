@@ -2,10 +2,11 @@
 
 namespace Drupal\layout_builder\Plugin\Block;
 
-use Drupal\block_content\Access\RefinableDependentAccessInterface;
-use Drupal\block_content\Access\RefinableDependentAccessTrait;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\RefinableDependentAccessInterface;
+use Drupal\Core\Access\RefinableDependentAccessTrait;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
@@ -14,21 +15,21 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\layout_builder\Plugin\Derivative\InlineBlockDeriver;
 
 /**
  * Defines an inline block plugin type.
  *
- * @Block(
- *  id = "inline_block",
- *  admin_label = @Translation("Inline block"),
- *  category = @Translation("Inline blocks"),
- *  deriver = "Drupal\layout_builder\Plugin\Derivative\InlineBlockDeriver",
- * )
- *
  * @internal
  *   Plugin classes are internal.
  */
+#[Block(
+   id: 'inline_block',
+   admin_label: new TranslatableMarkup('Inline block'),
+   category: new TranslatableMarkup('Inline blocks'),
+   deriver: InlineBlockDeriver::class,
+)]
 class InlineBlock extends BlockBase implements ContainerFactoryPluginInterface, RefinableDependentAccessInterface {
 
   use RefinableDependentAccessTrait;
@@ -98,23 +99,10 @@ class InlineBlock extends BlockBase implements ContainerFactoryPluginInterface, 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('entity_display.repository'),
-      $container->get('current_user')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function defaultConfiguration() {
     return [
       'view_mode' => 'full',
+      'block_id' => NULL,
       'block_revision_id' => NULL,
       'block_serialized' => NULL,
     ];
@@ -289,6 +277,7 @@ class InlineBlock extends BlockBase implements ContainerFactoryPluginInterface, 
         $block->setNewRevision();
       }
       $block->save();
+      $this->configuration['block_id'] = $block->id();
       $this->configuration['block_revision_id'] = $block->getRevisionId();
       $this->configuration['block_serialized'] = NULL;
     }

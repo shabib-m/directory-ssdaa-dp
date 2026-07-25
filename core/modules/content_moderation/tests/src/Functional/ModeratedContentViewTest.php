@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests moderated content administration page functionality.
- *
- * @group content_moderation
  */
+#[Group('content_moderation')]
+#[RunTestsInSeparateProcesses]
 class ModeratedContentViewTest extends BrowserTestBase {
 
   use ContentModerationTestTrait;
@@ -65,7 +69,7 @@ class ModeratedContentViewTest extends BrowserTestBase {
   /**
    * Tests the moderated content page.
    */
-  public function testModeratedContentPage() {
+  public function testModeratedContentPage(): void {
     $assert_session = $this->assertSession();
     $this->drupalLogin($this->adminUser);
 
@@ -75,31 +79,63 @@ class ModeratedContentViewTest extends BrowserTestBase {
     // table style configuration with a default sort on the 'changed' field
     // descending.
     $time = \Drupal::time()->getRequestTime();
-    $excluded_nodes['published_page'] = $this->drupalCreateNode(['type' => 'page', 'changed' => $time--, 'moderation_state' => 'published']);
-    $excluded_nodes['published_article'] = $this->drupalCreateNode(['type' => 'article', 'changed' => $time--, 'moderation_state' => 'published']);
+    $excluded_nodes['published_page'] = $this->drupalCreateNode([
+      'type' => 'page',
+      'changed' => $time--,
+      'moderation_state' => 'published',
+    ]);
+    $excluded_nodes['published_article'] = $this->drupalCreateNode([
+      'type' => 'article',
+      'changed' => $time--,
+      'moderation_state' => 'published',
+    ]);
 
-    $excluded_nodes['unmoderated_type'] = $this->drupalCreateNode(['type' => 'unmoderated_type', 'changed' => $time--]);
+    $excluded_nodes['unmoderated_type'] = $this->drupalCreateNode([
+      'type' => 'unmoderated_type',
+      'changed' => $time--,
+    ]);
     $excluded_nodes['unmoderated_type']->setNewRevision(TRUE);
     $excluded_nodes['unmoderated_type']->isDefaultRevision(FALSE);
     $excluded_nodes['unmoderated_type']->changed->value = $time--;
     $excluded_nodes['unmoderated_type']->save();
 
-    $nodes['published_then_draft_article'] = $this->drupalCreateNode(['type' => 'article', 'changed' => $time--, 'moderation_state' => 'published', 'title' => 'first article - published']);
+    $nodes['published_then_draft_article'] = $this->drupalCreateNode([
+      'type' => 'article',
+      'changed' => $time--,
+      'moderation_state' => 'published',
+      'title' => 'first article - published',
+    ]);
     $nodes['published_then_draft_article']->setNewRevision(TRUE);
     $nodes['published_then_draft_article']->setTitle('first article - draft');
     $nodes['published_then_draft_article']->moderation_state->value = 'draft';
     $nodes['published_then_draft_article']->changed->value = $time--;
     $nodes['published_then_draft_article']->save();
 
-    $nodes['published_then_archived_article'] = $this->drupalCreateNode(['type' => 'article', 'changed' => $time--, 'moderation_state' => 'published']);
+    $nodes['published_then_archived_article'] = $this->drupalCreateNode([
+      'type' => 'article',
+      'changed' => $time--,
+      'moderation_state' => 'published',
+    ]);
     $nodes['published_then_archived_article']->setNewRevision(TRUE);
     $nodes['published_then_archived_article']->moderation_state->value = 'archived';
     $nodes['published_then_archived_article']->changed->value = $time--;
     $nodes['published_then_archived_article']->save();
 
-    $nodes['draft_article'] = $this->drupalCreateNode(['type' => 'article', 'changed' => $time--, 'moderation_state' => 'draft']);
-    $nodes['draft_page_1'] = $this->drupalCreateNode(['type' => 'page', 'changed' => $time--, 'moderation_state' => 'draft']);
-    $nodes['draft_page_2'] = $this->drupalCreateNode(['type' => 'page', 'changed' => $time, 'moderation_state' => 'draft']);
+    $nodes['draft_article'] = $this->drupalCreateNode([
+      'type' => 'article',
+      'changed' => $time--,
+      'moderation_state' => 'draft',
+    ]);
+    $nodes['draft_page_1'] = $this->drupalCreateNode([
+      'type' => 'page',
+      'changed' => $time--,
+      'moderation_state' => 'draft',
+    ]);
+    $nodes['draft_page_2'] = $this->drupalCreateNode([
+      'type' => 'page',
+      'changed' => $time,
+      'moderation_state' => 'draft',
+    ]);
 
     // Verify view, edit, and delete links for any content.
     $this->drupalGet('admin/content/moderated');
@@ -149,7 +185,7 @@ class ModeratedContentViewTest extends BrowserTestBase {
   /**
    * Tests the moderated content page with multilingual content.
    */
-  public function testModeratedContentPageMultilingual() {
+  public function testModeratedContentPageMultilingual(): void {
     ConfigurableLanguage::createFromLangcode('fr')->save();
 
     $node = $this->drupalCreateNode([

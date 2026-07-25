@@ -1,15 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore montag
 /**
  * Tests translation files for multiple languages get imported during install.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerTranslationMultipleLanguageNonInteractiveTest extends BrowserTestBase {
+
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -26,12 +34,12 @@ class InstallerTranslationMultipleLanguageNonInteractiveTest extends BrowserTest
   /**
    * {@inheritdoc}
    */
-  protected function prepareEnvironment() {
+  protected function prepareEnvironment(): void {
     parent::prepareEnvironment();
     // Place custom local translations in the translations directory.
     mkdir(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations', 0777, TRUE);
-    file_put_contents(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations/drupal-8.0.0.de.po', $this->getPo('de'));
-    file_put_contents(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations/drupal-8.0.0.es.po', $this->getPo('es'));
+    file_put_contents(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations/drupal-' . \Drupal::VERSION . '.de.po', $this->getPo('de'));
+    file_put_contents(DRUPAL_ROOT . '/' . $this->siteDirectory . '/files/translations/drupal-' . \Drupal::VERSION . '.es.po', $this->getPo('es'));
   }
 
   /**
@@ -43,8 +51,8 @@ class InstallerTranslationMultipleLanguageNonInteractiveTest extends BrowserTest
    * @return string
    *   Contents for the test .po file.
    */
-  protected function getPo($langcode) {
-    return <<<ENDPO
+  protected function getPo($langcode): string {
+    return <<<PO
 msgid ""
 msgstr ""
 
@@ -60,7 +68,7 @@ msgstr "Language $langcode"
 #: Testing site name configuration during the installer.
 msgid "Drupal"
 msgstr "Drupal"
-ENDPO;
+PO;
   }
 
   /**
@@ -75,7 +83,7 @@ ENDPO;
   /**
    * Tests that translations ended up at the expected places.
    */
-  public function testTranslationsLoaded() {
+  public function testTranslationsLoaded(): void {
     $this->drupalLogin($this->createUser([], NULL, TRUE));
     // Ensure the title is correct.
     $this->assertEquals('SITE_NAME_en', \Drupal::config('system.site')->get('name'));
@@ -120,13 +128,13 @@ ENDPO;
     $this->assertEquals('Anonymous es', $override_es->get('anonymous'));
 
     // Test translation from locale_test module.
-    $this->assertEquals('Montag', t('Monday', [], ['langcode' => 'de']));
+    $this->assertEquals('Montag', $this->t('Monday', [], ['langcode' => 'de']));
   }
 
   /**
    * Helper function to verify that the expected strings are translated.
    */
-  protected function verifyImportedStringsTranslated() {
+  protected function verifyImportedStringsTranslated(): void {
     $test_samples = ['Save and continue', 'Anonymous', 'Language'];
     $langcodes = ['de', 'es'];
 

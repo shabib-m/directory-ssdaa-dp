@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Unit\Menu;
 
 use Drupal\Tests\Core\Menu\LocalTaskIntegrationTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests content translation local tasks.
- *
- * @group content_translation
  */
+#[Group('content_translation')]
 class ContentTranslationLocalTasksTest extends LocalTaskIntegrationTestBase {
 
   /**
@@ -43,17 +46,16 @@ class ContentTranslationLocalTasksTest extends LocalTaskIntegrationTestBase {
 
   /**
    * Tests the block admin display local tasks.
-   *
-   * @dataProvider providerTestBlockAdminDisplay
    */
-  public function testBlockAdminDisplay($route, $expected) {
+  #[DataProvider('providerTestBlockAdminDisplay')]
+  public function testBlockAdminDisplay($route, $expected): void {
     $this->assertLocalTasks($route, $expected);
   }
 
   /**
    * Provides a list of routes to test.
    */
-  public function providerTestBlockAdminDisplay() {
+  public static function providerTestBlockAdminDisplay() {
     return [
       [
         'entity.node.canonical',

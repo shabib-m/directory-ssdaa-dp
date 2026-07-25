@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Migrate\d6;
 
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests field option translations migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateProfileFieldOptionTranslationTest extends MigrateDrupal6TestBase {
 
   /**
@@ -17,8 +21,6 @@ class MigrateProfileFieldOptionTranslationTest extends MigrateDrupal6TestBase {
   protected static $modules = [
     'config_translation',
     'language',
-    'locale',
-    'menu_ui',
   ];
 
   /**
@@ -37,7 +39,7 @@ class MigrateProfileFieldOptionTranslationTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal 6 field option translation.
    */
-  public function testFieldOptionTranslation() {
+  public function testFieldOptionTranslation(): void {
     $language_manager = $this->container->get('language_manager');
 
     /** @var \Drupal\language\Config\LanguageConfigOverride $config_translation */

@@ -1,0 +1,118 @@
+# أقسام الدول (معجم: country)
+- name: "المملكة العربية السعودية"
+  vid: "country"
+  parent: ""
+  field_sndwq_aldwl: "1" # حقل الـ Checkbox
+  field__lm_aldwlt: "SA.png" # اسم ملف الصورة فقط
+
+- name: "الامارات العربية المتحده"
+  vid: "country"
+  parent: ""
+  field_sndwq_aldwl: "1"
+  field__lm_aldwlt: "AE.png"
+
+- name: "البحرين"
+  vid: "country"
+  parent: ""
+  field_sndwq_aldwl: "1"
+  field__lm_aldwlt: "BH.png"
+
+- name: "الكويت"
+  vid: "country"
+  parent: ""
+  field_sndwq_aldwl: "1"
+  field__lm_aldwlt: "KW.png"
+
+- name: "عمان"
+  vid: "country"
+  parent: ""
+  field_sndwq_aldwl: "1"
+  field__lm_aldwlt: "OM.png"
+
+- name: "مصر"
+  vid: "country"
+  parent: ""
+  field_sndwq_aldwl: "1"
+  field__lm_aldwlt: "EG.png"
+
+- name: "مالي"
+  vid: "country"
+  parent: ""
+  field_sndwq_aldwl: "1"
+  field__lm_aldwlt: "ML.png"
+
+- name: "ليبيا"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "LY.png"
+
+- name: "لبنان"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "LB.png"
+
+- name: "قطر"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "QA.png"
+
+- name: "جيبوتي"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "DJ.png"
+
+- name: "سوريا"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "SY.png"
+
+- name: "تونس"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "TN.png"
+
+- name: "المغرب"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "MA.png"
+
+- name: "العراق"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "IQ.png"
+
+- name: "السودان"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "SD.png"
+
+- name: "الجزائر"
+  vid: "country"
+  parent: ""
+  field_sndwq_aldwl: "1"
+  field__lm_aldwlt: "DZ.png"
+
+- name: "الاردن"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "JO.png"
+
+- name: "اليمن"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "YE.png"
+
+- name: "فلسطين"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "PS.png"
+
+- name: "الصومال"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "SO.png"
+
+- name: "جزر القمر"
+  vid: "country"
+  parent: ""
+  field__lm_aldwlt: "KM.png"

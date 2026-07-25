@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Routing;
 
 use Drupal\Core\Routing\ContentTypeHeaderMatcher;
 use Drupal\Tests\UnitTestCase;
-use Symfony\Component\HttpFoundation\ParameterBag;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use Symfony\Component\HttpFoundation\HeaderBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\UnsupportedMediaTypeHttpException;
 
 /**
  * Confirm that the content types partial matcher is functioning properly.
- *
- * @group Routing
- *
- * @coversDefaultClass \Drupal\Core\Routing\ContentTypeHeaderMatcher
  */
+#[CoversClass(ContentTypeHeaderMatcher::class)]
+#[Group('Routing')]
 class ContentTypeHeaderMatcherTest extends UnitTestCase {
 
   /**
@@ -43,10 +46,9 @@ class ContentTypeHeaderMatcherTest extends UnitTestCase {
 
   /**
    * Tests that routes are not filtered on safe requests.
-   *
-   * @dataProvider providerTestSafeRequestFilter
    */
-  public function testSafeRequestFilter($method) {
+  #[DataProvider('providerTestSafeRequestFilter')]
+  public function testSafeRequestFilter($method): void {
     $collection = $this->fixtures->sampleRouteCollection();
     $collection->addCollection($this->fixtures->contentRouteCollection());
 
@@ -55,7 +57,7 @@ class ContentTypeHeaderMatcherTest extends UnitTestCase {
     $this->assertCount(7, $routes, 'The correct number of routes was found.');
   }
 
-  public function providerTestSafeRequestFilter() {
+  public static function providerTestSafeRequestFilter(): array {
     return [
       ['GET'],
       ['HEAD'],
@@ -68,7 +70,7 @@ class ContentTypeHeaderMatcherTest extends UnitTestCase {
   /**
    * Tests that XML-restricted routes get filtered out on JSON requests.
    */
-  public function testJsonRequest() {
+  public function testJsonRequest(): void {
     $collection = $this->fixtures->sampleRouteCollection();
     $collection->addCollection($this->fixtures->contentRouteCollection());
 
@@ -87,7 +89,7 @@ class ContentTypeHeaderMatcherTest extends UnitTestCase {
   /**
    * Tests route filtering on POST form submission requests.
    */
-  public function testPostForm() {
+  public function testPostForm(): void {
     $collection = $this->fixtures->sampleRouteCollection();
     $collection->addCollection($this->fixtures->contentRouteCollection());
 
@@ -104,9 +106,9 @@ class ContentTypeHeaderMatcherTest extends UnitTestCase {
   /**
    * Confirms that the matcher throws an exception for no-route.
    *
-   * @covers ::filter
+   * @legacy-covers ::filter
    */
-  public function testNoRouteFound() {
+  public function testNoRouteFound(): void {
     $matcher = new ContentTypeHeaderMatcher();
 
     $routes = $this->fixtures->contentRouteCollection();
@@ -120,15 +122,15 @@ class ContentTypeHeaderMatcherTest extends UnitTestCase {
   /**
    * Confirms that the matcher throws an exception for missing request header.
    *
-   * @covers ::filter
+   * @legacy-covers ::filter
    */
-  public function testContentTypeRequestHeaderMissing() {
+  public function testContentTypeRequestHeaderMissing(): void {
     $matcher = new ContentTypeHeaderMatcher();
 
     $routes = $this->fixtures->contentRouteCollection();
     $request = Request::create('path/two', 'POST');
     // Delete all request headers that Request::create() sets by default.
-    $request->headers = new ParameterBag();
+    $request->headers = new HeaderBag();
     $this->expectException(UnsupportedMediaTypeHttpException::class);
     $this->expectExceptionMessage('No "Content-Type" request header specified');
     $matcher->filter($routes, $request);

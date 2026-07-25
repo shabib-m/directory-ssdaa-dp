@@ -2,22 +2,26 @@
 
 namespace Drupal\comment\Plugin\views\field;
 
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\field\Date;
 
 /**
  * Field handler to display the newer of last comment / node updated.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsField("comment_ces_last_updated")
  */
+#[ViewsField("comment_ces_last_updated")]
 class StatisticsLastUpdated extends Date {
 
   /**
    * The node table.
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected ?string $node_table;
 
+  /**
+   * {@inheritdoc}
+   */
   public function query() {
     $this->ensureMyTable();
     $this->node_table = $this->query->ensureTable('node_field_data', $this->relationship);

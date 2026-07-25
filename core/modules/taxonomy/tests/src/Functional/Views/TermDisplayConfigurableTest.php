@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional\Views;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests making taxonomy term base fields' displays configurable.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermDisplayConfigurableTest extends TaxonomyTestBase {
 
   /**
@@ -24,7 +29,7 @@ class TermDisplayConfigurableTest extends TaxonomyTestBase {
   /**
    * Sets base fields to configurable display and check settings are respected.
    */
-  public function testDisplayConfigurable() {
+  public function testDisplayConfigurable(): void {
     $user = $this->drupalCreateUser(['administer nodes']);
     $this->drupalLogin($user);
 

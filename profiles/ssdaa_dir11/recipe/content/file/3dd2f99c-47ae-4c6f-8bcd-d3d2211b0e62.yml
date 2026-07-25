@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 3dd2f99c-47ae-4c6f-8bcd-d3d2211b0e62
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: DJ.png
+  uri:
+    -
+      value: 'public://term-country/2026-07/DJ.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 3792
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

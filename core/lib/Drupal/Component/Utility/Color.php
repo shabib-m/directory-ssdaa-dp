@@ -10,7 +10,7 @@ class Color {
   /**
    * Validates whether a hexadecimal color value is syntactically correct.
    *
-   * @param $hex
+   * @param string $hex
    *   The hexadecimal string to validate. May contain a leading '#'. May use
    *   the shorthand notation (e.g., '123' for '112233').
    *
@@ -84,7 +84,7 @@ class Color {
       $out |= $v << (16 - $k * 8);
     }
 
-    return '#' . str_pad(dechex($out), 6, 0, STR_PAD_LEFT);
+    return '#' . str_pad(dechex($out), 6, '0', STR_PAD_LEFT);
   }
 
   /**

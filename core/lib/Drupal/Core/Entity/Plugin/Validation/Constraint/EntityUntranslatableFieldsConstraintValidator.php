@@ -46,7 +46,7 @@ class EntityUntranslatableFieldsConstraintValidator extends ConstraintValidator 
   /**
    * {@inheritdoc}
    */
-  public function validate($entity, Constraint $constraint) {
+  public function validate($entity, Constraint $constraint): void {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     /** @var \Drupal\Core\Entity\Plugin\Validation\Constraint\EntityUntranslatableFieldsConstraint $constraint */
 
@@ -96,13 +96,12 @@ class EntityUntranslatableFieldsConstraintValidator extends ConstraintValidator 
   protected function hasUntranslatableFieldsChanges(ContentEntityInterface $entity) {
     $skip_fields = $this->getFieldsToSkipFromTranslationChangesCheck($entity);
     /** @var \Drupal\Core\Entity\ContentEntityInterface $original */
-    if (isset($entity->original)) {
-      $original = $entity->original;
-    }
-    else {
-      $original = $this->entityTypeManager
-        ->getStorage($entity->getEntityTypeId())
-        ->loadRevision($entity->getLoadedRevisionId());
+    $original = $entity->getOriginal();
+    if (!$original) {
+      /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+      $storage = $this->entityTypeManager
+        ->getStorage($entity->getEntityTypeId());
+      $original = $storage->loadRevision($entity->getLoadedRevisionId());
     }
 
     foreach ($entity->getFieldDefinitions() as $field_name => $definition) {

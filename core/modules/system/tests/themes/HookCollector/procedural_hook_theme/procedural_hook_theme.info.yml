@@ -1,0 +1,10 @@
+name: 'Procedural hook test'
+type: theme
+description: 'Test theme for procedural hooks.'
+# version: VERSION
+base theme: false
+
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
+project: 'drupal'
+datestamp: 1784141321

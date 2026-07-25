@@ -2,6 +2,7 @@
 
 namespace Drupal\layout_builder\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
@@ -9,9 +10,10 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Security\Attribute\TrustedCallback;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\layout_builder\Plugin\Derivative\ExtraFieldBlockDeriver;
 
 /**
  * Provides a block that renders an extra field from an entity.
@@ -23,14 +25,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   This block plugin handles all other field entities not provided by
  *   hook_entity_extra_field_info().
  *
- * @Block(
- *   id = "extra_field_block",
- *   deriver = "\Drupal\layout_builder\Plugin\Derivative\ExtraFieldBlockDeriver",
- * )
- *
  * @internal
  *   Plugin classes are internal.
  */
+#[Block(
+  id: "extra_field_block",
+  deriver: ExtraFieldBlockDeriver::class
+)]
 class ExtraFieldBlock extends BlockBase implements ContextAwarePluginInterface, ContainerFactoryPluginInterface {
 
   /**
@@ -84,25 +85,12 @@ class ExtraFieldBlock extends BlockBase implements ContextAwarePluginInterface, 
    */
   public function defaultConfiguration() {
     return [
-      'label_display' => FALSE,
+      'label_display' => '0',
       'formatter' => [
         'settings' => [],
         'third_party_settings' => [],
       ],
     ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('entity_field.manager')
-    );
   }
 
   /**
@@ -169,12 +157,34 @@ class ExtraFieldBlock extends BlockBase implements ContextAwarePluginInterface, 
         $built_cache = CacheableMetadata::createFromRenderArray($built_field);
         $merged_cache = $placeholder_cache->merge($built_cache);
         $build[$child] = $built_field;
+        $build['#pre_render'][] = [static::class, 'preRenderBlock'];
         $merged_cache->applyTo($build);
       }
       else {
         static::replaceFieldPlaceholder($build[$child], $built_field, $field_name);
       }
     }
+  }
+
+  /**
+   * Pre-render callback to ensure empty extra_field_block's are not rendered.
+   *
+   * @param array $block_build
+   *   The original block render array.
+   *
+   * @return array
+   *   The modified block render array.
+   */
+  #[TrustedCallback]
+  public static function preRenderBlock(array $block_build): array {
+    $content = $block_build['content'] ?? NULL;
+    if ($content === NULL || Element::isEmpty($content)) {
+      // Block content is empty, abort rendering the whole block and preserve
+      // cache metadata.
+      // @see \Drupal\Core\Render\Renderer::doRender
+      $block_build['#printed'] = TRUE;
+    }
+    return $block_build;
   }
 
   /**

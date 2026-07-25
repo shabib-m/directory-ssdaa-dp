@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests covering Preview of unsaved Views.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class UnsavedPreviewTest extends UITestBase {
 
   /**
@@ -46,7 +51,7 @@ class UnsavedPreviewTest extends UITestBase {
   /**
    * Tests previews of unsaved new page displays.
    */
-  public function testUnsavedPageDisplayPreview() {
+  public function testUnsavedPageDisplayPreview(): void {
     $this->drupalCreateContentType(['type' => 'page']);
     for ($i = 0; $i < 5; $i++) {
       $this->drupalCreateNode();
@@ -61,7 +66,7 @@ class UnsavedPreviewTest extends UITestBase {
     $this->drupalGet('admin/structure/views/nojs/display/content/page_2/path');
     $this->assertSession()->statusCodeEquals(200);
 
-    $this->submitForm(['path' => 'foobarbaz'], 'Apply');
+    $this->submitForm(['path' => 'foobar'], 'Apply');
     $this->assertSession()->statusCodeEquals(200);
 
     $this->submitForm([], 'Update preview');
@@ -76,7 +81,7 @@ class UnsavedPreviewTest extends UITestBase {
 
     $this->submitForm([], 'Update preview');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->linkByHrefExists('foobarbaz');
+    $this->assertSession()->linkByHrefExists('foobar');
   }
 
 }

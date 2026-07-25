@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional\Views;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests node_views_analyze().
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeViewsAnalyzeTest extends NodeTestBase {
 
   /**
@@ -29,7 +34,7 @@ class NodeViewsAnalyzeTest extends NodeTestBase {
   /**
    * Tests the implementation of node_views_analyze().
    */
-  public function testNodeViewsAnalyze() {
+  public function testNodeViewsAnalyze(): void {
     // Create user with permission to view analyze message on views_ui.
     $admin_user = $this->createUser(['administer views']);
 

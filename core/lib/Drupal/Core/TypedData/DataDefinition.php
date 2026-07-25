@@ -261,6 +261,19 @@ class DataDefinition implements DataDefinitionInterface, \ArrayAccess {
   public function getConstraints() {
     $constraints = $this->definition['constraints'] ?? [];
     $constraints += $this->getTypedDataManager()->getDefaultConstraints($this);
+    // If either the constraints defined on this data definition or the default
+    // constraints for this data definition's type contain the `NotBlank`
+    // constraint, then prevent a validation error from `NotBlank` if `NotNull`
+    // already would generate one. (When both are present, `NotBlank` should
+    // allow a NULL value, otherwise there will be two validation errors with
+    // distinct messages for the exact same problem. Automatically configuring
+    // `NotBlank`'s `allowNull: true` option mitigates that.)
+    // @see ::isRequired()
+    // @see \Drupal\Core\TypedData\TypedDataManager::getDefaultConstraints()
+    if (array_key_exists('NotBlank', $constraints) && $this->isRequired()) {
+      assert(array_key_exists('NotNull', $constraints));
+      $constraints['NotBlank']['allowNull'] = TRUE;
+    }
     return $constraints;
   }
 
@@ -290,7 +303,7 @@ class DataDefinition implements DataDefinitionInterface, \ArrayAccess {
   /**
    * {@inheritdoc}
    */
-  public function addConstraint($constraint_name, $options = NULL) {
+  public function addConstraint($constraint_name, /* ?array */$options = NULL) {
     $this->definition['constraints'][$constraint_name] = $options;
     return $this;
   }
@@ -299,10 +312,10 @@ class DataDefinition implements DataDefinitionInterface, \ArrayAccess {
    * {@inheritdoc}
    *
    * This is for BC support only.
-   * @todo: Remove in https://www.drupal.org/node/1928868.
+   *
+   * @todo Remove in https://www.drupal.org/node/1928868.
    */
-  #[\ReturnTypeWillChange]
-  public function offsetExists($offset) {
+  public function offsetExists($offset): bool {
     // PHP's array access does not work correctly with isset(), so we have to
     // bake isset() in here. See https://bugs.php.net/bug.php?id=41727.
     return array_key_exists($offset, $this->definition) && isset($this->definition[$offset]);
@@ -312,10 +325,10 @@ class DataDefinition implements DataDefinitionInterface, \ArrayAccess {
    * {@inheritdoc}
    *
    * This is for BC support only.
-   * @todo: Remove in https://www.drupal.org/node/1928868.
+   *
+   * @todo Remove in https://www.drupal.org/node/1928868.
    */
-  #[\ReturnTypeWillChange]
-  public function &offsetGet($offset) {
+  public function &offsetGet($offset): mixed {
     if (!isset($this->definition[$offset])) {
       $this->definition[$offset] = NULL;
     }
@@ -326,10 +339,10 @@ class DataDefinition implements DataDefinitionInterface, \ArrayAccess {
    * {@inheritdoc}
    *
    * This is for BC support only.
-   * @todo: Remove in https://www.drupal.org/node/1928868.
+   *
+   * @todo Remove in https://www.drupal.org/node/1928868.
    */
-  #[\ReturnTypeWillChange]
-  public function offsetSet($offset, $value) {
+  public function offsetSet($offset, $value): void {
     $this->definition[$offset] = $value;
   }
 
@@ -337,10 +350,10 @@ class DataDefinition implements DataDefinitionInterface, \ArrayAccess {
    * {@inheritdoc}
    *
    * This is for BC support only.
-   * @todo: Remove in https://www.drupal.org/node/1928868.
+   *
+   * @todo Remove in https://www.drupal.org/node/1928868.
    */
-  #[\ReturnTypeWillChange]
-  public function offsetUnset($offset) {
+  public function offsetUnset($offset): void {
     unset($this->definition[$offset]);
   }
 
@@ -348,6 +361,7 @@ class DataDefinition implements DataDefinitionInterface, \ArrayAccess {
    * Returns all definition values as array.
    *
    * @return array
+   *   The array holding values for all definition keys.
    */
   public function toArray() {
     return $this->definition;
@@ -356,7 +370,7 @@ class DataDefinition implements DataDefinitionInterface, \ArrayAccess {
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     // Never serialize the typed data manager.
     $vars = get_object_vars($this);
     unset($vars['typedDataManager']);

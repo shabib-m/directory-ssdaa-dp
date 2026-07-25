@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Plugin;
 
-use Drupal\views\Views;
 use Drupal\views\ViewExecutable;
+use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the table style plugin.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\style\Table
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class StyleTableUnitTest extends PluginKernelTestBase {
 
   /**
@@ -24,7 +29,7 @@ class StyleTableUnitTest extends PluginKernelTestBase {
   /**
    * Tests the table style.
    */
-  public function testTable() {
+  public function testTable(): void {
     $view = Views::getView('test_table');
 
     $view->setDisplay('default');
@@ -118,7 +123,7 @@ class StyleTableUnitTest extends PluginKernelTestBase {
     $this->prepareView($view);
     $view->field['name']->options['exclude'] = TRUE;
     $output = $view->preview();
-    $output = \Drupal::service('renderer')->renderRoot($output);
+    $output = (string) \Drupal::service('renderer')->renderRoot($output);
     $this->assertStringNotContainsString('views-field-name', $output, "Excluded field's wrapper was not rendered.");
     $view->destroy();
 
@@ -126,7 +131,7 @@ class StyleTableUnitTest extends PluginKernelTestBase {
     // rendered.
     $this->executeView($view);
     $output = $view->preview();
-    $output = \Drupal::service('renderer')->renderRoot($output);
+    $output = (string) \Drupal::service('renderer')->renderRoot($output);
 
     $this->assertStringNotContainsString('custom text', $output, 'Empty handler was not rendered on a non empty table.');
 
@@ -135,7 +140,7 @@ class StyleTableUnitTest extends PluginKernelTestBase {
     $view->executed = TRUE;
     $view->result = [];
     $output = $view->preview();
-    $output = \Drupal::service('renderer')->renderRoot($output);
+    $output = (string) \Drupal::service('renderer')->renderRoot($output);
 
     $this->assertStringContainsString('custom text', $output, 'Empty handler got rendered on an empty table.');
   }
@@ -146,7 +151,7 @@ class StyleTableUnitTest extends PluginKernelTestBase {
    * @param \Drupal\views\ViewExecutable $view
    *   The executable to prepare.
    */
-  protected function prepareView(ViewExecutable $view) {
+  protected function prepareView(ViewExecutable $view): void {
     $view->setDisplay();
     $view->initStyle();
     $view->initHandlers();

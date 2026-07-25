@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\TestSite\Commands;
 
 use Drupal\Core\Config\ConfigImporter;
@@ -7,9 +9,9 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Test\FunctionalTestSetupTrait;
 use Drupal\Core\Test\TestDatabase;
 use Drupal\Core\Test\TestSetupTrait;
+use Drupal\Tests\RandomGeneratorTrait;
 use Drupal\TestSite\TestPreinstallInterface;
 use Drupal\TestSite\TestSetupInterface;
-use Drupal\Tests\RandomGeneratorTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -49,12 +51,6 @@ class TestSiteInstallCommand extends Command {
    */
   protected array $originalShutdownCallbacks = [];
 
-  /**
-   * The translation file directory for the test environment.
-   *
-   * This is set in BrowserTestBase::prepareEnvironment().
-   */
-  protected string $translationFilesDirectory;
 
   /**
    * The config importer that can be used in a test.
@@ -85,9 +81,16 @@ class TestSiteInstallCommand extends Command {
   protected $langcode = 'en';
 
   /**
+   * The Drupal root directory.
+   *
+   * @var string
+   */
+  protected $root;
+
+  /**
    * {@inheritdoc}
    */
-  protected function configure() {
+  protected function configure(): void {
     $this->setName('install')
       ->setDescription('Creates a test Drupal site')
       ->setHelp('The details to connect to the test site created will be displayed upon success. It will contain the database prefix and the user agent.')
@@ -99,7 +102,7 @@ class TestSiteInstallCommand extends Command {
       ->addOption('json', NULL, InputOption::VALUE_NONE, 'Output test site connection details in JSON.')
       ->addUsage('--setup-file core/tests/Drupal/TestSite/TestSiteMultilingualInstallTestScript.php --json')
       ->addUsage('--install-profile demo_umami --langcode fr')
-      ->addUsage('--base-url "http://example.com" --db-url "mysql://username:password@localhost/databasename#table_prefix"');
+      ->addUsage('--base-url "http://example.com" --db-url "mysql://username:password@localhost/database_name#table_prefix"');
   }
 
   /**
@@ -216,7 +219,7 @@ class TestSiteInstallCommand extends Command {
    * @param string $langcode
    *   (optional) The language to install the site in.
    */
-  public function setup($profile = 'testing', $setup_class = NULL, $langcode = 'en') {
+  public function setup($profile = 'testing', $setup_class = NULL, $langcode = 'en'): void {
     $this->profile = $profile;
     $this->langcode = $langcode;
     $this->setupBaseUrl();
@@ -284,18 +287,18 @@ class TestSiteInstallCommand extends Command {
   }
 
   /**
-   * {@inheritdoc}
+   * Changes the database connection to the prefixed one.
    */
-  protected function changeDatabasePrefix() {
+  protected function changeDatabasePrefix(): void {
     // Ensure that we use the database from SIMPLETEST_DB environment variable.
     Database::removeConnection('default');
     $this->changeDatabasePrefixTrait();
   }
 
   /**
-   * {@inheritdoc}
+   * Generates a database prefix for the site installation.
    */
-  protected function prepareDatabasePrefix() {
+  protected function prepareDatabasePrefix(): void {
     // Override this method so that we can force a lock to be created.
     $test_db = new TestDatabase(NULL, TRUE);
     $this->siteDirectory = $test_db->getTestSitePath();

@@ -12,7 +12,7 @@ pathauto.pattern.*:
       type: string
       label: 'Pattern type'
     pattern:
-      type: string
+      type: label
       label: 'Pattern'
     selection_criteria:
       type: sequence
@@ -30,9 +30,9 @@ pathauto.pattern.*:
       type: sequence
       label: 'Context definitions'
       sequence:
-        - type: mapping
-          label: 'Relationship'
-          mapping:
-            label:
-              type: label
-              label: 'Label'
+        type: mapping
+        label: 'Relationship'
+        mapping:
+          label:
+            type: label
+            label: 'Label'

@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_ui\Functional;
 
 use Drupal\Core\Entity\Entity\EntityFormMode;
 use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the functionality of the Field UI route subscriber.
- *
- * @group field_ui
  */
+#[Group('field_ui')]
+#[RunTestsInSeparateProcesses]
 class FieldUIRouteTest extends BrowserTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var string[]
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'entity_test', 'field_ui'];
 
@@ -31,14 +33,25 @@ class FieldUIRouteTest extends BrowserTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->drupalLogin($this->rootUser);
     $this->drupalPlaceBlock('local_tasks_block');
   }
 
   /**
    * Ensures that entity types with bundles do not break following entity types.
    */
-  public function testFieldUIRoutes() {
+  public function testFieldUIRoutes(): void {
+    $route = \Drupal::service('router.route_provider')->getRouteByName('entity.entity_test.field_ui_fields');
+    $is_admin = \Drupal::service('router.admin_context')->isAdminRoute($route);
+    // Asserts that admin routes are correctly marked as such.
+    $this->assertTrue($is_admin, 'Admin route correctly marked for "Manage fields" page.');
+
+    $this->drupalLogin($this->drupalCreateUser([
+      'administer account settings',
+      'administer entity_test_no_id fields',
+      'administer user fields',
+      'administer user form display',
+      'administer user display',
+    ]));
     $this->drupalGet('entity_test_no_id/structure/entity_test/fields');
     $this->assertSession()->pageTextContains('No fields are present yet.');
 
@@ -54,8 +67,9 @@ class FieldUIRouteTest extends BrowserTestBase {
     $this->assertSession()->titleEquals('Manage display | Drupal');
     $this->assertLocalTasks();
 
-    $edit = ['display_modes_custom[compact]' => TRUE];
-    $this->submitForm($edit, 'Save');
+    $xpath = "//tr[@id='display-mode-user-user-compact']//a[contains(., 'Enable')]";
+    $this->assertSession()->elementExists('xpath', $xpath);
+    $this->getSession()->getPage()->find('xpath', $xpath)->click();
     $this->drupalGet('admin/config/people/accounts/display/compact');
     $this->assertSession()->titleEquals('Manage display | Drupal');
     $this->assertLocalTasks();
@@ -86,9 +100,10 @@ class FieldUIRouteTest extends BrowserTestBase {
     ])->save();
     $this->container->get('router.builder')->rebuildIfNeeded();
 
-    $edit = ['display_modes_custom[test]' => TRUE];
     $this->drupalGet('admin/config/people/accounts/display');
-    $this->submitForm($edit, 'Save');
+    $xpath = "//tr[@id='display-mode-user-user-test']//a[contains(., 'Enable')]";
+    $this->assertSession()->elementExists('xpath', $xpath);
+    $this->getSession()->getPage()->find('xpath', $xpath)->click();
     $this->assertSession()->linkExists('Test');
 
     // Create new form mode and verify it's available on the Manage Form
@@ -116,15 +131,6 @@ class FieldUIRouteTest extends BrowserTestBase {
     $this->assertSession()->linkExists('Manage fields');
     $this->assertSession()->linkExists('Manage display');
     $this->assertSession()->linkExists('Manage form display');
-  }
-
-  /**
-   * Asserts that admin routes are correctly marked as such.
-   */
-  public function testAdminRoute() {
-    $route = \Drupal::service('router.route_provider')->getRouteByName('entity.entity_test.field_ui_fields');
-    $is_admin = \Drupal::service('router.admin_context')->isAdminRoute($route);
-    $this->assertTrue($is_admin, 'Admin route correctly marked for "Manage fields" page.');
   }
 
 }

@@ -1,45 +1,48 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit\process;
 
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\migrate\Plugin\migrate\process\FileCopy;
 use Drupal\migrate\Plugin\MigrateProcessInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the file copy process plugin.
- *
- * @group migrate
- *
- * @coversDefaultClass \Drupal\migrate\Plugin\migrate\process\FileCopy
  */
+#[CoversClass(FileCopy::class)]
+#[Group('migrate')]
 class FileCopyTest extends MigrateProcessTestCase {
 
   /**
    * Tests that the plugin constructor correctly sets the configuration.
    *
-   * @dataProvider providerFileProcessBaseConstructor
-   *
    * @param array $configuration
    *   The plugin configuration.
-   * @param $expected
+   * @param \Drupal\Core\File\FileExists $expected
    *   The expected value of the plugin configuration.
    */
-  public function testFileProcessBaseConstructor($configuration, $expected) {
+  #[DataProvider('providerFileProcessBaseConstructor')]
+  public function testFileProcessBaseConstructor(array $configuration, FileExists $expected): void {
     $this->assertPlugin($configuration, $expected);
   }
 
   /**
    * Data provider for testFileProcessBaseConstructor.
    */
-  public function providerFileProcessBaseConstructor() {
+  public static function providerFileProcessBaseConstructor() {
     return [
-      [['file_exists' => 'replace'], FileSystemInterface::EXISTS_REPLACE],
-      [['file_exists' => 'rename'], FileSystemInterface::EXISTS_RENAME],
-      [['file_exists' => 'use existing'], FileSystemInterface::EXISTS_ERROR],
-      [['file_exists' => 'foobar'], FileSystemInterface::EXISTS_REPLACE],
-      [[], FileSystemInterface::EXISTS_REPLACE],
+      [['file_exists' => 'replace'], FileExists::Replace],
+      [['file_exists' => 'rename'], FileExists::Rename],
+      [['file_exists' => 'use existing'], FileExists::Error],
+      [['file_exists' => 'foobar'], FileExists::Replace],
+      [[], FileExists::Replace],
     ];
   }
 
@@ -48,12 +51,12 @@ class FileCopyTest extends MigrateProcessTestCase {
    *
    * @param array $configuration
    *   The plugin configuration.
-   * @param int $expected
+   * @param \Drupal\Core\File\FileExists $expected
    *   The expected value of the plugin configuration.
    *
    * @internal
    */
-  protected function assertPlugin(array $configuration, int $expected): void {
+  protected function assertPlugin(array $configuration, FileExists $expected): void {
     $stream_wrapper_manager = $this->prophesize(StreamWrapperManagerInterface::class)->reveal();
     $file_system = $this->prophesize(FileSystemInterface::class)->reveal();
     $download_plugin = $this->prophesize(MigrateProcessInterface::class)->reveal();

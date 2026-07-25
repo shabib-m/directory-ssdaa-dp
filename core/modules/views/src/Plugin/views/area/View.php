@@ -4,6 +4,7 @@ namespace Drupal\views\Plugin\views\area;
 
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsArea;
 use Drupal\views\Views;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -11,9 +12,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Views area handlers. Insert a view inside of an area.
  *
  * @ingroup views_area_handlers
- *
- * @ViewsArea("view")
  */
+#[ViewsArea("view")]
 class View extends AreaPluginBase {
 
   /**
@@ -36,7 +36,7 @@ class View extends AreaPluginBase {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityStorageInterface $view_storage
@@ -111,14 +111,18 @@ class View extends AreaPluginBase {
       }
       $view->setDisplay($display_id);
 
-      // Avoid recursion
+      // Avoid recursion.
       $view->parent_views += $this->view->parent_views;
       $view->parent_views[] = "$view_name:$display_id";
 
-      // Check if the view is part of the parent views of this view
+      // Check if the view is part of the parent views of this view.
       $search = "$view_name:$display_id";
       if (in_array($search, $this->view->parent_views)) {
-        \Drupal::messenger()->addError($this->t("Recursion detected in view @view display @display.", ['@view' => $view_name, '@display' => $display_id]));
+        \Drupal::messenger()
+          ->addError($this->t("Recursion detected in view @view display @display.", [
+            '@view' => $view_name,
+            '@display' => $display_id,
+          ]));
       }
       else {
         if (!empty($this->options['inherit_arguments']) && !empty($this->view->args)) {
@@ -153,7 +157,8 @@ class View extends AreaPluginBase {
     $dependencies = parent::calculateDependencies();
 
     [$view_id] = explode(':', $this->options['view_to_insert'], 2);
-    // Don't call the current view, as it would result into an infinite recursion.
+    // Don't call the current view, as it would result into an infinite
+    // recursion.
     if ($view_id && $this->view->storage->id() != $view_id) {
       $view = $this->viewStorage->load($view_id);
       $dependencies[$view->getConfigDependencyKey()][] = $view->getConfigDependencyName();

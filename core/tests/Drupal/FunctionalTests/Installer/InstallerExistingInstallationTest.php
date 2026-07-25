@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the installer with an existing Drupal installation.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerExistingInstallationTest extends InstallerTestBase {
 
   /**
@@ -17,10 +22,13 @@ class InstallerExistingInstallationTest extends InstallerTestBase {
   /**
    * Tests that Drupal fails to install when there is an existing installation.
    */
-  public function testInstaller() {
+  public function testInstaller(): void {
     // Verify that Drupal can't be immediately reinstalled.
     $this->visitInstaller();
     $this->assertSession()->pageTextContains('Drupal already installed');
+
+    // Verify that Drupal version is not displayed.
+    $this->assertSession()->pageTextNotContains(\Drupal::VERSION);
 
     // Delete settings.php and attempt to reinstall again.
     unlink($this->siteDirectory . '/settings.php');

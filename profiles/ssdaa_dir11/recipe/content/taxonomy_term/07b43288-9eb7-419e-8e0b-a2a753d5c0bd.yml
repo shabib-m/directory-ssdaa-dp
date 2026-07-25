@@ -1,0 +1,28 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 07b43288-9eb7-419e-8e0b-a2a753d5c0bd
+  bundle: main
+  default_langcode: ar
+  depends:
+    0e55e25d-9fe4-4cb1-8794-98b0763245c8: taxonomy_term
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'مواقع الأطفال'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      entity: 0e55e25d-9fe4-4cb1-8794-98b0763245c8
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

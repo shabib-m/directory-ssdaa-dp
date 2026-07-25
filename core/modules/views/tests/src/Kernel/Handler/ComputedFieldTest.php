@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\entity_test\Entity\EntityTestComputedField;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Provides some integration tests for the Field handler.
  *
  * @see \Drupal\views\Plugin\views\field\EntityField
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ComputedFieldTest extends ViewsKernelTestBase {
 
   /**
@@ -22,9 +27,7 @@ class ComputedFieldTest extends ViewsKernelTestBase {
   public static $testViews = ['computed_field_view'];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['entity_test'];
 
@@ -40,7 +43,7 @@ class ComputedFieldTest extends ViewsKernelTestBase {
   /**
    * Tests the computed field handler.
    */
-  public function testComputedFieldHandler() {
+  public function testComputedFieldHandler(): void {
     \Drupal::state()->set('entity_test_computed_field_item_list_value', ['computed string']);
 
     $entity = EntityTestComputedField::create([]);

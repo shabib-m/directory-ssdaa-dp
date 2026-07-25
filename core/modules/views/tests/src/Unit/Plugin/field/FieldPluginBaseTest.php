@@ -1,14 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\views\Unit\Plugin\field\FieldPluginBaseTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\views\Unit\Plugin\field;
 
-use Drupal\Core\GeneratedUrl;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\GeneratedUrl;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
@@ -18,16 +15,20 @@ use Drupal\Core\Utility\UnroutedUrlAssembler;
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use Prophecy\Prophet;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Route;
-use Prophecy\Prophet;
 
 /**
- * @coversDefaultClass \Drupal\views\Plugin\views\field\FieldPluginBase
- * @group views
+ * Tests Drupal\views\Plugin\views\field\FieldPluginBase.
  */
+#[CoversClass(FieldPluginBase::class)]
+#[Group('views')]
 class FieldPluginBaseTest extends UnitTestCase {
 
   /**
@@ -172,7 +173,7 @@ class FieldPluginBaseTest extends UnitTestCase {
   /**
    * Sets up the unrouted URL assembler and the link generator.
    */
-  protected function setUpUrlIntegrationServices() {
+  protected function setUpUrlIntegrationServices(): void {
     $this->pathProcessor = $this->createMock('Drupal\Core\PathProcessor\OutboundPathProcessorInterface');
     $this->unroutedUrlAssembler = new UnroutedUrlAssembler($this->requestStack, $this->pathProcessor);
 
@@ -184,7 +185,7 @@ class FieldPluginBaseTest extends UnitTestCase {
       ->willReturnCallback(
         // Pretend to do a render.
         function (&$elements, $is_root_call = FALSE) {
-          // Mock the ability to theme links
+          // Mock the ability to theme links.
           $link = $this->linkGenerator->generate($elements['#title'], $elements['#url']);
           if (isset($elements['#prefix'])) {
             $link = $elements['#prefix'] . $link;
@@ -200,7 +201,7 @@ class FieldPluginBaseTest extends UnitTestCase {
   /**
    * Sets up a display with empty arguments and fields.
    */
-  protected function setupDisplayWithEmptyArgumentsAndFields() {
+  protected function setupDisplayWithEmptyArgumentsAndFields(): void {
     $this->display->expects($this->any())
       ->method('getHandlers')
       ->willReturnMap([
@@ -211,10 +212,8 @@ class FieldPluginBaseTest extends UnitTestCase {
 
   /**
    * Tests rendering as a link without a path.
-   *
-   * @covers ::renderAsLink
    */
-  public function testRenderAsLinkWithoutPath() {
+  public function testRenderAsLinkWithoutPath(): void {
     $alter = [
       'make_link' => TRUE,
     ];
@@ -237,10 +236,10 @@ class FieldPluginBaseTest extends UnitTestCase {
    * @param string $url
    *   The final URL used by the more link.
    *
-   * @dataProvider providerTestRenderTrimmedWithMoreLinkAndPath
-   * @covers ::renderText
+   * @legacy-covers ::renderText
    */
-  public function testRenderTrimmedWithMoreLinkAndPath($path, $url) {
+  #[DataProvider('providerTestRenderTrimmedWithMoreLinkAndPath')]
+  public function testRenderTrimmedWithMoreLinkAndPath($path, $url): void {
     $alter = [
       'trim' => TRUE,
       'max_length' => 7,
@@ -274,7 +273,7 @@ class FieldPluginBaseTest extends UnitTestCase {
    * @return array
    *   Test data.
    */
-  public function providerTestRenderTrimmedWithMoreLinkAndPath() {
+  public static function providerTestRenderTrimmedWithMoreLinkAndPath() {
     $data = [];
     // Simple path with default options.
     $data[] = ['test-path', '/test-path'];
@@ -298,9 +297,9 @@ class FieldPluginBaseTest extends UnitTestCase {
   /**
    * Tests the "No results text" rendering.
    *
-   * @covers ::renderText
+   * @legacy-covers ::renderText
    */
-  public function testRenderNoResult() {
+  public function testRenderNoResult(): void {
     $this->setupDisplayWithEmptyArgumentsAndFields();
     $field = $this->setupTestField(['empty' => 'This <strong>should work</strong>.']);
     $field->field_alias = 'key';
@@ -314,17 +313,13 @@ class FieldPluginBaseTest extends UnitTestCase {
 
   /**
    * Tests rendering of a link with a path and options.
-   *
-   * @dataProvider providerTestRenderAsLinkWithPathAndOptions
-   * @covers ::renderAsLink
    */
-  public function testRenderAsLinkWithPathAndOptions($path, $alter, $link_html, $final_html = NULL) {
+  #[DataProvider('providerTestRenderAsLinkWithPathAndOptions')]
+  public function testRenderAsLinkWithPathAndOptions($path, $alter, $final_html): void {
     $alter += [
       'make_link' => TRUE,
       'path' => $path,
     ];
-
-    $final_html = $final_html ?? $link_html;
 
     $this->setUpUrlIntegrationServices();
     $this->setupDisplayWithEmptyArgumentsAndFields();
@@ -342,10 +337,10 @@ class FieldPluginBaseTest extends UnitTestCase {
    * @return array
    *   Test data.
    */
-  public function providerTestRenderAsLinkWithPathAndOptions() {
+  public static function providerTestRenderAsLinkWithPathAndOptions() {
     $data = [];
     // Simple path with default options.
-    $data[] = ['test-path', [], [], '<a href="/test-path">value</a>'];
+    $data[] = ['test-path', [], '<a href="/test-path">value</a>'];
     // Add a fragment.
     $data[] = ['test-path', ['fragment' => 'test'], '<a href="/test-path#test">value</a>'];
     // Rel attributes.
@@ -368,37 +363,32 @@ class FieldPluginBaseTest extends UnitTestCase {
     // executed for paths which aren't routed.
 
     // Entity flag.
-    $entity = $this->createMock('Drupal\Core\Entity\EntityInterface');
-    $data[] = ['test-path', ['entity' => $entity], '<a href="/test-path">value</a>'];
+    $data[] = ['test-path', ['entity' => new \stdClass()], '<a href="/test-path">value</a>'];
     // entity_type flag.
     $entity_type_id = 'node';
     $data[] = ['test-path', ['entity_type' => $entity_type_id], '<a href="/test-path">value</a>'];
-    // prefix
-    $data[] = ['test-path', ['prefix' => 'test_prefix'], '<a href="/test-path">value</a>', 'test_prefix<a href="/test-path">value</a>'];
+    // Prefix.
+    $data[] = ['test-path', ['prefix' => 'test_prefix'], 'test_prefix<a href="/test-path">value</a>'];
     // suffix.
-    $data[] = ['test-path', ['suffix' => 'test_suffix'], '<a href="/test-path">value</a>', '<a href="/test-path">value</a>test_suffix'];
+    $data[] = ['test-path', ['suffix' => 'test_suffix'], '<a href="/test-path">value</a>test_suffix'];
 
     // External URL.
-    $data[] = ['https://www.example.com', [], [], '<a href="https://www.example.com">value</a>'];
-    $data[] = ['www.example.com', ['external' => TRUE], [], '<a href="http://www.example.com">value</a>'];
-    $data[] = ['', ['external' => TRUE], [], 'value'];
+    $data[] = ['https://www.example.com', [], '<a href="https://www.example.com">value</a>'];
+    $data[] = ['www.example.com', ['external' => TRUE], '<a href="http://www.example.com">value</a>'];
+    $data[] = ['', ['external' => TRUE], 'value'];
 
     return $data;
   }
 
   /**
    * Tests link rendering with a URL and options.
-   *
-   * @dataProvider providerTestRenderAsLinkWithUrlAndOptions
-   * @covers ::renderAsLink
    */
-  public function testRenderAsLinkWithUrlAndOptions(Url $url, $alter, Url $expected_url, $url_path, Url $expected_link_url, $link_html, $final_html = NULL) {
+  #[DataProvider('providerTestRenderAsLinkWithUrlAndOptions')]
+  public function testRenderAsLinkWithUrlAndOptions(Url $url, $alter, Url $expected_url, $url_path, Url $expected_link_url, $final_html): void {
     $alter += [
       'make_link' => TRUE,
       'url' => $url,
     ];
-
-    $final_html = $final_html ?? $link_html;
 
     $this->setUpUrlIntegrationServices();
     $this->setupDisplayWithEmptyArgumentsAndFields();
@@ -436,42 +426,84 @@ class FieldPluginBaseTest extends UnitTestCase {
 
     // Simple URL with parameters.
     $url_parameters = Url::fromRoute('test_route', ['key' => 'value']);
-    $data[] = [$url_parameters, [], clone $url_parameters, '/test-path/value', clone $url_parameters, '<a href="/test-path/value">value</a>'];
+    $data[] = [
+      $url_parameters,
+      [],
+      clone $url_parameters,
+      '/test-path/value',
+      clone $url_parameters,
+      '<a href="/test-path/value">value</a>',
+    ];
 
     // Add a fragment.
     $url = Url::fromRoute('test_route');
     $url_with_fragment = Url::fromRoute('test_route');
     $options = ['fragment' => 'test'] + static::DEFAULT_URL_OPTIONS;
     $url_with_fragment->setOptions($options);
-    $data[] = [$url, ['fragment' => 'test'], $url_with_fragment, '/test-path#test', clone $url_with_fragment, '<a href="/test-path#test">value</a>'];
+    $data[] = [
+      $url,
+      ['fragment' => 'test'],
+      $url_with_fragment,
+      '/test-path#test',
+      clone $url_with_fragment,
+      '<a href="/test-path#test">value</a>',
+    ];
 
     // Rel attributes.
     $url = Url::fromRoute('test_route');
     $url_with_rel = Url::fromRoute('test_route');
     $options = ['attributes' => ['rel' => 'up']] + static::DEFAULT_URL_OPTIONS;
     $url_with_rel->setOptions($options);
-    $data[] = [$url, ['rel' => 'up'], clone $url, '/test-path', $url_with_rel, '<a href="/test-path" rel="up">value</a>'];
+    $data[] = [
+      $url,
+      ['rel' => 'up'],
+      clone $url,
+      '/test-path',
+      $url_with_rel,
+      '<a href="/test-path" rel="up">value</a>',
+    ];
 
     // Target attributes.
     $url = Url::fromRoute('test_route');
     $url_with_target = Url::fromRoute('test_route');
     $options = ['attributes' => ['target' => '_blank']] + static::DEFAULT_URL_OPTIONS;
     $url_with_target->setOptions($options);
-    $data[] = [$url, ['target' => '_blank'], $url_with_target, '/test-path', clone $url_with_target, '<a href="/test-path" target="_blank">value</a>'];
+    $data[] = [
+      $url,
+      ['target' => '_blank'],
+      $url_with_target,
+      '/test-path',
+      clone $url_with_target,
+      '<a href="/test-path" target="_blank">value</a>',
+    ];
 
     // Link attributes.
     $url = Url::fromRoute('test_route');
     $url_with_link_attributes = Url::fromRoute('test_route');
     $options = ['attributes' => ['foo' => 'bar']] + static::DEFAULT_URL_OPTIONS;
     $url_with_link_attributes->setOptions($options);
-    $data[] = [$url, ['link_attributes' => ['foo' => 'bar']], clone $url, '/test-path', $url_with_link_attributes, '<a href="/test-path" foo="bar">value</a>'];
+    $data[] = [
+      $url,
+      ['link_attributes' => ['foo' => 'bar']],
+      clone $url,
+      '/test-path',
+      $url_with_link_attributes,
+      '<a href="/test-path" foo="bar">value</a>',
+    ];
 
     // Manual specified query.
     $url = Url::fromRoute('test_route');
     $url_with_query = Url::fromRoute('test_route');
     $options = ['query' => ['foo' => 'bar']] + static::DEFAULT_URL_OPTIONS;
     $url_with_query->setOptions($options);
-    $data[] = [$url, ['query' => ['foo' => 'bar']], clone $url_with_query, '/test-path?foo=bar', $url_with_query, '<a href="/test-path?foo=bar">value</a>'];
+    $data[] = [
+      $url,
+      ['query' => ['foo' => 'bar']],
+      clone $url_with_query,
+      '/test-path?foo=bar',
+      $url_with_query,
+      '<a href="/test-path?foo=bar">value</a>',
+    ];
 
     // Query specified as part of the path.
     $url = Url::fromRoute('test_route')->setOption('query', ['foo' => 'bar']);
@@ -484,14 +516,28 @@ class FieldPluginBaseTest extends UnitTestCase {
     $url_with_query = Url::fromRoute('test_route');
     $options = ['query' => ['key' => 'value']] + static::DEFAULT_URL_OPTIONS;
     $url_with_query->setOptions($options);
-    $data[] = [$url, ['query' => ['key' => 'value']], $url_with_query, '/test-path?key=value', clone $url_with_query, '<a href="/test-path?key=value">value</a>'];
+    $data[] = [
+      $url,
+      ['query' => ['key' => 'value']],
+      $url_with_query,
+      '/test-path?key=value',
+      clone $url_with_query,
+      '<a href="/test-path?key=value">value</a>',
+    ];
 
     // Alias flag.
     $url = Url::fromRoute('test_route');
     $url_without_alias = Url::fromRoute('test_route');
     $options = ['alias' => TRUE] + static::DEFAULT_URL_OPTIONS;
     $url_without_alias->setOptions($options);
-    $data[] = [$url, ['alias' => TRUE], $url_without_alias, '/test-path', clone $url_without_alias, '<a href="/test-path">value</a>'];
+    $data[] = [
+      $url,
+      ['alias' => TRUE],
+      $url_without_alias,
+      '/test-path',
+      clone $url_without_alias,
+      '<a href="/test-path">value</a>',
+    ];
 
     // Language flag.
     $language = new Language(['id' => 'fr']);
@@ -499,7 +545,14 @@ class FieldPluginBaseTest extends UnitTestCase {
     $url_with_language = Url::fromRoute('test_route');
     $options = ['language' => $language] + static::DEFAULT_URL_OPTIONS;
     $url_with_language->setOptions($options);
-    $data[] = [$url, ['language' => $language], $url_with_language, '/fr/test-path', clone $url_with_language, '<a href="/fr/test-path" hreflang="fr">value</a>'];
+    $data[] = [
+      $url,
+      ['language' => $language],
+      $url_with_language,
+      '/fr/test-path',
+      clone $url_with_language,
+      '<a href="/fr/test-path" hreflang="fr">value</a>',
+    ];
 
     // Entity flag.
     $entity = (new Prophet())->prophesize(EntityInterface::class)->reveal();
@@ -507,7 +560,14 @@ class FieldPluginBaseTest extends UnitTestCase {
     $url_with_entity = Url::fromRoute('test_route');
     $options = ['entity' => $entity] + static::DEFAULT_URL_OPTIONS;
     $url_with_entity->setOptions($options);
-    $data[] = [$url, ['entity' => $entity], $url_with_entity, '/test-path', clone $url_with_entity, '<a href="/test-path">value</a>'];
+    $data[] = [
+      $url,
+      ['entity' => $entity],
+      $url_with_entity,
+      '/test-path',
+      clone $url_with_entity,
+      '<a href="/test-path">value</a>',
+    ];
 
     // Test entity_type flag.
     $entity_type_id = 'node';
@@ -515,26 +575,45 @@ class FieldPluginBaseTest extends UnitTestCase {
     $url_with_entity_type = Url::fromRoute('test_route');
     $options = ['entity_type' => $entity_type_id] + static::DEFAULT_URL_OPTIONS;
     $url_with_entity_type->setOptions($options);
-    $data[] = [$url, ['entity_type' => $entity_type_id], $url_with_entity_type, '/test-path', clone $url_with_entity_type, '<a href="/test-path">value</a>'];
+    $data[] = [
+      $url,
+      ['entity_type' => $entity_type_id],
+      $url_with_entity_type,
+      '/test-path',
+      clone $url_with_entity_type,
+      '<a href="/test-path">value</a>',
+    ];
 
     // Test prefix.
     $url = Url::fromRoute('test_route');
-    $data[] = [$url, ['prefix' => 'test_prefix'], clone $url, '/test-path', clone $url, '<a href="/test-path">value</a>', 'test_prefix<a href="/test-path">value</a>'];
+    $data[] = [
+      $url,
+      ['prefix' => 'test_prefix'],
+      clone $url,
+      '/test-path',
+      clone $url,
+      'test_prefix<a href="/test-path">value</a>',
+    ];
 
     // Test suffix.
     $url = Url::fromRoute('test_route');
-    $data[] = [$url, ['suffix' => 'test_suffix'], clone $url, '/test-path', clone $url, '<a href="/test-path">value</a>', '<a href="/test-path">value</a>test_suffix'];
+    $data[] = [
+      $url,
+      ['suffix' => 'test_suffix'],
+      clone $url,
+      '/test-path',
+      clone $url,
+      '<a href="/test-path">value</a>test_suffix',
+    ];
 
     return $data;
   }
 
   /**
    * Tests rendering of a link with a path and options.
-   *
-   * @dataProvider providerTestRenderAsLinkWithPathAndTokens
-   * @covers ::renderAsLink
    */
-  public function testRenderAsLinkWithPathAndTokens($path, $tokens, $link_html) {
+  #[DataProvider('providerTestRenderAsLinkWithPathAndTokens')]
+  public function testRenderAsLinkWithPathAndTokens($path, $tokens, $link_html): void {
     $alter = [
       'make_link' => TRUE,
       'path' => $path,
@@ -555,7 +634,7 @@ class FieldPluginBaseTest extends UnitTestCase {
     ];
 
     $this->renderer->expects($this->once())
-      ->method('renderPlain')
+      ->method('renderInIsolation')
       ->with($build)
       ->willReturn('base:test-path/123');
 
@@ -569,7 +648,7 @@ class FieldPluginBaseTest extends UnitTestCase {
    * @return array
    *   Test data.
    */
-  public function providerTestRenderAsLinkWithPathAndTokens() {
+  public static function providerTestRenderAsLinkWithPathAndTokens() {
     $tokens = ['{{ foo }}' => 123];
     $link_html = '<a href="/test-path/123">value</a>';
 
@@ -591,10 +670,10 @@ class FieldPluginBaseTest extends UnitTestCase {
   /**
    * Tests rendering of a link with a path and options.
    *
-   * @dataProvider providerTestRenderAsExternalLinkWithPathAndTokens
-   * @covers ::renderAsLink
+   * @legacy-covers ::renderAsLink
    */
-  public function testRenderAsExternalLinkWithPathAndTokens($path, $tokens, $link_html, $context) {
+  #[DataProvider('providerTestRenderAsExternalLinkWithPathAndTokens')]
+  public function testRenderAsExternalLinkWithPathAndTokens($path, $tokens, $link_html, $context): void {
     $alter = [
       'make_link' => TRUE,
       'path' => $path,
@@ -619,7 +698,7 @@ class FieldPluginBaseTest extends UnitTestCase {
     ];
 
     $this->renderer->expects($this->once())
-      ->method('renderPlain')
+      ->method('renderInIsolation')
       ->with($build)
       ->willReturn($context['context_path']);
 
@@ -633,13 +712,33 @@ class FieldPluginBaseTest extends UnitTestCase {
    * @return array
    *   Test data.
    */
-  public function providerTestRenderAsExternalLinkWithPathAndTokens() {
+  public static function providerTestRenderAsExternalLinkWithPathAndTokens() {
     $data = [];
 
-    $data[] = ['{{ foo }}', ['{{ foo }}' => 'http://www.example.com'], '<a href="http://www.example.com">value</a>', ['context_path' => 'http://www.example.com']];
-    $data[] = ['{{ foo }}', ['{{ foo }}' => ''], 'value', ['context_path' => '']];
-    $data[] = ['{{ foo }}', ['{{ foo }}' => ''], 'value', ['context_path' => '', 'alter' => ['external' => TRUE]]];
-    $data[] = ['{{ foo }}', ['{{ foo }}' => '/test-path/123'], '<a href="/test-path/123">value</a>', ['context_path' => '/test-path/123']];
+    $data[] = [
+      '{{ foo }}',
+      ['{{ foo }}' => 'http://www.example.com'],
+      '<a href="http://www.example.com">value</a>',
+      ['context_path' => 'http://www.example.com'],
+    ];
+    $data[] = [
+      '{{ foo }}',
+      ['{{ foo }}' => ''],
+      'value',
+      ['context_path' => ''],
+    ];
+    $data[] = [
+      '{{ foo }}',
+      ['{{ foo }}' => ''],
+      'value',
+      ['context_path' => '', 'alter' => ['external' => TRUE]],
+    ];
+    $data[] = [
+      '{{ foo }}',
+      ['{{ foo }}' => '/test-path/123'],
+      '<a href="/test-path/123">value</a>',
+      ['context_path' => '/test-path/123'],
+    ];
 
     return $data;
   }
@@ -647,25 +746,21 @@ class FieldPluginBaseTest extends UnitTestCase {
   /**
    * Sets up a test field.
    *
-   * @return \Drupal\Tests\views\Unit\Plugin\field\FieldPluginBaseTestField|\PHPUnit\Framework\MockObject\MockObject
+   * @return \Drupal\Tests\views\Unit\Plugin\field\FieldPluginBaseTestField
    *   The test field.
    */
   protected function setupTestField(array $options = []) {
-    /** @var \Drupal\Tests\views\Unit\Plugin\field\FieldPluginBaseTestField $field */
-    $field = $this->getMockBuilder('Drupal\Tests\views\Unit\Plugin\field\FieldPluginBaseTestField')
-      ->addMethods(['l'])
-      ->setConstructorArgs([$this->configuration, $this->pluginId, $this->pluginDefinition])
-      ->getMock();
+    $field = new FieldPluginBaseTestField($this->configuration, $this->pluginId, $this->pluginDefinition);
     $field->init($this->executable, $this->display, $options);
     $field->setLinkGenerator($this->linkGenerator);
-
+    $field->view->row_index = 0;
     return $field;
   }
 
   /**
-   * @covers ::getRenderTokens
+   * Tests get render tokens without fields and arguments.
    */
-  public function testGetRenderTokensWithoutFieldsAndArguments() {
+  public function testGetRenderTokensWithoutFieldsAndArguments(): void {
     $field = $this->setupTestField();
 
     $this->display->expects($this->any())
@@ -679,9 +774,9 @@ class FieldPluginBaseTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getRenderTokens
+   * Tests get render tokens without arguments.
    */
-  public function testGetRenderTokensWithoutArguments() {
+  public function testGetRenderTokensWithoutArguments(): void {
     $field = $this->setupTestField(['id' => 'id']);
 
     $field->last_render = 'last rendered output';
@@ -696,9 +791,9 @@ class FieldPluginBaseTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getRenderTokens
+   * Tests get render tokens with arguments.
    */
-  public function testGetRenderTokensWithArguments() {
+  public function testGetRenderTokensWithArguments(): void {
     $field = $this->setupTestField(['id' => 'id']);
     $field->view->args = ['argument value'];
     $field->view->build_info['substitutions']['{{ arguments.name }}'] = 'argument value';
@@ -724,13 +819,115 @@ class FieldPluginBaseTest extends UnitTestCase {
   }
 
   /**
+   * Tests get render tokens with query.
+   *
+   * @legacy-covers ::getRenderTokens
+   * @legacy-covers ::getTokenValuesRecursive
+   */
+  #[DataProvider('providerTestGetRenderTokensWithQuery')]
+  public function testGetRenderTokensWithQuery(array $query_params, array $expected): void {
+    $request = new Request($query_params);
+    $this->executable->expects($this->any())
+      ->method('getRequest')
+      ->willReturn($request);
+
+    $field = $this->setupTestField(['id' => 'id']);
+    $field->last_render = 'last rendered output';
+    $this->display->expects($this->any())
+      ->method('getHandlers')
+      ->willReturnMap([
+        ['argument', []],
+        ['field', ['id' => $field]],
+      ]);
+
+    $this->assertEquals($expected, $field->getRenderTokens([]));
+  }
+
+  /**
+   * Data provider for ::testGetRenderTokensWithQuery().
+   *
+   * @return array
+   *   Test data.
+   */
+  public static function providerTestGetRenderTokensWithQuery(): array {
+    $data = [];
+    // No query parameters.
+    $data[] = [
+      [],
+      [
+        '{{ id }}' => 'last rendered output',
+      ],
+    ];
+    // Invalid query parameters.
+    $data[] = [
+      [
+        '&invalid' => [
+          'a' => 1,
+          'b' => [1, 2],
+          1 => 2,
+        ],
+        'invalid.entry' => 'ignore me',
+      ],
+      [
+        '{{ id }}' => 'last rendered output',
+      ],
+    ];
+    // Process only valid query parameters.
+    $data[] = [
+      [
+        'foo' => [
+          'a' => 'value',
+          'b' => 'value',
+          'c.d' => 'invalid argument',
+          '&invalid' => 'invalid argument',
+        ],
+        'bar' => [
+          'a' => 'value',
+          'b' => [
+            'c' => 'value',
+          ],
+        ],
+      ],
+      [
+        '{{ id }}' => 'last rendered output',
+        '{{ arguments.foo.a }}' => 'value',
+        '{{ arguments.foo.b }}' => 'value',
+        '{{ arguments.bar.a }}' => 'value',
+        '{{ arguments.bar.b.c }}' => 'value',
+      ],
+    ];
+    // Supports numeric keys.
+    $data[] = [
+      [
+        'multiple' => [
+          1,
+          2,
+          3,
+        ],
+        1 => '',
+        3 => '&amp; encoded_value',
+      ],
+      [
+        '{{ id }}' => 'last rendered output',
+        '{{ arguments.multiple.0 }}' => '1',
+        '{{ arguments.multiple.1 }}' => '2',
+        '{{ arguments.multiple.2 }}' => '3',
+        '{{ arguments.1 }}' => '',
+        '{{ arguments.3 }}' => '& encoded_value',
+      ],
+    ];
+
+    return $data;
+  }
+
+  /**
    * Ensures proper token replacement when generating CSS classes.
    *
-   * @covers ::elementClasses
-   * @covers ::elementLabelClasses
-   * @covers ::elementWrapperClasses
+   * @legacy-covers ::elementClasses
+   * @legacy-covers ::elementLabelClasses
+   * @legacy-covers ::elementWrapperClasses
    */
-  public function testElementClassesWithTokens() {
+  public function testElementClassesWithTokens(): void {
     $functions = [
       'elementClasses' => 'element_class',
       'elementLabelClasses' => 'element_label_class',
@@ -753,7 +950,7 @@ class FieldPluginBaseTest extends UnitTestCase {
     // being tested correctly handles tokens when generating the element's class
     // attribute.
     $this->renderer->expects($this->any())
-      ->method('renderPlain')
+      ->method('renderInIsolation')
       ->with($build)
       ->willReturn($expected_result);
 
@@ -769,9 +966,15 @@ class FieldPluginBaseTest extends UnitTestCase {
 
 }
 
+/**
+ * Test class for testing field plugins.
+ */
 class FieldPluginBaseTestField extends FieldPluginBase {
 
-  public function setLinkGenerator(LinkGeneratorInterface $link_generator) {
+  /**
+   * Set the link generator.
+   */
+  public function setLinkGenerator(LinkGeneratorInterface $link_generator): void {
     $this->linkGenerator = $link_generator;
   }
 
@@ -782,6 +985,9 @@ namespace Drupal\views\Plugin\views\field;
 
 if (!function_exists('base_path')) {
 
+  /**
+   * Returns the base path.
+   */
   function base_path() {
     return '/';
   }

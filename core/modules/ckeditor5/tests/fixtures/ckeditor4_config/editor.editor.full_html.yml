@@ -3,8 +3,9 @@ status: true
 dependencies:
   config:
     - filter.format.full_html
-  module:
-    - ckeditor
+# TRICKY: This technically is a module that this config depends on, but it has been removed from Drupal >=10.
+#  module:
+#    - ckeditor
 format: full_html
 editor: ckeditor
 settings:
@@ -52,7 +53,7 @@ image_upload:
   status: true
   scheme: public
   directory: inline-images
-  max_size: ''
+  max_size: null
   max_dimensions:
-    width: 0
-    height: 0
+    width: null
+    height: null

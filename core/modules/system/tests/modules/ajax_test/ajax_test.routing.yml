@@ -43,6 +43,13 @@ ajax_test.insert_links_inline_wrapper:
   requirements:
     _access: 'TRUE'
 
+ajax_test.insert_links_table_wrapper:
+  path: '/ajax-test/insert-table-wrapper'
+  defaults:
+    _controller: '\Drupal\ajax_test\Controller\AjaxTestController::insertLinksTableWrapper'
+  requirements:
+    _access: 'TRUE'
+
 ajax_test.dialog_close:
   path: '/ajax-test/dialog-close'
   defaults:
@@ -143,5 +150,21 @@ ajax_test.http_methods.dialog:
   path: '/ajax-test/http-methods-dialog'
   defaults:
     _controller: Drupal\ajax_test\Controller\AjaxTestController::httpMethodsDialog
+  requirements:
+    _access: 'TRUE'
+
+ajax_test.link_page.dialog:
+  path: '/ajax-test/link-page-dialog'
+  defaults:
+    _title: 'AJAX link page'
+    _controller: '\Drupal\ajax_test\Controller\AjaxTestController::linkPageDialog'
+  requirements:
+    _access: 'TRUE'
+
+ajax_test.link_page.dialog_contents:
+  path: '/ajax-test/link-page-dialog-contents'
+  defaults:
+    _title_callback: '\Drupal\ajax_test\Controller\AjaxTestController::linkPageDialogTitle'
+    _controller: '\Drupal\ajax_test\Controller\AjaxTestController::httpMethodsDialog'
   requirements:
     _access: 'TRUE'

@@ -1,0 +1,12 @@
+name: Navigation test
+description: 'Provides test functionality for navigation module'
+package: Testing
+# version: VERSION
+type: module
+dependencies:
+  - drupal:navigation
+
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
+project: 'drupal'
+datestamp: 1784141321

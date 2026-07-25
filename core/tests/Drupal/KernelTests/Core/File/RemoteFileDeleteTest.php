@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\File;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the unmanaged file delete function.
- *
- * @group File
  */
+#[Group('File')]
+#[RunTestsInSeparateProcesses]
 class RemoteFileDeleteTest extends FileDeleteTest {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['file_test'];
 

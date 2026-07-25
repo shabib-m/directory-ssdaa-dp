@@ -4,15 +4,14 @@ declare(strict_types = 1);
 
 namespace Drupal\ckeditor5\Plugin\Editor;
 
-use Drupal\ckeditor5\CKEditor5StylesheetsMessage;
 use Drupal\ckeditor5\HTMLRestrictions;
+use Drupal\ckeditor5\LanguageMapper;
 use Drupal\ckeditor5\Plugin\CKEditor5Plugin\Heading;
 use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
 use Drupal\ckeditor5\Plugin\CKEditor5PluginManagerInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\Schema\SchemaCheckTrait;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
@@ -21,36 +20,36 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ckeditor5\SmartDefaultSettings;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Validation\Plugin\Validation\Constraint\PrimitiveTypeConstraint;
+use Drupal\editor\Attribute\Editor;
 use Drupal\editor\EditorInterface;
-use Drupal\editor\Entity\Editor;
+use Drupal\editor\Entity\Editor as EditorEntity;
+use Drupal\editor\Hook\EditorHooks;
 use Drupal\editor\Plugin\EditorBase;
 use Drupal\filter\FilterFormatInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
  * Defines a CKEditor 5-based text editor for Drupal.
  *
- * @Editor(
- *   id = "ckeditor5",
- *   label = @Translation("CKEditor 5"),
- *   supports_content_filtering = TRUE,
- *   supports_inline_editing = TRUE,
- *   is_xss_safe = FALSE,
- *   supported_element_types = {
- *     "textarea"
- *   }
- * )
- *
  * @internal
  *   Plugin classes are internal.
  */
+#[Editor(
+  id: 'ckeditor5',
+  label: new TranslatableMarkup('CKEditor 5'),
+  supports_content_filtering: TRUE,
+  supports_inline_editing: TRUE,
+  is_xss_safe: FALSE,
+  supported_element_types: [
+    'textarea',
+  ]
+)]
 class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
-
-  use SchemaCheckTrait;
 
   /**
    * The CKEditor plugin manager.
@@ -102,13 +101,6 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
   protected $cache;
 
   /**
-   * The ckeditor_stylesheets message utility.
-   *
-   * @var \Drupal\ckeditor5\CKEditor5StylesheetsMessage
-   */
-  private $stylesheetsMessage;
-
-  /**
    * A logger instance.
    *
    * @var \Psr\Log\LoggerInterface
@@ -116,56 +108,62 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
   protected $logger;
 
   /**
+   * The ckeditor language mapper.
+   *
+   * @var \Drupal\ckeditor5\LanguageMapper
+   */
+  protected LanguageMapper $languageMapper;
+
+  /**
    * Constructs a CKEditor 5 editor plugin.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\ckeditor5\Plugin\CKEditor5PluginManagerInterface $ckeditor5_plugin_manager
    *   The CKEditor 5 plugin manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
-   *   The language manager
+   *   The language manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    * @param \Drupal\ckeditor5\SmartDefaultSettings $smart_default_settings
    *   The smart default settings utility.
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache
    *   The cache.
-   * @param \Drupal\ckeditor5\CKEditor5StylesheetsMessage $stylesheets_message
-   *   The ckeditor_stylesheets message utility.
    * @param \Psr\Log\LoggerInterface $logger
    *   A logger instance.
+   * @param \Drupal\ckeditor5\LanguageMapper $languageMapper
+   *   The ckeditor language mapper.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, CKEditor5PluginManagerInterface $ckeditor5_plugin_manager, LanguageManagerInterface $language_manager, ModuleHandlerInterface $module_handler, SmartDefaultSettings $smart_default_settings, CacheBackendInterface $cache, CKEditor5StylesheetsMessage $stylesheets_message, LoggerInterface $logger) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    CKEditor5PluginManagerInterface $ckeditor5_plugin_manager,
+    LanguageManagerInterface $language_manager,
+    ModuleHandlerInterface $module_handler,
+    SmartDefaultSettings $smart_default_settings,
+    #[Autowire(service: 'cache.default')]
+    CacheBackendInterface $cache,
+    #[Autowire(service: 'logger.channel.ckeditor5')]
+    LoggerInterface $logger,
+    LanguageMapper $languageMapper,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->ckeditor5PluginManager = $ckeditor5_plugin_manager;
     $this->languageManager = $language_manager;
     $this->moduleHandler = $module_handler;
     $this->smartDefaultSettings = $smart_default_settings;
     $this->cache = $cache;
-    $this->stylesheetsMessage = $stylesheets_message;
     $this->logger = $logger;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('plugin.manager.ckeditor5.plugin'),
-      $container->get('language_manager'),
-      $container->get('module_handler'),
-      $container->get('ckeditor5.smart_default_settings'),
-      $container->get('cache.default'),
-      $container->get('ckeditor5.stylesheets.message'),
-      $container->get('logger.channel.ckeditor5')
-    );
+    if (!$languageMapper) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $languageMapper argument is deprecated in drupal:11.3.0 and it will be required in drupal:12.0.0. See https://www.drupal.org/node/3551652', E_USER_DEPRECATED);
+      $languageMapper = \Drupal::service(LanguageMapper::class);
+    }
+    $this->languageMapper = $languageMapper;
   }
 
   /**
@@ -263,7 +261,7 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $editor = $form_state->get('editor');
-    assert($editor instanceof Editor);
+    assert($editor instanceof EditorEntity);
     $language = $this->languageManager->getCurrentLanguage();
 
     // When enabling CKEditor 5, generate sensible settings from the
@@ -298,23 +296,6 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
       // from $form_state->get('editor').
       // @see \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image::buildConfigurationForm
       $form_state->set('editor', $editor);
-    }
-
-    if ($css_warning = $this->stylesheetsMessage->getWarning()) {
-      // Explicitly render this single warning message visually close to the
-      // text editor since this is a very long form. Otherwise, it may be
-      // interpreted as a text format problem, or ignored entirely.
-      // All other messages will be rendered in the default location.
-      // @see \Drupal\Core\Render\Element\StatusMessages
-      $form['css_warning'] = [
-        '#theme' => 'status_messages',
-        '#message_list' => [
-          'warning' => [$css_warning],
-        ],
-        '#status_headings' => [
-          'warning' => $this->t('Warning message'),
-        ],
-      ];
     }
 
     // AJAX validation errors should appear visually close to the text editor
@@ -527,14 +508,6 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
     $form_state->set('ckeditor5_is_active', $already_using_ckeditor5);
     $form_state->set('ckeditor5_is_selected', $form_state->getValue(['editor', 'editor']) === 'ckeditor5');
 
-    // Disable inline form errors when using CKEditor 5 because it prevents
-    // useful error messages from vertical tabs from being visible to the user.
-    // @todo Remove this workaround in
-    //   https://www.drupal.org/project/drupal/issues/3263668
-    if ($form_state->get('ckeditor5_is_selected')) {
-      $element['#disable_inline_form_errors'] = TRUE;
-    }
-
     return $element;
   }
 
@@ -543,7 +516,7 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
    */
   public static function validateSwitchingToCKEditor5(array $form, FormStateInterface $form_state): void {
     if (!$form_state->get('ckeditor5_is_active') && $form_state->get('ckeditor5_is_selected')) {
-      $minimal_ckeditor5_editor = Editor::create([
+      $minimal_ckeditor5_editor = EditorEntity::create([
         'format' => NULL,
         'editor' => 'ckeditor5',
       ]);
@@ -638,7 +611,7 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
       // If this plugin is configurable but it has empty default configuration,
       // that means the configuration must be stored out of band.
       // @see \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image
-      // @see editor_image_upload_settings_form()
+      // @see \Drupal\editor\EditorImageUploadSettings::getForm()
       $default_configuration = $plugin->defaultConfiguration();
       $configuration_stored_out_of_band = empty($default_configuration);
       // If this plugin is configurable but has not yet had user interaction,
@@ -671,7 +644,13 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
     // All plugin settings have been collected, including defaults that depend
     // on visibility. Store the collected settings, throw away the interim state
     // that allowed determining which defaults to add.
+    // Create a new clone, because the plugins whose data is being stored
+    // out-of-band may have modified the Text Editor config entity in the form
+    // state.
+    // @see \Drupal\editor\EditorInterface::setImageUploadSettings()
+    // @see \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image::submitConfigurationForm()
     unset($eventual_editor_and_format_for_plugin_settings_visibility);
+    $submitted_editor = clone $form_state->get('editor');
     $submitted_editor->setSettings($settings);
 
     // Validate the text editor + text format pair.
@@ -687,7 +666,7 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
 
       // Special case: AJAX updates that do not submit the form (that cannot
       // result in configuration being saved).
-      if (in_array('editor_form_filter_admin_format_editor_configure', $form_state->getSubmitHandlers(), TRUE)) {
+      if (in_array(EditorHooks::class . ':editorFormFilterAdminFormatEditorConfigure', $form_state->getSubmitHandlers(), TRUE)) {
         // Ensure that plugins' validation constraints do not immediately
         // trigger a validation error: the user may choose to configure other
         // CKEditor 5 aspects first.
@@ -729,8 +708,6 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
     // ::getGeneratedAllowedHtmlValue(), to update filter_html's
     // "allowed_html".
     $form_state->set('ckeditor5_validated_pair', $eventual_editor_and_format);
-
-    assert(TRUE === $this->checkConfigSchema(\Drupal::getContainer()->get('config.typed'), 'editor.editor.id_does_not_matter', $submitted_editor->toArray()), 'Schema errors: ' . print_r($this->checkConfigSchema(\Drupal::getContainer()->get('config.typed'), 'editor.editor.id_does_not_matter', $submitted_editor->toArray()), TRUE));
   }
 
   /**
@@ -916,6 +893,14 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
       return implode('][', array_merge(explode('.', $property_path), ['settings']));
     }
 
+    // Image upload settings are stored out-of-band and may also trigger
+    // validation errors.
+    // @see \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image
+    if (str_starts_with($property_path, 'image_upload.')) {
+      $image_upload_setting_property_path = str_replace('image_upload.', '', $property_path);
+      return 'editor][settings][plugins][ckeditor5_image][' . implode('][', explode('.', $image_upload_setting_property_path));
+    }
+
     // Everything else is in the subform.
     return 'editor][' . static::mapViolationPropertyPathsToFormNames($property_path, $form);
   }
@@ -927,9 +912,10 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
     // @see ::validateConfigurationForm()
     $editor = $form_state->get('editor');
 
-    // Prepare the editor settings for editor_form_filter_admin_format_submit().
+    // Prepare settings for EditorHooks::editorFormFilterAdminFormatSubmit().
     // This strips away unwanted form values too, because those never can exist
     // in the already validated Editor config entity.
+    // @see \Drupal\editor\Hook\EditorHooks::editorFormFilterAdminFormatSubmit()
     $form_state->setValues($editor->getSettings());
 
     parent::submitConfigurationForm($form, $form_state);
@@ -942,7 +928,7 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public function getJSSettings(Editor $editor) {
+  public function getJSSettings(EditorEntity $editor) {
     $toolbar_items = $editor->getSettings()['toolbar']['items'];
     $plugin_config = $this->ckeditor5PluginManager->getCKEditor5PluginConfig($editor);
 
@@ -953,9 +939,11 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
       ],
     ] + $plugin_config;
 
+    $settings['config']['licenseKey'] ??= 'GPL';
+
     if ($this->moduleHandler->moduleExists('locale')) {
       $language_interface = $this->languageManager->getCurrentLanguage();
-      $settings['language']['ui'] = _ckeditor5_get_langcode_mapping($language_interface->getId());
+      $settings['language']['ui'] = $this->languageMapper->getMapping($language_interface->getId());
     }
 
     return $settings;
@@ -964,12 +952,12 @@ class CKEditor5 extends EditorBase implements ContainerFactoryPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public function getLibraries(Editor $editor) {
+  public function getLibraries(EditorEntity $editor) {
     $plugin_libraries = $this->ckeditor5PluginManager->getEnabledLibraries($editor);
 
     if ($this->moduleHandler->moduleExists('locale')) {
       $language_interface = $this->languageManager->getCurrentLanguage();
-      $plugin_libraries[] = 'core/ckeditor5.translations.' . _ckeditor5_get_langcode_mapping($language_interface->getId());
+      $plugin_libraries[] = 'core/ckeditor5.translations.' . $this->languageMapper->getMapping($language_interface->getId());
     }
 
     return $plugin_libraries;

@@ -6,11 +6,20 @@ use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Cache\Context\CacheContextsManager;
 
 /**
  * Turns a render array into a placeholder.
  */
 class PlaceholderGenerator implements PlaceholderGeneratorInterface {
+
+  /**
+   * The cache contexts manager service.
+   *
+   * @var \Drupal\Core\Cache\Context\CacheContextsManager
+   */
+  protected $cacheContextsManager;
 
   /**
    * The renderer configuration array.
@@ -22,10 +31,13 @@ class PlaceholderGenerator implements PlaceholderGeneratorInterface {
   /**
    * Constructs a new Placeholder service.
    *
+   * @param \Drupal\Core\Cache\Context\CacheContextsManager $cache_contexts_manager
+   *   The cache contexts manager service.
    * @param array $renderer_config
    *   The renderer configuration array.
    */
-  public function __construct(array $renderer_config) {
+  public function __construct(CacheContextsManager $cache_contexts_manager, array $renderer_config) {
+    $this->cacheContextsManager = $cache_contexts_manager;
     $this->rendererConfig = $renderer_config;
   }
 
@@ -48,15 +60,21 @@ class PlaceholderGenerator implements PlaceholderGeneratorInterface {
     // parameter.
     $conditions = $this->rendererConfig['auto_placeholder_conditions'];
 
-    if (isset($element['#cache']['max-age']) && $element['#cache']['max-age'] !== Cache::PERMANENT && $element['#cache']['max-age'] <= $conditions['max-age']) {
+    $cacheability = CacheableMetadata::createFromRenderArray($element);
+    if ($cacheability->getCacheMaxAge() !== Cache::PERMANENT && $cacheability->getCacheMaxAge() <= $conditions['max-age']) {
       return TRUE;
     }
 
-    if (isset($element['#cache']['contexts']) && array_intersect($element['#cache']['contexts'], $conditions['contexts'])) {
+    // Optimize the contexts and let them affect the cache tags to mimic what
+    // happens to the cacheability in the variation cache (RenderCache backend).
+    $cacheability->addCacheableDependency($this->cacheContextsManager->convertTokensToKeys($cacheability->getCacheContexts()));
+    $cacheability->setCacheContexts($this->cacheContextsManager->optimizeTokens($cacheability->getCacheContexts()));
+
+    if (array_intersect($cacheability->getCacheContexts(), $conditions['contexts'])) {
       return TRUE;
     }
 
-    if (isset($element['#cache']['tags']) && array_intersect($element['#cache']['tags'], $conditions['tags'])) {
+    if (array_intersect($cacheability->getCacheTags(), $conditions['tags'])) {
       return TRUE;
     }
 
@@ -67,15 +85,18 @@ class PlaceholderGenerator implements PlaceholderGeneratorInterface {
    * {@inheritdoc}
    */
   public function createPlaceholder(array $element) {
-    $placeholder_render_array = array_intersect_key($element, [
+    $placeholder_render_array = array_intersect_key($element, \array_flip([
       // Placeholders are replaced with markup by executing the associated
       // #lazy_builder callback, which generates a render array, and which the
       // Renderer will render and replace the placeholder with.
-      '#lazy_builder' => TRUE,
+      '#lazy_builder',
       // The cacheability metadata for the placeholder. The rendered result of
       // the placeholder may itself be cached, if [#cache][keys] are specified.
-      '#cache' => TRUE,
-    ]);
+      '#cache',
+      // The placeholder strategy denylist for this placeholder which can be
+      // used to skip placeholder strategies for specific render arrays.
+      '#placeholder_strategy_denylist',
+    ]));
 
     if (isset($element['#lazy_builder_preview'])) {
       $placeholder_render_array['#preview'] = $element['#lazy_builder_preview'];
@@ -93,18 +114,33 @@ class PlaceholderGenerator implements PlaceholderGeneratorInterface {
 
     // Generate placeholder markup. Note that the only requirement is that this
     // is unique markup that isn't easily guessable. The #lazy_builder callback
-    // and its arguments are put in the placeholder markup solely to simplify<<<
+    // and its arguments are put in the placeholder markup solely to simplify
     // debugging.
-    $callback = $placeholder_render_array['#lazy_builder'][0];
-    $arguments = UrlHelper::buildQuery($placeholder_render_array['#lazy_builder'][1]);
-    $token = Crypt::hashBase64(serialize($placeholder_render_array));
-    $placeholder_markup = '<drupal-render-placeholder callback="' . Html::escape($callback) . '" arguments="' . Html::escape($arguments) . '" token="' . Html::escape($token) . '"></drupal-render-placeholder>';
+    $placeholder_markup = static::createPlaceholderTag('drupal-render-placeholder', [
+      'callback' => $placeholder_render_array['#lazy_builder'][0],
+      'arguments' => UrlHelper::buildQuery($placeholder_render_array['#lazy_builder'][1]),
+      'token' => Crypt::hashBase64(serialize($placeholder_render_array)),
+    ]);
 
     // Build the placeholder element to return.
     $placeholder_element = [];
     $placeholder_element['#markup'] = Markup::create($placeholder_markup);
     $placeholder_element['#attached']['placeholders'][$placeholder_markup] = $placeholder_render_array;
     return $placeholder_element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function createPlaceholderTag(string $tag, array $attributes): string {
+    $markup = "<$tag";
+    foreach ($attributes as $key => $value) {
+      if ($value !== '') {
+        $markup .= ' ' . $key . '="' . Html::escape($value) . '"';
+      }
+    }
+    $markup .= "></$tag>";
+    return $markup;
   }
 
 }

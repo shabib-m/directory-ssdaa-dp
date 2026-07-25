@@ -1,18 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Functional;
 
-use Drupal\Component\Utility\Html;
 use Drupal\block\Entity\Block;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Url;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests basic block functionality.
- *
- * @group block
  */
+#[Group('block')]
+#[RunTestsInSeparateProcesses]
 class BlockTest extends BlockTestBase {
 
   /**
@@ -23,23 +27,25 @@ class BlockTest extends BlockTestBase {
   /**
    * Tests block visibility.
    */
-  public function testBlockVisibility() {
+  public function testBlockVisibility(): void {
     $block_name = 'system_powered_by_block';
     // Create a random title for the block.
     $title = $this->randomMachineName(8);
     // Enable a standard block.
     $default_theme = $this->config('system.theme')->get('default');
     $edit = [
-      'id' => strtolower($this->randomMachineName(8)),
+      'id' => $this->randomMachineName(8),
       'region' => 'sidebar_first',
       'settings[label]' => $title,
       'settings[label_display]' => TRUE,
     ];
-    // Set the block to be hidden on any user path, and to be shown only to
-    // authenticated users.
+    // Set the block to be hidden on any user path, to be shown only to
+    // authenticated users, and to be shown only on 200 and 404 responses.
     $edit['visibility[request_path][pages]'] = '/user*';
     $edit['visibility[request_path][negate]'] = TRUE;
     $edit['visibility[user_role][roles][' . RoleInterface::AUTHENTICATED_ID . ']'] = TRUE;
+    $edit['visibility[response_status][status_codes][200]'] = 200;
+    $edit['visibility[response_status][status_codes][404]'] = 404;
     $this->drupalGet('admin/structure/block/add/' . $block_name . '/' . $default_theme);
     $this->assertSession()->checkboxChecked('edit-visibility-request-path-negate-0');
 
@@ -48,14 +54,24 @@ class BlockTest extends BlockTestBase {
 
     $this->clickLink('Configure');
     $this->assertSession()->checkboxChecked('edit-visibility-request-path-negate-1');
+    $this->assertSession()->checkboxChecked('edit-visibility-response-status-status-codes-200');
+    $this->assertSession()->checkboxChecked('edit-visibility-response-status-status-codes-404');
 
-    // Confirm that the block is displayed on the front page.
+    // Confirm that the block is displayed on the front page (200 response).
     $this->drupalGet('');
     $this->assertSession()->pageTextContains($title);
 
-    // Confirm that the block is not displayed according to block visibility
+    // Confirm that the block is not displayed according to path visibility
     // rules.
     $this->drupalGet('user');
+    $this->assertSession()->pageTextNotContains($title);
+
+    // Confirm that the block is displayed on a 404 response.
+    $this->drupalGet('/0/null');
+    $this->assertSession()->pageTextContains($title);
+
+    // Confirm that the block is not displayed on a 403 response.
+    $this->drupalGet('/admin/config/system/cron');
     $this->assertSession()->pageTextNotContains($title);
 
     // Confirm that the block is not displayed to anonymous users.
@@ -71,14 +87,14 @@ class BlockTest extends BlockTestBase {
   /**
    * Tests that visibility can be properly toggled.
    */
-  public function testBlockToggleVisibility() {
+  public function testBlockToggleVisibility(): void {
     $block_name = 'system_powered_by_block';
     // Create a random title for the block.
     $title = $this->randomMachineName(8);
     // Enable a standard block.
     $default_theme = $this->config('system.theme')->get('default');
     $edit = [
-      'id' => strtolower($this->randomMachineName(8)),
+      'id' => $this->randomMachineName(8),
       'region' => 'sidebar_first',
       'settings[label]' => $title,
     ];
@@ -108,14 +124,14 @@ class BlockTest extends BlockTestBase {
   /**
    * Tests block visibility when leaving "pages" textarea empty.
    */
-  public function testBlockVisibilityListedEmpty() {
+  public function testBlockVisibilityListedEmpty(): void {
     $block_name = 'system_powered_by_block';
     // Create a random title for the block.
     $title = $this->randomMachineName(8);
     // Enable a standard block.
     $default_theme = $this->config('system.theme')->get('default');
     $edit = [
-      'id' => strtolower($this->randomMachineName(8)),
+      'id' => $this->randomMachineName(8),
       'region' => 'sidebar_first',
       'settings[label]' => $title,
       'visibility[request_path][negate]' => TRUE,
@@ -145,7 +161,7 @@ class BlockTest extends BlockTestBase {
   /**
    * Tests adding a block from the library page with a weight query string.
    */
-  public function testAddBlockFromLibraryWithWeight() {
+  public function testAddBlockFromLibraryWithWeight(): void {
     $default_theme = $this->config('system.theme')->get('default');
     // Test one positive, zero, and one negative weight.
     foreach (['7', '0', '-9'] as $weight) {
@@ -169,13 +185,13 @@ class BlockTest extends BlockTestBase {
       $this->assertSession()->elementTextEquals('xpath', $xpath, 'Place block');
 
       $link = $this->getSession()->getPage()->find('xpath', $xpath);
-      [$path, $query_string] = explode('?', $link->getAttribute('href'), 2);
+      [, $query_string] = explode('?', $link->getAttribute('href'), 2);
       parse_str($query_string, $query_parts);
       $this->assertEquals($weight, $query_parts['weight'], 'Found the expected weight query string.');
 
       // Create a random title for the block.
       $title = $this->randomMachineName(8);
-      $block_id = strtolower($this->randomMachineName(8));
+      $block_id = $this->randomMachineName(8);
       $edit = [
         'id' => $block_id,
         'settings[label]' => $title,
@@ -194,7 +210,7 @@ class BlockTest extends BlockTestBase {
   /**
    * Tests configuring and moving a module-define block to specific regions.
    */
-  public function testBlock() {
+  public function testBlock(): void {
     // Place page title block to test error messages.
     $this->drupalPlaceBlock('page_title_block');
 
@@ -210,7 +226,8 @@ class BlockTest extends BlockTestBase {
     $block['theme'] = $this->config('system.theme')->get('default');
     $block['region'] = 'header';
 
-    // Set block title to confirm that interface works and override any custom titles.
+    // Set block title to confirm that interface works and override any custom
+    // titles.
     $this->drupalGet('admin/structure/block/add/' . $block['id'] . '/' . $block['theme']);
     $this->submitForm([
       'settings[label]' => $block['settings[label]'],
@@ -278,7 +295,7 @@ class BlockTest extends BlockTestBase {
   /**
    * Tests that the block form has a theme selector when not passed via the URL.
    */
-  public function testBlockThemeSelector() {
+  public function testBlockThemeSelector(): void {
     // Install all themes.
     $themes = [
       'olivero',
@@ -292,7 +309,7 @@ class BlockTest extends BlockTestBase {
       $this->assertSession()->titleEquals('Block layout | Drupal');
       // Select the 'Powered by Drupal' block to be placed.
       $block = [];
-      $block['id'] = strtolower($this->randomMachineName());
+      $block['id'] = $this->randomMachineName();
       $block['theme'] = $theme;
       $block['region'] = 'content';
       $this->drupalGet('admin/structure/block/add/system_powered_by_block');
@@ -311,27 +328,27 @@ class BlockTest extends BlockTestBase {
   /**
    * Tests block display of theme titles.
    */
-  public function testThemeName() {
+  public function testThemeName(): void {
     // Enable the help block.
     $this->drupalPlaceBlock('help_block', ['region' => 'help']);
     $this->drupalPlaceBlock('local_tasks_block');
     // Explicitly set the default and admin themes.
-    $theme = 'block_test_specialchars_theme';
+    $theme = 'block_test_special_chars_theme';
     \Drupal::service('theme_installer')->install([$theme]);
     $this->drupalGet('admin/structure/block');
     $this->assertSession()->assertEscaped('<"Cat" & \'Mouse\'>');
-    $this->drupalGet('admin/structure/block/list/block_test_specialchars_theme');
+    $this->drupalGet('admin/structure/block/list/block_test_special_chars_theme');
     $this->assertSession()->assertEscaped('Demonstrate block regions (<"Cat" & \'Mouse\'>)');
   }
 
   /**
    * Tests block title display settings.
    */
-  public function testHideBlockTitle() {
+  public function testHideBlockTitle(): void {
     $block_name = 'system_powered_by_block';
     // Create a random title for the block.
     $title = $this->randomMachineName(8);
-    $id = strtolower($this->randomMachineName(8));
+    $id = $this->randomMachineName(8);
     // Enable a standard block.
     $default_theme = $this->config('system.theme')->get('default');
     $edit = [
@@ -374,7 +391,7 @@ class BlockTest extends BlockTestBase {
    *   The machine name of the theme region to move the block to, for example
    *   'header' or 'sidebar_first'.
    */
-  public function moveBlockToRegion(array $block, $region) {
+  public function moveBlockToRegion(array $block, $region): void {
     // Set the created block to a specific region.
     $block += ['theme' => $this->config('system.theme')->get('default')];
     $edit = [];
@@ -390,11 +407,11 @@ class BlockTest extends BlockTestBase {
     $this->assertSession()->pageTextContains($block['settings[label]']);
 
     $region_xpath = [
-      'header' => '//header[@role = "banner"]',
+      'header' => '//header',
       'sidebar_first' => '//aside[contains(@class, "layout-sidebar-first")]',
       'content' => '//div[contains(@class, "layout-content")]',
       'sidebar_second' => '//aside[contains(@class, "layout-sidebar-second")]',
-      'footer' => '//footer[@role = "contentinfo"]',
+      'footer' => '//footer',
     ];
 
     // Confirm that the content block was found at the proper region.
@@ -411,7 +428,7 @@ class BlockTest extends BlockTestBase {
    * - "block:<block ID>"
    * - "block_plugin:<block plugin ID>"
    */
-  public function testBlockCacheTags() {
+  public function testBlockCacheTags(): void {
     // The page cache only works for anonymous users.
     $this->drupalLogout();
 
@@ -436,19 +453,18 @@ class BlockTest extends BlockTestBase {
     $cache_entry = \Drupal::cache('page')->get($cid);
     $expected_cache_tags = [
       'config:block_list',
-      'block_view',
-      'config:block.block.powered',
       'config:user.role.anonymous',
       'http_response',
       'rendered',
     ];
     sort($expected_cache_tags);
-    $keys = \Drupal::service('cache_contexts_manager')->convertTokensToKeys(['languages:language_interface', 'theme', 'user.permissions'])->getKeys();
+    $keys = \Drupal::service('cache_contexts_manager')
+      ->convertTokensToKeys(['languages:language_interface', 'theme', 'user.permissions'])
+      ->getKeys();
     $this->assertSame($expected_cache_tags, $cache_entry->tags);
     $cache_entry = \Drupal::cache('render')->get('entity_view:block:powered:' . implode(':', $keys));
     $expected_cache_tags = [
-      'block_view',
-      'config:block.block.powered',
+      'config:block_list',
       'rendered',
     ];
     sort($expected_cache_tags);
@@ -465,7 +481,7 @@ class BlockTest extends BlockTestBase {
     $this->assertSession()->responseHeaderEquals('X-Drupal-Cache', 'HIT');
 
     // Place the "Powered by Drupal" block another time; verify a cache miss.
-    $this->drupalPlaceBlock('system_powered_by_block', ['id' => 'powered-2']);
+    $this->drupalPlaceBlock('system_powered_by_block', ['id' => 'powered_2']);
     $this->drupalGet('<front>');
     $this->assertSession()->responseHeaderEquals('X-Drupal-Cache', 'MISS');
 
@@ -477,9 +493,6 @@ class BlockTest extends BlockTestBase {
     $cache_entry = \Drupal::cache('page')->get($cid);
     $expected_cache_tags = [
       'config:block_list',
-      'block_view',
-      'config:block.block.powered',
-      'config:block.block.powered-2',
       'config:user.role.anonymous',
       'http_response',
       'rendered',
@@ -487,22 +500,24 @@ class BlockTest extends BlockTestBase {
     sort($expected_cache_tags);
     $this->assertEquals($expected_cache_tags, $cache_entry->tags);
     $expected_cache_tags = [
-      'block_view',
-      'config:block.block.powered',
+      'config:block_list',
       'rendered',
     ];
     sort($expected_cache_tags);
-    $keys = \Drupal::service('cache_contexts_manager')->convertTokensToKeys(['languages:language_interface', 'theme', 'user.permissions'])->getKeys();
+    $keys = \Drupal::service('cache_contexts_manager')
+      ->convertTokensToKeys(['languages:language_interface', 'theme', 'user.permissions'])
+      ->getKeys();
     $cache_entry = \Drupal::cache('render')->get('entity_view:block:powered:' . implode(':', $keys));
     $this->assertSame($expected_cache_tags, $cache_entry->tags);
     $expected_cache_tags = [
-      'block_view',
-      'config:block.block.powered-2',
+      'config:block_list',
       'rendered',
     ];
     sort($expected_cache_tags);
-    $keys = \Drupal::service('cache_contexts_manager')->convertTokensToKeys(['languages:language_interface', 'theme', 'user.permissions'])->getKeys();
-    $cache_entry = \Drupal::cache('render')->get('entity_view:block:powered-2:' . implode(':', $keys));
+    $keys = \Drupal::service('cache_contexts_manager')
+      ->convertTokensToKeys(['languages:language_interface', 'theme', 'user.permissions'])
+      ->getKeys();
+    $cache_entry = \Drupal::cache('render')->get('entity_view:block:powered_2:' . implode(':', $keys));
     $this->assertSame($expected_cache_tags, $cache_entry->tags);
 
     // Now we should have a cache hit again.
@@ -512,7 +527,7 @@ class BlockTest extends BlockTestBase {
     // Delete the "Powered by Drupal" blocks; verify a cache miss.
     $block_storage = \Drupal::entityTypeManager()->getStorage('block');
     $block_storage->load('powered')->delete();
-    $block_storage->load('powered-2')->delete();
+    $block_storage->load('powered_2')->delete();
     $this->drupalGet('<front>');
     $this->assertSession()->responseHeaderEquals('X-Drupal-Cache', 'MISS');
   }
@@ -520,7 +535,7 @@ class BlockTest extends BlockTestBase {
   /**
    * Tests that a link exists to block layout from the appearance form.
    */
-  public function testThemeAdminLink() {
+  public function testThemeAdminLink(): void {
     $this->drupalPlaceBlock('help_block', ['region' => 'help']);
     $theme_admin = $this->drupalCreateUser([
       'administer blocks',
@@ -536,7 +551,7 @@ class BlockTest extends BlockTestBase {
   /**
    * Tests that uninstalling a theme removes its block configuration.
    */
-  public function testUninstallTheme() {
+  public function testUninstallTheme(): void {
     /** @var \Drupal\Core\Extension\ThemeInstallerInterface $theme_installer */
     $theme_installer = \Drupal::service('theme_installer');
 
@@ -556,13 +571,13 @@ class BlockTest extends BlockTestBase {
   /**
    * Tests the block access.
    */
-  public function testBlockAccess() {
+  public function testBlockAccess(): void {
     $this->drupalPlaceBlock('test_access', ['region' => 'help']);
 
     $this->drupalGet('<front>');
     $this->assertSession()->pageTextNotContains('Hello test world');
 
-    \Drupal::state()->set('test_block_access', TRUE);
+    \Drupal::keyValue('block_test')->set('access', TRUE);
     $this->drupalGet('<front>');
     $this->assertSession()->pageTextContains('Hello test world');
   }
@@ -570,7 +585,7 @@ class BlockTest extends BlockTestBase {
   /**
    * Tests block_user_role_delete.
    */
-  public function testBlockUserRoleDelete() {
+  public function testBlockUserRoleDelete(): void {
     $role1 = Role::create(['id' => 'test_role1', 'label' => 'Test role 1']);
     $role1->save();
 
@@ -580,6 +595,7 @@ class BlockTest extends BlockTestBase {
     $block = Block::create([
       'id' => $this->randomMachineName(),
       'plugin' => 'system_powered_by_block',
+      'theme' => 'stark',
     ]);
 
     $block->setVisibilityConfig('user_role', [
@@ -602,7 +618,7 @@ class BlockTest extends BlockTestBase {
   /**
    * Tests block title.
    */
-  public function testBlockTitle() {
+  public function testBlockTitle(): void {
     // Create a custom title for the block.
     $title = "This block's <b>great!</b>";
     // Enable a standard block.
@@ -625,6 +641,25 @@ class BlockTest extends BlockTestBase {
     $this->clickLink('Disable');
     $elements = $this->xpath('//table/tbody/tr//td[contains(@class, "block")]');
     $this->assertEquals("$title (disabled)", $elements[0]->getText());
+  }
+
+  /**
+   * Tests a combined page title, content, and messages block.
+   */
+  public function testTitleContentMessagesSingleBlock(): void {
+    // Place block which implements MainContentBlockPluginInterface,
+    // TitleBlockPluginInterface, and MessagesBlockPluginInterface.
+    $this->drupalPlaceBlock('test_title_content_message_block');
+    $this->drupalGet('');
+
+    // Ensure the block's setTitle function was called.
+    $this->assertSession()->pageTextContains('Page title has been placed in the block.');
+
+    // Ensure the block's setMainContent function was called.
+    $this->assertSession()->pageTextContains('Main content has been placed in the block.');
+
+    // Ensure the status message is shown.
+    $this->assertSession()->statusMessageContains('This is a status message.', 'status');
   }
 
 }

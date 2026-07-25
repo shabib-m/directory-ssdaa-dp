@@ -1,18 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional;
 
-use Drupal\Core\Entity\Entity\EntityViewDisplay;
-use Drupal\Core\Language\LanguageInterface;
 use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests making comment base fields' displays configurable.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentDisplayConfigurableTest extends CommentTestBase {
 
   /**
@@ -36,7 +40,7 @@ class CommentDisplayConfigurableTest extends CommentTestBase {
   /**
    * Sets base fields to configurable display and check settings are respected.
    */
-  public function testDisplayConfigurable() {
+  public function testDisplayConfigurable(): void {
     // Add a comment.
     $nid = $this->node->id();
     /** @var \Drupal\comment\CommentInterface $comment */

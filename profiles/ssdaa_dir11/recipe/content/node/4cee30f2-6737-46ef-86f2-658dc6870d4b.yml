@@ -1,0 +1,56 @@
+_meta:
+  version: '1.0'
+  entity_type: node
+  uuid: 4cee30f2-6737-46ef-86f2-658dc6870d4b
+  bundle: directory
+  default_langcode: ar
+  depends:
+    2ad0bcbc-6fef-4fff-8846-7085d2db7e61: taxonomy_term
+    85386d84-5167-4183-a472-3846e09a8ee9: file
+default:
+  revision_uid:
+    -
+      target_id: 0
+  status:
+    -
+      value: true
+  uid:
+    -
+      target_id: 0
+  title:
+    -
+      value: 'ﻣﻮﻗﻊ العلامه ﺻﺎﻟﺢ ﺑﻦ ﻓﻮﺯﺍﻥ ﺍﻟﻔﻮﺯﺍﻥ'
+  created:
+    -
+      value: 1784748879
+  promote:
+    -
+      value: true
+  sticky:
+    -
+      value: false
+  path:
+    -
+      alias: /website/alfawzan
+      langcode: ar
+  body:
+    -
+      value: |
+        <p>موقع الامام العلامة الشيخ صالح الفوزان حفظة الله واطال في عمره على طاعته ونفع بعلمه </p>
+      format: full_html
+      summary: ''
+  field_aldwlh:
+    -
+      entity: 2ad0bcbc-6fef-4fff-8846-7085d2db7e61
+  field_image:
+    -
+      entity: 85386d84-5167-4183-a472-3846e09a8ee9
+      alt: ''
+      title: ''
+      width: 600
+      height: 306
+  field_url_website:
+    -
+      uri: 'https://www.alfawzan.af.org.sa'
+      title: ''
+      options: {  }

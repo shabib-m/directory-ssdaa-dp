@@ -1,3 +1,5 @@
+<!-- cspell:ignore skiptags -->
+
 # Running tests
 
 ## Setting up
@@ -29,9 +31,6 @@ Settings to change in this file:
 * SIMPLETEST_DB: The URL of your Drupal database
 * The bootstrap attribute of the top-level phpunit tag, to take into account
   the location of the file
-* BROWSERTEST_OUTPUT_DIRECTORY: Set to sites/simpletest/browser_output;
-  you will also want to uncomment the printerClass attribute of the
-  top-level phpunit tag.
 
 ### Additional setup for JavaScript tests
 
@@ -53,7 +52,7 @@ a particular group:
 ```
 ./vendor/bin/phpunit -c /path/to/your/phpunit.xml path/to/your/class/file.php
 ./vendor/bin/phpunit --list-groups
-./vendor/bin/phpunit -c /path/to/your/phpunit.xml --group Groupname
+./vendor/bin/phpunit -c /path/to/your/phpunit.xml --group group_name
 ```
 
 Drupal core currently has a number of different types of tests that can be run
@@ -113,7 +112,7 @@ chromedriver using port 4444, and keep it running:
 * To run only core tests, run `yarn test:nightwatch --tag core`
 * To skip running core tests, run `yarn test:nightwatch --skiptags core`
 * To run a single test, run e.g.
-  `yarn test:nightwatch tests/Drupal/Nightwatch/Tests/exampleTest.js`
+  `yarn test:nightwatch tests/Drupal/Nightwatch/Tests/loginTest.js`
 * To run a11y tests for both the admin and default themes.
   `yarn test:nightwatch --tag a11y`
 * To run a11y tests for the admin theme only.
@@ -121,9 +120,9 @@ chromedriver using port 4444, and keep it running:
 * To run a11y tests for the default theme only.
   `yarn test:nightwatch --tag a11y:default`
 * To run an a11y test for a custom theme used as the default theme.
-  `yarn test:nightwatch --tag a11y:default --defaultTheme bartik`
+  `yarn test:nightwatch --tag a11y:default --defaultTheme olivero`
 * To run an a11y test for a custom admin theme.
-  `yarn test:nightwatch --tag a11y:admin --adminTheme seven`
+  `yarn test:nightwatch --tag a11y:admin --adminTheme claro`
 
 Nightwatch tests, as well as custom commands, assertions and pages, can be
 placed in any folder with the pattern
@@ -157,7 +156,7 @@ If you run into file permission problems while running tests, you may need to
 invoke the phpunit executable with a user in the same group as the web server
 user, or with access to files owned by the web server user. For example:
 ```
-sudo -u www-data ./vendor/bin/phpunit -c /path/to/your/phpunit.xml --group Groupname
+sudo -u www-data ./vendor/bin/phpunit -c /path/to/your/phpunit.xml --group group_name
 ```
 
 If you have permission problems accessing files after running tests, try

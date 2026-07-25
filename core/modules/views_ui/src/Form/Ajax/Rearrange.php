@@ -5,6 +5,7 @@ namespace Drupal\views_ui\Form\Ajax;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\views\ViewEntityInterface;
 use Drupal\views\ViewExecutable;
@@ -66,12 +67,12 @@ class Rearrange extends ViewsFormBase {
     if ($display->defaultableSections($types[$type]['plural'])) {
       $section = $types[$type]['plural'];
       $form_state->set('section', $section);
-      views_ui_standard_display_dropdown($form, $form_state, $section);
+      $this->standardDisplayDropdown($form, $form_state, $section);
     }
 
     $count = 0;
 
-    // Get relationship labels
+    // Get relationship labels.
     $relationships = [];
     foreach ($display->getHandlers('relationship') as $id => $handler) {
       $relationships[$id] = $handler->adminLabel();
@@ -125,9 +126,10 @@ class Rearrange extends ViewsFormBase {
         '#title' => $this->t('Remove @title', ['@title' => $name]),
         '#title_display' => 'invisible',
         '#id' => 'views-removed-' . $id,
-        '#attributes' => ['class' => ['views-remove-checkbox', 'js-hide']],
+        '#attributes' => ['class' => ['views-remove-checkbox']],
         '#default_value' => 0,
-        '#suffix' => Link::fromTextAndUrl(new FormattableMarkup('<span>@text</span>', ['@text' => $this->t('Remove')]),
+        '#prefix' => '<div class="js-hide">',
+        '#suffix' => Markup::create('</div>' . Link::fromTextAndUrl(new FormattableMarkup('<span>@text</span>', ['@text' => $this->t('Remove')]),
           Url::fromRoute('<none>', [], [
             'attributes' => [
               'id' => 'views-remove-link-' . $id,
@@ -136,7 +138,7 @@ class Rearrange extends ViewsFormBase {
               'title' => $this->t('Remove this item'),
             ],
           ])
-        )->toString(),
+        )->toString()),
       ];
     }
 
@@ -159,16 +161,16 @@ class Rearrange extends ViewsFormBase {
     $old_fields = $display->getOption($types[$type]['plural']);
     $new_fields = $order = [];
 
-    // Make an array with the weights
+    // Make an array with the weights.
     foreach ($form_state->getValue('fields') as $field => $info) {
-      // add each value that is a field with a weight to our list, but only if
+      // Add each value that is a field with a weight to our list, but only if
       // it has had its 'removed' checkbox checked.
       if (is_array($info) && isset($info['weight']) && empty($info['removed'])) {
         $order[$field] = $info['weight'];
       }
     }
 
-    // Sort the array
+    // Sort the array.
     asort($order);
 
     // Create a new list of fields in the new order.
@@ -177,7 +179,7 @@ class Rearrange extends ViewsFormBase {
     }
     $display->setOption($types[$type]['plural'], $new_fields);
 
-    // Store in cache
+    // Store in cache.
     $view->cacheSet();
   }
 

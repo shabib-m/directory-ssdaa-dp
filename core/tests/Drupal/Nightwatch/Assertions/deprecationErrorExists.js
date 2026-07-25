@@ -7,17 +7,21 @@ module.exports.assertion = function (expected) {
     const deprecationMessages =
       sessionStorageEntries !== null
         ? sessionStorageEntries.filter((message) =>
-            new RegExp('[Deprecation]').test(message),
+            message.includes('[Deprecation]'),
           )
         : [];
 
     return deprecationMessages.map((message) =>
-      message.replace('[Deprecation] ', ''),
+      message.replace(/.*\[Deprecation\] /, ''),
     );
   };
   this.command = (callback) =>
     // eslint-disable-next-line prefer-arrow-callback
-    this.api.execute(function () {
-      return window.sessionStorage.getItem('js_testing_log_test.warnings');
-    }, callback);
+    this.api.execute(
+      function () {
+        return window.sessionStorage.getItem('js_testing_log_test.warnings');
+      },
+      [],
+      callback,
+    );
 };

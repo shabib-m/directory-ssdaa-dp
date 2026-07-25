@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Functional;
 
-use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
+use Drupal\comment\CommentingStatus;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
@@ -11,12 +13,14 @@ use Drupal\search\Entity\SearchPage;
 use Drupal\search\SearchIndexInterface;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\Traits\Core\CronRunTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Indexes content and tests ranking factors.
- *
- * @group search
  */
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchRankingTest extends BrowserTestBase {
 
   use CommentTestTrait;
@@ -32,7 +36,7 @@ class SearchRankingTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['node', 'search', 'comment'];
+  protected static $modules = ['node', 'search', 'comment', 'search_node'];
 
   /**
    * {@inheritdoc}
@@ -59,7 +63,10 @@ class SearchRankingTest extends BrowserTestBase {
     ]));
   }
 
-  public function testRankings() {
+  /**
+   * Tests the impact of different ranking factors on search results.
+   */
+  public function testRankings(): void {
     // Add a comment field.
     $this->addDefaultCommentField('node', 'page');
 
@@ -72,12 +79,12 @@ class SearchRankingTest extends BrowserTestBase {
       $settings = [
         'type' => 'page',
         'comment' => [
-          ['status' => CommentItemInterface::HIDDEN],
+          ['status' => CommentingStatus::Hidden->value],
         ],
         'title' => 'Drupal rocks',
         'body' => [['value' => "Drupal's search rocks"]],
         // Node is one day old.
-        'created' => REQUEST_TIME - 24 * 3600,
+        'created' => \Drupal::time()->getRequestTime() - 24 * 3600,
         'sticky' => 0,
         'promote' => 0,
       ];
@@ -95,11 +102,11 @@ class SearchRankingTest extends BrowserTestBase {
 
             case 'recent':
               // Node is 1 hour hold.
-              $settings['created'] = REQUEST_TIME - 3600;
+              $settings['created'] = \Drupal::time()->getRequestTime() - 3600;
               break;
 
             case 'comments':
-              $settings['comment'][0]['status'] = CommentItemInterface::OPEN;
+              $settings['comment'][0]['status'] = CommentingStatus::Open->value;
               break;
           }
         }
@@ -209,7 +216,7 @@ class SearchRankingTest extends BrowserTestBase {
   /**
    * Tests rankings of HTML tags.
    */
-  public function testHTMLRankings() {
+  public function testHTMLRankings(): void {
     $full_html_format = FilterFormat::create([
       'format' => 'full_html',
       'name' => 'Full HTML',
@@ -217,7 +224,7 @@ class SearchRankingTest extends BrowserTestBase {
     $full_html_format->save();
 
     // Test HTML tags with different weights.
-    $sorted_tags = ['h1', 'h2', 'h3', 'h4', 'a', 'h5', 'h6', 'notag'];
+    $sorted_tags = ['h1', 'h2', 'h3', 'h4', 'a', 'h5', 'h6', 'NoTag'];
     $shuffled_tags = $sorted_tags;
 
     // Shuffle tags to ensure HTML tags are ranked properly.
@@ -230,10 +237,15 @@ class SearchRankingTest extends BrowserTestBase {
     foreach ($shuffled_tags as $tag) {
       switch ($tag) {
         case 'a':
-          $settings['body'] = [['value' => Link::fromTextAndUrl('Drupal Rocks', Url::fromRoute('<front>'))->toString(), 'format' => 'full_html']];
+          $settings['body'] = [
+            [
+              'value' => Link::fromTextAndUrl('Drupal Rocks', Url::fromRoute('<front>'))->toString(),
+              'format' => 'full_html',
+            ],
+          ];
           break;
 
-        case 'notag':
+        case 'NoTag':
           $settings['body'] = [['value' => 'Drupal Rocks']];
           break;
 
@@ -256,7 +268,7 @@ class SearchRankingTest extends BrowserTestBase {
     // Test the ranking of each tag.
     foreach ($sorted_tags as $tag_rank => $tag) {
       // Assert the results.
-      if ($tag == 'notag') {
+      if ($tag == 'NoTag') {
         $this->assertEquals($nodes[$tag]->id(), $set[$tag_rank]['node']->id(), 'Search tag ranking for plain text order.');
       }
       else {

@@ -1,39 +1,38 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\KeyValueStore;
 
 use Drupal\Component\Serialization\PhpSerialize;
 use Drupal\Core\Database\Database;
 use Drupal\Core\KeyValueStore\DatabaseStorageExpirable;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\system\Hook\SystemHooks;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests garbage collection for the expirable key-value database storage.
- *
- * @group KeyValueStore
  */
+#[Group('KeyValueStore')]
+#[RunTestsInSeparateProcesses]
 class GarbageCollectionTest extends KernelTestBase {
-
-  /**
-   * Modules to enable.
-   *
-   * @var array
-   */
-  protected static $modules = ['system'];
 
   /**
    * Tests garbage collection.
    */
-  public function testGarbageCollection() {
+  public function testGarbageCollection(): void {
     $collection = $this->randomMachineName();
     $connection = Database::getConnection();
-    $store = new DatabaseStorageExpirable($collection, new PhpSerialize(), $connection);
+    $store = new DatabaseStorageExpirable($collection, new PhpSerialize(), $connection, \Drupal::time());
 
     // Insert some items and confirm that they're set.
     for ($i = 0; $i <= 3; $i++) {
       $store->setWithExpire('key_' . $i, $this->randomObject(), rand(500, 100000));
     }
     $this->assertCount(4, $store->getAll(), 'Four items were written to the storage.');
+    $this->assertCount(4, $store->getAllKeys(), 'Four items were written to the storage.');
 
     // Manually expire the data.
     for ($i = 0; $i <= 3; $i++) {
@@ -43,14 +42,15 @@ class GarbageCollectionTest extends KernelTestBase {
           'collection' => $collection,
         ])
         ->fields([
-          'expire' => REQUEST_TIME - 1,
+          'expire' => \Drupal::time()->getRequestTime() - 1,
         ])
         ->execute();
     }
 
     // Perform a new set operation and then trigger garbage collection.
     $store->setWithExpire('autumn', 'winter', rand(500, 1000000));
-    system_cron();
+    $systemCron = new SystemHooks();
+    $systemCron->cron();
 
     // Query the database and confirm that the stale records were deleted.
     $result = $connection->select('key_value_expire', 'kvp')

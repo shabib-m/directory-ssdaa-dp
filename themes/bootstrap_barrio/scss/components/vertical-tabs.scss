@@ -39,6 +39,9 @@
 .vertical-tabs__pane {
     margin: 0;
     border: 0;
+    label {
+        font-weight: bold;
+    }
 }
 
 .vertical-tabs__pane>summary {

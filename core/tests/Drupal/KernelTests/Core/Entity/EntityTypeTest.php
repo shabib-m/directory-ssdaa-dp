@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Core\Entity\EntityType;
 use Drupal\Core\StringTranslation\TranslationManager;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests general features of entity types.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityTypeTest extends KernelTestBase {
 
   /**
@@ -20,8 +24,9 @@ class EntityTypeTest extends KernelTestBase {
    *   An array of values to use for the EntityType.
    *
    * @return \Drupal\Core\Entity\EntityTypeInterface
+   *   The EntityType object.
    */
-  protected function setUpEntityType($definition) {
+  protected function setUpEntityType($definition): EntityType {
     $definition += [
       'id' => 'example_entity_type',
     ];
@@ -31,7 +36,7 @@ class EntityTypeTest extends KernelTestBase {
   /**
    * Tests that the EntityType object can be serialized.
    */
-  public function testIsSerializable() {
+  public function testIsSerializable(): void {
     $entity_type = $this->setUpEntityType([]);
 
     $translation_service = new class () extends TranslationManager {

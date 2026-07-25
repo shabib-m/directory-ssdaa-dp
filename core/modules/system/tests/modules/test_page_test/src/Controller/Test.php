@@ -1,11 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\test_page_test\Controller;
 
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
@@ -85,7 +86,7 @@ class Test {
    * @param int $code
    *   The status code.
    */
-  public function httpResponseException($code) {
+  public function httpResponseException(int $code) {
     throw new HttpException($code);
   }
 
@@ -94,42 +95,6 @@ class Test {
     return [
       '#markup' => 'Content',
     ];
-  }
-
-  /**
-   * Sets an HTTP header.
-   *
-   * @param string $name
-   *   The header name.
-   * @param string $value
-   *   (optional) The header value ot set.
-   */
-  public function setHeader($name, $value = NULL) {
-    $response = new Response();
-    $response->headers->set($name, $value);
-    return $response;
-  }
-
-  /**
-   * Renders a page with encoded markup.
-   *
-   * @return array
-   *   A render array as expected by
-   *   \Drupal\Core\Render\RendererInterface::render().
-   */
-  public function renderEncodedMarkup() {
-    return ['#plain_text' => 'Bad html <script>alert(123);</script>'];
-  }
-
-  /**
-   * Renders a page with pipe character in link test.
-   *
-   * @return array
-   *   A render array as expected by
-   *   \Drupal\Core\Render\RendererInterface::render().
-   */
-  public function renderPipeInLink() {
-    return ['#markup' => '<a href="http://example.com">foo|bar|baz</a>'];
   }
 
   public function escapedCharacters() {
@@ -171,62 +136,14 @@ class Test {
   }
 
   /**
-   * Returns a page render array with 2 elements with the same HTML IDs.
-   *
-   * @return array
-   *   A render array as expected by
-   *   \Drupal\Core\Render\RendererInterface::render().
-   */
-  public function renderPageWithDuplicateIds() {
-    return [
-      '#type' => 'container',
-      'title' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h1',
-        '#value' => 'Hello',
-        '#attributes' => ['id' => 'page-element'],
-      ],
-      'description' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h2',
-        '#value' => 'World',
-        '#attributes' => ['id' => 'page-element'],
-      ],
-    ];
-  }
-
-  /**
-   * Returns a page render array with 2 elements with the unique HTML IDs.
-   *
-   * @return array
-   *   A render array as expected by
-   *   \Drupal\Core\Render\RendererInterface::render().
-   */
-  public function renderPageWithoutDuplicateIds() {
-    return [
-      '#type' => 'container',
-      'title' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h1',
-        '#value' => 'Hello',
-        '#attributes' => ['id' => 'page-element-title'],
-      ],
-      'description' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h2',
-        '#value' => 'World',
-        '#attributes' => ['id' => 'page-element-description'],
-      ],
-    ];
-  }
-
-  /**
    * Returns a page while triggering deprecation notices.
    */
   public function deprecations() {
     // Create 2 identical deprecation messages. This should only trigger a
     // single response header.
+    // phpcs:ignore Drupal.Semantics.FunctionTriggerError
     @trigger_error('Test deprecation message', E_USER_DEPRECATED);
+    // phpcs:ignore Drupal.Semantics.FunctionTriggerError
     @trigger_error('Test deprecation message', E_USER_DEPRECATED);
     return [
       '#markup' => 'Content that triggers deprecation messages',

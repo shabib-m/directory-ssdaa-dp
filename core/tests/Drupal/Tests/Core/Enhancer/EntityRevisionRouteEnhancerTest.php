@@ -1,18 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Enhancer;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\Enhancer\EntityRevisionRouteEnhancer;
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Routing\RouteObjectInterface;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
 
 /**
- * @coversDefaultClass \Drupal\Core\Routing\Enhancer\EntityRevisionRouteEnhancer
- * @group Entity
+ * Tests Drupal\Core\Routing\Enhancer\EntityRevisionRouteEnhancer.
  */
+#[CoversClass(EntityRevisionRouteEnhancer::class)]
+#[Group('Entity')]
 class EntityRevisionRouteEnhancerTest extends UnitTestCase {
 
   /**
@@ -30,9 +35,9 @@ class EntityRevisionRouteEnhancerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::enhance
+   * Tests enhance without parameter.
    */
-  public function testEnhanceWithoutParameter() {
+  public function testEnhanceWithoutParameter(): void {
     $route = new Route('/test-path/{entity_test}');
 
     $request = Request::create('/test-path');
@@ -43,9 +48,9 @@ class EntityRevisionRouteEnhancerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::enhance
+   * Tests enhance without entity revision.
    */
-  public function testEnhanceWithoutEntityRevision() {
+  public function testEnhanceWithoutEntityRevision(): void {
     $route = new Route('/test-path/{entity_test}', [], [], ['parameters' => ['entity_test' => ['type' => 'entity:entity_test']]]);
     $request = Request::create('/test-path/123');
     $entity = $this->prophesize(EntityInterface::class);
@@ -57,9 +62,9 @@ class EntityRevisionRouteEnhancerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::enhance
+   * Tests enhance with entity revision.
    */
-  public function testEnhanceWithEntityRevision() {
+  public function testEnhanceWithEntityRevision(): void {
     $route = new Route('/test-path/{entity_test_revision}', [], [], ['parameters' => ['entity_test_revision' => ['type' => 'entity_revision:entity_test']]]);
     $request = Request::create('/test-path/123');
     $entity = $this->prophesize(EntityInterface::class);

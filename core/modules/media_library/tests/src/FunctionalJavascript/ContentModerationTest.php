@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media_library\FunctionalJavascript;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -7,19 +9,22 @@ use Drupal\file\Entity\File;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\media\Entity\Media;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore hoglet
 /**
  * Tests media library integration with content moderation.
- *
- * @group media_library
  */
+#[Group('media_library')]
+#[RunTestsInSeparateProcesses]
 class ContentModerationTest extends WebDriverTestBase {
 
   use ContentModerationTestTrait;
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
   use MediaTypeCreationTrait;
   use TestFileCreationTrait;
 
@@ -176,12 +181,7 @@ class ContentModerationTest extends WebDriverTestBase {
   /**
    * Tests the media library widget only shows published media.
    */
-  public function testAdministrationPage() {
-    // User 1 should be able to see all media items.
-    $this->drupalLogin($this->rootUser);
-    $this->drupalGet('admin/content/media');
-    $this->assertAllMedia();
-
+  public function testAdministrationPage(): void {
     // The media admin user should be able to see all media items.
     $this->drupalLogin($this->userAdmin);
     $this->drupalGet('admin/content/media');
@@ -213,11 +213,6 @@ class ContentModerationTest extends WebDriverTestBase {
       $media->save();
     }
 
-    // User 1 should still be able to see all media items.
-    $this->drupalLogin($this->rootUser);
-    $this->drupalGet('admin/content/media');
-    $this->assertAllMedia();
-
     // The media admin user should still be able to see all media items.
     $this->drupalLogin($this->userAdmin);
     $this->drupalGet('admin/content/media');
@@ -246,15 +241,10 @@ class ContentModerationTest extends WebDriverTestBase {
   /**
    * Tests the media library widget only shows published media.
    */
-  public function testWidget() {
+  public function testWidget(): void {
     $assert_session = $this->assertSession();
 
     // All users should only be able to see published media items.
-    $this->drupalLogin($this->rootUser);
-    $this->drupalGet('node/add/article');
-    $assert_session->elementExists('css', '.js-media-library-open-button[name^="field_media"]')->click();
-    $assert_session->assertWaitOnAjaxRequest();
-    $this->assertOnlyPublishedMedia();
     $this->drupalLogin($this->userAdmin);
     $this->drupalGet('node/add/article');
     $assert_session->elementExists('css', '.js-media-library-open-button[name^="field_media"]')->click();
@@ -283,11 +273,6 @@ class ContentModerationTest extends WebDriverTestBase {
       $media->save();
     }
 
-    $this->drupalLogin($this->rootUser);
-    $this->drupalGet('node/add/article');
-    $assert_session->elementExists('css', '.js-media-library-open-button[name^="field_media"]')->click();
-    $assert_session->assertWaitOnAjaxRequest();
-    $this->assertOnlyPublishedMedia();
     $this->drupalLogin($this->userAdmin);
     $this->drupalGet('node/add/article');
     $assert_session->elementExists('css', '.js-media-library-open-button[name^="field_media"]')->click();

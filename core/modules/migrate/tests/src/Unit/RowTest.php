@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit;
 
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Row;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\migrate\Row
- * @group migrate
+ * Tests Drupal\migrate\Row.
  */
+#[CoversClass(Row::class)]
+#[Group('migrate')]
 class RowTest extends UnitTestCase {
 
   /**
@@ -85,7 +91,7 @@ class RowTest extends UnitTestCase {
   /**
    * Tests object creation: empty.
    */
-  public function testRowWithoutData() {
+  public function testRowWithoutData(): void {
     $row = new Row();
     $this->assertSame([], $row->getSource(), 'Empty row');
   }
@@ -93,7 +99,7 @@ class RowTest extends UnitTestCase {
   /**
    * Tests object creation: basic.
    */
-  public function testRowWithBasicData() {
+  public function testRowWithBasicData(): void {
     $row = new Row($this->testValues, $this->testSourceIds);
     $this->assertSame($this->testValues, $row->getSource(), 'Row with data, simple id.');
   }
@@ -101,17 +107,17 @@ class RowTest extends UnitTestCase {
   /**
    * Tests object creation: multiple source IDs.
    */
-  public function testRowWithMultipleSourceIds() {
+  public function testRowWithMultipleSourceIds(): void {
     $multi_source_ids = $this->testSourceIds + ['vid' => 'Node revision'];
     $multi_source_ids_values = $this->testValues + ['vid' => 1];
     $row = new Row($multi_source_ids_values, $multi_source_ids);
-    $this->assertSame($multi_source_ids_values, $row->getSource(), 'Row with data, multifield id.');
+    $this->assertSame($multi_source_ids_values, $row->getSource(), 'Row with data, multiple source id.');
   }
 
   /**
    * Tests object creation: invalid values.
    */
-  public function testRowWithInvalidData() {
+  public function testRowWithInvalidData(): void {
     $invalid_values = [
       'title' => 'node X',
     ];
@@ -122,7 +128,7 @@ class RowTest extends UnitTestCase {
   /**
    * Tests source immutability after freeze.
    */
-  public function testSourceFreeze() {
+  public function testSourceFreeze(): void {
     $row = new Row($this->testValues, $this->testSourceIds);
     $row->rehash();
     $this->assertSame($this->testHash, $row->getHash(), 'Correct hash.');
@@ -137,7 +143,7 @@ class RowTest extends UnitTestCase {
   /**
    * Tests setting on a frozen row.
    */
-  public function testSetFrozenRow() {
+  public function testSetFrozenRow(): void {
     $row = new Row($this->testValues, $this->testSourceIds);
     $row->freezeSource();
     $this->expectException(\Exception::class);
@@ -148,7 +154,7 @@ class RowTest extends UnitTestCase {
   /**
    * Tests hashing.
    */
-  public function testHashing() {
+  public function testHashing(): void {
     $row = new Row($this->testValues, $this->testSourceIds);
     $this->assertSame('', $row->getHash(), 'No hash at creation');
     $row->rehash();
@@ -208,10 +214,10 @@ class RowTest extends UnitTestCase {
   /**
    * Tests getting/setting the ID Map.
    *
-   * @covers ::setIdMap
-   * @covers ::getIdMap
+   * @legacy-covers ::setIdMap
+   * @legacy-covers ::getIdMap
    */
-  public function testGetSetIdMap() {
+  public function testGetSetIdMap(): void {
     $row = new Row($this->testValues, $this->testSourceIds);
     $test_id_map = [
       'original_hash' => '',
@@ -225,7 +231,7 @@ class RowTest extends UnitTestCase {
   /**
    * Tests the source ID.
    */
-  public function testSourceIdValues() {
+  public function testSourceIdValues(): void {
     $row = new Row($this->testValues, $this->testSourceIds);
     $this->assertSame(['nid' => $this->testValues['nid']], $row->getSourceIdValues());
   }
@@ -233,7 +239,7 @@ class RowTest extends UnitTestCase {
   /**
    * Tests the multiple source IDs.
    */
-  public function testMultipleSourceIdValues() {
+  public function testMultipleSourceIdValues(): void {
     // Set values in same order as ids.
     $multi_source_ids = $this->testSourceIds + [
       'vid' => 'Node revision',
@@ -265,10 +271,8 @@ class RowTest extends UnitTestCase {
 
   /**
    * Tests getting the source property.
-   *
-   * @covers ::getSourceProperty
    */
-  public function testGetSourceProperty() {
+  public function testGetSourceProperty(): void {
     $row = new Row($this->testValues, $this->testSourceIds);
     $this->assertSame($this->testValues['nid'], $row->getSourceProperty('nid'));
     $this->assertSame($this->testValues['title'], $row->getSourceProperty('title'));
@@ -278,7 +282,7 @@ class RowTest extends UnitTestCase {
   /**
    * Tests setting and getting the destination.
    */
-  public function testDestination() {
+  public function testDestination(): void {
     $row = new Row($this->testValues, $this->testSourceIds);
     $this->assertEmpty($row->getDestination());
     $this->assertFalse($row->hasDestinationProperty('nid'));
@@ -290,9 +294,46 @@ class RowTest extends UnitTestCase {
   }
 
   /**
+   * Tests checking for and removing destination properties that may be empty.
+   *
+   * @legacy-covers ::hasEmptyDestinationProperty
+   * @legacy-covers ::removeEmptyDestinationProperty
+   */
+  public function testDestinationOrEmptyProperty(): void {
+    $row = new Row($this->testValues, $this->testSourceIds);
+
+    // Set a destination.
+    $row->setDestinationProperty('nid', 2);
+    $this->assertTrue($row->hasDestinationProperty('nid'));
+    $this->assertFalse($row->hasEmptyDestinationProperty('nid'));
+
+    // Set an empty destination.
+    $row->setEmptyDestinationProperty('a_property_with_no_value');
+    $this->assertTrue($row->hasEmptyDestinationProperty('a_property_with_no_value'));
+    $this->assertFalse($row->hasDestinationProperty('a_property_with_no_value'));
+
+    // Removing an empty destination that is not actually empty has no effect.
+    $row->removeEmptyDestinationProperty('nid');
+    $this->assertTrue($row->hasDestinationProperty('nid'));
+    $this->assertFalse($row->hasEmptyDestinationProperty('nid'));
+
+    // Removing a destination that is actually empty has no effect.
+    $row->removeDestinationProperty('a_property_with_no_value');
+    $this->assertTrue($row->hasEmptyDestinationProperty('a_property_with_no_value'));
+
+    // Remove the empty destination.
+    $row->removeEmptyDestinationProperty('a_property_with_no_value');
+    $this->assertFalse($row->hasEmptyDestinationProperty('a_property_with_no_value'));
+
+    // Removing a destination that does not exist does not throw an error.
+    $this->assertFalse($row->hasEmptyDestinationProperty('not_a_property'));
+    $row->removeEmptyDestinationProperty('not_a_property');
+  }
+
+  /**
    * Tests setting/getting multiple destination IDs.
    */
-  public function testMultipleDestination() {
+  public function testMultipleDestination(): void {
     $row = new Row($this->testValues, $this->testSourceIds);
     // Set some deep nested values.
     $row->setDestinationProperty('image/alt', 'alt text');
@@ -316,11 +357,9 @@ class RowTest extends UnitTestCase {
    *   The key to look up.
    * @param string $expected_value
    *   The expected value.
-   *
-   * @dataProvider getDataProvider
-   * @covers ::get
    */
-  public function testGet($key, $expected_value) {
+  #[DataProvider('getDataProvider')]
+  public function testGet($key, $expected_value): void {
     $row = $this->createRowWithDestinationProperties($this->testGetSourceProperties, $this->testGetSourceIds, $this->testGetDestinationProperties);
     $this->assertSame($expected_value, $row->get($key));
   }
@@ -331,7 +370,7 @@ class RowTest extends UnitTestCase {
    * @return array
    *   The keys and expected values.
    */
-  public function getDataProvider() {
+  public static function getDataProvider() {
     return [
       ['source_key_1', 'source_value_1'],
       ['source_key_2', 'source_value_2'],
@@ -360,11 +399,9 @@ class RowTest extends UnitTestCase {
    *   An array of keys to look up.
    * @param array $expected_values
    *   An array of expected values.
-   *
-   * @covers ::getMultiple
-   * @dataProvider getMultipleDataProvider
    */
-  public function testGetMultiple(array $keys, array $expected_values) {
+  #[DataProvider('getMultipleDataProvider')]
+  public function testGetMultiple(array $keys, array $expected_values): void {
     $row = $this->createRowWithDestinationProperties($this->testGetSourceProperties, $this->testGetSourceIds, $this->testGetDestinationProperties);
     $this->assertEquals(array_combine($keys, $expected_values), $row->getMultiple($keys));
   }
@@ -375,11 +412,11 @@ class RowTest extends UnitTestCase {
    * @return array
    *   The keys and expected values.
    */
-  public function getMultipleDataProvider() {
+  public static function getMultipleDataProvider() {
     return [
       'Single Key' => [
         'keys' => ['source_key_1'],
-        'values' => ['source_value_1'],
+        'expected_values' => ['source_value_1'],
       ],
       'All Source Keys' => [
         'keys' => [
@@ -387,7 +424,7 @@ class RowTest extends UnitTestCase {
           'source_key_2',
           '@@source_key_3',
         ],
-        'values' => [
+        'expected_values' => [
           'source_value_1',
           'source_value_2',
           'source_value_3',
@@ -399,7 +436,7 @@ class RowTest extends UnitTestCase {
           '@destination_key_2',
           '@@@destination_key_3',
         ],
-        'values' => [
+        'expected_values' => [
           'destination_value_1',
           'destination_value_2',
           'destination_value_3',
@@ -415,7 +452,7 @@ class RowTest extends UnitTestCase {
           'non_existent_source_key',
           '@non_existent_destination_key',
         ],
-        'values' => [
+        'expected_values' => [
           'source_shared_value_1',
           'destination_shared_value_1',
           'source_shared_value_2',

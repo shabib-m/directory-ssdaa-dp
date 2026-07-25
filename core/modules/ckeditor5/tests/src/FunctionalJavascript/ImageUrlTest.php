@@ -1,94 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
-use Drupal\ckeditor5\Plugin\Editor\CKEditor5;
-use Drupal\editor\Entity\Editor;
-use Drupal\filter\Entity\FilterFormat;
-use Symfony\Component\Validator\ConstraintViolation;
-
-// cspell:ignore imageresize
+use Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image
- * @group ckeditor5
- * @group #slow
+ * Tests Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image.
+ *
  * @internal
  */
-class ImageUrlTest extends ImageTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    FilterFormat::create([
-      'format' => 'test_format',
-      'name' => 'Test format',
-      'filters' => [
-        'filter_html' => [
-          'status' => TRUE,
-          'settings' => [
-            'allowed_html' => '<p> <br> <em> <a href> <img alt height width src data-caption data-align>',
-          ],
-        ],
-        'filter_align' => ['status' => TRUE],
-        'filter_caption' => ['status' => TRUE],
-      ],
-    ])->save();
-    Editor::create([
-      'editor' => 'ckeditor5',
-      'format' => 'test_format',
-      'settings' => [
-        'toolbar' => [
-          'items' => [
-            'drupalInsertImage',
-            'sourceEditing',
-            'link',
-            'italic',
-          ],
-        ],
-        'plugins' => [
-          'ckeditor5_sourceEditing' => [
-            'allowed_tags' => [],
-          ],
-          'ckeditor5_imageResize' => [
-            'allow_resize' => TRUE,
-          ],
-        ],
-      ],
-      'image_upload' => [
-        'status' => FALSE,
-      ],
-    ])->save();
-    $this->assertSame([], array_map(
-      function (ConstraintViolation $v) {
-        return (string) $v->getMessage();
-      },
-      iterator_to_array(CKEditor5::validatePair(
-        Editor::load('test_format'),
-        FilterFormat::load('test_format')
-      ))
-    ));
-    $this->adminUser = $this->drupalCreateUser([
-      'use text format test_format',
-      'bypass node access',
-      'administer filters',
-    ]);
-
-    $this->host = $this->createNode([
-      'type' => 'page',
-      'title' => 'Animals with strange names',
-      'body' => [
-        'value' => '<p>The pirate is irate.</p>',
-        'format' => 'test_format',
-      ],
-    ]);
-    $this->host->save();
-
-    $this->drupalLogin($this->adminUser);
-  }
+#[CoversClass(Image::class)]
+#[Group('ckeditor5')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
+class ImageUrlTest extends ImageUrlTestBase {
+  use ImageTestBaselineTrait;
 
   /**
    * Tests the Drupal image URL widget.
@@ -103,19 +34,19 @@ class ImageUrlTest extends ImageTestBase {
     $this->drupalGet($this->host->toUrl('edit-form'));
     $this->waitForEditor();
 
-    $this->pressEditorButton('Insert image');
-    $panel = $page->find('css', '.ck-dropdown__panel.ck-image-insert__panel');
-    $src_input = $panel->find('css', 'input[type=text]');
+    $this->pressEditorButton('Insert image via URL');
+    $dialog = $page->find('css', '.ck-dialog');
+    $src_input = $dialog->find('css', '.ck-image-insert-url input[type=text]');
     $src_input->setValue($src);
-    $panel->find('xpath', "//button[span[text()='Insert']]")->click();
+    $dialog->find('xpath', "//button[span[text()='Insert']]")->click();
 
     $this->assertNotEmpty($assert_session->waitForElementVisible('css', $image_selector));
     $this->click($image_selector);
     $this->assertVisibleBalloon('[aria-label="Image toolbar"]');
 
-    $this->pressEditorButton('Insert image');
-    $panel = $page->find('css', '.ck-dropdown__panel.ck-image-insert__panel');
-    $src_input = $panel->find('css', 'input[type=text]');
+    $this->pressEditorButton('Update image URL');
+    $dialog = $page->find('css', '.ck-dialog');
+    $src_input = $dialog->find('css', '.ck-image-insert-url input[type=text]');
     $this->assertEquals($src, $src_input->getValue());
   }
 

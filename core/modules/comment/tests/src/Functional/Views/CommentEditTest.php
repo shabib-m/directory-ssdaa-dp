@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional\Views;
 
 use Drupal\Tests\comment\Functional\CommentTestBase as CommentBrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests comment edit functionality.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentEditTest extends CommentBrowserTestBase {
 
   /**
@@ -19,7 +23,7 @@ class CommentEditTest extends CommentBrowserTestBase {
   /**
    * Tests comment label in admin view.
    */
-  public function testCommentEdit() {
+  public function testCommentEdit(): void {
     $this->drupalLogin($this->adminUser);
     // Post a comment to node.
     $node_comment = $this->postComment($this->node, $this->randomMachineName(), $this->randomMachineName(), TRUE);

@@ -1,0 +1,21 @@
+uuid: a59f89ee-ca9b-4ab4-b2c8-0f7821c58fed
+langcode: ar
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.field_ayqwnt_alqsm
+field_name: field_ayqwnt_alqsm
+entity_type: taxonomy_term
+type: string
+settings:
+  max_length: 255
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

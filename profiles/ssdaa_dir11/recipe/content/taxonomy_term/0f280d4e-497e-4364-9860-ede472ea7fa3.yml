@@ -1,0 +1,30 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 0f280d4e-497e-4364-9860-ede472ea7fa3
+  bundle: main
+  default_langcode: ar
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: منتديات
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_ayqwnt_alqsm:
+    -
+      value: |
+        fa fa-comments-o
+  field_sndwq_alaqsam:
+    -
+      value: true

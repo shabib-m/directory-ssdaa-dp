@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Menu;
 
 use Drupal\Core\Menu\LocalActionDefault;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @coversDefaultClass \Drupal\Core\Menu\LocalActionDefault
- * @group Menu
+ * Tests Drupal\Core\Menu\LocalActionDefault.
  */
+#[CoversClass(LocalActionDefault::class)]
+#[Group('Menu')]
 class LocalActionDefaultTest extends UnitTestCase {
 
   /**
@@ -70,7 +75,7 @@ class LocalActionDefaultTest extends UnitTestCase {
   /**
    * Setups the local action default.
    */
-  protected function setupLocalActionDefault() {
+  protected function setupLocalActionDefault(): void {
     $this->localActionDefault = new LocalActionDefault($this->config, $this->pluginId, $this->pluginDefinition, $this->routeProvider);
   }
 
@@ -79,7 +84,7 @@ class LocalActionDefaultTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Menu\LocalTaskDefault::getTitle()
    */
-  public function testGetTitle() {
+  public function testGetTitle(): void {
     $this->pluginDefinition['title'] = (new TranslatableMarkup('Example', [], [], $this->stringTranslation));
     $this->stringTranslation->expects($this->once())
       ->method('translateString')
@@ -95,7 +100,7 @@ class LocalActionDefaultTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Menu\LocalTaskDefault::getTitle()
    */
-  public function testGetTitleWithContext() {
+  public function testGetTitleWithContext(): void {
     $this->pluginDefinition['title'] = (new TranslatableMarkup('Example', [], ['context' => 'context'], $this->stringTranslation));
     $this->stringTranslation->expects($this->once())
       ->method('translateString')
@@ -109,7 +114,7 @@ class LocalActionDefaultTest extends UnitTestCase {
   /**
    * Tests the getTitle method with title arguments.
    */
-  public function testGetTitleWithTitleArguments() {
+  public function testGetTitleWithTitleArguments(): void {
     $this->pluginDefinition['title'] = (new TranslatableMarkup('Example @test', ['@test' => 'value'], [], $this->stringTranslation));
     $this->stringTranslation->expects($this->once())
       ->method('translateString')

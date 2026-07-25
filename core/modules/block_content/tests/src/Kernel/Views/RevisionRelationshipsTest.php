@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Kernel\Views;
 
 use Drupal\block_content\Entity\BlockContent;
@@ -8,12 +10,14 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\views\Tests\ViewResultAssertionTrait;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the integration of block_content_revision table.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class RevisionRelationshipsTest extends KernelTestBase {
 
   use ViewResultAssertionTrait;
@@ -42,7 +46,7 @@ class RevisionRelationshipsTest extends KernelTestBase {
   /**
    * Create a block_content with revision and rest result count for both views.
    */
-  public function testBlockContentRevisionRelationship() {
+  public function testBlockContentRevisionRelationship(): void {
     $this->installEntitySchema('block_content');
     ViewTestData::createTestViews(static::class, ['block_content_test_views']);
 

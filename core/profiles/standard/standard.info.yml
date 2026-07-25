@@ -4,14 +4,11 @@ description: 'Install with commonly used features pre-configured.'
 # version: VERSION
 install:
   - node
-  - history
   - block
   - breakpoint
   - ckeditor5
   - config
-  - comment
   - contextual
-  - contact
   - menu_link_content
   - datetime
   - block_content
@@ -26,20 +23,18 @@ install:
   - big_pipe
   - taxonomy
   - dblog
-  - search
-  - shortcut
-  - toolbar
+  - navigation
   - field_ui
   - file
   - views
   - views_ui
-  - tour
   - automated_cron
+  - announcements_feed
 themes:
   - olivero
   - claro
 
-# Information added by Drupal.org packaging script on 2023-11-01
-version: '10.1.6'
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
 project: 'drupal'
-datestamp: 1698841355
+datestamp: 1784141321

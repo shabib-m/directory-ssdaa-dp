@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 80d4c86b-64f9-4a5a-ad65-e06967b48fef
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: KM.png
+  uri:
+    -
+      value: 'public://term-country/2026-07/KM.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 4380
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

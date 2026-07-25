@@ -1,31 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Site\Settings;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests reading and writing of configuration files.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigFileContentTest extends KernelTestBase {
 
   /**
    * Exempt from strict schema checking.
    *
-   * @see \Drupal\Core\Config\Development\ConfigSchemaChecker
-   *
    * @var bool
+   *
+   * @see \Drupal\Core\Config\Development\ConfigSchemaChecker
    */
   protected $strictConfigSchema = FALSE;
 
   /**
    * Tests setting, writing, and reading of a configuration setting.
    */
-  public function testReadWriteConfig() {
+  public function testReadWriteConfig(): void {
     $storage = $this->container->get('config.storage');
 
     $name = 'foo.bar';
@@ -188,7 +192,7 @@ class ConfigFileContentTest extends KernelTestBase {
   /**
    * Tests serialization of configuration to file.
    */
-  public function testSerialization() {
+  public function testSerialization(): void {
     $name = $this->randomMachineName(10) . '.' . $this->randomMachineName(10);
     $config_data = [
       // Indexed arrays; the order of elements is essential.
@@ -198,6 +202,7 @@ class ConfigFileContentTest extends KernelTestBase {
         // HTML/XML in values.
         'HTML' => '<strong> <bold> <em> <blockquote>',
         // UTF-8 in values.
+        // cspell:disable-next-line
         'UTF-8' => 'FrançAIS is ÜBER-åwesome',
         // Unicode in keys and values.
         // cSpell:disable-next-line

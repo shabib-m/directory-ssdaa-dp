@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Plugin\migrate\source\d6;
 
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use Drupal\user\Plugin\migrate\source\d6\UserPictureFile;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the d6_user_picture_file source plugin.
- *
- * @covers \Drupal\user\Plugin\migrate\source\d6\UserPictureFile
- * @group user
  */
+#[CoversClass(UserPictureFile::class)]
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserPictureFileTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -20,7 +26,7 @@ class UserPictureFileTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.

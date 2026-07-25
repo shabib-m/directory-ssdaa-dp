@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\captcha\Kernel\Migrate\d7;
 
-use Drupal\captcha\Constants\CaptchaConstants;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use Drupal\captcha\Constants\CaptchaConstants;
 
 /**
  * Migrates various configuration objects owned by the captcha module.
@@ -61,6 +61,7 @@ class MigrateCaptchaSimpleConfigurationTest extends MigrateDrupal7TestBase {
    */
   public function testConfigurationMigration() {
     // Test Config.
+    $this->expectedConfig['captcha.settings'] = version_compare(\Drupal::VERSION, '10.3.0', '>=') ? ['langcode' => 'en'] + $this->expectedConfig['captcha.settings'] : $this->expectedConfig['captcha.settings'];
     foreach ($this->expectedConfig as $config_id => $values) {
       $actual = \Drupal::config($config_id)->get();
       $this->assertSame($values, $actual);

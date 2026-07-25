@@ -1,21 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Http;
 
 use Drupal\Core\Http\LinkRelationType;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests link relationships in Drupal.
- *
- * @group HTTP
  */
+#[Group('HTTP')]
+#[RunTestsInSeparateProcesses]
 class LinkRelationsTest extends KernelTestBase {
 
   /**
-   * Tests correct Link Relations are returned from the Link Relation Type Manager.
+   * Tests the Link Relations returned from the Link Relation Type Manager.
    */
-  public function testAvailableLinkRelationships() {
+  public function testAvailableLinkRelationships(): void {
     /** @var \Drupal\Core\Http\LinkRelationTypeManager $link_relation_type_manager */
     $link_relation_type_manager = $this->container->get('plugin.manager.link_relation_type');
 

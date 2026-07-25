@@ -23,11 +23,11 @@
       // Start by finding all potentially active links.
       const path = drupalSettings.path;
       const queryString = JSON.stringify(path.currentQuery);
-      const querySelector = path.currentQuery
-        ? `[data-drupal-link-query='${queryString}']`
+      const querySelector = queryString
+        ? `[data-drupal-link-query="${CSS.escape(queryString)}"]`
         : ':not([data-drupal-link-query])';
       const originalSelectors = [
-        `[data-drupal-link-system-path="${path.currentPath}"]`,
+        `[data-drupal-link-system-path="${CSS.escape(path.currentPath)}"]`,
       ];
       let selectors;
 
@@ -40,32 +40,37 @@
       // Add language filtering.
       selectors = [].concat(
         // Links without any hreflang attributes (most of them).
-        originalSelectors.map((selector) => `${selector}:not([hreflang])`),
-        // Links with hreflang equals to the current language.
         originalSelectors.map(
-          (selector) => `${selector}[hreflang="${path.currentLanguage}"]`,
+          (selector) =>
+            `${selector}:not([data-drupal-language]):not([hreflang])`,
+        ),
+        // Links li with data-drupal-language equals to the current language.
+        originalSelectors.map(
+          (selector) =>
+            `li${selector}[data-drupal-language="${path.currentLanguage}"]`,
+        ),
+        // Links a with hreflang equals to the current language.
+        originalSelectors.map(
+          (selector) => `a${selector}[hreflang="${path.currentLanguage}"]`,
         ),
       );
 
       // Add query string selector for pagers, exposed filters.
       selectors = selectors.map((current) => current + querySelector);
 
-      // Query the DOM.
-      const activeLinks = context.querySelectorAll(selectors.join(','));
-      const il = activeLinks.length;
-      for (let i = 0; i < il; i++) {
-        activeLinks[i].classList.add('is-active');
-      }
+      context.querySelectorAll(selectors.join(',')).forEach((activeLink) => {
+        activeLink.classList.add('is-active');
+        activeLink.setAttribute('aria-current', 'page');
+      });
     },
     detach(context, settings, trigger) {
       if (trigger === 'unload') {
-        const activeLinks = context.querySelectorAll(
-          '[data-drupal-link-system-path].is-active',
-        );
-        const il = activeLinks.length;
-        for (let i = 0; i < il; i++) {
-          activeLinks[i].classList.remove('is-active');
-        }
+        context
+          .querySelectorAll('[data-drupal-link-system-path].is-active')
+          .forEach((activeLink) => {
+            activeLink.classList.remove('is-active');
+            activeLink.removeAttribute('aria-current');
+          });
       }
     },
   };

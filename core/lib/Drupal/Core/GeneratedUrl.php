@@ -8,7 +8,7 @@ use Drupal\Core\Render\BubbleableMetadata;
  * Used to return generated URLs, along with associated bubbleable metadata.
  *
  * Note: not to be confused with \Drupal\Core\Url, which is for passing around
- *   ungenerated URLs (typically route name + route parameters).
+ *   URLs that are not generated (typically route name + route parameters).
  */
 class GeneratedUrl extends BubbleableMetadata {
 
@@ -23,6 +23,7 @@ class GeneratedUrl extends BubbleableMetadata {
    * Gets the generated URL.
    *
    * @return string
+   *   The generated URL.
    */
   public function getGeneratedUrl() {
     return $this->generatedUrl;

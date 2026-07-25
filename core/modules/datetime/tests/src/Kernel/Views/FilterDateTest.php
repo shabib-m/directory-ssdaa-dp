@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\datetime\Kernel\Views;
 
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItem;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests date-only fields.
- *
- * @group datetime
  */
+#[Group('datetime')]
+#[RunTestsInSeparateProcesses]
 class FilterDateTest extends DateTimeHandlerTestBase {
 
   /**
@@ -85,7 +89,7 @@ class FilterDateTest extends DateTimeHandlerTestBase {
   /**
    * Tests offsets with date-only fields.
    */
-  public function testDateOffsets() {
+  public function testDateOffsets(): void {
     $view = Views::getView('test_filter_datetime');
     $field = static::$fieldName . '_value';
 
@@ -169,7 +173,7 @@ class FilterDateTest extends DateTimeHandlerTestBase {
   /**
    * Tests date filter with date-only fields.
    */
-  public function testDateIs() {
+  public function testDateIs(): void {
     $view = Views::getView('test_filter_datetime');
     $field = static::$fieldName . '_value';
 
@@ -220,7 +224,7 @@ class FilterDateTest extends DateTimeHandlerTestBase {
    * @param array $dates
    *   An array of DATETIME_DATE_STORAGE_FORMAT date values.
    */
-  protected function updateNodesDateFieldsValues(array $dates) {
+  protected function updateNodesDateFieldsValues(array $dates): void {
     foreach ($dates as $index => $date) {
       $this->nodes[$index]->{static::$fieldName}->value = $date;
       $this->nodes[$index]->save();

@@ -1,39 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Session;
 
-use Drupal\Core\Cache\MemoryCache\MemoryCache;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Session\UserSession;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 
 /**
- * @coversDefaultClass \Drupal\Core\Session\UserSession
- * @group Session
+ * Tests Drupal\Core\Session\UserSession.
  */
+#[CoversClass(UserSession::class)]
+#[Group('Session')]
 class UserSessionTest extends UnitTestCase {
-
-  /**
-   * The user sessions used in the test.
-   *
-   * @var \Drupal\Core\Session\AccountInterface[]
-   */
-  protected $users = [];
-
-  /**
-   * Provides test data for getHasPermission().
-   *
-   * @return array
-   */
-  public function providerTestHasPermission() {
-    $data = [];
-    $data[] = ['example permission', ['user_one', 'user_two'], ['user_last']];
-    $data[] = ['another example permission', ['user_two'], ['user_one', 'user_last']];
-    $data[] = ['final example permission', [], ['user_one', 'user_two', 'user_last']];
-
-    return $data;
-  }
 
   /**
    * Setups a user session for the test.
@@ -52,127 +36,95 @@ class UserSessionTest extends UnitTestCase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $roles = [];
-    $roles['role_one'] = $this->getMockBuilder('Drupal\user\Entity\Role')
-      ->disableOriginalConstructor()
-      ->onlyMethods(['hasPermission'])
-      ->getMock();
-    $roles['role_one']->expects($this->any())
-      ->method('hasPermission')
-      ->willReturnMap([
-        ['example permission', TRUE],
-        ['another example permission', FALSE],
-        ['last example permission', FALSE],
-      ]);
-
-    $roles['role_two'] = $this->getMockBuilder('Drupal\user\Entity\Role')
-      ->disableOriginalConstructor()
-      ->onlyMethods(['hasPermission'])
-      ->getMock();
-    $roles['role_two']->expects($this->any())
-      ->method('hasPermission')
-      ->willReturnMap([
-        ['example permission', TRUE],
-        ['another example permission', TRUE],
-        ['last example permission', FALSE],
-      ]);
-
-    $roles['anonymous'] = $this->getMockBuilder('Drupal\user\Entity\Role')
-      ->disableOriginalConstructor()
-      ->onlyMethods(['hasPermission'])
-      ->getMock();
-    $roles['anonymous']->expects($this->any())
-      ->method('hasPermission')
-      ->willReturnMap([
-        ['example permission', FALSE],
-        ['another example permission', FALSE],
-        ['last example permission', FALSE],
-      ]);
-
-    $role_storage = $this->getMockBuilder('Drupal\user\RoleStorage')
-      ->setConstructorArgs(['role', new MemoryCache()])
-      ->disableOriginalConstructor()
-      ->onlyMethods(['loadMultiple'])
-      ->getMock();
-    $role_storage->expects($this->any())
-      ->method('loadMultiple')
-      ->willReturnMap([
-        [[], []],
-        [NULL, $roles],
-        [['anonymous'], [$roles['anonymous']]],
-        [['anonymous', 'role_one'], [$roles['role_one']]],
-        [['anonymous', 'role_two'], [$roles['role_two']]],
-        [
-          ['anonymous', 'role_one', 'role_two'],
-          [$roles['role_one'], $roles['role_two']],
-        ],
-      ]);
-
-    $entity_type_manager = $this->createMock('Drupal\Core\Entity\EntityTypeManagerInterface');
-    $entity_type_manager->expects($this->any())
-      ->method('getStorage')
-      ->with($this->equalTo('user_role'))
-      ->willReturn($role_storage);
-    $container = new ContainerBuilder();
-    $container->set('entity_type.manager', $entity_type_manager);
-    \Drupal::setContainer($container);
-
-    $this->users['user_one'] = $this->createUserSession(['role_one']);
-    $this->users['user_two'] = $this->createUserSession(['role_one', 'role_two']);
-    $this->users['user_three'] = $this->createUserSession(['role_two'], TRUE);
-    $this->users['user_last'] = $this->createUserSession();
-  }
-
-  /**
    * Tests the has permission method.
-   *
-   * @param string $permission
-   *   The permission to check.
-   * @param \Drupal\Core\Session\AccountInterface[] $sessions_with_access
-   *   The users with access.
-   * @param \Drupal\Core\Session\AccountInterface[] $sessions_without_access
-   *   The users without access.
-   *
-   * @dataProvider providerTestHasPermission
    *
    * @see \Drupal\Core\Session\UserSession::hasPermission()
    */
-  public function testHasPermission($permission, array $sessions_with_access, array $sessions_without_access) {
-    foreach ($sessions_with_access as $name) {
-      $this->assertTrue($this->users[$name]->hasPermission($permission));
-    }
-    foreach ($sessions_without_access as $name) {
-      $this->assertFalse($this->users[$name]->hasPermission($permission));
-    }
+  public function testHasPermission(): void {
+    $user = $this->createUserSession();
+
+    $permission_checker = $this->prophesize('Drupal\Core\Session\PermissionCheckerInterface');
+    $permission_checker->hasPermission('example permission', $user)->willReturn(TRUE);
+    $permission_checker->hasPermission('another example permission', $user)->willReturn(FALSE);
+
+    $container = new ContainerBuilder();
+    $container->set('permission_checker', $permission_checker->reveal());
+    \Drupal::setContainer($container);
+
+    $this->assertTrue($user->hasPermission('example permission'));
+    $this->assertFalse($user->hasPermission('another example permission'));
   }
 
   /**
    * Tests the method getRoles exclude or include locked roles based in param.
    *
-   * @covers ::getRoles
    * @todo Move roles constants to a class/interface
+   * @legacy-covers ::getRoles
    */
-  public function testUserGetRoles() {
-    $this->assertEquals([RoleInterface::AUTHENTICATED_ID, 'role_two'], $this->users['user_three']->getRoles());
-    $this->assertEquals(['role_two'], $this->users['user_three']->getRoles(TRUE));
+  public function testUserGetRoles(): void {
+    $user = $this->createUserSession(['role_two'], TRUE);
+    $this->assertEquals([RoleInterface::AUTHENTICATED_ID, 'role_two'], $user->getRoles());
+    $this->assertEquals(['role_two'], $user->getRoles(TRUE));
   }
 
   /**
    * Tests the hasRole method.
-   *
-   * @covers ::hasRole
    */
-  public function testHasRole() {
-    $this->assertTrue($this->users['user_one']->hasRole('role_one'));
-    $this->assertFalse($this->users['user_two']->hasRole('no role'));
-    $this->assertTrue($this->users['user_three']->hasRole(RoleInterface::AUTHENTICATED_ID));
-    $this->assertFalse($this->users['user_three']->hasRole(RoleInterface::ANONYMOUS_ID));
-    $this->assertTrue($this->users['user_last']->hasRole(RoleInterface::ANONYMOUS_ID));
+  public function testHasRole(): void {
+    $user1 = $this->createUserSession(['role_one']);
+    $user2 = $this->createUserSession(['role_one', 'role_two']);
+    $user3 = $this->createUserSession(['role_two'], TRUE);
+    $user4 = $this->createUserSession();
+
+    $this->assertTrue($user1->hasRole('role_one'));
+    $this->assertFalse($user2->hasRole('no role'));
+    $this->assertTrue($user3->hasRole(RoleInterface::AUTHENTICATED_ID));
+    $this->assertFalse($user3->hasRole(RoleInterface::ANONYMOUS_ID));
+    $this->assertTrue($user4->hasRole(RoleInterface::ANONYMOUS_ID));
+  }
+
+  /**
+   * Tests the name property deprecation.
+   *
+   * @legacy-covers ::__get
+   * @legacy-covers ::__isset
+   * @legacy-covers ::__set
+   */
+  #[IgnoreDeprecations]
+  public function testNamePropertyDeprecation(): void {
+    $user = new UserSession([
+      'name' => 'test',
+    ]);
+    $this->expectUserDeprecationMessage('Getting the name property is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\Session\UserSession::getAccountName() instead. See https://www.drupal.org/node/3513856');
+    self::assertEquals($user->name, $user->getAccountName());
+    $this->expectUserDeprecationMessage('Checking for the name property is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use \Drupal\Core\Session\UserSession::getAccountName() instead. See https://www.drupal.org/node/3513856');
+    self::assertTrue(isset($user->name));
+
+    // Test setting the name property.
+    $this->expectUserDeprecationMessage('Setting the name property is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Set the name via the constructor when creating the UserSession instance. See https://www.drupal.org/node/3513856');
+    $user->name = 'test new';
+    $this->assertEquals('test new', $user->getAccountName());
+
+    // Verify protected properties cannot be accessed.
+    $this->expectExceptionMessage('Cannot access protected property mail in Drupal\Core\Session\UserSession');
+    $user->mail;
+
+    // Verify dynamic properties can be set and accessed.
+    $user->foo = 'bar';
+    $this->assertEquals('bar', $user->foo);
+  }
+
+  /**
+   * Tests that ::getLastAccessedTime() returns an integer.
+   *
+   * @legacy-covers ::getLastAccessedTime
+   */
+  public function testGetLastAccessedTime(): void {
+    $user = new UserSession([
+      'access' => '1234567890',
+    ]);
+
+    $this->assertSame(1234567890, $user->getLastAccessedTime());
   }
 
 }

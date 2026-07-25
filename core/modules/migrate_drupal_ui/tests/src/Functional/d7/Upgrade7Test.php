@@ -1,34 +1,41 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal_ui\Functional\d7;
 
 use Drupal\node\Entity\Node;
 use Drupal\Tests\migrate_drupal_ui\Functional\MigrateUpgradeExecuteTestBase;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore Filefield Multiupload Imagefield
-
 /**
  * Tests Drupal 7 upgrade using the migrate UI.
  *
  * The test method is provided by the MigrateUpgradeTestBase class.
- *
- * @group migrate_drupal_ui
  */
+#[Group('migrate_drupal_ui')]
+#[Group('#slow')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'book',
     'config_translation',
+    'contact',
     'content_translation',
+    'comment',
     'datetime_range',
     'language',
     'migrate_drupal_ui',
-    'statistics',
     'telephone',
+    'shortcut',
   ];
 
   /**
@@ -55,21 +62,27 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
     $this->nodeStorage->delete($this->nodeStorage->loadMultiple());
 
     $this->loadFixture($this->getModulePath('migrate_drupal') . '/tests/fixtures/drupal7.php');
+
+    $this->expectedLoggedErrors = 27;
+    // If saving the logs, then set the admin user.
+    if ($this->outputLogs) {
+      $this->migratedAdminUserName = 'admin';
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getSourceBasePath() {
+  protected function getSourceBasePath(): string {
     return __DIR__ . '/files';
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEntityCounts() {
+  protected function getEntityCounts(): array {
     return [
-      'block' => 27,
+      'block' => 24,
       'block_content' => 1,
       'block_content_type' => 1,
       'comment' => 4,
@@ -79,36 +92,34 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
       // Module 'language' comes with 'en', 'und', 'zxx'. Migration adds 'is'
       // and 'fr'.
       'configurable_language' => 5,
-      'contact_form' => 3,
+      'contact_form' => 2,
       'contact_message' => 0,
       'editor' => 2,
-      'field_config' => 90,
-      'field_storage_config' => 69,
+      'field_config' => 88,
+      'field_storage_config' => 68,
       'file' => 3,
       'filter_format' => 7,
       'image_style' => 7,
       'language_content_settings' => 24,
       'node' => 7,
       'node_type' => 8,
-      'search_page' => 2,
-      'shortcut' => 6,
+      'shortcut' => 4,
       'shortcut_set' => 2,
-      'action' => 27,
-      'menu' => 7,
+      'action' => 24,
+      'menu' => 9,
       'taxonomy_term' => 25,
       'taxonomy_vocabulary' => 8,
       'path_alias' => 8,
-      'tour' => 6,
       'user' => 4,
       'user_role' => 4,
       'menu_link_content' => 12,
       'view' => 14,
       'date_format' => 12,
-      'entity_form_display' => 23,
+      'entity_form_display' => 22,
       'entity_form_mode' => 1,
-      'entity_view_display' => 33,
-      'entity_view_mode' => 12,
-      'base_field_override' => 3,
+      'entity_view_display' => 31,
+      'entity_view_mode' => 9,
+      'base_field_override' => 1,
     ];
   }
 
@@ -130,11 +141,10 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getAvailablePaths() {
+  protected function getAvailablePaths(): array {
     return [
       'Block languages',
       'Block',
-      'Book',
       'Chaos tools',
       'Comment',
       'Contact',
@@ -164,9 +174,7 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
       'Options',
       'Path',
       'Phone',
-      'Search',
       'Shortcut',
-      'Statistics',
       'String translation',
       'Synchronize translations',
       'System',
@@ -196,13 +204,16 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getMissingPaths() {
+  protected function getMissingPaths(): array {
     return [
       'Aggregator',
+      'Book',
       'Color',
       'Forum',
       'RDF',
       'References',
+      'Search',
+      'Statistics',
       'Translation sets',
       'Variable realm',
       'Variable store',
@@ -210,7 +221,6 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
       // These modules are in the missing path list because they are installed
       // on the source site but they are not installed on the destination site.
       'Syslog',
-      // @todo Remove tracker in https://www.drupal.org/project/drupal/issues/3261452
       'Tracker',
       'Update manager',
     ];
@@ -219,7 +229,7 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
   /**
    * Executes all steps of migrations upgrade.
    */
-  public function testUpgradeAndIncremental() {
+  public function testUpgradeAndIncremental(): void {
     // Perform upgrade followed by an incremental upgrade.
     $this->doUpgradeAndIncremental();
 
@@ -227,8 +237,9 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
     $this->assertUserLogIn(2, 'a password');
 
     $this->assertFollowUpMigrationResults();
-
+    $this->assertEntityRevisionsCount('node', 19);
     $this->assertEmailsSent();
+    $this->assertLogError();
   }
 
   /**

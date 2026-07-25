@@ -1,18 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_link_content\Kernel\Plugin\migrate\source;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\menu_link_content\Plugin\migrate\source\MenuLink;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
 use Drupal\TestTools\Random;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore mlid plid tsid
 /**
  * Tests the menu link source plugin.
- *
- * @covers \Drupal\menu_link_content\Plugin\migrate\source\MenuLink
- *
- * @group menu_link_content
  */
+#[CoversClass(MenuLink::class)]
+#[Group('menu_link_content')]
+#[RunTestsInSeparateProcesses]
 class MenuLinkTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -23,7 +29,7 @@ class MenuLinkTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.

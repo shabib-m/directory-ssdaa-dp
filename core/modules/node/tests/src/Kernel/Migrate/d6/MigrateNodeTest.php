@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Migrate\d6;
 
 use Drupal\Core\Database\Database;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\file\Kernel\Migrate\d6\FileMigrationTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Node content migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateNodeTest extends MigrateNodeTestBase {
 
   use FileMigrationTestTrait;
@@ -43,7 +47,7 @@ class MigrateNodeTest extends MigrateNodeTestBase {
   /**
    * Tests node migration from Drupal 6 to 8.
    */
-  public function testNode() {
+  public function testNode(): void {
     // Confirm there are only classic node migration map tables. This shows
     // that only the classic migration ran.
     $results = $this->nodeMigrateMapTableCount('6');
@@ -156,7 +160,8 @@ class MigrateNodeTest extends MigrateNodeTestBase {
     $node = Node::load(12);
     $this->assertSame('zu', $manager->getTranslationMetadata($node->getTranslation('en'))->getSource());
 
-    // Node 11 is a translation of node 10, and should not be imported separately.
+    // Node 11 is a translation of node 10, and should not be imported
+    // separately.
     $this->assertNull(Node::load(11), "Node 11 doesn't exist in D8, it was a translation");
 
     // Rerun migration with two source database changes.

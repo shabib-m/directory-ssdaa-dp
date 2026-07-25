@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_events_test\Plugin\migrate\destination;
 
+use Drupal\migrate\Attribute\MigrateDestination;
 use Drupal\migrate\Plugin\migrate\destination\DestinationBase;
 use Drupal\migrate\Row;
 
 /**
- * @MigrateDestination(
- *   id = "dummy",
- *   requirements_met = true
- * )
+ * Migration dummy destination.
  */
+#[MigrateDestination(
+  id: 'dummy',
+  requirements_met: TRUE
+)]
 class DummyDestination extends DestinationBase {
 
   /**

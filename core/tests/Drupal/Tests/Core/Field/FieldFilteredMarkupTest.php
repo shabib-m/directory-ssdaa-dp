@@ -1,23 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Field;
 
-use Drupal\Tests\UnitTestCase;
-use Drupal\Core\Field\FieldFilteredMarkup;
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Field\FieldFilteredMarkup;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Prophet;
 
 /**
- * @coversDefaultClass \Drupal\Core\Field\FieldFilteredMarkup
- * @group Field
+ * Tests Drupal\Core\Field\FieldFilteredMarkup.
  */
+#[CoversClass(FieldFilteredMarkup::class)]
+#[Group('Field')]
 class FieldFilteredMarkupTest extends UnitTestCase {
 
   /**
-   * @covers ::create
-   * @dataProvider providerTestCreate
+   * Tests create.
    */
-  public function testCreate($string, $expected, $instance_of_check) {
+  #[DataProvider('providerTestCreate')]
+  public function testCreate($string, $expected, $instance_of_check): void {
     $filtered_string = FieldFilteredMarkup::create($string);
 
     if ($instance_of_check) {
@@ -29,28 +35,28 @@ class FieldFilteredMarkupTest extends UnitTestCase {
   /**
    * Provides data for testCreate().
    */
-  public static function providerTestCreate() {
+  public static function providerTestCreate(): array {
     $data = [];
     $data[] = ['', '', FALSE];
     // Certain tags are filtered.
-    $data[] = ['<script>teststring</script>', 'teststring', TRUE];
+    $data[] = ['<script>test string</script>', 'test string', TRUE];
     // Certain tags are not filtered.
-    $data[] = ['<em>teststring</em>', '<em>teststring</em>', TRUE];
+    $data[] = ['<em>test string</em>', '<em>test string</em>', TRUE];
     // HTML will be normalized.
-    $data[] = ['<em>teststring', '<em>teststring</em>', TRUE];
+    $data[] = ['<em>test string', '<em>test string</em>', TRUE];
 
     // Even safe strings will be escaped.
     $safe_string = (new Prophet())->prophesize(MarkupInterface::class);
-    $safe_string->__toString()->willReturn('<script>teststring</script>');
-    $data[] = [$safe_string->reveal(), 'teststring', TRUE];
+    $safe_string->__toString()->willReturn('<script>test string</script>');
+    $data[] = [$safe_string->reveal(), 'test string', TRUE];
 
     return $data;
   }
 
   /**
-   * @covers ::displayAllowedTags
+   * Tests display allowed tags.
    */
-  public function testdisplayAllowedTags() {
+  public function testDisplayAllowedTags(): void {
     $expected = '<a> <b> <big> <code> <del> <em> <i> <ins> <pre> <q> <small> <span> <strong> <sub> <sup> <tt> <ol> <ul> <li> <p> <br> <img>';
 
     $this->assertSame($expected, FieldFilteredMarkup::displayAllowedTags());

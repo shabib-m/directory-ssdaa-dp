@@ -24,10 +24,7 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
  */
 class RegexValidator extends ConstraintValidator
 {
-    /**
-     * @return void
-     */
-    public function validate(mixed $value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof Regex) {
             throw new UnexpectedTypeException($constraint, Regex::class);
@@ -47,7 +44,9 @@ class RegexValidator extends ConstraintValidator
             $value = ($constraint->normalizer)($value);
         }
 
-        if ($constraint->match xor preg_match($constraint->pattern, $value)) {
+        $expectedResult = $constraint->match ? 1 : 0;
+
+        if (preg_match($constraint->pattern, $value) !== $expectedResult) {
             $this->context->buildViolation($constraint->message)
                 ->setParameter('{{ value }}', $this->formatValue($value))
                 ->setParameter('{{ pattern }}', $constraint->pattern)

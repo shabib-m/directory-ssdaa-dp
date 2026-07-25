@@ -1,29 +1,40 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
 use Drupal\ckeditor5\Plugin\Editor\CKEditor5;
 use Drupal\editor\Entity\Editor;
 use Drupal\filter\Entity\FilterFormat;
+use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\user\Entity\User;
-use Symfony\Component\Validator\ConstraintViolation;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Symfony\Component\Validator\ConstraintViolationInterface;
 
 /**
  * Tests for CKEditor 5 editor UI with Toolbar module.
  *
- * @group ckeditor5
  * @internal
  */
-class CKEditor5ToolbarTest extends CKEditor5TestBase {
+#[Group('ckeditor5')]
+#[RunTestsInSeparateProcesses]
+class CKEditor5ToolbarTest extends WebDriverTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
+    'node',
+    'ckeditor5',
     'toolbar',
   ];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   /**
    * The admin user.
@@ -46,10 +57,13 @@ class CKEditor5ToolbarTest extends CKEditor5TestBase {
     Editor::create([
       'editor' => 'ckeditor5',
       'format' => 'test_format',
+      'image_upload' => [
+        'status' => FALSE,
+      ],
       'settings' => [],
     ])->save();
     $this->assertSame([], array_map(
-      function (ConstraintViolation $v) {
+      function (ConstraintViolationInterface $v) {
         return (string) $v->getMessage();
       },
       iterator_to_array(CKEditor5::validatePair(

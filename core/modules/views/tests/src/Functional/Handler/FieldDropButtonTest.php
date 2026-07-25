@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Handler;
 
 use Drupal\Tests\views\Functional\ViewTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the dropbutton field handler.
  *
- * @group views
  * @see \Drupal\system\Plugin\views\field\Dropbutton
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldDropButtonTest extends ViewTestBase {
 
   /**
@@ -20,9 +25,7 @@ class FieldDropButtonTest extends ViewTestBase {
   public static $testViews = ['test_dropbutton'];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node'];
 
@@ -48,7 +51,7 @@ class FieldDropButtonTest extends ViewTestBase {
   /**
    * Tests dropbutton field.
    */
-  public function testDropbutton() {
+  public function testDropbutton(): void {
     // Create some test nodes.
     $nodes = [];
     for ($i = 0; $i < 5; $i++) {

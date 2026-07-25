@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Migrate\d6;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the user profile field instance migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateUserProfileFieldInstanceTest extends MigrateDrupal6TestBase {
 
   /**
@@ -31,7 +35,7 @@ class MigrateUserProfileFieldInstanceTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of user profile fields.
    */
-  public function testUserProfileFields() {
+  public function testUserProfileFields(): void {
     // Migrated a text field.
     $field = FieldConfig::load('user.user.profile_color');
     $this->assertSame('Favorite color', $field->label());
@@ -67,7 +71,8 @@ class MigrateUserProfileFieldInstanceTest extends MigrateDrupal6TestBase {
     $this->assertSame('Birthdate', $field->label());
     $this->assertSame("Enter your birth date and we'll send you a coupon.", $field->getDescription());
 
-    // Another migrated checkbox field, with a different source visibility setting.
+    // Another migrated checkbox field, with a different source visibility
+    // setting.
     $field = FieldConfig::load('user.user.profile_really_really_love_mig');
     $this->assertSame('I really, really, really love migrations', $field->label());
     $this->assertSame("If you check this box, you love migrations.", $field->getDescription());

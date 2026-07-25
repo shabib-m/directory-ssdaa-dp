@@ -1,20 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Theme;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests themes and base themes are correctly loaded.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class MaintenanceThemeTest extends KernelTestBase {
 
   /**
    * Tests that the maintenance theme initializes the theme and its base themes.
    */
-  public function testMaintenanceTheme() {
+  public function testMaintenanceTheme(): void {
     $this->setSetting('maintenance_theme', 'test_subtheme');
     // Get the maintenance theme loaded.
     drupal_maintenance_theme();
@@ -27,7 +31,7 @@ class MaintenanceThemeTest extends KernelTestBase {
 
     $base_themes = $active_theme->getBaseThemeExtensions();
     $base_theme_names = array_keys($base_themes);
-    $this->assertSame(['test_basetheme'], $base_theme_names);
+    $this->assertSame(['test_base_theme'], $base_theme_names);
   }
 
 }

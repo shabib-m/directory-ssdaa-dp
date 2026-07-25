@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Kernel\Migrate;
 
 use Drupal\field\Entity\FieldConfig;
@@ -7,14 +9,19 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\FieldConfigInterface;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Attaches a body field to the block type.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class MigrateBlockContentBodyFieldTest extends MigrateDrupal7TestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['block', 'block_content', 'filter', 'text'];
 
   /**
@@ -27,13 +34,14 @@ class MigrateBlockContentBodyFieldTest extends MigrateDrupal7TestBase {
     $this->executeMigrations([
       'block_content_type',
       'block_content_body_field',
+      'block_content_body_field_storage',
     ]);
   }
 
   /**
    * Tests the block content body field migration.
    */
-  public function testBlockContentBodyFieldMigration() {
+  public function testBlockContentBodyFieldMigration(): void {
     /** @var \Drupal\field\FieldStorageConfigInterface $storage */
     $storage = FieldStorageConfig::load('block_content.body');
     $this->assertInstanceOf(FieldStorageConfigInterface::class, $storage);

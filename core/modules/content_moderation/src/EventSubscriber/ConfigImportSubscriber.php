@@ -31,7 +31,7 @@ class ConfigImportSubscriber extends ConfigImportValidateEventSubscriberBase {
    * Constructs the event subscriber.
    *
    * @param \Drupal\Core\Config\ConfigManagerInterface $config_manager
-   *   The config manager
+   *   The config manager.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    */
@@ -47,7 +47,8 @@ class ConfigImportSubscriber extends ConfigImportValidateEventSubscriberBase {
     foreach (['update', 'delete'] as $op) {
       $unprocessed_configurations = $event->getConfigImporter()->getUnprocessedConfiguration($op);
       foreach ($unprocessed_configurations as $unprocessed_configuration) {
-        if ($workflow = $this->getWorkflow($unprocessed_configuration)) {
+        if (($workflow = $this->getWorkflow($unprocessed_configuration))
+            && $workflow->getTypePlugin()->getPluginId() === 'content_moderation') {
           if ($op === 'update') {
             $original_workflow_config = $event->getConfigImporter()
               ->getStorageComparer()

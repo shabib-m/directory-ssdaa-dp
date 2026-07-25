@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel\Migrate\d7;
 
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the migration of comment fields from Drupal 7.
- *
- * @group comment
- * @group migrate_drupal_7
  */
+#[Group('comment')]
+#[Group('migrate_drupal_7')]
+#[RunTestsInSeparateProcesses]
 class MigrateCommentFieldTest extends MigrateDrupal7TestBase {
 
   /**
@@ -46,7 +50,7 @@ class MigrateCommentFieldTest extends MigrateDrupal7TestBase {
   /**
    * Tests the migrated comment fields.
    */
-  public function testMigration() {
+  public function testMigration(): void {
     $this->assertEntity('comment_node_page');
     $this->assertEntity('comment_node_article');
     $this->assertEntity('comment_node_blog');

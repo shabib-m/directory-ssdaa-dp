@@ -2,19 +2,21 @@
 
 namespace Drupal\views\Plugin\views\pager;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsPager;
+
 /**
  * The plugin to handle mini pager.
  *
  * @ingroup views_pager_plugins
- *
- * @ViewsPager(
- *   id = "mini",
- *   title = @Translation("Paged output, mini pager"),
- *   short_title = @Translation("Mini"),
- *   help = @Translation("A simple pager containing previous and next links."),
- *   theme = "views_mini_pager"
- * )
  */
+#[ViewsPager(
+  id: "mini",
+  title: new TranslatableMarkup("Paged output, mini pager"),
+  short_title: new TranslatableMarkup("Mini"),
+  help: new TranslatableMarkup("A simple pager containing previous and next links."),
+  theme: "views_mini_pager",
+)]
 class Mini extends SqlBase {
 
   /**
@@ -36,7 +38,13 @@ class Mini extends SqlBase {
    */
   public function summaryTitle() {
     if (!empty($this->options['offset'])) {
-      return $this->formatPlural($this->options['items_per_page'], 'Mini pager, @count item, skip @skip', 'Mini pager, @count items, skip @skip', ['@count' => $this->options['items_per_page'], '@skip' => $this->options['offset']]);
+      return $this->formatPlural($this->options['items_per_page'],
+        'Mini pager, @count item, skip @skip',
+        'Mini pager, @count items, skip @skip',
+        [
+          '@count' => $this->options['items_per_page'],
+          '@skip' => $this->options['offset'],
+        ]);
     }
     return $this->formatPlural($this->options['items_per_page'], 'Mini pager, @count item', 'Mini pager, @count items', ['@count' => $this->options['items_per_page']]);
   }
@@ -47,7 +55,7 @@ class Mini extends SqlBase {
   public function query() {
     parent::query();
 
-    // Only modify the query if we don't want to do a total row count
+    // Only modify the query if we don't want to do a total row count.
     if (!$this->view->get_total_rows) {
       // Don't query for the next page if we have a pager that has a limited
       // amount of pages.
@@ -72,7 +80,7 @@ class Mini extends SqlBase {
    * {@inheritdoc}
    */
   public function postExecute(&$result) {
-    // Only modify the result if we didn't do a total row count
+    // Only modify the result if we didn't do a total row count.
     if (!$this->view->get_total_rows) {
       $this->total_items = $this->getCurrentPage() * $this->getItemsPerPage() + count($result);
       // query() checks if we need a next link by setting limit 1 record past
@@ -88,15 +96,18 @@ class Mini extends SqlBase {
    * {@inheritdoc}
    */
   public function render($input) {
-    // The 1, 3 indexes are correct, see template_preprocess_pager().
+    // The 1, 3 indexes are correct, see
+    // \Drupal\Core\Pager\PagerPreprocess::preprocessPager().
     $tags = [
       1 => $this->options['tags']['previous'],
       3 => $this->options['tags']['next'],
     ];
+
     return [
       '#theme' => $this->themeFunctions(),
       '#tags' => $tags,
       '#element' => $this->options['id'],
+      '#pagination_heading_level' => parent::getHeadingLevel(),
       '#parameters' => $input,
       '#route_name' => !empty($this->view->live_preview) ? '<current>' : '<none>',
     ];

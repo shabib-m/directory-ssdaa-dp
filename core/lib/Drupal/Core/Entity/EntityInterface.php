@@ -110,17 +110,19 @@ interface EntityInterface extends AccessibleInterface, CacheableDependencyInterf
    *   "version-history" = "/node/{node}/revisions"
    * }
    * @endcode
-   * or specified in a callback function set like:
+   * or specified in a callback function set like (deprecated):
    * @code
    * uri_callback = "comment_uri",
    * @endcode
    * If the path is not set in the links array, the uri_callback function is
-   * used for setting the path. If this does not exist and the link relationship
-   * type is canonical, the path is set using the default template:
+   * used for setting the path (deprecated). If this does not exist and the link
+   * relationship type is canonical, the path is set using the default template:
    * entity/entityType/id.
    *
    * @param string $rel
-   *   The link relationship type, for example: canonical or edit-form.
+   *   The link relationship type, for example: canonical or edit-form. If none
+   *   is provided, canonical is assumed, or edit-form if no canonical link
+   *   exists.
    * @param array $options
    *   See \Drupal\Core\Routing\UrlGeneratorInterface::generateFromRoute() for
    *   the available options.
@@ -131,7 +133,7 @@ interface EntityInterface extends AccessibleInterface, CacheableDependencyInterf
    * @throws \Drupal\Core\Entity\EntityMalformedException
    * @throws \Drupal\Core\Entity\Exception\UndefinedLinkTemplateException
    */
-  public function toUrl($rel = 'canonical', array $options = []);
+  public function toUrl($rel = NULL, array $options = []);
 
   /**
    * Generates the HTML for a link to this entity.
@@ -192,7 +194,7 @@ interface EntityInterface extends AccessibleInterface, CacheableDependencyInterf
    * @return static[]
    *   An array of entity objects indexed by their IDs.
    */
-  public static function loadMultiple(array $ids = NULL);
+  public static function loadMultiple(?array $ids = NULL);
 
   /**
    * Constructs a new entity object, without permanently saving it.
@@ -237,6 +239,7 @@ interface EntityInterface extends AccessibleInterface, CacheableDependencyInterf
    * over all translations if needed. This is different from its counterpart in
    * the Field API, FieldItemListInterface::preSave(), which is fired on all
    * field translations automatically.
+   *
    * @todo Adjust existing implementations and the documentation according to
    *   https://www.drupal.org/node/2577609 to have a consistent API.
    *
@@ -441,5 +444,31 @@ interface EntityInterface extends AccessibleInterface, CacheableDependencyInterf
    *   The configuration target identifier.
    */
   public function getConfigTarget();
+
+  /**
+   * Returns the original unchanged entity.
+   *
+   * If the entity being saved was not the default revision then the original
+   * entity is that specific revision to allow for reliable comparisons.
+   *
+   * This is only available while an entity is being saved.
+   *
+   * @return static|null
+   *   The original entity.
+   */
+  public function getOriginal(): ?static;
+
+  /**
+   * Sets the original unchanged entity.
+   *
+   * This method may be used as a performance optimization when unchanged entity
+   * is already available.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface|null $original
+   *   The unchanged entity.
+   *
+   * @return $this
+   */
+  public function setOriginal(?EntityInterface $original): static;
 
 }

@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Module;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Attempts enabling a module that fails hook_requirements('install').
- *
- * @group Module
  */
+#[Group('Module')]
+#[RunTestsInSeparateProcesses]
 class HookRequirementsTest extends ModuleTestBase {
 
   /**
@@ -17,7 +22,7 @@ class HookRequirementsTest extends ModuleTestBase {
   /**
    * Assert that a module cannot be installed if it fails hook_requirements().
    */
-  public function testHookRequirementsFailure() {
+  public function testHookRequirementsFailure(): void {
     $this->assertModules(['requirements1_test'], FALSE);
 
     // Attempt to install the requirements1_test module.

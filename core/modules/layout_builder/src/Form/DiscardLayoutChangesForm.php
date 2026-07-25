@@ -2,8 +2,10 @@
 
 namespace Drupal\layout_builder\Form;
 
+use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceDynamicSafeFormInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -15,7 +17,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @internal
  *   Form classes are internal.
  */
-class DiscardLayoutChangesForm extends ConfirmFormBase {
+class DiscardLayoutChangesForm extends ConfirmFormBase implements WorkspaceDynamicSafeFormInterface {
+
+  use WorkspaceSafeFormTrait;
 
   /**
    * The layout tempstore repository.
@@ -72,20 +76,36 @@ class DiscardLayoutChangesForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to discard your layout changes?');
+    return $this->t('Discard unsaved changes');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription() {
+    try {
+      $entity = $this->sectionStorage->getContextValue('entity');
+      return $this->t('Any unsaved changes to the layout for %label will be discarded. This action cannot be undone.', [
+        '%label' => $entity->label(),
+      ]);
+    }
+    catch (ContextException) {
+      // If the entity is not available, just return a generic message.
+      return $this->t('Any unsaved changes to the layout will be discarded. This action cannot be undone.');
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return $this->sectionStorage->getRedirectUrl();
+    return $this->sectionStorage->getLayoutBuilderUrl();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL) {
     $this->sectionStorage = $section_storage;
     // Mark this as an administrative page for JavaScript ("Back to site" link).
     $form['#attached']['drupalSettings']['path']['currentPathIsAdmin'] = TRUE;
@@ -100,7 +120,7 @@ class DiscardLayoutChangesForm extends ConfirmFormBase {
 
     $this->messenger->addMessage($this->t('The changes to the layout have been discarded.'));
 
-    $form_state->setRedirectUrl($this->getCancelUrl());
+    $form_state->setRedirectUrl($this->sectionStorage->getRedirectUrl());
   }
 
 }

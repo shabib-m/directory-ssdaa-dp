@@ -1,18 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Functional;
 
 use Drupal\field\Entity\FieldConfig;
-use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\content_translation\Traits\ContentTranslationTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that contextual links are available for content translation.
- *
- * @group content_translation
  */
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class ContentTranslationContextualLinksTest extends BrowserTestBase {
+
+  use ContentTranslationTestTrait;
 
   /**
    * The bundle being tested.
@@ -48,9 +54,7 @@ class ContentTranslationContextualLinksTest extends BrowserTestBase {
   protected $langcodes;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['content_translation', 'contextual', 'node'];
 
@@ -68,7 +72,7 @@ class ContentTranslationContextualLinksTest extends BrowserTestBase {
     parent::setUp();
     // Set up an additional language.
     $this->langcodes = [\Drupal::languageManager()->getDefaultLanguage()->getId(), 'es'];
-    ConfigurableLanguage::createFromLangcode('es')->save();
+    static::createLanguageFromLangcode('es');
 
     // Create a content type.
     $this->bundle = $this->randomMachineName();
@@ -108,24 +112,13 @@ class ContentTranslationContextualLinksTest extends BrowserTestBase {
   /**
    * Tests that a contextual link is available for translating a node.
    */
-  public function testContentTranslationContextualLinks() {
+  public function testContentTranslationContextualLinks(): void {
     // Create a node.
     $title = $this->randomString();
     $this->drupalCreateNode(['type' => $this->bundle, 'title' => $title, 'langcode' => 'en']);
     $node = $this->drupalGetNodeByTitle($title);
 
-    // Use a UI form submission to make the node type and field translatable.
-    // This tests that caches are properly invalidated.
-    $this->drupalLogin($this->rootUser);
-    $edit = [
-      'entity_types[node]' => TRUE,
-      'settings[node][' . $this->bundle . '][settings][language][language_alterable]' => TRUE,
-      'settings[node][' . $this->bundle . '][translatable]' => TRUE,
-      'settings[node][' . $this->bundle . '][fields][field_test_text]' => TRUE,
-    ];
-    $this->drupalGet('admin/config/regional/content-language');
-    $this->submitForm($edit, 'Save configuration');
-    $this->drupalLogout();
+    static::enableContentTranslation('node', $this->bundle);
 
     // Check that the link leads to the translate page.
     $this->drupalLogin($this->translator);

@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Menu;
 
+use Drupal\Core\Menu\LocalTaskManager;
 use Drupal\Core\Plugin\Discovery\ContainerDerivativeDiscoveryDecorator;
 use Drupal\Core\Plugin\Discovery\YamlDiscovery;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -54,7 +58,7 @@ abstract class LocalTaskIntegrationTestBase extends UnitTestCase {
   /**
    * Sets up the local task manager for the test.
    */
-  protected function getLocalTaskManager($module_dirs, $route_name, $route_params) {
+  protected function getLocalTaskManager(array $module_dirs, string $route_name, array $route_params): LocalTaskManager&MockObject {
     $manager = $this
       ->getMockBuilder('Drupal\Core\Menu\LocalTaskManager')
       ->disableOriginalConstructor()
@@ -65,7 +69,7 @@ abstract class LocalTaskIntegrationTestBase extends UnitTestCase {
     $property = new \ReflectionProperty('Drupal\Core\Menu\LocalTaskManager', 'argumentResolver');
     $property->setValue($manager, $argumentResolver);
 
-    // todo mock a request with a route.
+    // @todo Mock a request with a route.
     $request_stack = new RequestStack();
     $property = new \ReflectionProperty('Drupal\Core\Menu\LocalTaskManager', 'requestStack');
     $property->setValue($manager, $request_stack);
@@ -115,14 +119,14 @@ abstract class LocalTaskIntegrationTestBase extends UnitTestCase {
   /**
    * Tests integration for local tasks.
    *
-   * @param $route_name
+   * @param string $route_name
    *   Route name to base task building on.
-   * @param $expected_tasks
-   *   A list of tasks groups by level expected at the given route
+   * @param array $expected_tasks
+   *   A list of tasks groups by level expected at the given route.
    * @param array $route_params
    *   (optional) A list of route parameters used to resolve tasks.
    */
-  protected function assertLocalTasks($route_name, $expected_tasks, $route_params = []) {
+  protected function assertLocalTasks(string $route_name, array $expected_tasks, array $route_params = []): void {
 
     $directory_list = [];
     foreach ($this->directoryList as $key => $value) {

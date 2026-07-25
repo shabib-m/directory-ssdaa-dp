@@ -42,7 +42,7 @@ class BigPipeController {
     //   the cookie was already set, yet the user is executing this controller;
     // - there is no session, in which case BigPipe is not enabled anyway, so it
     //   is pointless to set this cookie.
-    if ($request->cookies->has(BigPipeStrategy::NOJS_COOKIE) || !$request->hasSession()) {
+    if ($request->cookies->has(BigPipeStrategy::NOJS_COOKIE)) {
       throw new AccessDeniedHttpException();
     }
 
@@ -53,7 +53,10 @@ class BigPipeController {
     $response = new LocalRedirectResponse($request->query->get('destination'));
     // Set cookie without httpOnly, so that JavaScript can delete it.
     $response->headers->setCookie(new Cookie(BigPipeStrategy::NOJS_COOKIE, TRUE, 0, '/', NULL, FALSE, FALSE, FALSE, NULL));
-    $response->addCacheableDependency((new CacheableMetadata())->addCacheContexts(['cookies:' . BigPipeStrategy::NOJS_COOKIE, 'session.exists']));
+    $response->addCacheableDependency((new CacheableMetadata())->addCacheContexts([
+      'cookies:' . BigPipeStrategy::NOJS_COOKIE,
+      'session.exists',
+    ]));
     return $response;
   }
 

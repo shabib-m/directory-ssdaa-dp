@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * Tests validation functions such as min/max resolution.
- *
- * @group image
+ * Tests validation functions such as min/max dimensions.
  */
+#[Group('image')]
+#[RunTestsInSeparateProcesses]
 class ImageFieldValidateTest extends ImageFieldTestBase {
 
   use TestFileCreationTrait {
@@ -25,12 +30,12 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
   /**
    * Tests image validity.
    */
-  public function testValid() {
+  public function testValid(): void {
     $file_system = $this->container->get('file_system');
     $image_files = $this->drupalGetTestFiles('image');
 
-    $field_name = strtolower($this->randomMachineName());
-    $this->createImageField($field_name, 'article', [], ['file_directory' => 'test-upload']);
+    $field_name = $this->randomMachineName();
+    $this->createImageField($field_name, 'node', 'article', [], ['file_directory' => 'test-upload']);
     $expected_path = 'public://test-upload';
 
     // Create alt text for the image.
@@ -85,13 +90,13 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
   }
 
   /**
-   * Tests min/max resolution settings.
+   * Tests min/max dimensions settings.
    */
-  public function testResolution() {
+  public function testResolution(): void {
     $field_names = [
-      0 => strtolower($this->randomMachineName()),
-      1 => strtolower($this->randomMachineName()),
-      2 => strtolower($this->randomMachineName()),
+      0 => $this->randomMachineName(),
+      1 => $this->randomMachineName(),
+      2 => $this->randomMachineName(),
     ];
     $min_resolution = [
       'width' => 50,
@@ -122,9 +127,9 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
       1 => $this->getFieldSettings($no_height_min_resolution, $no_height_max_resolution),
       2 => $this->getFieldSettings($no_width_min_resolution, $no_width_max_resolution),
     ];
-    $this->createImageField($field_names[0], 'article', [], $field_settings[0]);
-    $this->createImageField($field_names[1], 'article', [], $field_settings[1]);
-    $this->createImageField($field_names[2], 'article', [], $field_settings[2]);
+    $this->createImageField($field_names[0], 'node', 'article', [], $field_settings[0]);
+    $this->createImageField($field_names[1], 'node', 'article', [], $field_settings[1]);
+    $this->createImageField($field_names[2], 'node', 'article', [], $field_settings[2]);
 
     // We want a test image that is too small, and a test image that is too
     // big, so cycle through test image files until we have what we need.
@@ -162,8 +167,8 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
   /**
    * Tests that required alt/title fields gets validated right.
    */
-  public function testRequiredAttributes() {
-    $field_name = strtolower($this->randomMachineName());
+  public function testRequiredAttributes(): void {
+    $field_name = $this->randomMachineName();
     $field_settings = [
       'alt_field' => 1,
       'alt_field_required' => 1,
@@ -171,7 +176,7 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
       'title_field_required' => 1,
       'required' => 1,
     ];
-    $instance = $this->createImageField($field_name, 'article', [], $field_settings);
+    $instance = $this->createImageField($field_name, 'node', 'article', [], $field_settings);
     $images = $this->drupalGetTestFiles('image');
     // Let's just use the first image.
     $image = $images[0];
@@ -216,11 +221,10 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
    *
    * This is tested first with edit access to the image field allowed, and then
    * with it forbidden.
-   *
-   * @dataProvider providerTestEmpty
    */
-  public function testEmpty($field_name, $required, $cardinality, $form_element_name, $expected_page_text_when_edit_access_allowed, $expected_page_text_when_edit_access_forbidden) {
-    $this->createImageField($field_name, 'article', ['cardinality' => $cardinality], ['required' => $required]);
+  #[DataProvider('providerTestEmpty')]
+  public function testEmpty($field_name, $required, $cardinality, $form_element_name, $expected_page_text_when_edit_access_allowed, $expected_page_text_when_edit_access_forbidden): void {
+    $this->createImageField($field_name, 'node', 'article', ['cardinality' => $cardinality], ['required' => $required]);
 
     // Test with field edit access allowed.
     $this->drupalGet('node/add/article');
@@ -248,16 +252,58 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
    * @return array
    *   Test cases.
    */
-  public function providerTestEmpty() {
+  public static function providerTestEmpty() {
     return [
-      'optional-single' => ['field_image', FALSE, 1, 'files[field_image_0]', 'Article Article with edit-access-allowed image field has been created.', 'Article Article with edit-access-forbidden image field has been created.'],
-      'optional-unlimited' => ['field_image', FALSE, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED, 'files[field_image_0][]', 'Article Article with edit-access-allowed image field has been created.', 'Article Article with edit-access-forbidden image field has been created.'],
-      'optional-multiple-limited' => ['field_image', FALSE, 2, 'files[field_image_0][]', 'Article Article with edit-access-allowed image field has been created.', 'Article Article with edit-access-forbidden image field has been created.'],
-      'required-single' => ['field_image', TRUE, 1, 'files[field_image_0]', 'field_image field is required.', 'field_image field is required.'],
-      'required-unlimited' => ['field_image', TRUE, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED, 'files[field_image_0][]', 'field_image field is required.', 'field_image field is required.'],
+      'optional-single' => [
+        'field_image',
+        FALSE,
+        1,
+        'files[field_image_0]',
+        'Article Article with edit-access-allowed image field has been created.',
+        'Article Article with edit-access-forbidden image field has been created.',
+      ],
+      'optional-unlimited' => [
+        'field_image',
+        FALSE,
+        FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'files[field_image_0][]',
+        'Article Article with edit-access-allowed image field has been created.',
+        'Article Article with edit-access-forbidden image field has been created.',
+      ],
+      'optional-multiple-limited' => [
+        'field_image',
+        FALSE,
+        2,
+        'files[field_image_0][]',
+        'Article Article with edit-access-allowed image field has been created.',
+        'Article Article with edit-access-forbidden image field has been created.',
+      ],
+      'required-single' => [
+        'field_image',
+        TRUE,
+        1,
+        'files[field_image_0]',
+        'field_image field is required.',
+        'field_image field is required.',
+      ],
+      'required-unlimited' => [
+        'field_image',
+        TRUE,
+        FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        'files[field_image_0][]',
+        'field_image field is required.',
+        'field_image field is required.',
+      ],
 
       // @todo Fix this discrepancy in https://www.drupal.org/project/drupal/issues/3011744.
-      'required-multiple-limited' => ['field_image', TRUE, 2, 'files[field_image_0][]', 'This value should not be null.', 'Article Article with edit-access-forbidden image field has been created.'],
+      'required-multiple-limited' => [
+        'field_image',
+        TRUE,
+        2,
+        'files[field_image_0][]',
+        'This value should not be null.',
+        'Article Article with edit-access-forbidden image field has been created.',
+      ],
     ];
   }
 
@@ -265,13 +311,14 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
    * Returns field settings.
    *
    * @param int[] $min_resolution
-   *   The minimum width and height resolution setting.
+   *   The minimum width and height setting.
    * @param int[] $max_resolution
-   *   The maximum width and height resolution setting.
+   *   The maximum width and height setting.
    *
    * @return array
+   *   List of field settings.
    */
-  protected function getFieldSettings($min_resolution, $max_resolution) {
+  protected function getFieldSettings($min_resolution, $max_resolution): array {
     return [
       'max_resolution' => $max_resolution['width'] . 'x' . $max_resolution['height'],
       'min_resolution' => $min_resolution['width'] . 'x' . $min_resolution['height'],

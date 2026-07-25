@@ -72,14 +72,14 @@
  * following to a module_name.links.task.yml file (in the top-level directory
  * for your module):
  * @code
- * book.admin:
- *   route_name: book.admin
+ * my_module.admin:
+ *   route_name: my_module.admin
  *   title: 'List'
- *   base_route: book.admin
- * book.settings:
- *   route_name: book.settings
+ *   base_route: my_module.admin
+ * my_module.settings:
+ *   route_name: my_module.settings
  *   title: 'Settings'
- *   base_route: book.admin
+ *   base_route: my_module.admin
  *   weight: 100
  * @endcode
  * Some notes:
@@ -92,7 +92,9 @@
  *   matches the base route, that will be the default/first tab shown.
  *
  * Local tasks from other modules can be altered using
- * hook_menu_local_tasks_alter().
+ * hook_local_tasks_alter().
+ * Additionally, hook_menu_local_tasks_alter() can be used to dynamically alter
+ * local tasks before they are rendered.
  *
  * @todo Derivatives are in flux for these; when they are more stable, add
  *   documentation here.
@@ -105,8 +107,8 @@
  * module_name.links.action.yml file (in the top-level directory for your
  * module):
  * @code
- * node.add_page:
- *   route_name: node.add_page
+ * entity.node.add_page:
+ *   route_name: entity.node.add_page
  *   title: 'Add content'
  *   appears_on:
  *     - system.admin_content
@@ -128,12 +130,12 @@
  * interface elements whose render arrays have a '#contextual_links' element
  * defined. For example, a block render array might look like this, in part:
  * @code
- * array(
- *   '#contextual_links' => array(
- *     'block' => array(
- *       'route_parameters' => array('block' => $entity->id()),
- *     ),
- *   ),
+ * [
+ *   '#contextual_links' => [
+ *     'block' => [
+ *       'route_parameters' => ['block' => $entity->id()],
+ *     ],
+ *   ],
  * @endcode
  * In this array, the outer key 'block' defines a "group" for contextual
  * links, and the inner array provides values for the route's placeholder
@@ -196,12 +198,12 @@
  * $tree = $menu_tree->load($menu_name, $parameters);
  *
  * // Transform the tree using the manipulators you want.
- * $manipulators = array(
+ * $manipulators = [
  *   // Only show links that are accessible for the current user.
- *   array('callable' => 'menu.default_tree_manipulators:checkAccess'),
+ *   ['callable' => 'menu.default_tree_manipulators:checkAccess'],
  *   // Use the default sorting of menu links.
- *   array('callable' => 'menu.default_tree_manipulators:generateIndexAndSort'),
- * );
+ *   ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
+ * ];
  * $tree = $menu_tree->transform($tree, $manipulators);
  *
  * // Finally, build a renderable array from the transformed tree.
@@ -222,8 +224,8 @@
  * Alters all the menu links discovered by the menu link plugin manager.
  *
  * @param array &$links
- *   The link definitions to be altered. Each link has a key that is the machine
- *   name, which must be unique. By default, use the route name as the
+ *   The discovered menu links to be altered. Each link has a key that is the
+ *   machine name, which must be unique. By default, use the route name as the
  *   machine name. In cases where multiple links use the same route name, such
  *   as two links to the same page in different menus, or two links using the
  *   same route name but different route parameters, the suggested machine name
@@ -308,16 +310,18 @@ function hook_menu_links_discovered_alter(&$links) {
  * @param \Drupal\Core\Cache\RefinableCacheableDependencyInterface $cacheability
  *   The cacheability metadata for the current route's local tasks.
  *
+ * @see hook_local_tasks_alter()
+ *
  * @ingroup menu
  */
 function hook_menu_local_tasks_alter(&$data, $route_name, \Drupal\Core\Cache\RefinableCacheableDependencyInterface &$cacheability) {
 
   // Add a tab linking to node/add to all pages.
-  $data['tabs'][0]['node.add_page'] = [
+  $data['tabs'][0]['entity.node.add_page'] = [
     '#theme' => 'menu_local_task',
     '#link' => [
       'title' => t('Example tab'),
-      'url' => Url::fromRoute('node.add_page'),
+      'url' => Url::fromRoute('entity.node.add_page'),
       'localized_options' => [
         'attributes' => [
           'title' => t('Add content'),
@@ -351,6 +355,7 @@ function hook_menu_local_actions_alter(&$local_actions) {
  *
  * @see \Drupal\Core\Menu\LocalTaskInterface
  * @see \Drupal\Core\Menu\LocalTaskManager
+ * @see hook_menu_local_tasks_alter()
  *
  * @ingroup menu
  */
@@ -385,7 +390,7 @@ function hook_local_tasks_alter(&$local_tasks) {
  *   The route parameters passed to each route_name of the contextual links.
  *   For example:
  *   @code
- *   array('node' => $node->id())
+ *   ['node' => $node->id()]
  *   @endcode
  *
  * @see \Drupal\Core\Menu\ContextualLinkManager

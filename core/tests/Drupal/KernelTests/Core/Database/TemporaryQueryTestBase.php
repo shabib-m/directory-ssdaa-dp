@@ -1,13 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\Database;
 
 /**
  * Tests the temporary query functionality.
- *
- * @group Database
  */
 abstract class TemporaryQueryTestBase extends DriverSpecificDatabaseTestBase {
 
@@ -28,7 +28,7 @@ abstract class TemporaryQueryTestBase extends DriverSpecificDatabaseTestBase {
   /**
    * Confirms that temporary tables work.
    */
-  public function testTemporaryQuery() {
+  public function testTemporaryQuery(): void {
     $connection = $this->getConnection();
 
     // Now try to run two temporary queries in the same request.

@@ -33,6 +33,7 @@ abstract class NumericItemBase extends FieldItemBase {
       '#type' => 'number',
       '#title' => $this->t('Minimum'),
       '#default_value' => $settings['min'],
+      '#element_validate' => [[static::class, 'validateMinAndMaxConfig']],
       '#description' => $this->t('The minimum value that should be allowed in this field. Leave blank for no minimum.'),
     ];
     $element['max'] = [
@@ -63,10 +64,9 @@ abstract class NumericItemBase extends FieldItemBase {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    if (empty($this->value) && (string) $this->value !== '0') {
-      return TRUE;
-    }
-    return FALSE;
+    $value = $this->get('value')->getValue();
+
+    return empty($value) && (string) $value !== '0';
   }
 
   /**
@@ -82,10 +82,12 @@ abstract class NumericItemBase extends FieldItemBase {
     if (isset($settings['min']) && $settings['min'] !== '') {
       $min = $settings['min'];
       $constraints[] = $constraint_manager->create('ComplexData', [
-        'value' => [
-          'Range' => [
-            'min' => $min,
-            'minMessage' => $this->t('%name: the value may be no less than %min.', ['%name' => $label, '%min' => $min]),
+        'properties' => [
+          'value' => [
+            'Range' => [
+              'min' => $min,
+              'minMessage' => $this->t('%name: the value may be no less than %min.', ['%name' => $label, '%min' => $min]),
+            ],
           ],
         ],
       ]);
@@ -94,13 +96,15 @@ abstract class NumericItemBase extends FieldItemBase {
     if (isset($settings['max']) && $settings['max'] !== '') {
       $max = $settings['max'];
       $constraints[] = $constraint_manager->create('ComplexData', [
-        'value' => [
-          'Range' => [
-            'max' => $max,
-            'maxMessage' => $this->t('%name: the value may be no greater than %max.', [
-              '%name' => $label,
-              '%max' => $max,
-            ]),
+        'properties' => [
+          'value' => [
+            'Range' => [
+              'max' => $max,
+              'maxMessage' => $this->t('%name: the value may be no greater than %max.', [
+                '%name' => $label,
+                '%max' => $max,
+              ]),
+            ],
           ],
         ],
       ]);
@@ -122,6 +126,34 @@ abstract class NumericItemBase extends FieldItemBase {
    */
   protected static function truncateDecimal($decimal, $num) {
     return floor($decimal * pow(10, $num)) / pow(10, $num);
+  }
+
+  /**
+   * Validates that the minimum value is less than the maximum.
+   *
+   * @param array[] $element
+   *   The numeric element to be validated.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   * @param array[] $complete_form
+   *   The complete form structure.
+   */
+  public static function validateMinAndMaxConfig(array &$element, FormStateInterface &$form_state, array &$complete_form): void {
+    $settingsValue = $form_state->getValue('settings');
+
+    // Ensure that the minimum and maximum are numeric.
+    $minValue = is_numeric($settingsValue['min']) ? (float) $settingsValue['min'] : NULL;
+    $maxValue = is_numeric($settingsValue['max']) ? (float) $settingsValue['max'] : NULL;
+
+    // Only proceed with validation if both values are numeric.
+    if ($minValue === NULL || $maxValue === NULL) {
+      return;
+    }
+
+    if ($minValue > $maxValue) {
+      $form_state->setError($element, t('The minimum value must be less than or equal to %max.', ['%max' => $maxValue]));
+      return;
+    }
   }
 
 }

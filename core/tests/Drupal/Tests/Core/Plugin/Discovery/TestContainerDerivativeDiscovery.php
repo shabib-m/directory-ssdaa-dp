@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Plugin\Discovery;
 
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
@@ -23,7 +25,7 @@ class TestContainerDerivativeDiscovery extends TestDerivativeDiscovery implement
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, $base_plugin_id) {
+  public static function create(ContainerInterface $container, $base_plugin_id): static {
     return new static($container->get('example_service'));
   }
 

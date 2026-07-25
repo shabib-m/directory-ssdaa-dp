@@ -56,17 +56,31 @@ class ExtensionExistsConstraintValidator extends ConstraintValidator implements 
   /**
    * {@inheritdoc}
    */
-  public function validate(mixed $extension_name, Constraint $constraint) {
+  public function validate(mixed $extension_name, Constraint $constraint): void {
     $variables = ['@name' => $extension_name];
 
     switch ($constraint->type) {
       case 'module':
+        // This constraint may be used to validate nullable (optional) values.
+        if ($extension_name === NULL) {
+          return;
+        }
+        // Some plugins are shipped in `core/lib`, which corresponds to the
+        // special `core` extension name.
+        // For example: \Drupal\Core\Menu\Plugin\Block\LocalActionsBlock.
+        if ($extension_name === 'core') {
+          return;
+        }
         if (!$this->moduleHandler->moduleExists($extension_name)) {
           $this->context->addViolation($constraint->moduleMessage, $variables);
         }
         break;
 
       case 'theme':
+        // This constraint may be used to validate nullable (optional) values.
+        if ($extension_name === NULL) {
+          return;
+        }
         if (!$this->themeHandler->themeExists($extension_name)) {
           $this->context->addViolation($constraint->themeMessage, $variables);
         }

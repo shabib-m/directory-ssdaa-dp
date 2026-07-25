@@ -5,14 +5,14 @@ namespace Drupal\Core\DependencyInjection;
 use Drupal\Component\DependencyInjection\Container as DrupalContainer;
 
 /**
- * Extends the Drupal container to set the service ID on the created object.
+ * Extends the container to prevent serialization.
  */
 class Container extends DrupalContainer {
 
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     assert(FALSE, 'The container was serialized.');
     return array_keys(get_object_vars($this));
   }

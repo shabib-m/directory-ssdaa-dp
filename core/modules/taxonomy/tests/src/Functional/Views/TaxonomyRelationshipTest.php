@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional\Views;
 
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests taxonomy relationships with parent term and node.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TaxonomyRelationshipTest extends TaxonomyTestBase {
 
   /**
@@ -57,7 +61,7 @@ class TaxonomyRelationshipTest extends TaxonomyTestBase {
   /**
    * Tests the taxonomy parent plugin UI.
    */
-  public function testTaxonomyRelationships() {
+  public function testTaxonomyRelationships(): void {
 
     // Check the generated views data of taxonomy_index.
     $views_data = Views::viewsData()->get('taxonomy_index');

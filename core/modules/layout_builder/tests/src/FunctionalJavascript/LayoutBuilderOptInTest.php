@@ -1,15 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\Tests\layout_builder\Traits\EnableLayoutBuilderTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the ability for opting in and out of Layout Builder.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutBuilderOptInTest extends WebDriverTestBase {
+
+  use EnableLayoutBuilderTrait;
 
   /**
    * {@inheritdoc}
@@ -46,7 +53,7 @@ class LayoutBuilderOptInTest extends WebDriverTestBase {
   /**
    * Tests the interaction between the two layout checkboxes.
    */
-  public function testCheckboxLogic() {
+  public function testCheckboxLogic(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -72,9 +79,7 @@ class LayoutBuilderOptInTest extends WebDriverTestBase {
     $assert_session->checkboxChecked('layout[allow_custom]');
 
     // Reset the checkboxes.
-    $page->uncheckField('layout[enabled]');
-    $page->pressButton('Save');
-    $page->pressButton('Confirm');
+    $this->disableLayoutBuilderFromUi('before', 'default');
     $assert_session->checkboxNotChecked('layout[enabled]');
     $assert_session->checkboxNotChecked('layout[allow_custom]');
 
@@ -89,7 +94,7 @@ class LayoutBuilderOptInTest extends WebDriverTestBase {
   /**
    * Tests the expected default values for enabling Layout Builder.
    */
-  public function testDefaultValues() {
+  public function testDefaultValues(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -131,15 +136,15 @@ class LayoutBuilderOptInTest extends WebDriverTestBase {
     $this->drupalGet($layout_builder_ui);
     $assert_session->pageTextContains('You are not authorized to access this page.');
 
-    // The original body formatter is reflected in Field UI.
     $this->drupalGet($field_ui_prefix);
-    $assert_session->fieldValueEquals('fields[body][type]', 'text_default');
-
-    // Change the body formatter to Summary.
-    $page->selectFieldOption('fields[body][type]', 'text_summary_or_trimmed');
+    // Change the body formatter to trimmed and move the block back into
+    // the content region.
+    $assert_session->buttonExists('Show row weights')->click();
+    $page->selectFieldOption('fields[body][region]', 'content');
+    $page->selectFieldOption('fields[body][type]', 'text_trimmed');
     $assert_session->assertWaitOnAjaxRequest();
     $page->pressButton('Save');
-    $assert_session->fieldValueEquals('fields[body][type]', 'text_summary_or_trimmed');
+    $assert_session->fieldValueEquals('fields[body][type]', 'text_trimmed');
 
     // Reactivate Layout Builder.
     $this->drupalGet($field_ui_prefix);
@@ -151,7 +156,7 @@ class LayoutBuilderOptInTest extends WebDriverTestBase {
 
     // The changed body formatter is reflected in Layout Builder UI.
     $this->drupalGet($this->getPathForFieldBlock('node', 'after', 'default', 'body'));
-    $assert_session->fieldValueEquals('settings[formatter][type]', 'text_summary_or_trimmed');
+    $assert_session->fieldValueEquals('settings[formatter][type]', 'text_trimmed');
   }
 
   /**
@@ -169,7 +174,7 @@ class LayoutBuilderOptInTest extends WebDriverTestBase {
    * @return string
    *   The path.
    */
-  protected function getPathForFieldBlock($entity_type_id, $bundle, $view_mode, $field_name) {
+  protected function getPathForFieldBlock($entity_type_id, $bundle, $view_mode, $field_name): string {
     $delta = 0;
     /** @var \Drupal\layout_builder\Entity\LayoutEntityDisplayInterface $display */
     $display = $this->container->get('entity_type.manager')->getStorage('entity_view_display')->load("$entity_type_id.$bundle.$view_mode");

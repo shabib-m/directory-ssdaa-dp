@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test the multi-width layout plugins.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class TestMultiWidthLayoutsTest extends WebDriverTestBase {
 
   /**
@@ -49,7 +53,7 @@ class TestMultiWidthLayoutsTest extends WebDriverTestBase {
   /**
    * Tests changing the columns widths of a multi-width section.
    */
-  public function testWidthChange() {
+  public function testWidthChange(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 

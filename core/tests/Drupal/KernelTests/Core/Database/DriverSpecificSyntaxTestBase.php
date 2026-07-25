@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
 
 /**
@@ -17,7 +19,7 @@ abstract class DriverSpecificSyntaxTestBase extends DriverSpecificDatabaseTestBa
    *
    * @see \Drupal\Core\Database\Connection::prepareQuery()
    */
-  public function testAllowSquareBrackets() {
+  public function testAllowSquareBrackets(): void {
     $this->connection->insert('test')
       ->fields(['name'])
       ->values([
@@ -39,6 +41,18 @@ abstract class DriverSpecificSyntaxTestBase extends DriverSpecificDatabaseTestBa
     // Test square brackets using the query builder.
     $result = $this->connection->select('test')->fields('test', ['name'])->condition('name', '[square]')->execute();
     $this->assertSame('[square]', $result->fetchField());
+  }
+
+  /**
+   * Tests string concatenation with separator, with field values.
+   */
+  public function testConcatWsFields(): void {
+    $result = $this->connection->query("SELECT CONCAT_WS('-', :a1, [name], :a2, [age]) FROM {test} WHERE [age] = :age", [
+      ':a1' => 'name',
+      ':a2' => 'age',
+      ':age' => 25,
+    ]);
+    $this->assertSame('name-John-age-25', $result->fetchField());
   }
 
 }

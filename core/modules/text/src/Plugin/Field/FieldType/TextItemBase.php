@@ -8,6 +8,7 @@ use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\filter\FilterFormatRepositoryInterface;
 
 /**
  * Base class for 'text' configurable field types.
@@ -97,7 +98,7 @@ abstract class TextItemBase extends FieldItemBase {
    * {@inheritdoc}
    */
   public function applyDefaultValue($notify = TRUE) {
-    // @todo: Add in the filter default format here.
+    // @todo Add in the filter default format here.
     $this->setValue(['format' => NULL], $notify);
     return $this;
   }
@@ -133,19 +134,19 @@ abstract class TextItemBase extends FieldItemBase {
     $settings = $field_definition->getSettings();
 
     if (empty($settings['max_length'])) {
-      // Textarea handling
-      $value = $random->paragraphs();
+      // Textarea handling.
+      $value = $random->paragraphs(2);
     }
     else {
       // Textfield handling.
-      $max = ceil($settings['max_length'] / 3);
+      $max = (int) ceil($settings['max_length'] / 3);
       $value = substr($random->sentences(mt_rand(1, $max), FALSE), 0, $settings['max_length']);
     }
 
     $values = [
       'value' => $value,
       'summary' => $value,
-      'format' => filter_fallback_format(),
+      'format' => \Drupal::service(FilterFormatRepositoryInterface::class)->getFallbackFormatId(),
     ];
     return $values;
   }

@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Functional;
 
 use Drupal\Core\Database\Database;
 use Drupal\file\Entity\File;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests creating and deleting revisions with files attached.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileFieldRevisionTest extends FileFieldTestBase {
 
   /**
@@ -28,7 +32,7 @@ class FileFieldRevisionTest extends FileFieldTestBase {
    *  - When the last revision that uses a file is deleted, the original file
    *    should be deleted also.
    */
-  public function testRevisions() {
+  public function testRevisions(): void {
     // This test expects unused managed files to be marked as a temporary file
     // and then deleted up by file_cron().
     $this->config('file.settings')
@@ -36,7 +40,7 @@ class FileFieldRevisionTest extends FileFieldTestBase {
       ->save();
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
     $type_name = 'article';
-    $field_name = strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $this->createFileField($field_name, 'node', $type_name);
     // Create the same fields for users.
     $this->createFileField($field_name, 'user', 'user');
@@ -47,7 +51,6 @@ class FileFieldRevisionTest extends FileFieldTestBase {
     $nid = $this->uploadNodeFile($test_file, $field_name, $type_name);
 
     // Check that the file exists on disk and in the database.
-    $node_storage->resetCache([$nid]);
     $node = $node_storage->load($nid);
     $node_file_r1 = File::load($node->{$field_name}->target_id);
     $node_vid_r1 = $node->getRevisionId();
@@ -57,7 +60,6 @@ class FileFieldRevisionTest extends FileFieldTestBase {
 
     // Upload another file to the same node in a new revision.
     $this->replaceNodeFile($test_file, $field_name, $nid);
-    $node_storage->resetCache([$nid]);
     $node = $node_storage->load($nid);
     $node_file_r2 = File::load($node->{$field_name}->target_id);
     $node_vid_r2 = $node->getRevisionId();
@@ -77,7 +79,6 @@ class FileFieldRevisionTest extends FileFieldTestBase {
     // Check that the file is still the same as the previous revision.
     $this->drupalGet('node/' . $nid . '/edit');
     $this->submitForm(['revision' => '1'], 'Save');
-    $node_storage->resetCache([$nid]);
     $node = $node_storage->load($nid);
     $node_file_r3 = File::load($node->{$field_name}->target_id);
     $node_vid_r3 = $node->getRevisionId();
@@ -87,7 +88,6 @@ class FileFieldRevisionTest extends FileFieldTestBase {
     // Revert to the first revision and check that the original file is active.
     $this->drupalGet('node/' . $nid . '/revisions/' . $node_vid_r1 . '/revert');
     $this->submitForm([], 'Revert');
-    $node_storage->resetCache([$nid]);
     $node = $node_storage->load($nid);
     $node_file_r4 = File::load($node->{$field_name}->target_id);
     $this->assertEquals($node_file_r1->id(), $node_file_r4->id(), 'Original revision file still in place after reverting to the original revision.');
@@ -117,13 +117,6 @@ class FileFieldRevisionTest extends FileFieldTestBase {
 
     // Delete the user and check that the file is also deleted.
     $user->delete();
-    // TODO: This seems like a bug in File API. Clearing the stat cache should
-    // not be necessary here. The file really is deleted, but stream wrappers
-    // doesn't seem to think so unless we clear the PHP file stat() cache.
-    clearstatcache($node_file_r1->getFileUri());
-    clearstatcache($node_file_r2->getFileUri());
-    clearstatcache($node_file_r3->getFileUri());
-    clearstatcache($node_file_r4->getFileUri());
 
     // Call file_cron() to clean up the file. Make sure the changed timestamp
     // of the file is older than the system.file.temporary_maximum_age
@@ -132,7 +125,7 @@ class FileFieldRevisionTest extends FileFieldTestBase {
     $connection = Database::getConnection();
     $connection->update('file_managed')
       ->fields([
-        'changed' => REQUEST_TIME - ($this->config('system.file')->get('temporary_maximum_age') + 1),
+        'changed' => \Drupal::time()->getRequestTime() - ($this->config('system.file')->get('temporary_maximum_age') + 1),
       ])
       ->condition('fid', $node_file_r3->id())
       ->execute();
@@ -150,7 +143,7 @@ class FileFieldRevisionTest extends FileFieldTestBase {
     // would set the timestamp.
     $connection->update('file_managed')
       ->fields([
-        'changed' => REQUEST_TIME - ($this->config('system.file')->get('temporary_maximum_age') + 1),
+        'changed' => \Drupal::time()->getRequestTime() - ($this->config('system.file')->get('temporary_maximum_age') + 1),
       ])
       ->condition('fid', $node_file_r1->id())
       ->execute();

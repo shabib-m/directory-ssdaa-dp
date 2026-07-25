@@ -2,20 +2,21 @@
 
 namespace Drupal\help\Plugin\HelpSection;
 
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Link;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\help\Attribute\HelpSection;
 
 /**
  * Provides the module topics list section for the help page.
- *
- * @HelpSection(
- *   id = "hook_help",
- *   title = @Translation("Module overviews"),
- *   description = @Translation("Module overviews are provided by modules. Overviews available for your installed modules:"),
- * )
  */
+#[HelpSection(
+  id: 'hook_help',
+  title: new TranslatableMarkup('Module overviews'),
+  description: new TranslatableMarkup('Module overviews are provided by modules. Overviews available for your installed modules:')
+)]
 class HookHelpSection extends HelpSectionPluginBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -31,27 +32,23 @@ class HookHelpSection extends HelpSectionPluginBase implements ContainerFactoryP
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler service.
+   * @param \Drupal\Core\Extension\ModuleExtensionList $moduleExtensionList
+   *   The module extension list.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ModuleHandlerInterface $module_handler) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    ModuleHandlerInterface $module_handler,
+    protected ModuleExtensionList $moduleExtensionList,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->moduleHandler = $module_handler;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('module_handler')
-    );
   }
 
   /**
@@ -62,7 +59,7 @@ class HookHelpSection extends HelpSectionPluginBase implements ContainerFactoryP
     $this->moduleHandler->invokeAllWith(
       'help',
       function (callable $hook, string $module) use (&$topics) {
-        $title = $this->moduleHandler->getName($module);
+        $title = $this->moduleExtensionList->getName($module);
         $topics[$title] = Link::createFromRoute($title, 'help.page', ['name' => $module]);
       }
     );

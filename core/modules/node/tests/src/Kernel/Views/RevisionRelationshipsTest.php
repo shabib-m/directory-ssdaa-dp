@@ -1,31 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Views;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
-use Drupal\views\Views;
 use Drupal\views\Tests\ViewTestData;
+use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the integration of node_revision table of node module.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class RevisionRelationshipsTest extends ViewsKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'node',
     'node_test_views',
     'language',
-    'content_translation',
   ];
 
   /**
@@ -54,7 +55,7 @@ class RevisionRelationshipsTest extends ViewsKernelTestBase {
   /**
    * Create a node with revision and rest result count for both views.
    */
-  public function testNodeRevisionRelationship() {
+  public function testNodeRevisionRelationship(): void {
     $type = NodeType::create(['type' => 'page', 'name' => 'page']);
     $type->save();
     $node = Node::create(['type' => 'page', 'title' => 'test', 'uid' => 1]);

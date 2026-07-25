@@ -1,29 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filter\Kernel\Plugin\migrate\process;
 
 use Drupal\filter\Plugin\migrate\process\FilterSettings;
 use Drupal\migrate\MigrateExecutableInterface;
-use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
 use Drupal\Tests\migrate\Unit\MigrateTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 
 /**
  * Unit tests of the filter_settings plugin.
- *
- * @coversDefaultClass \Drupal\filter\Plugin\migrate\process\FilterSettings
- * @group filter
  */
+#[CoversClass(FilterSettings::class)]
+#[Group('filter')]
+#[IgnoreDeprecations]
 class FilterSettingsTest extends MigrateTestCase {
 
   /**
    * Tests transformation of filter settings.
-   *
-   * @dataProvider dataProvider
-   * @covers ::transform
    */
-  public function testTransform($value, $destination_id, $expected_value) {
-    $migration = $this->createMock(MigrationInterface::class);
+  #[DataProvider('dataProvider')]
+  public function testTransform($value, $destination_id, $expected_value): void {
     $plugin = new FilterSettings([], 'filter_settings', []);
 
     $executable = $this->createMock(MigrateExecutableInterface::class);
@@ -43,8 +45,9 @@ class FilterSettingsTest extends MigrateTestCase {
    * The test data provider.
    *
    * @return array
+   *   An array of test data.
    */
-  public function dataProvider() {
+  public static function dataProvider() {
     return [
       // Tests that the transformed value is identical to the input value when
       // destination is not the filter_html.

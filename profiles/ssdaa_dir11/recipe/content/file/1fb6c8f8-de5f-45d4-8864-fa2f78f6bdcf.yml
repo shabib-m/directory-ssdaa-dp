@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 1fb6c8f8-de5f-45d4-8864-fa2f78f6bdcf
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: muqbel.png
+  uri:
+    -
+      value: 'public://website-images/2026-07/muqbel.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 57619
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

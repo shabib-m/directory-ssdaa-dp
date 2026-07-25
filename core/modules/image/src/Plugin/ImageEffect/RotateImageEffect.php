@@ -6,17 +6,18 @@ use Drupal\Component\Utility\Color;
 use Drupal\Component\Utility\Rectangle;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
  * Rotates an image resource.
- *
- * @ImageEffect(
- *   id = "image_rotate",
- *   label = @Translation("Rotate"),
- *   description = @Translation("Rotating an image may cause the dimensions of an image to increase to fit the diagonal.")
- * )
  */
+#[ImageEffect(
+  id: "image_rotate",
+  label: new TranslatableMarkup("Rotate"),
+  description: new TranslatableMarkup("Rotating an image may cause the dimensions of an image to increase to fit the diagonal.")
+)]
 class RotateImageEffect extends ConfigurableImageEffectBase {
 
   /**
@@ -29,7 +30,12 @@ class RotateImageEffect extends ConfigurableImageEffectBase {
     }
 
     if (!$image->rotate($this->configuration['degrees'], $this->configuration['bgcolor'])) {
-      $this->logger->error('Image rotate failed using the %toolkit toolkit on %path (%mimetype, %dimensions)', ['%toolkit' => $image->getToolkitId(), '%path' => $image->getSource(), '%mimetype' => $image->getMimeType(), '%dimensions' => $image->getWidth() . 'x' . $image->getHeight()]);
+      $this->logger->error('Image rotate failed using the %toolkit toolkit on %path (%mimetype, %dimensions)', [
+        '%toolkit' => $image->getToolkitId(),
+        '%path' => $image->getSource(),
+        '%mimetype' => $image->getMimeType(),
+        '%dimensions' => $image->getWidth() . 'x' . $image->getHeight(),
+      ]);
       return FALSE;
     }
     return TRUE;

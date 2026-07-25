@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Render;
 
+use Drupal\Core\Render\Renderer;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use function preg_replace;
 
 /**
- * @coversDefaultClass \Drupal\Core\Render\Renderer
- * @group Render
+ * Tests Drupal\Core\Render\Renderer.
  */
+#[CoversClass(Renderer::class)]
+#[Group('Render')]
 class RendererDebugTest extends RendererTestBase {
 
   /**
@@ -24,9 +28,9 @@ class RendererDebugTest extends RendererTestBase {
   /**
    * Test render debug output.
    */
-  public function testDebugOutput() {
+  public function testDebugOutput(): void {
     $this->setUpRequest();
-    $this->setupMemoryCache();
+    $this->setUpMemoryCache();
 
     $element = [
       '#cache' => [

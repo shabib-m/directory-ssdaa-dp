@@ -1,11 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Rest;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 
+/**
+ * Resource test base for the entity_view_display entity.
+ */
 abstract class EntityViewDisplayResourceTestBase extends ConfigEntityResourceTestBase {
 
   /**

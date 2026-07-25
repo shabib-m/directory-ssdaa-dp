@@ -1,22 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Pager;
 
+use Drupal\Core\Pager\PagerParameters;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 /**
- * @group Pager
- *
- * @coversDefaultClass \Drupal\Core\Pager\PagerParameters
+ * Tests Drupal\Core\Pager\PagerParameters.
  */
+#[CoversClass(PagerParameters::class)]
+#[Group('Pager')]
+#[RunTestsInSeparateProcesses]
 class RequestPagerTest extends KernelTestBase {
 
   /**
-   * @covers ::findPage
+   * Tests find page.
    */
-  public function testFindPage() {
+  public function testFindPage(): void {
     $request = Request::create('http://example.com', 'GET', ['page' => '0,10']);
+    $request->setSession(new Session(new MockArraySessionStorage()));
 
     /** @var \Symfony\Component\HttpFoundation\RequestStack $request_stack */
     $request_stack = $this->container->get('request_stack');
@@ -28,13 +38,14 @@ class RequestPagerTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::getQueryParameters
+   * Tests get query parameters.
    */
-  public function testGetQueryParameters() {
+  public function testGetQueryParameters(): void {
     $test_parameters = [
       'other' => 'arbitrary',
     ];
     $request = Request::create('http://example.com', 'GET', array_merge(['page' => '0,10'], $test_parameters));
+    $request->setSession(new Session(new MockArraySessionStorage()));
 
     /** @var \Symfony\Component\HttpFoundation\RequestStack $request_stack */
     $request_stack = $this->container->get('request_stack');

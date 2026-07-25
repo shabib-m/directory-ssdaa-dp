@@ -2,6 +2,7 @@
 
 namespace Drupal\link\Plugin\migrate\process;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
@@ -33,16 +34,19 @@ use Drupal\migrate\Row;
  *     source: field_link
  * @endcode
  *
- * @MigrateProcessPlugin(
- *   id = "field_link"
- * )
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3533560
  */
+#[MigrateProcess('field_link')]
 class FieldLink extends ProcessPluginBase {
 
   /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560', E_USER_DEPRECATED);
     $configuration += ['uri_scheme' => 'http://'];
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -103,7 +107,8 @@ class FieldLink extends ProcessPluginBase {
       if (!preg_match($internal_pattern . $end, $uri)) {
         $link_domains = '[a-z][a-z0-9-]{1,62}';
 
-        // Starting a parenthesis group with (?: means that it is grouped, but is not captured
+        // Starting a parenthesis group with (?: means that it is grouped, but
+        // is not captured.
         $authentication = "(?:(?:(?:[\w\.\-\+!$&'\(\)*\+,;=" . $link_i_chars . "]|%[0-9a-f]{2})+(?::(?:[\w" . $link_i_chars . "\.\-\+%!$&'\(\)*\+,;=]|%[0-9a-f]{2})*)?)?@)";
         $domain = '(?:(?:[a-z0-9' . $link_i_chars . ']([a-z0-9' . $link_i_chars . '\-_\[\]])*)(\.(([a-z0-9' . $link_i_chars . '\-_\[\]])+\.)*(' . $link_domains . '|[a-z]{2}))?)';
         $ipv4 = '(?:[0-9]{1,3}(\.[0-9]{1,3}){3})';

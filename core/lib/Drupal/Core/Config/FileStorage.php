@@ -63,7 +63,7 @@ class FileStorage implements StorageInterface {
   }
 
   /**
-   * Returns the file extension used by the file storage for all configuration files.
+   * Gets the extension used by the file storage for all configuration files.
    *
    * @return string
    *   The file extension.
@@ -291,12 +291,12 @@ class FileStorage implements StorageInterface {
    *   ./collection/sub/two
    * this function will return:
    * @code
-   *   array(
+   *   [
    *     'another_collection.one',
    *     'another_collection.two',
    *     'collection.sub.one',
    *     'collection.sub.two',
-   *   );
+   *   ];
    * @endcode
    *
    * @param string $directory

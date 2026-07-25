@@ -3,28 +3,41 @@
 namespace Drupal\views\Plugin\views\pager;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsPager;
 
 /**
  * Plugin for views without pagers.
  *
  * @ingroup views_pager_plugins
- *
- * @ViewsPager(
- *   id = "some",
- *   title = @Translation("Display a specified number of items"),
- *   help = @Translation("Display a limited number items that this view might find."),
- *   display_types = {"basic"}
- * )
  */
+#[ViewsPager(
+  id: "some",
+  title: new TranslatableMarkup("Display a specified number of items"),
+  help: new TranslatableMarkup("Display a limited number items that this view might find."),
+  display_types: ["basic"],
+)]
 class Some extends PagerPluginBase {
 
+  /**
+   * {@inheritdoc}
+   */
   public function summaryTitle() {
     if (!empty($this->options['offset'])) {
-      return $this->formatPlural($this->options['items_per_page'], '@count item, skip @skip', '@count items, skip @skip', ['@count' => $this->options['items_per_page'], '@skip' => $this->options['offset']]);
+      return $this->formatPlural($this->options['items_per_page'],
+        '@count item, skip @skip',
+        '@count items, skip @skip',
+        [
+          '@count' => $this->options['items_per_page'],
+          '@skip' => $this->options['offset'],
+        ]);
     }
     return $this->formatPlural($this->options['items_per_page'], '@count item', '@count items', ['@count' => $this->options['items_per_page']]);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
     $options['items_per_page'] = ['default' => 10];
@@ -56,14 +69,23 @@ class Some extends PagerPluginBase {
     ];
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function usePager() {
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function useCountQuery() {
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function query() {
     $this->view->query->setLimit($this->options['items_per_page']);
     $this->view->query->setOffset($this->options['offset']);

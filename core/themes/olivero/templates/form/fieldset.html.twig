@@ -25,7 +25,7 @@
  * - title_display: Title display setting.
  * - inline_items: Boolean indicating whether the <fieldset> items are inline.
  *
- * @see template_preprocess_fieldset()
+ * @see \Drupal\Core\Form\FormPreprocess::preprocessFieldset()
  * @see olivero_preprocess_fieldset()
  */
 #}
@@ -68,7 +68,7 @@
 %}
 
 <fieldset{{ attributes.addClass(classes) }}>
-  {#  Always wrap fieldset legends in a <span> for CSS positioning. #}
+  {# Always wrap fieldset legends in a <span> for CSS positioning. #}
   {% if legend.title %}
   <legend{{ legend.attributes.addClass(legend_classes) }}>
     <span{{ legend_span.attributes.addClass(legend_span_classes) }}>{{ legend.title }}</span>

@@ -29,15 +29,13 @@ use Symfony\Component\VarDumper\Cloner\Stub;
  */
 class ValidatorDataCollector extends DataCollector implements LateDataCollectorInterface
 {
-    private TraceableValidator $validator;
-
-    public function __construct(TraceableValidator $validator)
-    {
-        $this->validator = $validator;
+    public function __construct(
+        private TraceableValidator $validator,
+    ) {
         $this->reset();
     }
 
-    public function collect(Request $request, Response $response, \Throwable $exception = null): void
+    public function collect(Request $request, Response $response, ?\Throwable $exception = null): void
     {
         // Everything is collected once, on kernel terminate.
     }
@@ -54,7 +52,7 @@ class ValidatorDataCollector extends DataCollector implements LateDataCollectorI
     {
         $collected = $this->validator->getCollectedData();
         $this->data['calls'] = $this->cloneVar($collected);
-        $this->data['violations_count'] = array_reduce($collected, fn ($previous, $item) => $previous + \count($item['violations']), 0);
+        $this->data['violations_count'] = array_reduce($collected, static fn ($previous, $item) => $previous + \count($item['violations']), 0);
     }
 
     public function getCalls(): Data
@@ -75,7 +73,7 @@ class ValidatorDataCollector extends DataCollector implements LateDataCollectorI
     protected function getCasters(): array
     {
         return parent::getCasters() + [
-            \Exception::class => function (\Exception $e, array $a, Stub $s) {
+            \Exception::class => static function (\Exception $e, array $a, Stub $s) {
                 foreach (["\0Exception\0previous", "\0Exception\0trace"] as $k) {
                     if (isset($a[$k])) {
                         unset($a[$k]);
@@ -85,7 +83,7 @@ class ValidatorDataCollector extends DataCollector implements LateDataCollectorI
 
                 return $a;
             },
-            FormInterface::class => fn (FormInterface $f, array $a) => [
+            FormInterface::class => static fn (FormInterface $f, array $a) => [
                 Caster::PREFIX_VIRTUAL.'name' => $f->getName(),
                 Caster::PREFIX_VIRTUAL.'type_class' => new ClassStub($f->getConfig()->getType()->getInnerType()::class),
                 Caster::PREFIX_VIRTUAL.'data' => $f->getData(),

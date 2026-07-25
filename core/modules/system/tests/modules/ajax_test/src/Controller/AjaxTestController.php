@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ajax_test\Controller;
 
 use Drupal\Component\Serialization\Json;
@@ -139,6 +141,36 @@ class AjaxTestController {
   }
 
   /**
+   * Returns a render array of links that directly Drupal.ajax().
+   *
+   * @return array
+   *   Renderable array of AJAX response contents.
+   */
+  public function insertLinksTableWrapper(): array {
+    $build['links'] = [
+      'ajax_target' => [
+        '#markup' => '<div class="ajax-target-wrapper"><table><tbody id="ajax-target"></tbody></table></div>',
+      ],
+      'links' => [
+        '#theme' => 'links',
+        '#attached' => ['library' => ['ajax_test/ajax_insert']],
+      ],
+    ];
+
+    $build['links']['links']['#links']['table-row'] = [
+      'title' => 'Link table-row',
+      'url' => Url::fromRoute('ajax_test.ajax_render_types', ['type' => 'table-row']),
+      'attributes' => [
+        'class' => ['ajax-insert'],
+        'data-method' => 'html',
+        'data-effect' => 'none',
+      ],
+    ];
+
+    return $build;
+  }
+
+  /**
    * Returns a render array that will be rendered by AjaxRenderer.
    *
    * Verifies that the response incorporates JavaScript settings generated
@@ -268,7 +300,7 @@ class AjaxTestController {
         ],
         'link6' => [
           'title' => 'Link 6 (entity form)',
-          'url' => Url::fromRoute('contact.form_add'),
+          'url' => Url::fromRoute('dialog_test.form_add'),
           'attributes' => [
             'class' => ['use-ajax'],
             'data-dialog-type' => 'modal',
@@ -334,6 +366,7 @@ class AjaxTestController {
       'comment-not-wrapped' => '<!-- COMMENT --><div class="comment-not-wrapped">comment-not-wrapped</div>',
       'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect x="0" y="0" height="10" width="10" fill="green"></rect></svg>',
       'empty' => '',
+      'table-row' => '<tr><td>table-row</td></tr>',
     ];
     $render_multiple_root = [
       'mixed' => ' foo <!-- COMMENT -->  foo bar<div class="a class"><p>some string</p></div> additional not wrapped strings, <!-- ANOTHER COMMENT --> <p>final string</p>',
@@ -455,6 +488,42 @@ class AjaxTestController {
    */
   public function httpMethodsDialog(): array {
     return ['#markup' => 'Modal dialog contents'];
+  }
+
+  /**
+   * Provides an Ajax link that open in dialog.
+   *
+   * @return array
+   *   The AJAX link.
+   */
+  public function linkPageDialog(): array {
+    return [
+      '#type' => 'link',
+      '#title' => 'Modal link',
+      '#url' => Url::fromRoute('ajax_test.link_page.dialog_contents'),
+      '#attributes' => [
+        'class' => [
+          'use-ajax',
+        ],
+        'data-dialog-type' => 'dialog',
+      ],
+      '#attached' => [
+        'library' => [
+          'core/drupal.dialog.ajax',
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Provides a title to the page.
+   *
+   * @return string
+   *   The page title.
+   */
+  public function linkPageDialogTitle(): string {
+    $title = 'Dialog link page title';
+    return $title;
   }
 
 }

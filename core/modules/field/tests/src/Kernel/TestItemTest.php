@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel;
 
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -8,18 +10,18 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the new entity API for the test field type.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class TestItemTest extends FieldKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['field_test'];
 
@@ -52,7 +54,7 @@ class TestItemTest extends FieldKernelTestBase {
   /**
    * Tests using entity fields of the test field type.
    */
-  public function testTestItem() {
+  public function testTestItem(): void {
     // Verify entity creation.
     $entity = EntityTest::create();
     $value = rand(1, 10);

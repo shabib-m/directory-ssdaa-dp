@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\link\Unit\Plugin\migrate\process;
 
 use Drupal\link\Plugin\migrate\process\FieldLink;
@@ -7,18 +9,22 @@ use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 
 /**
- * @group Link
+ * Tests the link field migrate process plugin.
  */
+#[Group('Link')]
+#[IgnoreDeprecations]
 class FieldLinkTest extends UnitTestCase {
 
   /**
    * Tests the URL transformations in the FieldLink process plugin.
-   *
-   * @dataProvider canonicalizeUriDataProvider
    */
-  public function testCanonicalizeUri($url, $expected, $configuration = []) {
+  #[DataProvider('canonicalizeUriDataProvider')]
+  public function testCanonicalizeUri($url, $expected, $configuration = []): void {
     $link_plugin = new FieldLink($configuration, '', [], $this->createMock(MigrationInterface::class));
     $transformed = $link_plugin->transform([
       'url' => $url,
@@ -31,7 +37,7 @@ class FieldLinkTest extends UnitTestCase {
   /**
    * Data provider for testCanonicalizeUri.
    */
-  public function canonicalizeUriDataProvider() {
+  public static function canonicalizeUriDataProvider() {
     return [
       'Simple front-page' => [
         '<front>',
@@ -108,7 +114,7 @@ class FieldLinkTest extends UnitTestCase {
   /**
    * Tests the attributes that are deeply serialized are discarded.
    */
-  public function testCanonicalizeUriSerialized() {
+  public function testCanonicalizeUriSerialized(): void {
     $link_plugin = new FieldLink([], '', [], $this->createMock(MigrationInterface::class));
     $migrate_executable = $this->createMock(MigrateExecutableInterface::class);
     $row = new Row();

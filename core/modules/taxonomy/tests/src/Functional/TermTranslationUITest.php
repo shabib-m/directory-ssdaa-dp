@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional;
 
-use Drupal\Tests\content_translation\Functional\ContentTranslationUITestBase;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\Tests\content_translation\Functional\ContentTranslationUITestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Term Translation UI.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermTranslationUITest extends ContentTranslationUITestBase {
 
   /**
@@ -32,9 +36,7 @@ class TermTranslationUITest extends ContentTranslationUITestBase {
   ];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['language', 'content_translation', 'taxonomy'];
 
@@ -50,12 +52,13 @@ class TermTranslationUITest extends ContentTranslationUITestBase {
     $this->entityTypeId = 'taxonomy_term';
     $this->bundle = 'tags';
     parent::setUp();
+    $this->doSetup();
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function setupBundle() {
+  protected function setupBundle(): void {
     parent::setupBundle();
 
     // Create a vocabulary.
@@ -72,7 +75,7 @@ class TermTranslationUITest extends ContentTranslationUITestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getTranslatorPermissions() {
+  protected function getTranslatorPermissions(): array {
     return array_merge(parent::getTranslatorPermissions(), ['administer taxonomy']);
   }
 
@@ -105,7 +108,7 @@ class TermTranslationUITest extends ContentTranslationUITestBase {
   /**
    * {@inheritdoc}
    */
-  public function testTranslationUI() {
+  public function testTranslationUI(): void {
     parent::testTranslationUI();
 
     // Make sure that no row was inserted for taxonomy vocabularies which do
@@ -125,8 +128,11 @@ class TermTranslationUITest extends ContentTranslationUITestBase {
   /**
    * Tests translate link on vocabulary term list.
    */
-  public function testTranslateLinkVocabularyAdminPage() {
-    $this->drupalLogin($this->drupalCreateUser(array_merge(parent::getTranslatorPermissions(), ['access administration pages', 'administer taxonomy'])));
+  public function testTranslateLinkVocabularyAdminPage(): void {
+    $this->drupalLogin($this->drupalCreateUser(array_merge(parent::getTranslatorPermissions(), [
+      'access administration pages',
+      'administer taxonomy',
+    ])));
 
     $values = [
       'name' => $this->randomMachineName(),
@@ -163,10 +169,9 @@ class TermTranslationUITest extends ContentTranslationUITestBase {
   /**
    * {@inheritdoc}
    */
-  protected function doTestTranslationEdit() {
+  protected function doTestTranslationEdit(): void {
     $storage = $this->container->get('entity_type.manager')
       ->getStorage($this->entityTypeId);
-    $storage->resetCache([$this->entityId]);
     $entity = $storage->load($this->entityId);
     $languages = $this->container->get('language_manager')->getLanguages();
 
@@ -184,10 +189,9 @@ class TermTranslationUITest extends ContentTranslationUITestBase {
   /**
    * {@inheritdoc}
    */
-  protected function doTestPublishedStatus() {
+  protected function doTestPublishedStatus(): void {
     $storage = $this->container->get('entity_type.manager')
       ->getStorage($this->entityTypeId);
-    $storage->resetCache([$this->entityId]);
     $entity = $storage->load($this->entityId);
     $languages = $this->container->get('language_manager')->getLanguages();
 
@@ -205,7 +209,6 @@ class TermTranslationUITest extends ContentTranslationUITestBase {
         $this->drupalGet($url, $options);
         $this->submitForm(['status[value]' => $value], 'Save');
       }
-      $storage->resetCache([$this->entityId]);
       $entity = $storage->load($this->entityId);
       foreach ($this->langcodes as $langcode) {
         // The term is created as unpublished thus we switch to the published

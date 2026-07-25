@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 0b472e5c-cc69-48fb-8964-55f00515411f
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: OM.png
+  uri:
+    -
+      value: 'public://term-country/2026-07/OM.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 10027
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

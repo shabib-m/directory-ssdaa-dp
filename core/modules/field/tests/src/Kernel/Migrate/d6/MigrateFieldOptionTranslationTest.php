@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Migrate\d6;
 
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrate field option translations.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateFieldOptionTranslationTest extends MigrateDrupal6TestBase {
 
   /**
@@ -17,8 +21,6 @@ class MigrateFieldOptionTranslationTest extends MigrateDrupal6TestBase {
   protected static $modules = [
     'config_translation',
     'language',
-    'locale',
-    'menu_ui',
   ];
 
   /**
@@ -36,7 +38,7 @@ class MigrateFieldOptionTranslationTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal 6 field to Drupal 8 migration.
    */
-  public function testFieldOptionTranslation() {
+  public function testFieldOptionTranslation(): void {
     $language_manager = $this->container->get('language_manager');
 
     // Test a select list with allowed values of key only.

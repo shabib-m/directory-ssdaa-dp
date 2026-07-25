@@ -1,0 +1,12 @@
+name: 'DummyDB'
+type: module
+description: 'Fake database driver for DummyDB.'
+package: Testing
+# version: VERSION
+dependencies:
+  - drupal:mysql
+
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
+project: 'drupal'
+datestamp: 1784141321

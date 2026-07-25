@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the basic AJAX functionality of Views exposed forms.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ExposedFilterAJAXTest extends WebDriverTestBase {
 
   use ContentTypeCreationTrait;
@@ -67,6 +71,7 @@ class ExposedFilterAJAXTest extends WebDriverTestBase {
       'access content',
       'access content overview',
       'edit any page content',
+      'view the administration theme',
     ]);
     $this->drupalLogin($user);
   }
@@ -74,7 +79,15 @@ class ExposedFilterAJAXTest extends WebDriverTestBase {
   /**
    * Tests if exposed filtering via AJAX works for the "Content" View.
    */
-  public function testExposedFiltering() {
+  public function testExposedFiltering(): void {
+    // Create an account that can update the sticky flag.
+    $user = $this->drupalCreateUser([
+      'access content overview',
+      'administer nodes',
+      'edit any page content',
+    ]);
+    $this->drupalLogin($user);
+
     // Visit the View page.
     $this->drupalGet('admin/content');
 
@@ -84,6 +97,7 @@ class ExposedFilterAJAXTest extends WebDriverTestBase {
     $html = $session->getPage()->getHtml();
     $this->assertStringContainsString('Page One', $html);
     $this->assertStringContainsString('Page Two', $html);
+    $this->assertSession()->addressEquals('admin/content');
 
     // Search for "Page One".
     $this->submitForm(['title' => 'Page One'], 'Filter');
@@ -93,6 +107,7 @@ class ExposedFilterAJAXTest extends WebDriverTestBase {
     $html = $session->getPage()->getHtml();
     $this->assertStringContainsString('Page One', $html);
     $this->assertStringNotContainsString('Page Two', $html);
+    $this->assertSession()->addressEquals('admin/content?title=Page%20One&type=All&status=All');
 
     // Search for "Page Two".
     $this->submitForm(['title' => 'Page Two'], 'Filter');
@@ -102,6 +117,7 @@ class ExposedFilterAJAXTest extends WebDriverTestBase {
     $html = $session->getPage()->getHtml();
     $this->assertStringContainsString('Page Two', $html);
     $this->assertStringNotContainsString('Page One', $html);
+    $this->assertSession()->addressEquals('admin/content?type=All&status=All&title=Page%20Two');
 
     // Submit bulk actions form to ensure that the previous AJAX submit does not
     // break it.
@@ -112,20 +128,43 @@ class ExposedFilterAJAXTest extends WebDriverTestBase {
 
     // Verify that the action was performed.
     $this->assertSession()->pageTextContains('Make content sticky was applied to 1 item.');
+    $this->assertSession()->addressEquals('admin/content?type=All&status=All&title=Page%20Two');
 
     // Reset the form.
     $this->submitForm([], 'Reset');
-    $this->assertSession()->assertWaitOnAjaxRequest();
 
     $this->assertSession()->pageTextContains('Page One');
     $this->assertSession()->pageTextContains('Page Two');
     $this->assertFalse($session->getPage()->hasButton('Reset'));
+    $this->assertSession()->addressEquals('admin/content');
+  }
+
+  /**
+   * Tests if exposed filtering via AJAX theme negotiation works.
+   */
+  public function testExposedFilteringThemeNegotiation(): void {
+    // Install 'claro' and configure it as administrative theme.
+    $this->container->get('theme_installer')->install(['claro']);
+    $this->config('system.theme')->set('admin', 'claro')->save();
+
+    // Visit the View page.
+    $this->drupalGet('admin/content');
+
+    // Search for "Page One".
+    $this->submitForm(['title' => 'Page One'], 'Filter');
+    $this->assertSession()->assertExpectedAjaxRequest(1);
+
+    // Verify that the theme is the 'claro' admin theme and not the default
+    // theme ('stark').
+    $settings = $this->getDrupalSettings();
+    $this->assertNotNull($settings['ajaxPageState']['theme_token']);
+    $this->assertEquals('claro', $settings['ajaxPageState']['theme']);
   }
 
   /**
    * Tests if exposed filtering via AJAX works in a modal.
    */
-  public function testExposedFiltersInModal() {
+  public function testExposedFiltersInModal(): void {
     $this->drupalGet('views-test-modal/modal');
 
     $assert = $this->assertSession();
@@ -173,7 +212,7 @@ class ExposedFilterAJAXTest extends WebDriverTestBase {
   /**
    * Tests exposed filtering via AJAX with a button element.
    */
-  public function testExposedFilteringWithButtonElement() {
+  public function testExposedFilteringWithButtonElement(): void {
     // Install theme to test with template system.
     \Drupal::service('theme_installer')->install(['views_test_theme']);
 

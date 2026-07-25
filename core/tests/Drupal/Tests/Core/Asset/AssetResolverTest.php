@@ -1,23 +1,27 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\Asset\AssetResolverTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Asset;
 
+use Drupal\Component\Datetime\Time;
 use Drupal\Core\Asset\AssetResolver;
 use Drupal\Core\Asset\AttachedAssets;
 use Drupal\Core\Asset\AttachedAssetsInterface;
+use Drupal\Core\Asset\JsCollectionGrouper;
+use Drupal\Core\Asset\LibraryDependencyResolver;
 use Drupal\Core\Cache\MemoryBackend;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Asset\AssetResolver
- * @group Asset
+ * Tests Drupal\Core\Asset\AssetResolver.
  */
+#[CoversClass(AssetResolver::class)]
+#[Group('Asset')]
 class AssetResolverTest extends UnitTestCase {
 
   /**
@@ -70,6 +74,13 @@ class AssetResolverTest extends UnitTestCase {
   protected $cache;
 
   /**
+   * The mocked theme handler.
+   *
+   * @var \Drupal\Core\Extension\ThemeHandlerInterface|\PHPUnit\Framework\MockObject\MockObject
+   */
+  protected $themeHandler;
+
+  /**
    * A mocked English language object.
    */
   protected LanguageInterface $english;
@@ -78,6 +89,10 @@ class AssetResolverTest extends UnitTestCase {
    * A mocked Japanese language object.
    */
   protected LanguageInterface $japanese;
+  /**
+   * An array of library definitions.
+   */
+  protected array $libraries = [];
 
   /**
    * {@inheritdoc}
@@ -88,13 +103,81 @@ class AssetResolverTest extends UnitTestCase {
     $this->libraryDiscovery = $this->getMockBuilder('Drupal\Core\Asset\LibraryDiscovery')
       ->disableOriginalConstructor()
       ->getMock();
-    $this->libraryDependencyResolver = $this->createMock('\Drupal\Core\Asset\LibraryDependencyResolverInterface');
-    $this->libraryDependencyResolver->expects($this->any())
-      ->method('getLibrariesWithDependencies')
-      ->willReturnArgument(0);
-    $this->libraryDependencyResolver->expects($this->any())
-      ->method('getMinimalRepresentativeSubset')
-      ->willReturnArgument(0);
+    $this->libraryDiscovery->expects($this->any())
+      ->method('getLibraryByName')
+      ->willReturnCallback(function ($extension, $name) {
+        return $this->libraries[$extension . '/' . $name];
+      });
+    $this->libraries = [
+      'core/drupal' => [
+        'version' => '1.0.0',
+        'css' => [],
+        'js' =>
+          [
+            'core/misc/drupal.js' => ['data' => 'core/misc/drupal.js', 'preprocess' => TRUE],
+          ],
+        'license' => '',
+      ],
+      'core/jquery' => [
+        'version' => '1.0.0',
+        'css' => [],
+        'js' =>
+          [
+            'core/misc/jquery.js' => ['data' => 'core/misc/jquery.js', 'minified' => TRUE],
+          ],
+        'license' => '',
+      ],
+      'llama/css' => [
+        'version' => '1.0.0',
+        'css' =>
+          [
+            'core/misc/llama.css' => ['data' => 'core/misc/llama.css'],
+          ],
+        'js' => [],
+        'fonts' => [],
+        'license' => '',
+      ],
+      'piggy/css' => [
+        'version' => '1.0.0',
+        'css' =>
+          [
+            'core/misc/piggy.css' => ['data' => 'core/misc/piggy.css'],
+          ],
+        'js' => [],
+        'fonts' => [
+          'fonts/font.woff2' => [
+            'data' => 'fonts/font.woff2',
+            'preload' => TRUE,
+          ],
+        ],
+        'license' => '',
+      ],
+      'core/ckeditor5' => [
+        'remote' => 'https://github.com/ckeditor/ckeditor5',
+        'version' => '1.0.0',
+        'license' => '',
+        'js' => [
+          'assets/vendor/ckeditor5/ckeditor5-dll/ckeditor5-dll.js' => [
+            'data' => 'assets/vendor/ckeditor5/ckeditor5-dll/ckeditor5-dll.js',
+            'preprocess' => FALSE,
+            'minified' => TRUE,
+          ],
+        ],
+      ],
+      'piggy/ckeditor' => [
+        'version' => '1.0.0',
+        'css' =>
+          [
+            'core/misc/ckeditor.css' => ['data' => 'core/misc/ckeditor.css'],
+          ],
+        'js' => [],
+        'license' => '',
+        'dependencies' => [
+          'core/ckeditor5',
+        ],
+      ],
+    ];
+    $this->libraryDependencyResolver = new LibraryDependencyResolver($this->libraryDiscovery);
     $this->moduleHandler = $this->createMock('\Drupal\Core\Extension\ModuleHandlerInterface');
     $this->themeManager = $this->createMock('\Drupal\Core\Theme\ThemeManagerInterface');
     $active_theme = $this->getMockBuilder('\Drupal\Core\Theme\ActiveTheme')
@@ -118,50 +201,133 @@ class AssetResolverTest extends UnitTestCase {
     $this->languageManager = $this->createMock('\Drupal\Core\Language\LanguageManagerInterface');
     $this->languageManager->expects($this->any())
       ->method('getCurrentLanguage')
-      ->will($this->onConsecutiveCalls($english, $english, $japanese, $japanese));
-    $this->cache = new TestMemoryBackend();
+      ->willReturn($english, $english, $japanese, $japanese);
+    $this->cache = new TestMemoryBackend(new Time());
 
-    $this->assetResolver = new AssetResolver($this->libraryDiscovery, $this->libraryDependencyResolver, $this->moduleHandler, $this->themeManager, $this->languageManager, $this->cache);
+    $this->themeHandler = $this->createMock('\Drupal\Core\Extension\ThemeHandlerInterface');
+
+    $this->assetResolver = new AssetResolver($this->libraryDiscovery, $this->libraryDependencyResolver, $this->moduleHandler, $this->themeManager, $this->languageManager, $this->cache, $this->themeHandler);
   }
 
   /**
-   * @covers ::getCssAssets
-   * @dataProvider providerAttachedAssets
+   * Tests get css assets.
    */
-  public function testGetCssAssets(AttachedAssetsInterface $assets_a, AttachedAssetsInterface $assets_b, $expected_cache_item_count) {
+  #[DataProvider('providerAttachedCssAssets')]
+  public function testGetCssAssets(AttachedAssetsInterface $assets_a, AttachedAssetsInterface $assets_b, $expected_css_cache_item_count): void {
+    $this->libraryDiscovery->expects($this->any())
+      ->method('getLibraryByName')
+      ->willReturnCallback(function ($extension, $name) {
+        return $this->libraries[$extension . '/' . $name];
+      });
     $this->assetResolver->getCssAssets($assets_a, FALSE, $this->english);
     $this->assetResolver->getCssAssets($assets_b, FALSE, $this->english);
-    $this->assertCount($expected_cache_item_count, $this->cache->getAllCids());
+    $this->assertCount($expected_css_cache_item_count, $this->cache->getAllCids());
+  }
+
+  public static function providerAttachedCssAssets(): array {
+    return [
+      'one js only library and one css only library' => [
+        (new AttachedAssets())->setAlreadyLoadedLibraries([])->setLibraries(['core/drupal']),
+        (new AttachedAssets())->setAlreadyLoadedLibraries([])->setLibraries(['llama/css']),
+        1,
+      ],
+      'two different css libraries' => [
+        (new AttachedAssets())->setAlreadyLoadedLibraries([])->setLibraries(['core/drupal', 'llama/css']),
+        (new AttachedAssets())->setAlreadyLoadedLibraries([])->setLibraries(['piggy/css']),
+        2,
+      ],
+    ];
   }
 
   /**
-   * @covers ::getJsAssets
-   * @dataProvider providerAttachedAssets
+   * Tests get js assets.
    */
-  public function testGetJsAssets(AttachedAssetsInterface $assets_a, AttachedAssetsInterface $assets_b, $expected_cache_item_count) {
+  #[DataProvider('providerAttachedJsAssets')]
+  public function testGetJsAssets(AttachedAssetsInterface $assets_a, AttachedAssetsInterface $assets_b, $expected_js_cache_item_count, $expected_multilingual_js_cache_item_count): void {
+    $this->libraryDiscovery->expects($this->any())
+      ->method('getLibraryByName')
+      ->willReturnCallback(function ($extension, $name) {
+        return $this->libraries[$extension . '/' . $name];
+      });
     $this->assetResolver->getJsAssets($assets_a, FALSE, $this->english);
     $this->assetResolver->getJsAssets($assets_b, FALSE, $this->english);
-    $this->assertCount($expected_cache_item_count, $this->cache->getAllCids());
+    $this->assertCount($expected_js_cache_item_count, $this->cache->getAllCids());
 
     $this->assetResolver->getJsAssets($assets_a, FALSE, $this->japanese);
     $this->assetResolver->getJsAssets($assets_b, FALSE, $this->japanese);
-    $this->assertCount($expected_cache_item_count * 2, $this->cache->getAllCids());
+    $this->assertCount($expected_multilingual_js_cache_item_count, $this->cache->getAllCids());
   }
 
-  public function providerAttachedAssets() {
+  public static function providerAttachedJsAssets(): array {
     $time = time();
     return [
       'same libraries, different timestamps' => [
         (new AttachedAssets())->setAlreadyLoadedLibraries([])->setLibraries(['core/drupal'])->setSettings(['currentTime' => $time]),
         (new AttachedAssets())->setAlreadyLoadedLibraries([])->setLibraries(['core/drupal'])->setSettings(['currentTime' => $time + 100]),
         1,
+        2,
       ],
       'different libraries, same timestamps' => [
         (new AttachedAssets())->setAlreadyLoadedLibraries([])->setLibraries(['core/drupal'])->setSettings(['currentTime' => $time]),
         (new AttachedAssets())->setAlreadyLoadedLibraries([])->setLibraries(['core/drupal', 'core/jquery'])->setSettings(['currentTime' => $time]),
         2,
+        4,
       ],
     ];
+  }
+
+  /**
+   * Tests get font assets.
+   */
+  #[DataProvider('providerAttachedFontAssets')]
+  public function testGetFontAssets($libraries, $expected): void {
+    $assets = (new AttachedAssets())->setAlreadyLoadedLibraries([])->setLibraries($libraries);
+    $fonts = $this->assetResolver->getFontAssets($assets, $this->english);
+    $this->assertSame($expected, $fonts);
+  }
+
+  public static function providerAttachedFontAssets(): array {
+    return [
+      [
+        ['piggy/css'],
+        [
+          [
+            'data' => 'fonts/font.woff2',
+            'preload' => TRUE,
+          ],
+        ],
+      ],
+      [
+        ['llama/css'],
+        [],
+      ],
+    ];
+  }
+
+  /**
+   * Test that order of scripts are correct.
+   */
+  public function testJsAssetsOrder(): void {
+    $time = time();
+    $assets_a = (new AttachedAssets())
+      ->setAlreadyLoadedLibraries([])
+      ->setLibraries(['core/drupal', 'core/ckeditor5', 'core/jquery', 'piggy/ckeditor'])
+      ->setSettings(['currentTime' => $time]);
+    $assets_b = (new AttachedAssets())
+      ->setAlreadyLoadedLibraries([])
+      ->setLibraries(['piggy/ckeditor', 'core/drupal', 'core/ckeditor5', 'core/jquery'])
+      ->setSettings(['currentTime' => $time]);
+    $js_assets_a = $this->assetResolver->getJsAssets($assets_a, FALSE, $this->english);
+    $js_assets_b = $this->assetResolver->getJsAssets($assets_b, FALSE, $this->english);
+
+    $grouper = new JsCollectionGrouper();
+
+    $group_a = $grouper->group($js_assets_a[1]);
+    $group_b = $grouper->group($js_assets_b[1]);
+
+    foreach ($group_a as $key => $value) {
+      $this->assertSame($value['items'], $group_b[$key]['items']);
+    }
   }
 
 }
@@ -174,6 +340,9 @@ if (!defined('JS_DEFAULT')) {
   define('JS_DEFAULT', 0);
 }
 
+/**
+ * Stub class with memory cache implementation for testing.
+ */
 class TestMemoryBackend extends MemoryBackend {
 
   public function getAllCids() {

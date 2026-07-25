@@ -27,7 +27,14 @@
    * viewport on short screens. */
   border-block-start: solid var(--color--white) calc(var(--sp3) + var(--drupal-displace-offset-top, 0px));
   background-color: var(--color--white);
-  box-shadow: 0 0 72px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 72px rgb(0, 0, 0, 0.1);
+
+  /* When Navigation module's mobile top bar is present, add padding to ensure no overlap. */
+  body:has(> .admin-toolbar-control-bar) & {
+    @media (max-width: 1023px) {
+      padding-top: 48px;
+    }
+  }
 
   &.is-active {
     visibility: visible;
@@ -65,7 +72,9 @@
  * works around https://bugs.chromium.org/p/chromium/issues/detail?id=332189
  */
 html.js .header-nav {
-  transition: visibility 0.2s, transform 0.2s;
+  transition:
+    visibility 0.2s,
+    transform 0.2s;
 }
 
 body:not(.is-always-mobile-nav) .header-nav {
@@ -96,7 +105,9 @@ body.is-always-mobile-nav {
       overflow: auto;
       max-width: calc((7 * (var(--grid-col-width) + var(--grid-gap))));
       padding-inline-end: var(--sp);
-      transition: transform 0.2s, visibility 0.2s;
+      transition:
+        transform 0.2s,
+        visibility 0.2s;
       border-top-width: calc(var(--drupal-displace-offset-top, 0px) + var(--sp11));
     }
 
@@ -118,11 +129,11 @@ body.is-always-mobile-nav {
   opacity: 0.2;
   background: var(--color--gray-5);
 
-  @media (forced-colors: active) {
-    background: canvastext;
+  .is-overlay-active & {
+    display: block;
   }
 
-  @nest .is-overlay-active & {
-    display: block;
+  @media (forced-colors: active) {
+    background: canvastext;
   }
 }

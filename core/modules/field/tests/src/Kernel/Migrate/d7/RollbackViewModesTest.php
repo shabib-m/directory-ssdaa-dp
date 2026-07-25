@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Migrate\d7;
 
 use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\migrate\MigrateExecutable;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrates and rolls back Drupal 7 view modes.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class RollbackViewModesTest extends MigrateViewModesTest {
 
   /**
@@ -20,7 +24,7 @@ class RollbackViewModesTest extends MigrateViewModesTest {
   /**
    * Tests migrating D7 view modes, then rolling back.
    */
-  public function testMigration() {
+  public function testMigration(): void {
     // Test that the view modes have migrated (prior to rollback).
     parent::testMigration();
 
@@ -44,7 +48,7 @@ class RollbackViewModesTest extends MigrateViewModesTest {
    * @param string|\Drupal\migrate\Plugin\MigrationInterface $migration
    *   The migration to rollback, or its ID.
    */
-  protected function executeRollback($migration) {
+  protected function executeRollback($migration): void {
     if (is_string($migration)) {
       $this->migration = $this->getMigration($migration);
     }

@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\shortcut\Kernel\Plugin\migrate\source\d7;
 
+use Drupal\shortcut\Plugin\migrate\source\d7\ShortcutSetUsers;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests D7 ShortcutSetUsers source plugin.
- *
- * @covers Drupal\shortcut\Plugin\migrate\source\d7\ShortcutSetUsers
- *
- * @group shortcut
  */
+#[CoversClass(ShortcutSetUsers::class)]
+#[Group('shortcut')]
+#[RunTestsInSeparateProcesses]
 class ShortcutSetUsersTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -21,7 +26,7 @@ class ShortcutSetUsersTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.

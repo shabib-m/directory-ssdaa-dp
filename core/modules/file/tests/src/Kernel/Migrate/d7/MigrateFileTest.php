@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel\Migrate\d7;
 
 use Drupal\file\Entity\File;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrates all files in the file_managed table.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class MigrateFileTest extends MigrateDrupal7TestBase {
 
   use FileMigrationSetupTrait;
@@ -30,10 +34,10 @@ class MigrateFileTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getFileMigrationInfo() {
+  protected function getFileMigrationInfo(): array {
     return [
       'path' => 'public://sites/default/files/cube.jpeg',
-      'size' => '3620',
+      'size' => 3620,
       'base_path' => 'public://',
       'plugin_id' => 'd7_file',
     ];
@@ -42,7 +46,7 @@ class MigrateFileTest extends MigrateDrupal7TestBase {
   /**
    * Tests that all expected files are migrated.
    */
-  public function testFileMigration() {
+  public function testFileMigration(): void {
     $this->assertEntity(1, 'cube.jpeg', 'public://cube.jpeg', 'image/jpeg', 3620, 1421727515, 1421727515, '1');
     // Ensure temporary file was not migrated.
     $this->assertNull(File::load(4));

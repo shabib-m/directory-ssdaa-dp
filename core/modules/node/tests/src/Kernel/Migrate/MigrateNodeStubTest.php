@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Migrate;
 
-use Drupal\Tests\migrate_drupal\Kernel\MigrateDrupalTestBase;
 use Drupal\migrate_drupal\Tests\StubTestTrait;
 use Drupal\node\Entity\NodeType;
+use Drupal\Tests\migrate_drupal\Kernel\MigrateDrupalTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test stub creation for nodes.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class MigrateNodeStubTest extends MigrateDrupalTestBase {
 
   use StubTestTrait;
@@ -36,7 +40,7 @@ class MigrateNodeStubTest extends MigrateDrupalTestBase {
   /**
    * Tests creation of node stubs.
    */
-  public function testStub() {
+  public function testStub(): void {
     $this->performStubTest('node');
   }
 

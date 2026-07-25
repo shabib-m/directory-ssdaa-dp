@@ -4,6 +4,7 @@ namespace Drupal\path_alias;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Language\LanguageInterface;
 
 /**
@@ -35,9 +36,14 @@ class AliasRepository implements AliasRepositoryInterface {
     $select = $this->getBaseQuery()
       ->fields('base_table', ['path', 'alias']);
 
+    // Use a map of paths to their lowercase equivalents to look up aliases so
+    // the returned array will contain an exact match to the provided path if it
+    // differs by case to the stored path.
+    $path_map = [];
     if (!empty($preloaded)) {
       $conditions = $this->connection->condition('OR');
       foreach ($preloaded as $preloaded_item) {
+        $path_map[$preloaded_item] = mb_strtolower($preloaded_item);
         $conditions->condition('base_table.path', $this->connection->escapeLike($preloaded_item), 'LIKE');
       }
       $select->condition($conditions);
@@ -45,12 +51,30 @@ class AliasRepository implements AliasRepositoryInterface {
 
     $this->addLanguageFallback($select, $langcode);
 
-    // We order by ID ASC so that fetchAllKeyed() returns the most recently
-    // created alias for each source. Subsequent queries using fetchField() must
-    // use ID DESC to have the same effect.
-    $select->orderBy('base_table.id', 'ASC');
+    $select->orderBy('base_table.id', 'DESC');
 
-    return $select->execute()->fetchAllKeyed();
+    // We want the most recently created alias for each source, however that
+    // will be at the start of the result-set, so fetch everything and reverse
+    // it. Note that it would not be sufficient to reverse the ordering of the
+    // 'base_table.id' column, as that would not guarantee other conditions
+    // added to the query, such as those in ::addLanguageFallback, would be
+    // reversed.
+    $results = $select->execute()->fetchAll(FetchAs::Associative);
+    $aliases = [];
+    foreach (array_reverse($results) as $result) {
+      $aliases[$result['path']] = $result['alias'];
+      // Paths are user input and are looked up via case-insensitive LIKE. If
+      // the alias's path does not have an exact match, then look up the path
+      // provided by the user in the map.
+      if (!isset($path_map[$result['path']])) {
+        $other_path = array_search(mb_strtolower($result['path']), $path_map);
+        if ($other_path !== FALSE) {
+          $aliases[$other_path] = $result['alias'];
+        }
+      }
+    }
+
+    return $aliases;
   }
 
   /**

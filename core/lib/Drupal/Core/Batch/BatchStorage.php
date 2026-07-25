@@ -2,11 +2,15 @@
 
 namespace Drupal\Core\Batch;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\DatabaseException;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Drupal\Core\Access\CsrfTokenGenerator;
 
+/**
+ * Defines the storage handler class for batches.
+ */
 class BatchStorage implements BatchStorageInterface {
 
   /**
@@ -15,40 +19,23 @@ class BatchStorage implements BatchStorageInterface {
   const TABLE_NAME = 'batch';
 
   /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
-
-  /**
-   * The session.
-   *
-   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
-   */
-  protected $session;
-
-  /**
-   * The CSRF token generator.
-   *
-   * @var \Drupal\Core\Access\CsrfTokenGenerator
-   */
-  protected $csrfToken;
-
-  /**
    * Constructs the database batch storage service.
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
    * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
    *   The session.
-   * @param \Drupal\Core\Access\CsrfTokenGenerator $csrf_token
+   * @param \Drupal\Core\Access\CsrfTokenGenerator $csrfToken
    *   The CSRF token generator.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    */
-  public function __construct(Connection $connection, SessionInterface $session, CsrfTokenGenerator $csrf_token) {
-    $this->connection = $connection;
-    $this->session = $session;
-    $this->csrfToken = $csrf_token;
+  public function __construct(
+    protected Connection $connection,
+    protected SessionInterface $session,
+    protected CsrfTokenGenerator $csrfToken,
+    protected TimeInterface $time,
+  ) {
   }
 
   /**
@@ -58,10 +45,12 @@ class BatchStorage implements BatchStorageInterface {
     // Ensure that a session is started before using the CSRF token generator.
     $this->session->start();
     try {
-      $batch = $this->connection->query("SELECT [batch] FROM {batch} WHERE [bid] = :bid AND [token] = :token", [
-        ':bid' => $id,
-        ':token' => $this->csrfToken->get($id),
-      ])->fetchField();
+      $batch = $this->connection->select('batch', 'b')
+        ->fields('b', ['batch'])
+        ->condition('bid', $id)
+        ->condition('token', $this->csrfToken->get($id))
+        ->execute()
+        ->fetchField();
     }
     catch (\Exception $e) {
       $this->catchException($e);
@@ -109,7 +98,7 @@ class BatchStorage implements BatchStorageInterface {
     try {
       // Cleanup the batch table and the queue for failed batches.
       $this->connection->delete('batch')
-        ->condition('timestamp', REQUEST_TIME - 864000, '<')
+        ->condition('timestamp', $this->time->getRequestTime() - 864000, '<')
         ->execute();
     }
     catch (\Exception $e) {
@@ -121,12 +110,29 @@ class BatchStorage implements BatchStorageInterface {
    * {@inheritdoc}
    */
   public function create(array $batch) {
-    // Ensure that a session is started before using the CSRF token generator.
+    // Ensure that a session is started before using the CSRF token generator,
+    // and update the database record.
     $this->session->start();
+    $this->connection->update('batch')
+      ->fields([
+        'token' => $this->csrfToken->get($batch['id']),
+        'batch' => serialize($batch),
+      ])
+      ->condition('bid', $batch['id'])
+      ->execute();
+  }
+
+  /**
+   * Returns a new batch id.
+   *
+   * @return int
+   *   A batch id.
+   */
+  public function getId(): int {
     $try_again = FALSE;
     try {
       // The batch table might not yet exist.
-      $this->doCreate($batch);
+      return $this->doInsertBatchRecord();
     }
     catch (\Exception $e) {
       // If there was an exception, try to create the table.
@@ -138,23 +144,22 @@ class BatchStorage implements BatchStorageInterface {
     }
     // Now that the table has been created, try again if necessary.
     if ($try_again) {
-      $this->doCreate($batch);
+      return $this->doInsertBatchRecord();
     }
   }
 
   /**
-   * Saves a batch.
+   * Inserts a record in the table and returns the batch id.
    *
-   * @param array $batch
-   *   The array representing the batch to create.
+   * @return int
+   *   A batch id.
    */
-  protected function doCreate(array $batch) {
-    $this->connection->insert('batch')
+  protected function doInsertBatchRecord(): int {
+    return $this->connection->insert('batch')
       ->fields([
-        'bid' => $batch['id'],
-        'timestamp' => REQUEST_TIME,
-        'token' => $this->csrfToken->get($batch['id']),
-        'batch' => serialize($batch),
+        'timestamp' => $this->time->getRequestTime(),
+        'token' => '',
+        'batch' => NULL,
       ])
       ->execute();
   }
@@ -171,9 +176,9 @@ class BatchStorage implements BatchStorageInterface {
     // If another process has already created the batch table, attempting to
     // recreate it will throw an exception. In this case just catch the
     // exception and do nothing.
-    catch (DatabaseException $e) {
+    catch (DatabaseException) {
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       return FALSE;
     }
     return TRUE;
@@ -186,7 +191,7 @@ class BatchStorage implements BatchStorageInterface {
    * yet the query failed, then the batch is stale and the exception needs to
    * propagate.
    *
-   * @param $e
+   * @param \Exception $e
    *   The exception.
    *
    * @throws \Exception
@@ -208,9 +213,7 @@ class BatchStorage implements BatchStorageInterface {
       'fields' => [
         'bid' => [
           'description' => 'Primary Key: Unique batch ID.',
-          // This is not a serial column, to allow both progressive and
-          // non-progressive batches. See batch_process().
-          'type' => 'int',
+          'type' => 'serial',
           'unsigned' => TRUE,
           'not null' => TRUE,
         ],

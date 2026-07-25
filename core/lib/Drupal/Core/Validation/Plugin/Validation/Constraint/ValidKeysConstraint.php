@@ -5,34 +5,22 @@ declare(strict_types = 1);
 namespace Drupal\Core\Validation\Plugin\Validation\Constraint;
 
 use Drupal\Core\Config\Schema\Mapping;
-use Drupal\Core\TypedData\MapDataDefinition;
-use Symfony\Component\Validator\Constraint;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Validation\Attribute\Constraint;
+use Symfony\Component\Validator\Attribute\HasNamedArguments;
+use Symfony\Component\Validator\Constraint as SymfonyConstraint;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
 
 /**
- * Checks that all the keys of a mapping are known.
- *
- * @Constraint(
- *   id = "ValidKeys",
- *   label = @Translation("Valid mapping keys", context = "Validation"),
- * )
+ * Checks that all the keys of a mapping are valid and required keys present.
  */
-class ValidKeysConstraint extends Constraint {
-
-  /**
-   * The error message if an invalid key appears.
-   *
-   * @var string
-   */
-  public string $invalidKeyMessage = "'@key' is not a supported key.";
-
-  /**
-   * The error message if the array being validated is a list.
-   *
-   * @var string
-   */
-  public string $indexedArrayMessage = 'Numerically indexed arrays are not allowed.';
+#[Constraint(
+  id: 'ValidKeys',
+  label: new TranslatableMarkup('Valid mapping keys', [], ['context' => 'Validation']),
+  type: ['mapping']
+)]
+class ValidKeysConstraint extends SymfonyConstraint {
 
   /**
    * Keys which are allowed in the validated array, or `<infer>` to auto-detect.
@@ -41,17 +29,33 @@ class ValidKeysConstraint extends Constraint {
    */
   public array|string $allowedKeys;
 
+  #[HasNamedArguments]
+  public function __construct(
+    mixed $options = NULL,
+    array|string|null $allowedKeys = NULL,
+    public string $invalidKeyMessage = "'@key' is not a supported key.",
+    public string $dynamicInvalidKeyMessage = "'@key' is an unknown key because @dynamic_type_property_path is @dynamic_type_property_value (see config schema type @resolved_dynamic_type).",
+    public string $missingRequiredKeyMessage = "'@key' is a required key.",
+    public string $dynamicMissingRequiredKeyMessage = "'@key' is a required key because @dynamic_type_property_path is @dynamic_type_property_value (see config schema type @resolved_dynamic_type).",
+    public string $indexedArrayMessage = 'Numerically indexed arrays are not allowed.',
+    ?array $groups = NULL,
+    mixed $payload = NULL,
+  ) {
+    parent::__construct($options, $groups, $payload);
+    $this->allowedKeys = $allowedKeys ?? $this->allowedKeys;
+  }
+
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOption() {
+  public function getDefaultOption(): ?string {
     return 'allowedKeys';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getRequiredOptions() {
+  public function getRequiredOptions(): array {
     return ['allowedKeys'];
   }
 
@@ -65,33 +69,28 @@ class ValidKeysConstraint extends Constraint {
    *   The keys that will be considered valid.
    */
   public function getAllowedKeys(ExecutionContextInterface $context): array {
+    $mapping = $context->getObject();
+    assert($mapping instanceof Mapping);
+    $resolved_type = $mapping->getDataDefinition()->getDataType();
+    $valid_keys = $mapping->getValidKeys();
+
     // If we were given an explicit array of allowed keys, return that.
     if (is_array($this->allowedKeys)) {
-      return $this->allowedKeys;
+      if (!empty(array_diff($this->allowedKeys, $valid_keys))) {
+        throw new InvalidArgumentException(sprintf(
+          'The type \'%s\' explicitly specifies the allowed keys (%s), but they are not a subset of the statically defined mapping keys in the schema (%s).',
+          $resolved_type,
+          implode(', ', $this->allowedKeys),
+          implode(', ', $valid_keys)
+        ));
+      }
+      return array_intersect($valid_keys, $this->allowedKeys);
     }
     // The only other value we'll accept is the string `<infer>`.
     elseif ($this->allowedKeys === '<infer>') {
-      return static::inferKeys($context->getObject());
+      return $mapping->getValidKeys();
     }
     throw new InvalidArgumentException("'$this->allowedKeys' is not a valid set of allowed keys.");
-  }
-
-  /**
-   * Tries to auto-detect the schema-defined keys in a mapping.
-   *
-   * @param \Drupal\Core\Config\Schema\Mapping $mapping
-   *   The mapping to inspect.
-   *
-   * @return string[]
-   *   The keys defined in the mapping's schema.
-   */
-  protected static function inferKeys(Mapping $mapping): array {
-    $definition = $mapping->getDataDefinition();
-    assert($definition instanceof MapDataDefinition);
-
-    $definition = $definition->toArray();
-    assert(array_key_exists('mapping', $definition));
-    return array_keys($definition['mapping']);
   }
 
 }

@@ -1,22 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Composer;
 
 use Drupal\Composer\Composer;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Composer\Composer
- * @group Composer
+ * Tests Drupal\Composer\Composer.
  */
+#[CoversClass(Composer::class)]
+#[Group('Composer')]
 class ComposerTest extends UnitTestCase {
 
   /**
    * Verify that Composer::ensureComposerVersion() doesn't break.
-   *
-   * @covers ::ensureComposerVersion
    */
-  public function testEnsureComposerVersion() {
+  public function testEnsureComposerVersion(): void {
     try {
       $this->assertNull(Composer::ensureComposerVersion());
     }
@@ -31,7 +34,7 @@ class ComposerTest extends UnitTestCase {
    * Also ensure that the minimum php version in the root-level composer.json
    * file exactly matches \Drupal::MINIMUM_PHP.
    */
-  public function testEnsurePhpConfiguredVersion() {
+  public function testEnsurePhpConfiguredVersion(): void {
     $composer_json = json_decode(file_get_contents($this->root . '/composer.json'), TRUE);
     $composer_core_json = json_decode(file_get_contents($this->root . '/core/composer.json'), TRUE);
     $this->assertEquals(\Drupal::MINIMUM_PHP, $composer_json['config']['platform']['php'], 'The \Drupal::MINIMUM_PHP constant should always be exactly the same as the config.platform.php in the root composer.json.');

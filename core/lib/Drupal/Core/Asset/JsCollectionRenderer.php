@@ -2,9 +2,9 @@
 
 namespace Drupal\Core\Asset;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\File\FileUrlGeneratorInterface;
-use Drupal\Core\State\StateInterface;
 
 /**
  * Renders JavaScript assets.
@@ -12,30 +12,20 @@ use Drupal\Core\State\StateInterface;
 class JsCollectionRenderer implements AssetCollectionRendererInterface {
 
   /**
-   * The state key/value store.
-   *
-   * @var \Drupal\Core\State\StateInterface
-   */
-  protected $state;
-
-  /**
-   * The file URL generator.
-   *
-   * @var \Drupal\Core\File\FileUrlGeneratorInterface
-   */
-  protected $fileUrlGenerator;
-
-  /**
    * Constructs a JsCollectionRenderer.
    *
-   * @param \Drupal\Core\State\StateInterface $state
-   *   The state key/value store.
-   * @param \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator
+   * @param \Drupal\Core\Asset\AssetQueryStringInterface $assetQueryString
+   *   The asset query string.
+   * @param \Drupal\Core\File\FileUrlGeneratorInterface $fileUrlGenerator
    *   The file URL generator.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    */
-  public function __construct(StateInterface $state, FileUrlGeneratorInterface $file_url_generator) {
-    $this->state = $state;
-    $this->fileUrlGenerator = $file_url_generator;
+  public function __construct(
+    protected AssetQueryStringInterface $assetQueryString,
+    protected FileUrlGeneratorInterface $fileUrlGenerator,
+    protected TimeInterface $time,
+  ) {
   }
 
   /**
@@ -49,13 +39,6 @@ class JsCollectionRenderer implements AssetCollectionRendererInterface {
    */
   public function render(array $js_assets) {
     $elements = [];
-
-    // A dummy query-string is added to filenames, to gain control over
-    // browser-caching. The string changes on every update or full cache
-    // flush, forcing browsers to load a new copy of the files, as the
-    // URL changed. Files that should not be cached get REQUEST_TIME as
-    // query-string instead, to enforce reload on every page request.
-    $default_query_string = $this->state->get('system.css_js_query_string', '0');
 
     // Defaults for each SCRIPT element.
     $element_defaults = [
@@ -81,13 +64,15 @@ class JsCollectionRenderer implements AssetCollectionRendererInterface {
           break;
 
         case 'file':
-          $query_string = $js_asset['version'] == -1 ? $default_query_string : 'v=' . $js_asset['version'];
-          $query_string_separator = str_contains($js_asset['data'], '?') ? '&' : '?';
           $element['#attributes']['src'] = $this->fileUrlGenerator->generateString($js_asset['data']);
-          // Only add the cache-busting query string if this isn't an aggregate
-          // file.
           if (!isset($js_asset['preprocessed'])) {
-            $element['#attributes']['src'] .= $query_string_separator . ($js_asset['cache'] ? $query_string : REQUEST_TIME);
+            // For unaggregated assets, add a either the library version or a
+            // default query string to force edge/browser cache invalidation.
+            // This query string is updated after each full cache clear or when
+            // the library version changes.
+            $query_string = $js_asset['version'] == -1 ? $this->assetQueryString->get() : 'v=' . $js_asset['version'];
+            $query_string_separator = str_contains($js_asset['data'], '?') ? '&' : '?';
+            $element['#attributes']['src'] .= $query_string_separator . ($js_asset['cache'] ? $query_string : $this->time->getRequestTime());
           }
           break;
 

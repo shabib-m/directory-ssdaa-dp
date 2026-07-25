@@ -26,9 +26,9 @@ class XmlFileLoader extends FileLoader
     /**
      * The XML nodes of the mapping file.
      *
-     * @var \SimpleXMLElement[]|null
+     * @var array<class-string, \SimpleXMLElement>
      */
-    protected $classes;
+    protected array $classes;
 
     public function __construct(string $file)
     {
@@ -37,7 +37,7 @@ class XmlFileLoader extends FileLoader
 
     public function loadClassMetadata(ClassMetadata $metadata): bool
     {
-        if (null === $this->classes) {
+        if (!isset($this->classes)) {
             $this->loadClassesFromXml();
         }
 
@@ -55,11 +55,11 @@ class XmlFileLoader extends FileLoader
     /**
      * Return the names of the classes mapped in this file.
      *
-     * @return string[]
+     * @return class-string[]
      */
     public function getMappedClasses(): array
     {
-        if (null === $this->classes) {
+        if (!isset($this->classes)) {
             $this->loadClassesFromXml();
         }
 
@@ -80,7 +80,11 @@ class XmlFileLoader extends FileLoader
         foreach ($nodes as $node) {
             if (\count($node) > 0) {
                 if (\count($node->value) > 0) {
-                    $options = $this->parseValues($node->value);
+                    trigger_deprecation('symfony/validator', '7.4', 'Using the "value" XML element to configure an option for the "%s" is deprecated. Use the "option" element instead.', (string) $node['name']);
+
+                    $options = [
+                        'value' => $this->parseValues($node->value),
+                    ];
                 } elseif (\count($node->constraint) > 0) {
                     $options = $this->parseConstraints($node->constraint);
                 } elseif (\count($node->option) > 0) {
@@ -94,7 +98,11 @@ class XmlFileLoader extends FileLoader
                 $options = null;
             }
 
-            $constraints[] = $this->newConstraint((string) $node['name'], $options);
+            if (isset($options['groups']) && !\is_array($options['groups'])) {
+                $options['groups'] = (array) $options['groups'];
+            }
+
+            $constraints[] = $this->newConstraint((string) $node['name'], $options, true);
         }
 
         return $constraints;
@@ -201,6 +209,7 @@ class XmlFileLoader extends FileLoader
     private function loadClassMetadataFromXml(ClassMetadata $metadata, \SimpleXMLElement $classDescription): void
     {
         if (\count($classDescription->{'group-sequence-provider'}) > 0) {
+            $metadata->setGroupProvider($classDescription->{'group-sequence-provider'}[0]->value ?: null);
             $metadata->setGroupSequenceProvider(true);
         }
 

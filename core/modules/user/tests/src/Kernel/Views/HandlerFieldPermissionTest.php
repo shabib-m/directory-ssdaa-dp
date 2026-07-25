@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Views;
 
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the permission field handler.
  *
- * @group user
  * @see \Drupal\user\Plugin\views\field\Permissions
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class HandlerFieldPermissionTest extends UserKernelTestBase {
 
   /**
@@ -22,7 +27,7 @@ class HandlerFieldPermissionTest extends UserKernelTestBase {
   /**
    * Tests the permission field handler output.
    */
-  public function testFieldPermission() {
+  public function testFieldPermission(): void {
     $this->setupPermissionTestData();
 
     $view = Views::getView('test_field_permission');

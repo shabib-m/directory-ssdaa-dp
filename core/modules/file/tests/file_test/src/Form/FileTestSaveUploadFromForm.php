@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\file_test\Form;
 
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -13,6 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * File test form class.
  */
 class FileTestSaveUploadFromForm extends FormBase {
+  use FileTestFormTrait;
 
   /**
    * Stores the state storage service.
@@ -62,48 +66,13 @@ class FileTestSaveUploadFromForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+
+    $form = $this->baseForm($form, $form_state);
+
     $form['file_test_upload'] = [
       '#type' => 'file',
       '#multiple' => TRUE,
       '#title' => $this->t('Upload a file'),
-    ];
-    $form['file_test_replace'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Replace existing image'),
-      '#options' => [
-        FileSystemInterface::EXISTS_RENAME => $this->t('Appends number until name is unique'),
-        FileSystemInterface::EXISTS_REPLACE => $this->t('Replace the existing file'),
-        FileSystemInterface::EXISTS_ERROR => $this->t('Fail with an error'),
-      ],
-      '#default_value' => FileSystemInterface::EXISTS_RENAME,
-    ];
-    $form['file_subdir'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Subdirectory for test file'),
-      '#default_value' => '',
-    ];
-
-    $form['extensions'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Allowed extensions.'),
-      '#default_value' => '',
-    ];
-
-    $form['allow_all_extensions'] = [
-      '#title' => t('Allow all extensions?'),
-      '#type' => 'radios',
-      '#options' => [
-        'false' => 'No',
-        'empty_array' => 'Empty array',
-        'empty_string' => 'Empty string',
-      ],
-      '#default_value' => 'false',
-    ];
-
-    $form['is_image_file'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Is this an image file?'),
-      '#default_value' => TRUE,
     ];
 
     $form['error_message'] = [
@@ -112,10 +81,6 @@ class FileTestSaveUploadFromForm extends FormBase {
       '#default_value' => '',
     ];
 
-    $form['submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Submit'),
-    ];
     return $form;
   }
 
@@ -141,18 +106,18 @@ class FileTestSaveUploadFromForm extends FormBase {
     // Setup validators.
     $validators = [];
     if ($form_state->getValue('is_image_file')) {
-      $validators['file_validate_is_image'] = [];
+      $validators['FileIsImage'] = [];
     }
 
     $allow = $form_state->getValue('allow_all_extensions');
     if ($allow === 'empty_array') {
-      $validators['file_validate_extensions'] = [];
+      $validators['FileExtension'] = [];
     }
     elseif ($allow === 'empty_string') {
-      $validators['file_validate_extensions'] = [''];
+      $validators['FileExtension'] = ['extensions' => ''];
     }
     elseif (!$form_state->isValueEmpty('extensions')) {
-      $validators['file_validate_extensions'] = [$form_state->getValue('extensions')];
+      $validators['FileExtension'] = ['extensions' => $form_state->getValue('extensions')];
     }
 
     // The test for \Drupal::service('file_system')->moveUploadedFile()
@@ -166,7 +131,7 @@ class FileTestSaveUploadFromForm extends FormBase {
     $form['file_test_upload']['#upload_location'] = $destination;
 
     $this->messenger->addStatus($this->t('Number of error messages before _file_save_upload_from_form(): @count.', ['@count' => count($this->messenger->messagesByType(MessengerInterface::TYPE_ERROR))]));
-    $file = _file_save_upload_from_form($form['file_test_upload'], $form_state, 0, $form_state->getValue('file_test_replace'));
+    $file = _file_save_upload_from_form($form['file_test_upload'], $form_state, 0, static::fileExistsFromName($form_state->getValue('file_test_replace')));
     $this->messenger->addStatus($this->t('Number of error messages after _file_save_upload_from_form(): @count.', ['@count' => count($this->messenger->messagesByType(MessengerInterface::TYPE_ERROR))]));
 
     if ($file) {
@@ -185,5 +150,16 @@ class FileTestSaveUploadFromForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {}
+
+  /**
+   * Get a FileExists enum from its name.
+   */
+  protected static function fileExistsFromName(string $name): FileExists {
+    return match ($name) {
+      FileExists::Replace->name => FileExists::Replace,
+      FileExists::Error->name => FileExists::Error,
+      default => FileExists::Rename,
+    };
+  }
 
 }

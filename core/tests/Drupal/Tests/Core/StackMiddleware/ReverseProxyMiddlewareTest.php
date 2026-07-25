@@ -1,19 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\StackMiddleware;
 
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StackMiddleware\ReverseProxyMiddleware;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * Unit test the reverse proxy stack middleware.
- *
- * @group StackMiddleware
  */
+#[Group('StackMiddleware')]
 class ReverseProxyMiddlewareTest extends UnitTestCase {
 
   /**
@@ -36,7 +39,7 @@ class ReverseProxyMiddlewareTest extends UnitTestCase {
   /**
    * Tests that subscriber does not act when reverse proxy is not set.
    */
-  public function testNoProxy() {
+  public function testNoProxy(): void {
     $settings = new Settings([]);
     $this->assertEquals(0, $settings->get('reverse_proxy'));
 
@@ -54,10 +57,9 @@ class ReverseProxyMiddlewareTest extends UnitTestCase {
 
   /**
    * Tests that subscriber sets trusted headers when reverse proxy is set.
-   *
-   * @dataProvider reverseProxyEnabledProvider
    */
-  public function testReverseProxyEnabled($provided_settings, $expected_trusted_header_set) {
+  #[DataProvider('reverseProxyEnabledProvider')]
+  public function testReverseProxyEnabled($provided_settings, $expected_trusted_header_set): void {
     // Enable reverse proxy and add test values.
     $settings = new Settings(['reverse_proxy' => 1] + $provided_settings);
     $this->trustedHeadersAreSet($settings, $expected_trusted_header_set);
@@ -66,7 +68,7 @@ class ReverseProxyMiddlewareTest extends UnitTestCase {
   /**
    * Data provider for testReverseProxyEnabled.
    */
-  public function reverseProxyEnabledProvider() {
+  public static function reverseProxyEnabledProvider(): array {
     return [
       'Proxy with default trusted headers' => [
         ['reverse_proxy_addresses' => ['127.0.0.2', '127.0.0.3']],
@@ -101,7 +103,7 @@ class ReverseProxyMiddlewareTest extends UnitTestCase {
    *   The expected bit value returned by
    *   \Symfony\Component\HttpFoundation\Request::getTrustedHeaderSet()
    */
-  protected function trustedHeadersAreSet(Settings $settings, $expected_trusted_header_set) {
+  protected function trustedHeadersAreSet(Settings $settings, $expected_trusted_header_set): void {
     $middleware = new ReverseProxyMiddleware($this->mockHttpKernel, $settings);
     $request = new Request();
 

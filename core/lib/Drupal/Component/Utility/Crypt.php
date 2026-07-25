@@ -21,7 +21,7 @@ class Crypt {
    *   A base-64 encoded sha-256 hmac, with + replaced with -, / with _ and
    *   any = padding characters removed.
    */
-  public static function hmacBase64($data, $key) {
+  public static function hmacBase64($data, #[\SensitiveParameter] $key) {
     // $data and $key being strings here is necessary to avoid empty string
     // results of the hash function if they are not scalar values. As this
     // function is used in security-critical contexts like token validation it
@@ -54,7 +54,7 @@ class Crypt {
   /**
    * Returns a URL-safe, base64 encoded string of highly randomized bytes.
    *
-   * @param $count
+   * @param int $count
    *   The number of random bytes to fetch and base64 encode.
    *
    * @return string

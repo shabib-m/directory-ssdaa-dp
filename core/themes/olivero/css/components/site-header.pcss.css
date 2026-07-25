@@ -9,7 +9,7 @@
   position: relative;
   /**
    * Ensure mobile site header is always above other elements including
-   * contextual links, and Tour.
+   * contextual links.
    */
   z-index: 101;
 
@@ -68,19 +68,22 @@
  */
 html.js body:not(.is-always-mobile-nav) .site-header__inner {
   @media (--nav) {
-    transition: opacity 0.3s, transform 0.3s, box-shadow 0.3s;
+    transition:
+      opacity 0.3s,
+      transform 0.3s,
+      box-shadow 0.3s;
   }
 }
 
 .site-header__fixable.is-expanded .site-header__inner {
   @media (--nav) {
-    box-shadow: -36px 1px 36px rgba(0, 0, 0, 0.08); /* LTR */
+    box-shadow: -36px 1px 36px rgb(0, 0, 0, 0.08); /* LTR */
   }
 }
 
 [dir="rtl"] .site-header__fixable.is-expanded .site-header__inner {
   @media (--nav) {
-    box-shadow: 36px 1px 36px rgba(0, 0, 0, 0.08);
+    box-shadow: 36px 1px 36px rgb(0, 0, 0, 0.08);
   }
 }
 
@@ -101,4 +104,9 @@ body:not(.is-always-mobile-nav) .site-header__fixable.is-fixed:not(.is-expanded)
 .site-header__inner__container {
   display: flex;
   justify-content: space-between;
+}
+
+/* Reset width set by layout.css */
+body.is-fixed .site-header__inner__container {
+  width: auto;
 }

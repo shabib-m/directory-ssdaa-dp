@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d7;
 
 use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 use Drupal\taxonomy\VocabularyInterface;
+use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrate taxonomy vocabularies to taxonomy.vocabulary.*.yml.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class MigrateTaxonomyVocabularyTest extends MigrateDrupal7TestBase {
 
   /**
@@ -31,11 +35,11 @@ class MigrateTaxonomyVocabularyTest extends MigrateDrupal7TestBase {
    *
    * @param string $id
    *   Entity ID to load and check.
-   * @param $expected_label
+   * @param string $expected_label
    *   The label the migrated entity should have.
-   * @param $expected_description
+   * @param string $expected_description
    *   The description the migrated entity should have.
-   * @param $expected_weight
+   * @param string $expected_weight
    *   The weight the migrated entity should have.
    *
    * @internal
@@ -52,9 +56,9 @@ class MigrateTaxonomyVocabularyTest extends MigrateDrupal7TestBase {
   /**
    * Tests the Drupal 7 taxonomy vocabularies to Drupal 8 migration.
    */
-  public function testTaxonomyVocabulary() {
+  public function testTaxonomyVocabulary(): void {
     $this->assertEntity('tags', 'Tags', 'Use tags to group articles on similar topics into categories.', 0);
-    $this->assertEntity('forums', 'Sujet de discussion', 'Forum navigation vocabulary', -10);
+    $this->assertEntity('sujet_de_discussion', 'Sujet de discussion', 'Forum navigation vocabulary', -10);
     $this->assertEntity('test_vocabulary', 'Test Vocabulary', 'This is the vocabulary description', 0);
     $this->assertEntity('vocabulary_name_much_longer_th', 'vocabulary name clearly different than machine name and much longer than thirty two characters', 'description of vocabulary name much longer than thirty two characters', 0);
   }

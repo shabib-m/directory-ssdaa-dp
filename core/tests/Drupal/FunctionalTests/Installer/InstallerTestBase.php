@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Session\UserSession;
@@ -11,10 +14,11 @@ use Drupal\Core\Utility\PhpRequirements;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\RequirementsPageTrait;
 use GuzzleHttp\HandlerStack;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 /**
  * Base class for testing the interactive installer.
@@ -51,9 +55,9 @@ abstract class InstallerTestBase extends BrowserTestBase {
   /**
    * Additional parameters to use for installer screens.
    *
-   * @see FunctionalTestSetupTrait::installParameters()
-   *
    * @var array
+   *
+   * @see FunctionalTestSetupTrait::installParameters()
    */
   protected $parameters = [];
 
@@ -89,20 +93,9 @@ abstract class InstallerTestBase extends BrowserTestBase {
   }
 
   /**
-   * {@inheritdoc}
+   * We are testing the installer, so set up a minimal environment for that.
    */
-  protected function setUp(): void {
-    parent::setUpAppRoot();
-
-    $this->isInstalled = FALSE;
-
-    $this->setupBaseUrl();
-
-    $this->prepareDatabasePrefix();
-
-    // Install Drupal test site.
-    $this->prepareEnvironment();
-
+  public function installDrupal(): void {
     // Define information about the user 1 account.
     $this->rootUser = new UserSession([
       'uid' => 1,
@@ -129,7 +122,8 @@ abstract class InstallerTestBase extends BrowserTestBase {
     // server information so that XDebug works.
     // @see install_begin_request()
     $request = Request::create($GLOBALS['base_url'] . '/core/install.php', 'GET', [], $_COOKIE, [], $_SERVER);
-    $this->container = new ContainerBuilder();
+    $request->setSession(new Session(new MockArraySessionStorage()));
+    \Drupal::setContainer(new ContainerBuilder());
     $request_stack = new RequestStack();
     $request_stack->push($request);
     $this->container
@@ -156,13 +150,13 @@ abstract class InstallerTestBase extends BrowserTestBase {
 
     $this->container
       ->setParameter('app.root', DRUPAL_ROOT);
-    \Drupal::setContainer($this->container);
+  }
 
-    // Setup Mink.
-    $this->initMink();
-
-    // Set up the browser test output file.
-    $this->initBrowserOutputFile();
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
 
     $this->visitInstaller();
 
@@ -197,7 +191,7 @@ abstract class InstallerTestBase extends BrowserTestBase {
       // BrowserTestBase::tearDown() will delete the entire test site directory.
       // Not using File API; a potential error must trigger a PHP warning.
       chmod($this->container->getParameter('app.root') . '/' . $this->siteDirectory, 0777);
-      $this->kernel = DrupalKernel::createFromRequest($request, $class_loader, 'prod', FALSE);
+      $this->kernel = DrupalKernel::createFromRequest($request, $class_loader, 'prod');
       $this->kernel->boot();
       $this->kernel->preHandle($request);
       $this->container = $this->kernel->getContainer();
@@ -207,6 +201,14 @@ abstract class InstallerTestBase extends BrowserTestBase {
       $this->container->get('config.factory')
         ->getEditable('system.mail')
         ->set('interface.default', 'test_mail_collector')
+        ->set('mailer_dsn', [
+          'scheme' => 'null',
+          'host' => 'null',
+          'user' => NULL,
+          'password' => NULL,
+          'port' => NULL,
+          'options' => [],
+        ])
         ->save();
 
       $this->installDefaultThemeFromClassProperty($this->container);
@@ -255,7 +257,10 @@ abstract class InstallerTestBase extends BrowserTestBase {
    * Installer step: Configure settings.
    */
   protected function setUpSettings() {
-    $edit = $this->translatePostValues($this->parameters['forms']['install_settings_form']);
+    $parameters = $this->parameters['forms']['install_settings_form'];
+    $driver = $parameters['driver'];
+    unset($parameters[$driver]['dependencies']);
+    $edit = $this->translatePostValues($parameters);
     $this->submitForm($edit, $this->translations['Save and continue']);
   }
 
@@ -265,7 +270,7 @@ abstract class InstallerTestBase extends BrowserTestBase {
    * Override this method to test specific requirements warnings or errors
    * during the installer.
    *
-   * @see system_requirements()
+   * @see \Drupal\system\Install\SystemRequirements
    */
   protected function setUpRequirementsProblem() {
     if (version_compare(phpversion(), PhpRequirements::getMinimumSupportedPhp()) < 0) {

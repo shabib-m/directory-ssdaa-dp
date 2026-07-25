@@ -1,30 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\options\Kernel;
 
 use Drupal\Core\Entity\Exception\FieldStorageDefinitionUpdateForbiddenException;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for the 'Options' field types.
- *
- * @group options
  */
+#[Group('options')]
+#[RunTestsInSeparateProcesses]
 class OptionsFieldTest extends OptionsFieldUnitTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['options'];
 
   /**
    * Tests that allowed values can be updated.
    */
-  public function testUpdateAllowedValues() {
+  public function testUpdateAllowedValues(): void {
     // All three options appear.
     $entity = EntityTest::create();
     $form = \Drupal::service('entity.form_builder')->getForm($entity);
@@ -42,7 +44,7 @@ class OptionsFieldTest extends OptionsFieldUnitTestBase {
       $this->fieldStorage->save();
       $this->fail('Cannot update a list field storage to not include keys with existing data.');
     }
-    catch (FieldStorageDefinitionUpdateForbiddenException $e) {
+    catch (FieldStorageDefinitionUpdateForbiddenException) {
       // Expected exception; just continue testing.
     }
     // Empty the value, so that we can actually remove the option.
@@ -101,7 +103,7 @@ class OptionsFieldTest extends OptionsFieldUnitTestBase {
   /**
    * Tests that ::generateSampleItems does not fail with empty allowed values.
    */
-  public function testGenerateSampleItemsWithNoAllowedValues() {
+  public function testGenerateSampleItemsWithNoAllowedValues(): void {
     $this->fieldStorage->setSetting('allowed_values', [])->save();
     $entity = EntityTest::create();
     $value = $entity->{$this->fieldName}->generateSampleItems();

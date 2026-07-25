@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test 'sub-admin' account with permission to edit some users but without 'administer users' permission.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserSubAdminTest extends BrowserTestBase {
 
   /**
@@ -24,7 +28,7 @@ class UserSubAdminTest extends BrowserTestBase {
   /**
    * Tests create and cancel forms as 'sub-admin'.
    */
-  public function testSubAdmin() {
+  public function testSubAdmin(): void {
     $user = $this->drupalCreateUser(['sub-admin']);
     $this->drupalLogin($user);
 
@@ -60,8 +64,9 @@ class UserSubAdminTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('Account ' . $cancel_user->getAccountName() . ' has been disabled.');
 
     // Repeat with permission to select account cancellation method.
-    $user->addRole($this->drupalCreateRole(['select account cancellation method']));
-    $user->save();
+    $user
+      ->addRole($this->drupalCreateRole(['select account cancellation method']))
+      ->save();
     $cancel_user = $this->createUser();
     $this->drupalGet('user/' . $cancel_user->id() . '/cancel');
     $this->assertSession()->pageTextContains('Cancellation method');

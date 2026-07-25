@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 37aca007-a5e9-41d9-bde2-5dc134e185d3
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: JO.png
+  uri:
+    -
+      value: 'public://term-country/2026-07/JO.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 3768
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

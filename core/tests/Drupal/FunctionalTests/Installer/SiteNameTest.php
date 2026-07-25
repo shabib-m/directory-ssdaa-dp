@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that the site name can be set during a non-interactive installation.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class SiteNameTest extends BrowserTestBase {
 
   /**
@@ -36,7 +40,7 @@ class SiteNameTest extends BrowserTestBase {
   /**
    * Tests that the desired site name appears on the page after installation.
    */
-  public function testSiteName() {
+  public function testSiteName(): void {
     $this->drupalGet('');
     $this->assertSession()->pageTextContains($this->siteName);
   }

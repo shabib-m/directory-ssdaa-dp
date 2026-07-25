@@ -1,0 +1,55 @@
+_meta:
+  version: '1.0'
+  entity_type: node
+  uuid: 5030c4ac-918a-498b-8768-c112c18ea0e7
+  bundle: article
+  default_langcode: ar
+  depends:
+    cecdd1d2-9a6d-4d36-9fbc-a96ce9e26f08: file
+default:
+  revision_uid:
+    -
+      target_id: 0
+  status:
+    -
+      value: true
+  uid:
+    -
+      target_id: 0
+  title:
+    -
+      value: 'مشروع نيوم'
+  created:
+    -
+      value: 1784748879
+  promote:
+    -
+      value: true
+  sticky:
+    -
+      value: false
+  path:
+    -
+      alias: ''
+      langcode: ar
+  body:
+    -
+      value: |
+        <p><span>نيوم هو مشروع سعودي لمدينة مخطط لبنائها عابرة للحدود، أطلقه الأمير محمد بن سلمان آل سعود، ولي العهد السعودي في يوم الثلاثاء 4 صفر 1439 هـ الموافق 24 أكتوبر 2017 ويقع المشروع في أقصى شمال غرب المملكة العربية السعودية بـإمارة منطقة تبوك محافظة ضباء، ويمتد 460 كم على ساحل البحر الأحمر.</span></p>
+      format: full_html
+      summary: ''
+  comment:
+    -
+      status: 2
+      cid: 0
+      last_comment_timestamp: 1784748879
+      last_comment_name: ''
+      last_comment_uid: 0
+      comment_count: 0
+  field_image:
+    -
+      entity: cecdd1d2-9a6d-4d36-9fbc-a96ce9e26f08
+      alt: ''
+      title: ''
+      width: 1350
+      height: 1061

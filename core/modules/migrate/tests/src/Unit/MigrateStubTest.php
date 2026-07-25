@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
-use Drupal\Tests\UnitTestCase;
 use Drupal\migrate\MigrateStub;
 use Drupal\migrate\Plugin\MigrateDestinationInterface;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
@@ -11,15 +12,16 @@ use Drupal\migrate\Plugin\MigrateSourceInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\migrate\Row;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
  * Tests the migrate stub service.
- *
- * @group migrate
- *
- * @coversDefaultClass \Drupal\migrate\MigrateStub
  */
+#[CoversClass(MigrateStub::class)]
+#[Group('migrate')]
 class MigrateStubTest extends UnitTestCase {
 
   /**
@@ -39,10 +41,8 @@ class MigrateStubTest extends UnitTestCase {
 
   /**
    * Tests stubbing.
-   *
-   * @covers ::createStub
    */
-  public function testCreateStub() {
+  public function testCreateStub(): void {
     $destination_plugin = $this->prophesize(MigrateDestinationInterface::class);
     $destination_plugin->import(Argument::type(Row::class))->willReturn(['id' => 2]);
 
@@ -69,7 +69,7 @@ class MigrateStubTest extends UnitTestCase {
   /**
    * Tests that an error is logged if the plugin manager throws an exception.
    */
-  public function testExceptionOnPluginNotFound() {
+  public function testExceptionOnPluginNotFound(): void {
     $this->migrationPluginManager->createInstances(['test_migration'])->willReturn([]);
     $this->expectException(PluginNotFoundException::class);
     $this->expectExceptionMessage("Plugin ID 'test_migration' was not found.");
@@ -80,7 +80,7 @@ class MigrateStubTest extends UnitTestCase {
   /**
    * Tests that an error is logged on derived migrations.
    */
-  public function testExceptionOnDerivedMigration() {
+  public function testExceptionOnDerivedMigration(): void {
     $this->migrationPluginManager->createInstances(['test_migration'])->willReturn([
       'test_migration:d1' => $this->prophesize(MigrationInterface::class)->reveal(),
       'test_migration:d2' => $this->prophesize(MigrationInterface::class)->reveal(),

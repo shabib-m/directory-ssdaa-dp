@@ -1,18 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\entity_test\Entity\EntityTest;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests basic CRUD functionality.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityApiTest extends EntityKernelTestBase {
 
   /**
@@ -21,7 +25,7 @@ class EntityApiTest extends EntityKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    foreach (entity_test_entity_types() as $entity_type_id) {
+    foreach (EntityTestHelper::getEntityTypes() as $entity_type_id) {
       // The entity_test schema is installed by the parent.
       if ($entity_type_id != 'entity_test') {
         $this->installEntitySchema($entity_type_id);
@@ -32,9 +36,9 @@ class EntityApiTest extends EntityKernelTestBase {
   /**
    * Tests basic CRUD functionality of the Entity API.
    */
-  public function testCRUD() {
+  public function testCRUD(): void {
     // All entity variations have to have the same results.
-    foreach (entity_test_entity_types() as $entity_type) {
+    foreach (EntityTestHelper::getEntityTypes() as $entity_type) {
       $this->assertCRUD($entity_type, $this->createUser());
     }
   }
@@ -69,25 +73,25 @@ class EntityApiTest extends EntityKernelTestBase {
       ->getStorage($entity_type);
 
     $entities = array_values($storage->loadByProperties(['name' => 'test']));
-    $this->assertEquals('test', $entities[0]->name->value, new FormattableMarkup('%entity_type: Created and loaded entity', ['%entity_type' => $entity_type]));
-    $this->assertEquals('test', $entities[1]->name->value, new FormattableMarkup('%entity_type: Created and loaded entity', ['%entity_type' => $entity_type]));
+    $this->assertEquals('test', $entities[0]->name->value, "$entity_type: Created and loaded entity");
+    $this->assertEquals('test', $entities[1]->name->value, "$entity_type: Created and loaded entity");
 
     // Test loading a single entity.
     $loaded_entity = $storage->load($entity->id());
-    $this->assertEquals($entity->id(), $loaded_entity->id(), new FormattableMarkup('%entity_type: Loaded a single entity by id.', ['%entity_type' => $entity_type]));
+    $this->assertEquals($entity->id(), $loaded_entity->id(), "$entity_type: Loaded a single entity by id.");
 
     // Test deleting an entity.
     $entities = array_values($storage->loadByProperties(['name' => 'test2']));
     $entities[0]->delete();
     $entities = array_values($storage->loadByProperties(['name' => 'test2']));
-    $this->assertEquals([], $entities, new FormattableMarkup('%entity_type: Entity deleted.', ['%entity_type' => $entity_type]));
+    $this->assertEquals([], $entities, "$entity_type: Entity deleted.");
 
     // Test updating an entity.
     $entities = array_values($storage->loadByProperties(['name' => 'test']));
     $entities[0]->name->value = 'test3';
     $entities[0]->save();
     $entity = $storage->load($entities[0]->id());
-    $this->assertEquals('test3', $entity->name->value, new FormattableMarkup('%entity_type: Entity updated.', ['%entity_type' => $entity_type]));
+    $this->assertEquals('test3', $entity->name->value, "$entity_type: Entity updated.");
 
     // Try deleting multiple test entities by deleting all.
     $entities = $storage->loadMultiple();
@@ -142,11 +146,179 @@ class EntityApiTest extends EntityKernelTestBase {
   }
 
   /**
+   * Test lazy preloading.
+   */
+  public function testLazyPreLoading(): void {
+    $storage = $this->container->get('entity_type.manager')->getStorage('entity_test');
+    $ids = [];
+    $entity = $storage->create(['name' => 'test']);
+    $entity->save();
+    $ids[] = $entity->id();
+
+    $entity = $storage->create(['name' => 'test2']);
+    $entity->save();
+    $ids[] = $entity->id();
+
+    $fiber1 = new \Fiber(fn () => $storage->load($ids[0]));
+    $fiber2 = new \Fiber(fn () => $storage->load($ids[1]));
+
+    // Make sure the entity cache is empty.
+    $this->container->get('entity.memory_cache')->reset();
+
+    // Start Fiber 1, this should set the first entity to be loaded, without
+    // actually loading it, and then suspend.
+    $fiber1->start();
+    $this->assertTrue($fiber1->isSuspended());
+    $this->assertFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[0]));
+
+    // Start Fiber 2, this should set the first entity to be loaded, without
+    // actually loading it, and then suspend.
+    $fiber2->start();
+    $this->assertTrue($fiber2->isSuspended());
+    $this->assertFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[1]));
+
+    $fiber2->resume();
+
+    $this->assertTrue($fiber2->isTerminated());
+
+    $this->assertSame($fiber2->getReturn()->id(), $ids[1]);
+
+    // Now both entities should be loaded.
+    $this->assertNotFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[0]));
+    $this->assertNotFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[1]));
+    $fiber1->resume();
+    $this->assertTrue($fiber1->isTerminated());
+    $this->assertSame($fiber1->getReturn()->id(), $ids[0]);
+  }
+
+  /**
+   * Test lazy preloading.
+   */
+  public function testLazyPreLoadingMultiple(): void {
+    $storage = $this->container->get('entity_type.manager')->getStorage('entity_test');
+    $ids = [];
+    $entity = $storage->create(['name' => 'test']);
+    $entity->save();
+    $ids[] = $entity->id();
+
+    $entity = $storage->create(['name' => 'test2']);
+    $entity->save();
+    $ids[] = $entity->id();
+
+    $fiber1 = new \Fiber(fn () => $storage->loadMultiple([$ids[0]]));
+    $fiber2 = new \Fiber(fn () => $storage->loadMultiple([$ids[1]]));
+
+    // Make sure the entity cache is empty.
+    $this->container->get('entity.memory_cache')->reset();
+
+    // Start Fiber 1, this should set the first entity to be loaded, without
+    // actually loading it, and then suspend.
+    $fiber1->start();
+    $this->assertTrue($fiber1->isSuspended());
+    $this->assertFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[0]));
+
+    // Start Fiber 2, this should set the first entity to be loaded, without
+    // actually loading it, and then suspend.
+    $fiber2->start();
+    $this->assertTrue($fiber2->isSuspended());
+    $this->assertFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[1]));
+
+    $fiber2->resume();
+
+    $this->assertTrue($fiber2->isTerminated());
+
+    $return2 = $fiber2->getReturn();
+
+    $this->assertSame($return2[2]->id(), $ids[1]);
+    $this->assertSame(\count($return2), 1);
+
+    // Now both entities should be loaded.
+    $this->assertNotFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[0]));
+    $this->assertNotFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[1]));
+    $fiber1->resume();
+    $this->assertTrue($fiber1->isTerminated());
+    $return1 = $fiber1->getReturn();
+    $this->assertSame($return1[1]->id(), $ids[0]);
+    $this->assertSame(\count($return1), 1);
+  }
+
+  /**
+   * Test lazy preloading with additional entity load calls.
+   */
+  public function testLazyPreLoadingAdditional(): void {
+    $storage = $this->container->get('entity_type.manager')->getStorage('entity_test');
+    $ids = [];
+    $entity = $storage->create(['name' => 'test']);
+    $entity->save();
+    $ids[] = $entity->id();
+
+    $entity = $storage->create(['name' => 'test2']);
+    $entity->save();
+    $ids[] = $entity->id();
+
+    $entity = $storage->create(['name' => 'test3']);
+    $entity->save();
+    $ids[] = $entity->id();
+
+    $fiber1 = new \Fiber(function () use ($ids, $storage) {
+      $storage->loadMultiple([$ids[0]]);
+      return $storage->loadMultiple([$ids[2]]);
+    });
+    $fiber2 = new \Fiber(fn () => $storage->loadMultiple([$ids[1]]));
+
+    // Make sure the entity cache is empty.
+    $this->container->get('entity.memory_cache')->reset();
+
+    // Start Fiber 1, this should set the first entity to be loaded, without
+    // actually loading it, and then suspend.
+    $fiber1->start();
+    $this->assertTrue($fiber1->isSuspended());
+    $this->assertFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[0]));
+
+    // Start Fiber 2, this should set the second entity to be loaded, without
+    // actually loading it, and then suspend.
+    $fiber2->start();
+    $this->assertTrue($fiber2->isSuspended());
+    $this->assertFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[1]));
+
+    // Resume Fiber 1, this should load both entities, and set the third entity
+    // to be loaded, without actually loading it, then suspend again.
+    $fiber1->resume();
+
+    $this->assertTrue($fiber1->isSuspended());
+    // Now the first and second entities should be loaded.
+    $this->assertNotFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[0]));
+    $this->assertNotFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[1]));
+
+    // But the third entity should not.
+    $this->assertFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[2]));
+
+    $fiber2->resume();
+
+    $this->assertTrue($fiber2->isTerminated());
+
+    $return2 = $fiber2->getReturn();
+
+    $this->assertSame($return2[2]->id(), $ids[1]);
+    $this->assertSame(\count($return2), 1);
+
+    // All three entities should be loaded if Fiber1 is resumed again.
+    $fiber1->resume();
+    $this->assertNotFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[0]));
+    $this->assertNotFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[1]));
+    $this->assertNotFalse($this->container->get('entity.memory_cache')->get('values:entity_test:' . $ids[2]));
+    $this->assertTrue($fiber1->isTerminated());
+    $return1 = $fiber1->getReturn();
+    $this->assertSame($return1[3]->id(), $ids[2]);
+    $this->assertSame(\count($return1), 1);
+  }
+
+  /**
    * Tests that the Entity storage loads the entities in the correct order.
    *
    * Entities should be returned in the same order as the passed IDs.
    */
-  public function testLoadMultiple() {
+  public function testLoadMultiple(): void {
     // Entity load.
     $storage = $this->container->get('entity_type.manager')->getStorage('entity_test');
 
@@ -203,7 +375,7 @@ class EntityApiTest extends EntityKernelTestBase {
   /**
    * Tests that exceptions are thrown when saving or deleting an entity.
    */
-  public function testEntityStorageExceptionHandling() {
+  public function testEntityStorageExceptionHandling(): void {
     $entity = EntityTest::create(['name' => 'test']);
     try {
       $GLOBALS['entity_test_throw_exception'] = TRUE;
@@ -248,7 +420,7 @@ class EntityApiTest extends EntityKernelTestBase {
   /**
    * Tests that resaving a revision with a different revision ID throws an exception.
    */
-  public function testUpdateWithRevisionId() {
+  public function testUpdateWithRevisionId(): void {
     $storage = \Drupal::entityTypeManager()->getStorage('entity_test_mulrev');
 
     // Create a new entity.
@@ -266,7 +438,7 @@ class EntityApiTest extends EntityKernelTestBase {
   /**
    * Tests that resaving an entity with a different entity ID throws an exception.
    */
-  public function testUpdateWithId() {
+  public function testUpdateWithId(): void {
     $storage = \Drupal::entityTypeManager()->getStorage('entity_test_mulrev');
 
     // Create a new entity.

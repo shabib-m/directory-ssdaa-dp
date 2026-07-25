@@ -1,26 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Event\MigrateEvents;
 use Drupal\migrate\Event\MigrateIdMapMessageEvent;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate\MigrateMessageInterface;
 use Drupal\migrate\Plugin\migrate\id_map\Sql;
+use Drupal\migrate\Plugin\MigrationInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests whether idmap messages are sent to message interface when requested.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class MigrateMessageTest extends KernelTestBase implements MigrateMessageInterface {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['migrate', 'system'];
 
@@ -77,7 +79,7 @@ class MigrateMessageTest extends KernelTestBase implements MigrateMessageInterfa
   /**
    * Tests migration interruptions.
    */
-  public function testMessagesNotTeed() {
+  public function testMessagesNotTeed(): void {
     // We don't ask for messages to be teed, so don't expect any.
     $executable = new MigrateExecutable($this->migration, $this);
     $executable->import();
@@ -87,7 +89,7 @@ class MigrateMessageTest extends KernelTestBase implements MigrateMessageInterfa
   /**
    * Tests migration interruptions.
    */
-  public function testMessagesTeed() {
+  public function testMessagesTeed(): void {
     // Ask to receive any messages sent to the idmap.
     \Drupal::service('event_dispatcher')->addListener(MigrateEvents::IDMAP_MESSAGE,
       [$this, 'mapMessageRecorder']);
@@ -104,7 +106,7 @@ class MigrateMessageTest extends KernelTestBase implements MigrateMessageInterfa
    * This method returns an iterator of StdClass objects. Check that these
    * objects have the expected keys.
    */
-  public function testGetMessages() {
+  public function testGetMessages(): void {
     $id = $this->migration->getPluginId();
     $expected_message = (object) [
       'src_name' => 'source_message',
@@ -132,7 +134,7 @@ class MigrateMessageTest extends KernelTestBase implements MigrateMessageInterfa
    * @param string $name
    *   The event name.
    */
-  public function mapMessageRecorder(MigrateIdMapMessageEvent $event, $name) {
+  public function mapMessageRecorder(MigrateIdMapMessageEvent $event, $name): void {
     if ($event->getLevel() == MigrationInterface::MESSAGE_NOTICE ||
         $event->getLevel() == MigrationInterface::MESSAGE_INFORMATIONAL) {
       $type = 'status';
@@ -147,7 +149,7 @@ class MigrateMessageTest extends KernelTestBase implements MigrateMessageInterfa
   /**
    * {@inheritdoc}
    */
-  public function display($message, $type = 'status') {
+  public function display($message, $type = 'status'): void {
     $this->messages[] = $message;
   }
 

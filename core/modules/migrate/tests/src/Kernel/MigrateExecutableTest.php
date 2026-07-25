@@ -1,16 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
 
 use Drupal\migrate\Plugin\MigrationInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the MigrateExecutable class.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class MigrateExecutableTest extends MigrateTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = [
     'entity_test',
     'user',
@@ -28,7 +35,7 @@ class MigrateExecutableTest extends MigrateTestBase {
   /**
    * Tests the MigrateExecutable class.
    */
-  public function testMigrateExecutable() {
+  public function testMigrateExecutable(): void {
     $data_rows = [
       ['key' => '1', 'field1' => 'f1value1', 'field2' => 'f2value1'],
       ['key' => '2', 'field1' => 'f1value2', 'field2' => 'f2value2'],

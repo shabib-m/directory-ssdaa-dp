@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: c00eb274-ecea-4ced-8746-67d25604aeab
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: SY.png
+  uri:
+    -
+      value: 'public://term-country/2026-07/SY.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 3540
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

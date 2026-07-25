@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\FunctionalJavascript\Form;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -7,13 +9,16 @@ use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests functionality of \Drupal\Core\Form\FormBuilderInterface::rebuildForm().
  *
- * @group Form
  * @todo Add tests for other aspects of form rebuilding.
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class RebuildTest extends WebDriverTestBase {
 
   /**
@@ -51,7 +56,7 @@ class RebuildTest extends WebDriverTestBase {
    * The 'action' attribute of a form should not change after an Ajax submission
    * followed by a non-Ajax submission, which triggers a validation error.
    */
-  public function testPreserveFormActionAfterAJAX() {
+  public function testPreserveFormActionAfterAJAX(): void {
     $page = $this->getSession()->getPage();
     // Create a multi-valued field for 'page' nodes to use for Ajax testing.
     $field_name = 'field_ajax_test';
@@ -120,7 +125,7 @@ class RebuildTest extends WebDriverTestBase {
     $this->assertCount(1, $forms);
     // Strip query params off the action before asserting.
     $url = parse_url($forms[0]->getAttribute('action'))['path'];
-    $this->assertEquals(Url::fromRoute('node.add', ['node_type' => 'page'])->toString(), $url);
+    $this->assertEquals(Url::fromRoute('entity.node.add_form', ['node_type' => 'page'])->toString(), $url);
   }
 
 }

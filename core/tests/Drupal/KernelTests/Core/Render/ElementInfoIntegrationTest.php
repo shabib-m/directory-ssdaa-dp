@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Render;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the element info.
- *
- * @group Render
  */
+#[Group('Render')]
+#[RunTestsInSeparateProcesses]
 class ElementInfoIntegrationTest extends KernelTestBase {
 
   /**
@@ -23,7 +27,7 @@ class ElementInfoIntegrationTest extends KernelTestBase {
   /**
    * Ensures that the element info can be altered by themes.
    */
-  public function testElementInfoByTheme() {
+  public function testElementInfoByTheme(): void {
     /** @var \Drupal\Core\Theme\ThemeInitializationInterface $theme_initializer */
     $theme_initializer = $this->container->get('theme.initialization');
 

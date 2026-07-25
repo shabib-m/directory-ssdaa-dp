@@ -1,21 +1,20 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Component\Plugin\Factory\ReflectionFactoryTest.
- *
- * Also contains Argument* classes used as data for testing.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\Component\Plugin\Factory;
 
 use Drupal\Component\Plugin\Factory\ReflectionFactory;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @group Plugin
- * @coversDefaultClass \Drupal\Component\Plugin\Factory\ReflectionFactory
+ * Tests Drupal\Component\Plugin\Factory\ReflectionFactory.
  */
+#[CoversClass(ReflectionFactory::class)]
+#[Group('Plugin')]
 class ReflectionFactoryTest extends TestCase {
 
   /**
@@ -30,7 +29,7 @@ class ReflectionFactoryTest extends TestCase {
    *   - $plugin_definition parameter to getInstanceArguments().
    *   - $configuration parameter to getInstanceArguments().
    */
-  public function providerGetInstanceArguments() {
+  public static function providerGetInstanceArguments(): array {
     return [
       [
         ['arguments_plugin_id'],
@@ -40,7 +39,13 @@ class ReflectionFactoryTest extends TestCase {
         [],
       ],
       [
-        [[], ['arguments_many' => ['class' => 'Drupal\Tests\Component\Plugin\Factory\ArgumentsMany']], 'arguments_many', 'default_value', 'what_default'],
+        [
+          [],
+          ['arguments_many' => ['class' => 'Drupal\Tests\Component\Plugin\Factory\ArgumentsMany']],
+          'arguments_many',
+          'default_value',
+          'what_default',
+        ],
         'Drupal\Tests\Component\Plugin\Factory\ArgumentsMany',
         'arguments_many',
         ['arguments_many' => ['class' => 'Drupal\Tests\Component\Plugin\Factory\ArgumentsMany']],
@@ -82,10 +87,10 @@ class ReflectionFactoryTest extends TestCase {
   }
 
   /**
-   * @covers ::createInstance
-   * @dataProvider providerGetInstanceArguments
+   * Tests create instance.
    */
-  public function testCreateInstance($expected, $reflector_name, $plugin_id, $plugin_definition, $configuration) {
+  #[DataProvider('providerGetInstanceArguments')]
+  public function testCreateInstance($expected, $reflector_name, $plugin_id, $plugin_definition, $configuration): void {
     // Create a mock DiscoveryInterface which can return our plugin definition.
     $mock_discovery = $this->getMockBuilder('Drupal\Component\Plugin\Discovery\DiscoveryInterface')
       ->onlyMethods(['getDefinition', 'getDefinitions', 'hasDefinition'])
@@ -107,13 +112,11 @@ class ReflectionFactoryTest extends TestCase {
   }
 
   /**
-   * @covers ::getInstanceArguments
-   * @dataProvider providerGetInstanceArguments
+   * Tests get instance arguments.
    */
-  public function testGetInstanceArguments($expected, $reflector_name, $plugin_id, $plugin_definition, $configuration) {
-    $reflection_factory = $this->getMockBuilder('Drupal\Component\Plugin\Factory\ReflectionFactory')
-      ->disableOriginalConstructor()
-      ->getMock();
+  #[DataProvider('providerGetInstanceArguments')]
+  public function testGetInstanceArguments($expected, $reflector_name, $plugin_id, $plugin_definition, $configuration): void {
+    $reflection_factory = $this->createStub(ReflectionFactory::class);
     $get_instance_arguments_ref = new \ReflectionMethod($reflection_factory, 'getInstanceArguments');
 
     // Special case for plugin class without a constructor.

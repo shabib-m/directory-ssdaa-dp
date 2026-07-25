@@ -3,6 +3,9 @@
 namespace Drupal\file\Upload;
 
 use Drupal\file\FileInterface;
+use Symfony\Component\Validator\ConstraintViolationInterface;
+use Symfony\Component\Validator\ConstraintViolationList;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
  * Value object for a file upload result.
@@ -38,6 +41,20 @@ class FileUploadResult {
   protected $file;
 
   /**
+   * The constraint violations.
+   *
+   * @var \Symfony\Component\Validator\ConstraintViolationListInterface
+   */
+  protected ConstraintViolationListInterface $violations;
+
+  /**
+   * Creates a new FileUploadResult.
+   */
+  public function __construct() {
+    $this->violations = new ConstraintViolationList();
+  }
+
+  /**
    * Flags the result as having had a security rename.
    *
    * @return $this
@@ -64,6 +81,7 @@ class FileUploadResult {
    * Gets the original filename.
    *
    * @return string
+   *   The original filename.
    */
   public function getOriginalFilename(): string {
     return $this->originalFilename;
@@ -99,6 +117,7 @@ class FileUploadResult {
    * Returns if there was a security rename.
    *
    * @return bool
+   *   TRUE when the file was renamed for a security reason, FALSE otherwise.
    */
   public function isSecurityRename(): bool {
     return $this->securityRename;
@@ -108,6 +127,7 @@ class FileUploadResult {
    * Returns if there was a file rename.
    *
    * @return bool
+   *   TRUE when the file was renamed, FALSE otherwise.
    */
   public function isRenamed(): bool {
     return $this->originalFilename !== $this->sanitizedFilename;
@@ -117,6 +137,7 @@ class FileUploadResult {
    * Gets the sanitized filename.
    *
    * @return string
+   *   The sanitized filename.
    */
   public function getSanitizedFilename(): string {
     return $this->sanitizedFilename;
@@ -126,9 +147,47 @@ class FileUploadResult {
    * Gets the File entity.
    *
    * @return \Drupal\file\FileInterface
+   *   The file entity.
    */
   public function getFile(): FileInterface {
     return $this->file;
+  }
+
+  /**
+   * Adds a constraint violation.
+   *
+   * @param \Symfony\Component\Validator\ConstraintViolationInterface $violation
+   *   The constraint violation.
+   */
+  public function addViolation(ConstraintViolationInterface $violation): void {
+    $this->violations->add($violation);
+  }
+
+  /**
+   * Adds constraint violations.
+   *
+   * @param \Symfony\Component\Validator\ConstraintViolationListInterface $violations
+   *   The constraint violations.
+   */
+  public function addViolations(ConstraintViolationListInterface $violations): void {
+    $this->violations->addAll($violations);
+  }
+
+  /**
+   * Gets the constraint violations.
+   *
+   * @return \Symfony\Component\Validator\ConstraintViolationListInterface
+   *   The constraint violations.
+   */
+  public function getViolations(): ConstraintViolationListInterface {
+    return $this->violations;
+  }
+
+  /**
+   * Returns TRUE if there are constraint violations.
+   */
+  public function hasViolations(): bool {
+    return $this->violations->count() > 0;
   }
 
 }

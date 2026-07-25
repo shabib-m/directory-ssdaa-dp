@@ -157,9 +157,7 @@
 
     // Create bound versions of this instance's object methods to use as event
     // handlers. This will let us easily unbind those specific handlers later
-    // on. NOTE: jQuery.proxy will not work for this because it assumes we want
-    // only one bound version of an object method, whereas we need one version
-    // per object instance.
+    // on.
     const self = this;
 
     /**
@@ -223,7 +221,7 @@
         this.target.each(function (i) {
           // Ensure that the maxlength is not exceeded by prepopulating the field.
           const maxlength = $(this).attr('maxlength') - suffix.length;
-          this.value = transliterated.substr(0, maxlength) + suffix;
+          this.value = transliterated.substring(0, maxlength) + suffix;
         });
       },
 
@@ -262,7 +260,12 @@
       const $context = $(context);
       let $form = $context;
       // The add handler form may have an id of views-ui-add-handler-form--n.
-      if (!$context.is('form[id^="views-ui-add-handler-form"]')) {
+      if (
+        !(
+          context instanceof HTMLElement &&
+          context.matches('form[id^="views-ui-add-handler-form"]')
+        )
+      ) {
         $form = $context.find('form[id^="views-ui-add-handler-form"]');
       }
       if (once('views-ui-add-handler-form', $form).length) {
@@ -289,7 +292,7 @@
     this.$form = $form;
     this.$form
       .find('.views-filterable-options :checkbox')
-      .on('click', $.proxy(this.handleCheck, this));
+      .on('click', this.handleCheck.bind(this));
 
     /**
      * Find the wrapper of the displayed text.
@@ -314,8 +317,9 @@
     const $target = $(event.target);
     const label = $target.closest('td').next().html().trim();
     // Add/remove the checked item to the list.
-    if ($target.is(':checked')) {
-      this.$selected_div.show().css('display', 'block');
+    if (event.target.checked) {
+      this.$selected_div.show();
+      this.$selected_div[0].style.display = 'block';
       this.checkedItems.push(label);
     } else {
       const position = $.inArray(label, this.checkedItems);
@@ -343,8 +347,13 @@
     // Perhaps we should precache the text div, too.
     this.$selected_div
       .find('.views-selected-options')
-      .html(this.checkedItems.join(', '))
-      .trigger('dialogContentResize');
+      .html(this.checkedItems.join(', '));
+
+    this.$selected_div
+      ?.get(0)
+      ?.dispatchEvent(
+        new CustomEvent('dialogContentResize', { bubbles: true }),
+      );
   };
 
   /**
@@ -376,7 +385,9 @@
           'Add',
         )}</a><ul class="action-list" style="display:none;"></ul></li>`,
       );
-      const $displayButtons = $menu.nextAll('input.add-display').detach();
+      const $displayButtons = $menu
+        .nextAll('input.add-display, button.add-display')
+        .detach();
       $displayButtons
         .appendTo($addDisplayDropdown.find('.action-list'))
         .wrap('<li>')
@@ -408,7 +419,7 @@
       $('li.add', $menu).on('mouseleave', function (event) {
         const $this = $(this);
         const $trigger = $this.children('a[href="#"]');
-        if ($this.children('.action-list').is(':visible')) {
+        if (Drupal.elementIsVisible($this.children('.action-list')[0])) {
           Drupal.behaviors.viewsUiRenderAddViewButton.toggleMenu($trigger);
         }
       });
@@ -445,7 +456,12 @@
       const $context = $(context);
       let $form = $context;
       // The add handler form may have an id of views-ui-add-handler-form--n.
-      if (!$context.is('form[id^="views-ui-add-handler-form"]')) {
+      if (
+        !(
+          context instanceof HTMLElement &&
+          context.matches('form[id^="views-ui-add-handler-form"]')
+        )
+      ) {
         $form = $context.find('form[id^="views-ui-add-handler-form"]');
       }
       // Make sure we don't add more than one event handler to the same form.
@@ -487,7 +503,7 @@
     this.$form.on(
       'formUpdated',
       `${searchBoxSelector},${controlGroupSelector}`,
-      $.proxy(this.handleFilter, this),
+      this.handleFilter.bind(this),
     );
 
     this.$searchBox = this.$form.find(searchBoxSelector);
@@ -561,7 +577,7 @@
         // Search through the search texts in the form for matching text.
         this.options.forEach((option) => {
           function hasWord(word) {
-            return option.searchText.indexOf(word) !== -1;
+            return option.searchText.includes(word);
           }
 
           let found = true;
@@ -578,7 +594,9 @@
         });
 
         // Adapt dialog to content size.
-        $(event.target).trigger('dialogContentResize');
+        event.target?.dispatchEvent(
+          new CustomEvent('dialogContentResize', { bubbles: true }),
+        );
       },
     },
   );
@@ -614,11 +632,10 @@
       }
 
       // Executes an initial preview.
-      if (
-        $(once('edit-displays-live-preview', '#edit-displays-live-preview')).is(
-          ':checked',
-        )
-      ) {
+      const $livePreview = $(
+        once('edit-displays-live-preview', '#edit-displays-live-preview'),
+      );
+      if ($livePreview.length && $livePreview[0].checked) {
         $(once('edit-displays-live-preview', '#preview-submit')).trigger(
           'click',
         );
@@ -705,7 +722,7 @@
       ),
     ).on(
       'change.views-rearrange-filter-handler',
-      $.proxy(this, 'redrawOperatorLabels'),
+      this.redrawOperatorLabels.bind(this),
     );
 
     // Bind handlers so that when a "Remove" link is clicked, we:
@@ -722,11 +739,11 @@
     )
       .on(
         'click.views-rearrange-filter-handler',
-        $.proxy(this, 'updateRowspans'),
+        this.updateRowspans.bind(this),
       )
       .on(
         'click.views-rearrange-filter-handler',
-        $.proxy(this, 'redrawOperatorLabels'),
+        this.redrawOperatorLabels.bind(this),
       );
   };
 
@@ -754,7 +771,7 @@
           .find('#views-add-group-link')
           .on(
             'click.views-rearrange-filter-handler',
-            $.proxy(this, 'clickAddGroupButton'),
+            this.clickAddGroupButton.bind(this),
           );
 
         // Find each (visually hidden) button for removing a filter group and
@@ -778,7 +795,7 @@
           ).on(
             'click.views-rearrange-filter-handler',
             { buttonId },
-            $.proxy(this, 'clickRemoveGroupButton'),
+            this.clickRemoveGroupButton.bind(this),
           );
         }
       },
@@ -874,7 +891,7 @@
           return;
         }
 
-        this.dropdowns.on('change', $.proxy(this, 'operatorChangeHandler'));
+        this.dropdowns.on('change', this.operatorChangeHandler.bind(this));
       },
 
       /**
@@ -928,7 +945,7 @@
             ) {
               // Move the dragged row down one.
               const next = thisRow.next();
-              if (next.is('tr')) {
+              if (next[0].tagName === 'TR') {
                 this.swap('after', next);
               }
             }
@@ -970,7 +987,7 @@
             'select.views-group-select',
             this.rowObject.element,
           );
-          if (!groupField.is(`.views-group-select-${groupName}`)) {
+          if (!groupField[0].matches(`.views-group-select-${groupName}`)) {
             const oldGroupName = groupField
               .attr('class')
               .replace(
@@ -1062,7 +1079,10 @@
             // The cell with the dropdown operator should span the title row and
             // the "this group is empty" row.
             $operatorCell.attr('rowspan', 2);
-          } else if ($row.hasClass('draggable') && $row.is(':visible')) {
+          } else if (
+            $row.hasClass('draggable') &&
+            Drupal.elementIsVisible(rows[i])
+          ) {
             // We've found a visible filter row, so we now know the group isn't
             // empty.
             draggableCount++;
@@ -1105,12 +1125,12 @@
         $selectAll.show();
         $selectAllCheckbox.on('click', function () {
           // Update all checkbox beside the select all checkbox.
-          $checkboxes.prop('checked', $(this).is(':checked'));
+          $checkboxes.prop('checked', this.checked);
         });
 
         // Uncheck the select all checkbox if any of the others are unchecked.
         $checkboxes.on('click', function () {
-          if ($(this).is('checked') === false) {
+          if (this.checked === false) {
             $selectAllCheckbox.prop('checked', false);
           }
         });
@@ -1201,7 +1221,7 @@
     this.$button.hide();
     this.$parent.find('.exposed-description, .grouped-description').hide();
 
-    this.$input.on('click', $.proxy(this, 'clickHandler'));
+    this.$input.on('click', this.clickHandler.bind(this));
   };
 
   /**
@@ -1231,7 +1251,6 @@
         context,
       ).forEach((dropdown) => {
         // Closures! :(
-        const $context = $(context);
         const submit = context.querySelector('[id^=edit-submit]');
         const oldValue = submit ? submit.value : '';
 
@@ -1255,8 +1274,10 @@
             } else {
               submit.value = Drupal.t('Apply (this display)');
             }
-            const $dialog = $context.closest('.ui-dialog-content');
-            $dialog.trigger('dialogButtonsChange');
+            if (context !== document) {
+              const dialog = context.closest('.ui-dialog-content');
+              dialog?.dispatchEvent(new CustomEvent('dialogButtonsChange'));
+            }
           })
           .trigger('change');
       });
@@ -1314,8 +1335,7 @@
     attach(context) {
       // Only act on the rearrange filter form.
       if (
-        typeof Drupal.tableDrag === 'undefined' ||
-        typeof Drupal.tableDrag['views-rearrange-filters'] === 'undefined'
+        typeof Drupal?.tableDrag?.['views-rearrange-filters'] === 'undefined'
       ) {
         return;
       }

@@ -1,15 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\contact\Kernel\Plugin\migrate\source\d6;
 
+use Drupal\contact\Plugin\migrate\source\ContactSettings;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests D6 contact settings source plugin.
- *
- * @covers \Drupal\contact\Plugin\migrate\source\ContactSettings
- * @group contact
  */
+#[CoversClass(ContactSettings::class)]
+#[Group('contact')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class ContactSettingsTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -20,7 +28,7 @@ class ContactSettingsTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     $tests[0]['source_data']['variable'] = [

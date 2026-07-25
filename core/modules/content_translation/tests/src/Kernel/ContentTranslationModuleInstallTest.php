@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Kernel;
 
 use Drupal\entity_test\Entity\EntityTestWithBundle;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests content translation for modules that provide translatable bundles.
- *
- * @group content_translation
  */
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class ContentTranslationModuleInstallTest extends KernelTestBase {
 
   /**
@@ -60,7 +64,7 @@ class ContentTranslationModuleInstallTest extends KernelTestBase {
   /**
    * Tests that content translation fields are created upon module installation.
    */
-  public function testFieldUpdates() {
+  public function testFieldUpdates(): void {
     // The module ships a translatable bundle of the 'entity_test_with_bundle'
     // entity type.
     $this->installConfig(['content_translation_test']);

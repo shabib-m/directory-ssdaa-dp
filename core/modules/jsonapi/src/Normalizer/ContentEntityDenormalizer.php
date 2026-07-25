@@ -45,7 +45,7 @@ final class ContentEntityDenormalizer extends EntityDenormalizerBase {
     // User resource objects contain a read-only attribute that is not a real
     // field on the user entity type.
     // @see \Drupal\jsonapi\JsonApiResource\ResourceObject::extractContentEntityFields()
-    // @todo: eliminate this special casing in https://www.drupal.org/project/drupal/issues/3079254.
+    // @todo Eliminate this special casing in https://www.drupal.org/project/drupal/issues/3079254.
     if ($entity_type_id === 'user') {
       $data = array_diff_key($data, array_flip([$resource_type->getPublicName('display_name')]));
     }
@@ -81,15 +81,6 @@ final class ContentEntityDenormalizer extends EntityDenormalizerBase {
     }
 
     return $data_internal;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasCacheableSupportsMethod(): bool {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use getSupportedTypes() instead. See https://www.drupal.org/node/3359695', E_USER_DEPRECATED);
-
-    return TRUE;
   }
 
   /**

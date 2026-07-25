@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Common;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the DateFormatterInterface::format() function.
- *
- * @group Common
  */
+#[Group('Common')]
+#[RunTestsInSeparateProcesses]
 class FormatDateTest extends BrowserTestBase {
 
   /**
@@ -19,7 +23,7 @@ class FormatDateTest extends BrowserTestBase {
   /**
    * Tests admin-defined formats in DateFormatterInterface::format().
    */
-  public function testAdminDefinedFormatDate() {
+  public function testAdminDefinedFormatDate(): void {
     // Create and log in an admin user.
     $this->drupalLogin($this->drupalCreateUser([
       'administer site configuration',

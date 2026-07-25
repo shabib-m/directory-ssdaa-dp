@@ -1,6 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests SQL syntax interpretation.
@@ -8,15 +13,15 @@ namespace Drupal\KernelTests\Core\Database;
  * In order to ensure consistent SQL handling throughout Drupal
  * across multiple kinds of database systems, we test that the
  * database system interprets SQL syntax in an expected fashion.
- *
- * @group Database
  */
+#[Group('Database')]
+#[RunTestsInSeparateProcesses]
 class BasicSyntaxTest extends DatabaseTestBase {
 
   /**
    * Tests string concatenation.
    */
-  public function testConcatLiterals() {
+  public function testConcatLiterals(): void {
     $result = $this->connection->query('SELECT CONCAT(:a1, CONCAT(:a2, CONCAT(:a3, CONCAT(:a4, :a5))))', [
       ':a1' => 'This',
       ':a2' => ' ',
@@ -35,7 +40,7 @@ class BasicSyntaxTest extends DatabaseTestBase {
    * since its type 'varchar_ascii' may lead to using field-level collations not
    * compatible with the other fields.
    */
-  public function testConcatFields() {
+  public function testConcatFields(): void {
     $result = $this->connection->query(
       'SELECT CONCAT(:a1, CONCAT([job], CONCAT(:a2, CONCAT([age], :a3)))) FROM {test} WHERE [age] = :age', [
         ':a1' => 'The age of ',
@@ -50,7 +55,7 @@ class BasicSyntaxTest extends DatabaseTestBase {
   /**
    * Tests string concatenation with separator.
    */
-  public function testConcatWsLiterals() {
+  public function testConcatWsLiterals(): void {
     $result = $this->connection->query("SELECT CONCAT_WS(', ', :a1, NULL, :a2, :a3, :a4)", [
       ':a1' => 'Hello',
       ':a2' => NULL,
@@ -61,21 +66,9 @@ class BasicSyntaxTest extends DatabaseTestBase {
   }
 
   /**
-   * Tests string concatenation with separator, with field values.
-   */
-  public function testConcatWsFields() {
-    $result = $this->connection->query("SELECT CONCAT_WS('-', :a1, [name], :a2, [age]) FROM {test} WHERE [age] = :age", [
-      ':a1' => 'name',
-      ':a2' => 'age',
-      ':age' => 25,
-    ]);
-    $this->assertSame('name-John-age-25', $result->fetchField());
-  }
-
-  /**
    * Tests escaping of LIKE wildcards.
    */
-  public function testLikeEscape() {
+  public function testLikeEscape(): void {
     $this->connection->insert('test')
       ->fields([
         'name' => 'Ring_',
@@ -101,7 +94,7 @@ class BasicSyntaxTest extends DatabaseTestBase {
   /**
    * Tests a LIKE query containing a backslash.
    */
-  public function testLikeBackslash() {
+  public function testLikeBackslash(): void {
     $this->connection->insert('test')
       ->fields(['name'])
       ->values([
@@ -132,7 +125,7 @@ class BasicSyntaxTest extends DatabaseTestBase {
   /**
    * Tests \Drupal\Core\Database\Connection::getFullQualifiedTableName().
    */
-  public function testGetFullQualifiedTableName() {
+  public function testGetFullQualifiedTableName(): void {
     $database = \Drupal::database();
     $num_matches = $database->select($database->getFullQualifiedTableName('test'), 't')
       ->countQuery()

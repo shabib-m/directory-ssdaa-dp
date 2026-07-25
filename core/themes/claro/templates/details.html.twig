@@ -15,7 +15,7 @@
  *   list.
  * - disabled: whether the details is disabled.
  *
- * @see template_preprocess_details()
+ * @see \Drupal\Core\Form\FormPreprocess::preprocessDetails()
  * @see claro_preprocess_details()
  */
 #}
@@ -41,7 +41,7 @@
     'claro-details__content',
     accordion ? 'claro-details__content--accordion',
     accordion_item ? 'claro-details__content--accordion-item',
-    element['#module_package_listing']  ? 'claro-details__content--package-listing',
+    element['#module_package_listing'] ? 'claro-details__content--package-listing',
   ]
 %}
 <details{{ attributes.addClass(classes) }}>
@@ -53,7 +53,7 @@
         required ? 'form-required',
         accordion ? 'claro-details__summary--accordion',
         accordion_item ? 'claro-details__summary--accordion-item',
-        element['#module_package_listing']  ? 'claro-details__summary--package-listing',
+        element['#module_package_listing'] ? 'claro-details__summary--package-listing',
 
     ]
     %}
@@ -70,12 +70,17 @@
     {% endif %}
 
       {% if errors %}
-        <div class="form-item form-item--error-message">
+        <div class="form-item form-item__error-message">
           {{ errors }}
         </div>
       {% endif %}
       {%- if description -%}
-        <div class="claro-details__description{{ disabled ? ' is-disabled' }}">{{ description }}</div>
+        {% set description_attributes = create_attribute({id: attributes['aria-describedby']}) %}
+        {% set description_classes = [
+          'claro-details__description',
+          disabled ? 'is-disabled',
+        ] %}
+        <div{{ description_attributes.addClass(description_classes) }}>{{ description }}</div>
       {%- endif -%}
       {%- if children -%}
         {{ children }}

@@ -1,5 +1,4 @@
 # Schema for the views filter plugins.
-
 views.filter.*:
   type: views_filter
   label: 'Default filter'
@@ -127,6 +126,26 @@ views.filter.many_to_one:
     reduce_duplicates:
       type: boolean
       label: 'Reduce duplicate'
+
+views.filter.entity_reference:
+  type: views.filter.many_to_one
+  label: 'Entity reference'
+  constraints:
+    FullyValidatable: ~
+  mapping:
+    sub_handler:
+      type: string
+      label: 'Selection handler'
+      constraints:
+        PluginExists:
+          manager: plugin.manager.entity_reference_selection
+          interface: 'Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface'
+    widget:
+      type: string
+      label: 'Selection type'
+    sub_handler_settings:
+      type: entity_reference_selection.[%parent.sub_handler]
+      label: 'Selection handler settings'
 
 views.filter.standard:
   type: views_filter

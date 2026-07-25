@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Unit\Form;
 
 use Drupal\Core\Access\AccessResult;
@@ -8,20 +10,25 @@ use Drupal\Core\Config\Entity\ConfigEntityDependency;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\Form\EntityPermissionsForm;
 use Drupal\user\PermissionHandlerInterface;
 use Drupal\user\RoleStorageInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use Symfony\Component\Routing\Route;
 
 /**
  * Tests the permissions administration form for a bundle.
- *
- * @coversDefaultClass \Drupal\user\Form\EntityPermissionsForm
- * @group user
  */
+#[CoversClass(EntityPermissionsForm::class)]
+#[Group('user')]
+#[IgnoreDeprecations]
 class EntityPermissionsFormTest extends UnitTestCase {
 
   /**
@@ -36,11 +43,11 @@ class EntityPermissionsFormTest extends UnitTestCase {
    * @param bool $found
    *   TRUE if there is a permission to be managed by the form.
    *
-   * @dataProvider providerTestPermissionsByProvider
-   * @covers \Drupal\user\Form\EntityPermissionsForm::access
-   * @covers \Drupal\user\Form\EntityPermissionsForm::permissionsByProvider
+   * @legacy-covers \Drupal\user\Form\EntityPermissionsForm::access
+   * @legacy-covers \Drupal\user\Form\EntityPermissionsForm::permissionsByProvider
    */
-  public function testPermissionsByProvider(string $dependency_name, bool $found) {
+  #[DataProvider('providerTestPermissionsByProvider')]
+  public function testPermissionsByProvider(string $dependency_name, bool $found): void {
 
     // Mock the constructor parameters.
     $prophecy = $this->prophesize(PermissionHandlerInterface::class);
@@ -55,13 +62,12 @@ class EntityPermissionsFormTest extends UnitTestCase {
     $permission_handler = $prophecy->reveal();
     $role_storage = $this->prophesize(RoleStorageInterface::class)->reveal();
     $module_handler = $this->prophesize(ModuleHandlerInterface::class)->reveal();
+    $module_extension_list = $this->prophesize(ModuleExtensionList::class)->reveal();
     $prophecy = $this->prophesize(ConfigManagerInterface::class);
-    $prophecy->getConfigEntitiesToChangeOnDependencyRemoval('config', ['node.type.article'])
+    $prophecy->findConfigEntityDependencies('config', ['node.type.article'])
       ->willReturn([
-        'delete' => [
-          new ConfigEntityDependency('core.entity_view_display.node.article.full'),
-          new ConfigEntityDependency('field.field.node.article.body'),
-        ],
+        new ConfigEntityDependency('core.entity_view_display.node.article.full'),
+        new ConfigEntityDependency('field.field.node.article.body'),
       ]);
     $config_manager = $prophecy->reveal();
     $prophecy = $this->prophesize(EntityTypeInterface::class);
@@ -73,7 +79,7 @@ class EntityPermissionsFormTest extends UnitTestCase {
       ->willReturn($entity_type);
     $entity_type_manager = $prophecy->reveal();
 
-    $bundle_form = new EntityPermissionsForm($permission_handler, $role_storage, $module_handler, $config_manager, $entity_type_manager);
+    $bundle_form = new EntityPermissionsForm($permission_handler, $role_storage, $module_handler, $config_manager, $entity_type_manager, $module_extension_list);
 
     // Mock the method parameters.
     $route = new Route('some.path');
@@ -91,14 +97,16 @@ class EntityPermissionsFormTest extends UnitTestCase {
 
     $access_actual = $bundle_form->access($route, $route_match, $bundle);
     $this->assertEquals($found ? AccessResult::allowed() : AccessResult::neutral(), $access_actual);
+    $this->expectUserDeprecationMessage('Drupal\user\Form\EntityPermissionsForm::access() is deprecated in drupal:11.1.0 and is removed from drupal:12.0.0. Use a permissions check on the route definition instead. See https://www.drupal.org/node/3384745');
   }
 
   /**
    * Provides data for the testPermissionsByProvider method.
    *
    * @return array
+   *   An array of test data.
    */
-  public function providerTestPermissionsByProvider() {
+  public static function providerTestPermissionsByProvider() {
     return [
       'direct dependency' => ['node.type.article', TRUE],
       'indirect dependency' => ['core.entity_view_display.node.article.full', TRUE],

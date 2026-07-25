@@ -2,9 +2,11 @@
 
 namespace Drupal\config_translation\Controller;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\config_translation\Exception\ConfigMapperLanguageException;
 use Drupal\Core\Access\AccessManagerInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
@@ -15,7 +17,7 @@ use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Matcher\RequestMatcherInterface;
 
@@ -91,7 +93,16 @@ class ConfigTranslationController extends ControllerBase {
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
    */
-  public function __construct(ConfigMapperManagerInterface $config_mapper_manager, AccessManagerInterface $access_manager, RequestMatcherInterface $router, InboundPathProcessorInterface $path_processor, AccountInterface $account, LanguageManagerInterface $language_manager, RendererInterface $renderer) {
+  public function __construct(
+    ConfigMapperManagerInterface $config_mapper_manager,
+    AccessManagerInterface $access_manager,
+    #[Autowire(service: 'router')]
+    RequestMatcherInterface $router,
+    InboundPathProcessorInterface $path_processor,
+    AccountInterface $account,
+    LanguageManagerInterface $language_manager,
+    RendererInterface $renderer,
+  ) {
     $this->configMapperManager = $config_mapper_manager;
     $this->accessManager = $access_manager;
     $this->router = $router;
@@ -99,21 +110,6 @@ class ConfigTranslationController extends ControllerBase {
     $this->account = $account;
     $this->languageManager = $language_manager;
     $this->renderer = $renderer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('plugin.manager.config_translation.mapper'),
-      $container->get('access_manager'),
-      $container->get('router'),
-      $container->get('path_processor_manager'),
-      $container->get('current_user'),
-      $container->get('language_manager'),
-      $container->get('renderer')
-    );
   }
 
   /**
@@ -130,6 +126,8 @@ class ConfigTranslationController extends ControllerBase {
    *   Page render array.
    */
   public function itemPage(Request $request, RouteMatchInterface $route_match, $plugin_id) {
+    $cacheable_metadata = new CacheableMetadata();
+
     /** @var \Drupal\config_translation\ConfigMapperInterface $mapper */
     $mapper = $this->configMapperManager->createInstance($plugin_id);
     $mapper->populateFromRouteMatch($route_match);
@@ -146,7 +144,7 @@ class ConfigTranslationController extends ControllerBase {
       $original_langcode = $mapper->getLangcode();
       $operations_access = TRUE;
     }
-    catch (ConfigMapperLanguageException $exception) {
+    catch (ConfigMapperLanguageException) {
       $items = [];
       foreach ($mapper->getConfigNames() as $config_name) {
         $langcode = $mapper->getLangcodeFromConfig($config_name);
@@ -162,7 +160,7 @@ class ConfigTranslationController extends ControllerBase {
           '#items' => $items,
         ],
       ];
-      $this->messenger()->addWarning($this->renderer->renderPlain($message));
+      $this->messenger()->addWarning($this->renderer->renderInIsolation($message));
 
       $original_langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED;
       $operations_access = FALSE;
@@ -176,7 +174,8 @@ class ConfigTranslationController extends ControllerBase {
     }
 
     // We create a fake request object to pass into
-    // ConfigMapperInterface::populateFromRouteMatch() for the different languages.
+    // ConfigMapperInterface::populateFromRouteMatch() for the different
+    // languages.
     // Creating a separate request for each language and route is neither easily
     // possible nor performant.
     $fake_request = $request->duplicate();
@@ -202,11 +201,12 @@ class ConfigTranslationController extends ControllerBase {
 
         // Check access for the path/route for editing, so we can decide to
         // include a link to edit or not.
-        $edit_access = $this->accessManager->checkNamedRoute($mapper->getBaseRouteName(), $route_match->getRawParameters()->all(), $this->account);
+        $edit_access = $this->accessManager->checkNamedRoute($mapper->getBaseRouteName(), $route_match->getRawParameters()->all(), $this->account, TRUE);
+        $cacheable_metadata->addCacheableDependency($edit_access);
 
         // Build list of operations.
         $operations = [];
-        if ($edit_access) {
+        if ($edit_access->isAllowed()) {
           $operations['edit'] = [
             'title' => $this->t('Edit'),
             'url' => Url::fromRoute($mapper->getBaseRouteName(), $mapper->getBaseRouteParameters(), ['query' => ['destination' => $mapper->getOverviewPath()]]),
@@ -216,12 +216,27 @@ class ConfigTranslationController extends ControllerBase {
       else {
         $language_name = $language->getName();
 
+        // The translation check below might change if the configs change, so we
+        // need to add their cache tags.
+        $cache_tags = [];
+        foreach ($mapper->getConfigNames() as $configName) {
+          $cache_tags[] = "config:$configName";
+        }
+        $cacheable_metadata->addCacheTags($cache_tags);
+
         $operations = [];
         // If no translation exists for this language, link to add one.
         if (!$mapper->hasTranslation($language)) {
           $operations['add'] = [
             'title' => $this->t('Add'),
             'url' => Url::fromRoute($mapper->getAddRouteName(), $mapper->getAddRouteParameters()),
+            'attributes' => [
+              'class' => ['use-ajax'],
+              'data-dialog-type' => 'modal',
+              'data-dialog-options' => Json::encode([
+                'width' => 880,
+              ]),
+            ],
           ];
         }
         else {
@@ -229,11 +244,25 @@ class ConfigTranslationController extends ControllerBase {
           $operations['edit'] = [
             'title' => $this->t('Edit'),
             'url' => Url::fromRoute($mapper->getEditRouteName(), $mapper->getEditRouteParameters()),
+            'attributes' => [
+              'class' => ['use-ajax'],
+              'data-dialog-type' => 'modal',
+              'data-dialog-options' => Json::encode([
+                'width' => 880,
+              ]),
+            ],
           ];
 
           $operations['delete'] = [
             'title' => $this->t('Delete'),
             'url' => Url::fromRoute($mapper->getDeleteRouteName(), $mapper->getDeleteRouteParameters()),
+            'attributes' => [
+              'class' => ['use-ajax'],
+              'data-dialog-type' => 'modal',
+              'data-dialog-options' => Json::encode([
+                'width' => 880,
+              ]),
+            ],
           ];
         }
       }
@@ -248,8 +277,10 @@ class ConfigTranslationController extends ControllerBase {
         // Even if the mapper contains multiple language codes, the source
         // configuration can still be edited.
         '#access' => ($langcode == $original_langcode) || $operations_access,
+        '#attached' => ['library' => ['core/drupal.dialog.ajax']],
       ];
     }
+    $cacheable_metadata->applyTo($page);
     return $page;
   }
 

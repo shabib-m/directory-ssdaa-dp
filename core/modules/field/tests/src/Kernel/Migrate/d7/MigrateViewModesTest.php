@@ -1,18 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Migrate\d7;
 
 use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\Core\Entity\EntityViewModeInterface;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests migration of D7 view modes.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class MigrateViewModesTest extends MigrateDrupal7TestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['comment', 'node', 'taxonomy', 'text'];
 
   /**
@@ -48,7 +55,7 @@ class MigrateViewModesTest extends MigrateDrupal7TestBase {
   /**
    * Tests migration of D7 view mode variables to D8 config entities.
    */
-  public function testMigration() {
+  public function testMigration(): void {
     $this->assertEntity('comment.full', 'Full', 'comment');
     $this->assertEntity('node.teaser', 'Teaser', 'node');
     $this->assertEntity('node.full', 'Full', 'node');

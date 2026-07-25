@@ -1,46 +1,46 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\locale\Unit;
 
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\locale\LocaleTranslation;
+use Drupal\locale\StringStorageInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * @coversDefaultClass \Drupal\locale\LocaleTranslation
- * @group locale
+ * Tests Drupal\locale\LocaleTranslation.
  */
+#[CoversClass(LocaleTranslation::class)]
+#[Group('locale')]
 class LocaleTranslationTest extends UnitTestCase {
 
   /**
    * A mocked storage to use when instantiating LocaleTranslation objects.
-   *
-   * @var \PHPUnit\Framework\MockObject\MockObject
    */
-  protected $storage;
+  protected StringStorageInterface&MockObject $storage;
 
   /**
    * A mocked lock to use when instantiating LocaleTranslation objects.
-   *
-   * @var \Drupal\Core\Lock\LockBackendInterface|\PHPUnit\Framework\MockObject\MockObject
    */
-  protected LockBackendInterface $lock;
+  protected LockBackendInterface&MockObject $lock;
 
   /**
    * A mocked cache to use when instantiating LocaleTranslation objects.
-   *
-   * @var \Drupal\Core\Cache\CacheBackendInterface|\PHPUnit\Framework\MockObject\MockObject
    */
-  protected CacheBackendInterface $cache;
+  protected CacheBackendInterface&MockObject $cache;
 
   /**
    * A mocked language manager built from LanguageManagerInterface.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface|\PHPUnit\Framework\MockObject\MockObject
    */
-  protected $languageManager;
+  protected LanguageManagerInterface&MockObject $languageManager;
 
   /**
    * The request stack.
@@ -65,7 +65,7 @@ class LocaleTranslationTest extends UnitTestCase {
   /**
    * Tests for \Drupal\locale\LocaleTranslation::destruct().
    */
-  public function testDestruct() {
+  public function testDestruct(): void {
     $translation = new LocaleTranslation($this->storage, $this->cache, $this->lock, $this->getConfigFactoryStub(), $this->languageManager, $this->requestStack);
     // Prove that destruction works without errors when translations are empty.
     $this->assertNull($translation->destruct());

@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional;
 
+use Drupal\Core\Database\Database;
 use Drupal\Core\Flood\DatabaseBackend;
 use Drupal\Core\Test\AssertMailTrait;
-use Drupal\Core\Database\Database;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Controller\UserAuthenticationController;
 use GuzzleHttp\Cookie\CookieJar;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -16,9 +20,9 @@ use Symfony\Component\Serializer\Serializer;
 
 /**
  * Tests login and password reset via direct HTTP.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserLoginHttpTest extends BrowserTestBase {
 
   use AssertMailTrait {
@@ -26,9 +30,7 @@ class UserLoginHttpTest extends BrowserTestBase {
   }
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['dblog'];
 
@@ -74,7 +76,7 @@ class UserLoginHttpTest extends BrowserTestBase {
    * @return \Psr\Http\Message\ResponseInterface
    *   The HTTP response.
    */
-  protected function loginRequest($name, $pass, $format = 'json') {
+  protected function loginRequest($name, $pass, $format = 'json'): ResponseInterface {
     $user_login_url = Url::fromRoute('user.login.http')
       ->setRouteParameter('_format', $format)
       ->setAbsolute();
@@ -101,7 +103,7 @@ class UserLoginHttpTest extends BrowserTestBase {
   /**
    * Tests user session life cycle.
    */
-  public function testLogin() {
+  public function testLogin(): void {
     // Without the serialization module only JSON is supported.
     $this->doTestLogin('json');
 
@@ -119,7 +121,7 @@ class UserLoginHttpTest extends BrowserTestBase {
    * @param string $format
    *   Serialization format.
    */
-  protected function doTestLogin($format) {
+  protected function doTestLogin($format): void {
     $client = \Drupal::httpClient();
     // Create new user for each iteration to reset flood.
     // Grant the user administer users permissions to they can see the
@@ -138,13 +140,13 @@ class UserLoginHttpTest extends BrowserTestBase {
       ->save();
 
     $response = $this->loginRequest($name, 'wrong-pass', $format);
-    $this->assertHttpResponseWithMessage($response, 400, 'Sorry, unrecognized username or password.', $format);
+    $this->assertHttpResponseWithMessage($response, 400, 'Unrecognized username or password.', $format);
 
     $response = $this->loginRequest($name, 'wrong-pass', $format);
-    $this->assertHttpResponseWithMessage($response, 400, 'Sorry, unrecognized username or password.', $format);
+    $this->assertHttpResponseWithMessage($response, 400, 'Unrecognized username or password.', $format);
 
     $response = $this->loginRequest($name, 'wrong-pass', $format);
-    $this->assertHttpResponseWithMessage($response, 400, 'Sorry, unrecognized username or password.', $format);
+    $this->assertHttpResponseWithMessage($response, 400, 'Unrecognized username or password.', $format);
 
     $response = $this->loginRequest($name, 'wrong-pass', $format);
     $this->assertHttpResponseWithMessage($response, 403, 'Too many failed login attempts from your IP address. This IP address is temporarily blocked.', $format);
@@ -176,14 +178,14 @@ class UserLoginHttpTest extends BrowserTestBase {
       ->save();
 
     $response = $this->loginRequest($name, 'garbage', $format);
-    $this->assertHttpResponseWithMessage($response, 400, 'Sorry, unrecognized username or password.', $format);
+    $this->assertHttpResponseWithMessage($response, 400, 'Unrecognized username or password.', $format);
 
     $response = $this->loginRequest('garbage', $pass, $format);
-    $this->assertHttpResponseWithMessage($response, 400, 'Sorry, unrecognized username or password.', $format);
+    $this->assertHttpResponseWithMessage($response, 400, 'Unrecognized username or password.', $format);
 
     $response = $this->loginRequest($name, $pass, $format);
     $this->assertEquals(200, $response->getStatusCode());
-    $result_data = $this->serializer->decode($response->getBody(), $format);
+    $result_data = $this->serializer->decode((string) $response->getBody(), $format);
     $this->assertEquals($name, $result_data['current_user']['name']);
     $this->assertEquals($account->id(), $result_data['current_user']['uid']);
     $this->assertEquals($account->getRoles(), $result_data['current_user']['roles']);
@@ -192,7 +194,7 @@ class UserLoginHttpTest extends BrowserTestBase {
     // Logging in while already logged in results in a 403 with helpful message.
     $response = $this->loginRequest($name, $pass, $format);
     $this->assertSame(403, $response->getStatusCode());
-    $this->assertSame(['message' => 'This route can only be accessed by anonymous users.'], $this->serializer->decode($response->getBody(), $format));
+    $this->assertSame(['message' => 'This route can only be accessed by anonymous users.'], $this->serializer->decode((string) $response->getBody(), $format));
 
     $response = $client->get($login_status_url, ['cookies' => $this->cookies]);
     $this->assertHttpResponse($response, 200, UserAuthenticationController::LOGGED_IN);
@@ -217,7 +219,7 @@ class UserLoginHttpTest extends BrowserTestBase {
    * @return \Psr\Http\Message\ResponseInterface
    *   The HTTP response.
    */
-  protected function passwordRequest(array $request_body, $format = 'json') {
+  protected function passwordRequest(array $request_body, $format = 'json'): ResponseInterface {
     $password_reset_url = Url::fromRoute('user.pass.http')
       ->setRouteParameter('_format', $format)
       ->setAbsolute();
@@ -237,7 +239,7 @@ class UserLoginHttpTest extends BrowserTestBase {
   /**
    * Tests user password reset.
    */
-  public function testPasswordReset() {
+  public function testPasswordReset(): void {
     // Create a user account.
     $account = $this->drupalCreateUser();
 
@@ -282,7 +284,7 @@ class UserLoginHttpTest extends BrowserTestBase {
   /**
    * Resets all flood entries.
    */
-  protected function resetFlood() {
+  protected function resetFlood(): void {
     $this->container->get('database')->delete(DatabaseBackend::TABLE_NAME)->execute();
   }
 
@@ -315,7 +317,7 @@ class UserLoginHttpTest extends BrowserTestBase {
 
     // IP limit has reached to its limit. Even valid user credentials will fail.
     $response = $this->loginRequest($user->getAccountName(), $user->passRaw, $format);
-    $this->assertHttpResponseWithMessage($response, '403', 'Access is blocked because of IP based flood prevention.', $format);
+    $this->assertHttpResponseWithMessage($response, 403, 'Access is blocked because of IP based flood prevention.', $format);
     $last_log = $database->select('watchdog', 'w')
       ->fields('w', ['message'])
       ->condition('type', 'user')
@@ -387,18 +389,18 @@ class UserLoginHttpTest extends BrowserTestBase {
       // Try 2 failed logins.
       for ($i = 0; $i < 2; $i++) {
         $response = $this->loginRequest($incorrect_user1->getAccountName(), $incorrect_user1->passRaw, $format);
-        $this->assertHttpResponseWithMessage($response, 400, 'Sorry, unrecognized username or password.', $format);
+        $this->assertHttpResponseWithMessage($response, 400, 'Unrecognized username or password.', $format);
       }
 
       // A successful login will reset the per-user flood control count.
       $response = $this->loginRequest($user1->getAccountName(), $user1->passRaw, $format);
-      $result_data = $this->serializer->decode($response->getBody(), $format);
+      $result_data = $this->serializer->decode((string) $response->getBody(), $format);
       $this->logoutRequest($format, $result_data['logout_token']);
 
       // Try 3 failed logins for user 1, they will not trigger flood control.
       for ($i = 0; $i < 3; $i++) {
         $response = $this->loginRequest($incorrect_user1->getAccountName(), $incorrect_user1->passRaw, $format);
-        $this->assertHttpResponseWithMessage($response, 400, 'Sorry, unrecognized username or password.', $format);
+        $this->assertHttpResponseWithMessage($response, 400, 'Unrecognized username or password.', $format);
       }
 
       // Try one successful attempt for user 2, it should not trigger any
@@ -442,7 +444,7 @@ class UserLoginHttpTest extends BrowserTestBase {
    * @return \Psr\Http\Message\ResponseInterface
    *   The HTTP response.
    */
-  protected function logoutRequest($format = 'json', $logout_token = '') {
+  protected function logoutRequest($format = 'json', $logout_token = ''): ResponseInterface {
     /** @var \GuzzleHttp\Client $client */
     $client = $this->container->get('http_client');
     $user_logout_url = Url::fromRoute('user.logout.http')
@@ -475,7 +477,7 @@ class UserLoginHttpTest extends BrowserTestBase {
 
     $response = $this->loginRequest($name, $pass, $format);
     $this->assertEquals(200, $response->getStatusCode());
-    $result_data = $this->serializer->decode($response->getBody(), $format);
+    $result_data = $this->serializer->decode((string) $response->getBody(), $format);
 
     $logout_token = $result_data['logout_token'];
 
@@ -530,11 +532,11 @@ class UserLoginHttpTest extends BrowserTestBase {
    * @param \Drupal\user\UserInterface $account
    *   Test account.
    */
-  protected function doTestPasswordReset($format, $account) {
+  protected function doTestPasswordReset($format, $account): void {
     $response = $this->passwordRequest([], $format);
     $this->assertHttpResponseWithMessage($response, 400, 'Missing credentials.name or credentials.mail', $format);
 
-    $response = $this->passwordRequest(['name' => 'dramallama'], $format);
+    $response = $this->passwordRequest(['name' => 'drama llama'], $format);
     $this->assertEquals(200, $response->getStatusCode());
 
     $response = $this->passwordRequest(['mail' => 'llama@drupal.org'], $format);
@@ -597,7 +599,7 @@ class UserLoginHttpTest extends BrowserTestBase {
   /**
    * Login from reset password email.
    */
-  protected function loginFromResetEmail() {
+  protected function loginFromResetEmail(): void {
     $_emails = $this->drupalGetMails();
     $email = end($_emails);
     $urls = [];
@@ -605,7 +607,7 @@ class UserLoginHttpTest extends BrowserTestBase {
     $resetURL = $urls[0];
     $this->drupalGet($resetURL);
     $this->submitForm([], 'Log in');
-    $this->assertSession()->pageTextContains('You have just used your one-time login link. It is no longer necessary to use this link to log in. Please set your password.');
+    $this->assertSession()->pageTextContains('You have used a one-time login link. You can set your new password now.');
   }
 
 }

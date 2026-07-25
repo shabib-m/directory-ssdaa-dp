@@ -2,6 +2,7 @@
 
 namespace Drupal\update;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
@@ -89,9 +90,9 @@ class UpdateProcessor implements UpdateProcessorInterface {
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
    * @param \Drupal\Core\Queue\QueueFactory $queue_factory
-   *   The queue factory
+   *   The queue factory.
    * @param \Drupal\update\UpdateFetcherInterface $update_fetcher
-   *   The update fetcher service
+   *   The update fetcher service.
    * @param \Drupal\Core\State\StateInterface $state_store
    *   The state service.
    * @param \Drupal\Core\PrivateKey $private_key
@@ -100,8 +101,19 @@ class UpdateProcessor implements UpdateProcessorInterface {
    *   The key/value factory.
    * @param \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface $key_value_expirable_factory
    *   The expirable key/value factory.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, QueueFactory $queue_factory, UpdateFetcherInterface $update_fetcher, StateInterface $state_store, PrivateKey $private_key, KeyValueFactoryInterface $key_value_factory, KeyValueExpirableFactoryInterface $key_value_expirable_factory) {
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    QueueFactory $queue_factory,
+    UpdateFetcherInterface $update_fetcher,
+    StateInterface $state_store,
+    PrivateKey $private_key,
+    KeyValueFactoryInterface $key_value_factory,
+    KeyValueExpirableFactoryInterface $key_value_expirable_factory,
+    protected TimeInterface $time,
+  ) {
     $this->updateFetcher = $update_fetcher;
     $this->updateSettings = $config_factory->get('update.settings');
     $this->fetchQueue = $queue_factory->get('update_fetch_tasks');
@@ -124,7 +136,7 @@ class UpdateProcessor implements UpdateProcessorInterface {
     if (empty($this->fetchTasks[$project['name']])) {
       $this->fetchQueue->createItem($project);
       $this->fetchTaskStore->set($project['name'], $project);
-      $this->fetchTasks[$project['name']] = REQUEST_TIME;
+      $this->fetchTasks[$project['name']] = $this->time->getRequestTime();
     }
   }
 
@@ -150,9 +162,8 @@ class UpdateProcessor implements UpdateProcessorInterface {
   public function processFetchTask($project) {
     global $base_url;
 
-    // This can be in the middle of a long-running batch, so REQUEST_TIME won't
-    // necessarily be valid.
-    $request_time_difference = time() - REQUEST_TIME;
+    // This can be in the middle of a long-running batch.
+    $request_time_difference = $this->time->getCurrentTime() - $this->time->getRequestTime();
     if (empty($this->failed)) {
       // If we have valid data about release history XML servers that we have
       // failed to fetch from on previous attempts, load that.
@@ -190,14 +201,14 @@ class UpdateProcessor implements UpdateProcessorInterface {
     }
 
     $frequency = $this->updateSettings->get('check.interval_days');
-    $available['last_fetch'] = REQUEST_TIME + $request_time_difference;
+    $available['last_fetch'] = $this->time->getRequestTime() + $request_time_difference;
     $this->availableReleasesTempStore->setWithExpire($project_name, $available, $request_time_difference + (60 * 60 * 24 * $frequency));
 
     // Stash the $this->failed data back in the DB for the next 5 minutes.
     $this->tempStore->setWithExpire('fetch_failures', $this->failed, $request_time_difference + (60 * 5));
 
     // Whether this worked or not, we did just (try to) check for updates.
-    $this->stateStore->set('update.last_check', REQUEST_TIME + $request_time_difference);
+    $this->stateStore->set('update.last_check', $this->time->getRequestTime() + $request_time_difference);
 
     // Now that we processed the fetch task for this project, clear out the
     // record for this task so we're willing to fetch again.
@@ -220,7 +231,7 @@ class UpdateProcessor implements UpdateProcessorInterface {
     try {
       $xml = new \SimpleXMLElement($raw_xml);
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       // SimpleXMLElement::__construct produces an E_WARNING error message for
       // each error found in the XML data and throws an exception if errors
       // were detected. Catch any exception and return failure (NULL).

@@ -1,18 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Migrate;
 
 use Drupal\migrate\MigrateExecutable;
-use Drupal\Tests\migrate_drupal\Kernel\MigrateDrupalTestBase;
 use Drupal\migrate_drupal\Tests\StubTestTrait;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\Tests\migrate_drupal\Kernel\MigrateDrupalTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test stub creation for taxonomy terms.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class MigrateTaxonomyTermStubTest extends MigrateDrupalTestBase {
 
   use StubTestTrait;
@@ -33,7 +37,7 @@ class MigrateTaxonomyTermStubTest extends MigrateDrupalTestBase {
   /**
    * Tests creation of taxonomy term stubs.
    */
-  public function testStub() {
+  public function testStub(): void {
     Vocabulary::create([
       'vid' => 'test_vocabulary',
       'name' => 'Test vocabulary',
@@ -44,7 +48,7 @@ class MigrateTaxonomyTermStubTest extends MigrateDrupalTestBase {
   /**
    * Tests creation of stubs when weight is mapped.
    */
-  public function testStubWithWeightMapping() {
+  public function testStubWithWeightMapping(): void {
     // Create a vocabulary via migration for the terms to reference.
     $vocabulary_data_rows = [
       ['id' => '1', 'name' => 'tags'],

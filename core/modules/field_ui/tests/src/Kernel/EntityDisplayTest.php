@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_ui\Kernel;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\Display\EntityDisplayInterface;
@@ -10,26 +11,26 @@ use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\Entity\EntityViewMode;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\node\Entity\NodeType;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\node\Entity\NodeType;
 use Drupal\user\Entity\Role;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the entity display configuration entities.
- *
- * @group field_ui
  */
+#[Group('field_ui')]
+#[RunTestsInSeparateProcesses]
 class EntityDisplayTest extends KernelTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var string[]
+   * {@inheritdoc}
    */
   protected static $modules = [
-    'field_ui',
     'field',
     'entity_test',
     'user',
@@ -53,7 +54,7 @@ class EntityDisplayTest extends KernelTestBase {
   /**
    * Tests basic CRUD operations on entity display objects.
    */
-  public function testEntityDisplayCRUD() {
+  public function testEntityDisplayCRUD(): void {
     $display = EntityViewDisplay::create([
       'targetEntityType' => 'entity_test',
       'bundle' => 'entity_test',
@@ -73,7 +74,11 @@ class EntityDisplayTest extends KernelTestBase {
     $this->assertEquals($expected['component_2'], $display->getComponent('component_2'));
 
     // Check that arbitrary options are correctly stored.
-    $expected['component_3'] = ['weight' => 10, 'third_party_settings' => ['field_test' => ['foo' => 'bar']], 'settings' => []];
+    $expected['component_3'] = [
+      'weight' => 10,
+      'third_party_settings' => ['field_test' => ['foo' => 'bar']],
+      'settings' => [],
+    ];
     $display->setComponent('component_3', $expected['component_3']);
     $this->assertEquals($expected['component_3'], $display->getComponent('component_3'));
 
@@ -97,6 +102,7 @@ class EntityDisplayTest extends KernelTestBase {
       'weight' => -5,
       'settings' => [
         'link_to_entity' => FALSE,
+        'link_rel' => 'canonical',
       ],
       'third_party_settings' => [],
       'region' => 'content',
@@ -114,7 +120,11 @@ class EntityDisplayTest extends KernelTestBase {
 
     // Check that createCopy() creates a new component that can be correctly
     // saved.
-    EntityViewMode::create(['id' => $display->getTargetEntityTypeId() . '.other_view_mode', 'targetEntityType' => $display->getTargetEntityTypeId()])->save();
+    EntityViewMode::create([
+      'id' => $display->getTargetEntityTypeId() . '.other_view_mode',
+      'label' => 'Other',
+      'targetEntityType' => $display->getTargetEntityTypeId(),
+    ])->save();
     $new_display = $display->createCopy('other_view_mode');
     $new_display->save();
     $new_display = EntityViewDisplay::load($new_display->id());
@@ -129,7 +139,7 @@ class EntityDisplayTest extends KernelTestBase {
   /**
    * Tests sorting of components by name on basic CRUD operations.
    */
-  public function testEntityDisplayCRUDSort() {
+  public function testEntityDisplayCRUDSort(): void {
     $display = EntityViewDisplay::create([
       'targetEntityType' => 'entity_test',
       'bundle' => 'entity_test',
@@ -146,9 +156,11 @@ class EntityDisplayTest extends KernelTestBase {
   }
 
   /**
-   * @covers \Drupal\Core\Entity\EntityDisplayRepository::getViewDisplay
+   * Tests entity get display.
+   *
+   * @legacy-covers \Drupal\Core\Entity\EntityDisplayRepository::getViewDisplay
    */
-  public function testEntityGetDisplay() {
+  public function testEntityGetDisplay(): void {
     $display_repository = $this->container->get('entity_display.repository');
 
     // Check that getViewDisplay() returns a fresh object when no configuration
@@ -170,8 +182,8 @@ class EntityDisplayTest extends KernelTestBase {
   /**
    * Tests the behavior of a field component within an entity display object.
    */
-  public function testExtraFieldComponent() {
-    entity_test_create_bundle('bundle_with_extra_fields');
+  public function testExtraFieldComponent(): void {
+    EntityTestHelper::createBundle('bundle_with_extra_fields');
     $display = EntityViewDisplay::create([
       'targetEntityType' => 'entity_test',
       'bundle' => 'bundle_with_extra_fields',
@@ -193,8 +205,8 @@ class EntityDisplayTest extends KernelTestBase {
   /**
    * Tests the behavior of an extra field component with initial invalid values.
    */
-  public function testExtraFieldComponentInitialInvalidConfig() {
-    entity_test_create_bundle('bundle_with_extra_fields');
+  public function testExtraFieldComponentInitialInvalidConfig(): void {
+    EntityTestHelper::createBundle('bundle_with_extra_fields');
     $display = EntityViewDisplay::create([
       'targetEntityType' => 'entity_test',
       'bundle' => 'bundle_with_extra_fields',
@@ -222,7 +234,7 @@ class EntityDisplayTest extends KernelTestBase {
   /**
    * Tests the behavior of a field component within an entity display object.
    */
-  public function testFieldComponent() {
+  public function testFieldComponent(): void {
     $field_name = 'test_field';
     // Create a field storage and a field.
     $field_storage = FieldStorageConfig::create([
@@ -257,7 +269,8 @@ class EntityDisplayTest extends KernelTestBase {
     ];
     $this->assertEquals($expected, $display->getComponent($field_name));
 
-    // Check that the getFormatter() method returns the correct formatter plugin.
+    // Check that the getFormatter() method returns the correct formatter
+    // plugin.
     $formatter = $display->getRenderer($field_name);
     $this->assertEquals($default_formatter, $formatter->getPluginId());
     $this->assertEquals($formatter_settings, $formatter->getSettings());
@@ -276,13 +289,19 @@ class EntityDisplayTest extends KernelTestBase {
     // Check that the display has dependencies on the field and the module that
     // provides the formatter.
     $dependencies = $display->calculateDependencies()->getDependencies();
-    $this->assertEquals(['config' => ['field.field.entity_test.entity_test.test_field'], 'module' => ['entity_test', 'field_test']], $dependencies);
+    $this->assertEquals(
+      [
+        'config' => ['field.field.entity_test.entity_test.test_field'],
+        'module' => ['entity_test', 'field_test'],
+      ],
+      $dependencies
+    );
   }
 
   /**
    * Tests the behavior of a field component for a base field.
    */
-  public function testBaseFieldComponent() {
+  public function testBaseFieldComponent(): void {
     $display = EntityViewDisplay::create([
       'targetEntityType' => 'entity_test_base_field_display',
       'bundle' => 'entity_test_base_field_display',
@@ -345,11 +364,13 @@ class EntityDisplayTest extends KernelTestBase {
   /**
    * Tests deleting a bundle.
    */
-  public function testDeleteBundle() {
+  public function testDeleteBundle(): void {
     // Create a node bundle, display and form display object.
-    $type = NodeType::create(['type' => 'article']);
+    $type = NodeType::create([
+      'type' => 'article',
+      'name' => 'Article',
+    ]);
     $type->save();
-    node_add_body_field($type);
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
     $display_repository = \Drupal::service('entity_display.repository');
     $display_repository->getViewDisplay('node', 'article')->save();
@@ -366,7 +387,7 @@ class EntityDisplayTest extends KernelTestBase {
   /**
    * Tests deleting field.
    */
-  public function testDeleteField() {
+  public function testDeleteField(): void {
     $field_name = 'test_field';
     // Create a field storage and a field.
     $field_storage = FieldStorageConfig::create([
@@ -382,7 +403,11 @@ class EntityDisplayTest extends KernelTestBase {
     $field->save();
 
     // Create default and teaser entity display.
-    EntityViewMode::create(['id' => 'entity_test.teaser', 'targetEntityType' => 'entity_test'])->save();
+    EntityViewMode::create([
+      'id' => 'entity_test.teaser',
+      'label' => 'Teaser',
+      'targetEntityType' => 'entity_test',
+    ])->save();
     EntityViewDisplay::create([
       'targetEntityType' => 'entity_test',
       'bundle' => 'entity_test',
@@ -416,7 +441,7 @@ class EntityDisplayTest extends KernelTestBase {
   /**
    * Tests \Drupal\Core\Entity\EntityDisplayBase::onDependencyRemoval().
    */
-  public function testOnDependencyRemoval() {
+  public function testOnDependencyRemoval(): void {
     $this->enableModules(['field_plugins_test']);
 
     $field_name = 'test_field';
@@ -461,7 +486,7 @@ class EntityDisplayTest extends KernelTestBase {
   /**
    * Ensure that entity view display changes invalidates cache tags.
    */
-  public function testEntityDisplayInvalidateCacheTags() {
+  public function testEntityDisplayInvalidateCacheTags(): void {
     $cache = \Drupal::cache();
     $cache->set('cid', 'kittens', Cache::PERMANENT, ['config:entity_view_display_list']);
     $display = EntityViewDisplay::create([
@@ -477,8 +502,11 @@ class EntityDisplayTest extends KernelTestBase {
   /**
    * Tests getDisplayModeOptions().
    */
-  public function testGetDisplayModeOptions() {
-    NodeType::create(['type' => 'article'])->save();
+  public function testGetDisplayModeOptions(): void {
+    NodeType::create([
+      'type' => 'article',
+      'name' => 'Article',
+    ])->save();
 
     EntityViewDisplay::create([
       'targetEntityType' => 'node',
@@ -524,7 +552,7 @@ class EntityDisplayTest extends KernelTestBase {
   /**
    * Tests components dependencies additions.
    */
-  public function testComponentDependencies() {
+  public function testComponentDependencies(): void {
     $this->enableModules(['dblog', 'help']);
     $this->installSchema('dblog', ['watchdog']);
     $this->installEntitySchema('user');
@@ -533,14 +561,14 @@ class EntityDisplayTest extends KernelTestBase {
     // Create two arbitrary user roles.
     for ($i = 0; $i < 2; $i++) {
       $roles[$i] = Role::create([
-        'id' => mb_strtolower($this->randomMachineName()),
+        'id' => $this->randomMachineName(),
         'label' => $this->randomString(),
       ]);
       $roles[$i]->save();
     }
 
     // Create a field of type 'test_field' attached to 'entity_test'.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'entity_test',
@@ -689,8 +717,8 @@ class EntityDisplayTest extends KernelTestBase {
     $dependencies = !empty($all_dependencies[$type]) ? $all_dependencies[$type] : [];
     $context = $display instanceof EntityViewDisplayInterface ? 'View' : 'Form';
     $value = $assertion ? in_array($key, $dependencies) : !in_array($key, $dependencies);
-    $args = ['@context' => $context, '@id' => $display->id(), '@type' => $type, '@key' => $key];
-    $message = $assertion ? new FormattableMarkup("@context display '@id' depends on @type '@key'.", $args) : new FormattableMarkup("@context display '@id' do not depend on @type '@key'.", $args);
+    $display_id = $display->id();
+    $message = $assertion ? "$context display '$display_id' depends on $type '$key'." : "$context display '$display_id' do not depend on $type '$key'.";
     $this->assertTrue($value, $message);
   }
 

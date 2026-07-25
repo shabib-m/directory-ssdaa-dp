@@ -1,21 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Handler;
 
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Entity\View;
-use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\HandlerBase;
+use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore wõrd
-
 /**
  * Tests abstract handler definitions.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class HandlerTest extends ViewTestBase {
 
   use CommentTestTrait;
@@ -25,12 +29,16 @@ class HandlerTest extends ViewTestBase {
    *
    * @var array
    */
-  public static $testViews = ['test_view', 'test_view_handler_weight', 'test_handler_relationships', 'test_handler_test_access', 'test_filter_in_operator_ui'];
+  public static $testViews = [
+    'test_view',
+    'test_view_handler_weight',
+    'test_handler_relationships',
+    'test_handler_test_access',
+    'test_filter_in_operator_ui',
+  ];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['views_ui', 'comment', 'node'];
 
@@ -76,11 +84,11 @@ class HandlerTest extends ViewTestBase {
   /**
    * Tests the breakString method.
    */
-  public function testBreakString() {
+  public function testBreakString(): void {
     // Check defaults.
     $this->assertEquals((object) ['value' => [], 'operator' => NULL], HandlerBase::breakString(''));
 
-    // Test ors
+    // Test ors.
     $handler = HandlerBase::breakString('word1 word2+word');
     $this->assertEquals(['word1', 'word2', 'word'], $handler->value);
     $this->assertEquals('or', $handler->operator);
@@ -114,13 +122,13 @@ class HandlerTest extends ViewTestBase {
     $this->assertEquals(['wõrd1', 'wõrd2', 'wõrd'], $handler->value);
     $this->assertEquals('and', $handler->operator);
 
-    // Test a single word
+    // Test a single word.
     $handler = HandlerBase::breakString('word');
     $this->assertEquals(['word'], $handler->value);
     $this->assertEquals('and', $handler->operator);
 
     $s1 = $this->randomMachineName();
-    // Generate three random numbers which can be used below;
+    // Generate three random numbers which can be used below.
     $n1 = rand(0, 100);
     $n2 = rand(0, 100);
     $n3 = rand(0, 100);
@@ -168,7 +176,7 @@ class HandlerTest extends ViewTestBase {
     $this->assertEquals([(int) $s1, $n2, $n3], $handlerBase->value);
     $this->assertEquals('or', $handlerBase->operator);
 
-    // Generate three random decimals which can be used below;
+    // Generate three random decimals which can be used below.
     $d1 = rand(0, 10) / 10;
     $d2 = rand(0, 10) / 10;
     $d3 = rand(0, 10) / 10;
@@ -203,7 +211,7 @@ class HandlerTest extends ViewTestBase {
   /**
    * Tests the order of handlers is the same before and after saving.
    */
-  public function testHandlerWeights() {
+  public function testHandlerWeights(): void {
     $handler_types = ['fields', 'filters', 'sorts'];
 
     $view = Views::getView('test_view_handler_weight');
@@ -229,7 +237,7 @@ class HandlerTest extends ViewTestBase {
   /**
    * Tests the relationship ui for field/filter/argument/relationship.
    */
-  public function testRelationshipUI() {
+  public function testRelationshipUI(): void {
     $views_admin = $this->drupalCreateUser(['administer views']);
     $this->drupalLogin($views_admin);
 
@@ -271,7 +279,11 @@ class HandlerTest extends ViewTestBase {
     $this->assertSession()->fieldNotExists($relationship_name);
 
     // Create a view of comments with node relationship.
-    View::create(['base_table' => 'comment_field_data', 'id' => 'test_get_entity_type'])->save();
+    View::create([
+      'base_table' => 'comment_field_data',
+      'id' => 'test_get_entity_type',
+      'label' => 'Test',
+    ])->save();
     $this->drupalGet('admin/structure/views/nojs/add-handler/test_get_entity_type/default/relationship');
     $this->submitForm(['name[comment_field_data.node]' => 'comment_field_data.node'], 'Add and configure relationships');
     $this->submitForm([], 'Apply');
@@ -289,7 +301,7 @@ class HandlerTest extends ViewTestBase {
   /**
    * Tests the relationship method on the base class.
    */
-  public function testSetRelationship() {
+  public function testSetRelationship(): void {
     $view = Views::getView('test_handler_relationships');
     $view->setDisplay();
     // Setup a broken relationship.
@@ -328,7 +340,7 @@ class HandlerTest extends ViewTestBase {
    *
    * @see \Drupal\views\Plugin\views\HandlerBase::placeholder()
    */
-  public function testPlaceholder() {
+  public function testPlaceholder(): void {
     $view = Views::getView('test_view');
     $view->initHandlers();
     $view->initQuery();
@@ -360,7 +372,9 @@ class HandlerTest extends ViewTestBase {
    *
    * @see views_test_data_handler_test_access_callback
    */
-  public function testAccess() {
+  #[IgnoreDeprecations]
+  public function testAccess(): void {
+    $this->expectUserDeprecationMessage('Passing the access callback using the array key is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. See https://www.drupal.org/node/3539918');
     $view = Views::getView('test_handler_test_access');
     $views_data = $this->viewsData();
     $views_data = $views_data['views_test_data'];

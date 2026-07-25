@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional\Views;
 
 use Drupal\taxonomy\Entity\Vocabulary;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the vocabulary argument.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TaxonomyVocabularyArgumentTest extends TaxonomyTestBase {
 
   /**
@@ -70,7 +74,7 @@ class TaxonomyVocabularyArgumentTest extends TaxonomyTestBase {
    *
    * @see Drupal\taxonomy\Plugin\views\argument\VocabularyVid
    */
-  public function testTermWithVocabularyArgument() {
+  public function testTermWithVocabularyArgument(): void {
     $this->drupalGet('test_argument_taxonomy_vocabulary/' . $this->vocabularies[0]->id());
     // First term should be present.
     $this->assertSession()->pageTextContains($this->terms[0]->label());

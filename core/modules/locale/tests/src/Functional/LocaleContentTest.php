@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\locale\Functional;
 
-use Drupal\Tests\BrowserTestBase;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\node\NodeInterface;
+use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests multilingual support for content types and individual nodes.
- *
- * @group locale
  */
+#[Group('locale')]
+#[RunTestsInSeparateProcesses]
 class LocaleContentTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node', 'locale'];
 
@@ -28,7 +30,7 @@ class LocaleContentTest extends BrowserTestBase {
   /**
    * Verifies that machine name fields are always LTR.
    */
-  public function testMachineNameLTR() {
+  public function testMachineNameLTR(): void {
     // User to add and remove language.
     $admin_user = $this->drupalCreateUser([
       'administer languages',
@@ -66,7 +68,7 @@ class LocaleContentTest extends BrowserTestBase {
   /**
    * Tests if a content type can be set to multilingual and language is present.
    */
-  public function testContentTypeLanguageConfiguration() {
+  public function testContentTypeLanguageConfiguration(): void {
     $type1 = $this->drupalCreateContentType();
     $type2 = $this->drupalCreateContentType();
 
@@ -105,7 +107,7 @@ class LocaleContentTest extends BrowserTestBase {
       'language_configuration[language_alterable]' => TRUE,
     ];
     $this->drupalGet("admin/structure/types/manage/{$type2->id()}");
-    $this->submitForm($edit, 'Save content type');
+    $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains("The content type {$type2->label()} has been updated.");
     $this->drupalLogout();
     \Drupal::languageManager()->reset();
@@ -157,7 +159,7 @@ class LocaleContentTest extends BrowserTestBase {
   /**
    * Tests if a dir and lang tags exist in node's attributes.
    */
-  public function testContentTypeDirLang() {
+  public function testContentTypeDirLang(): void {
     $type = $this->drupalCreateContentType();
 
     // User to add and remove language.
@@ -194,7 +196,7 @@ class LocaleContentTest extends BrowserTestBase {
       'language_configuration[language_alterable]' => TRUE,
     ];
     $this->drupalGet("admin/structure/types/manage/{$type->id()}");
-    $this->submitForm($edit, 'Save content type');
+    $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains("The content type {$type->label()} has been updated.");
     $this->drupalLogout();
 

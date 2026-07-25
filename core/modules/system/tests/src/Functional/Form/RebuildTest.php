@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Form;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests functionality of \Drupal\Core\Form\FormBuilderInterface::rebuildForm().
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class RebuildTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node', 'form_test'];
 
@@ -45,7 +47,7 @@ class RebuildTest extends BrowserTestBase {
   /**
    * Tests preservation of values.
    */
-  public function testRebuildPreservesValues() {
+  public function testRebuildPreservesValues(): void {
     $edit = [
       'checkbox_1_default_off' => TRUE,
       'checkbox_1_default_on' => FALSE,
@@ -61,7 +63,8 @@ class RebuildTest extends BrowserTestBase {
     $assert_session->checkboxNotChecked('edit-checkbox-1-default-on');
     $assert_session->fieldValueEquals('edit-text-1', 'foo');
 
-    // Verify that newly added elements were initialized with their default values.
+    // Verify that newly added elements were initialized with their default
+    // values.
     $assert_session->checkboxChecked('edit-checkbox-2-default-on');
     $assert_session->checkboxNotChecked('edit-checkbox-2-default-off');
     $assert_session->fieldValueEquals('edit-text-2', 'DEFAULT 2');

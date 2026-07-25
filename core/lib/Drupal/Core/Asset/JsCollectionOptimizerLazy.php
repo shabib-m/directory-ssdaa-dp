@@ -8,7 +8,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\State\StateInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -42,8 +42,6 @@ class JsCollectionOptimizerLazy implements AssetCollectionGroupOptimizerInterfac
    *   The time service.
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
-   * @param \Drupal\Core\State\StateInterface $state
-   *   The state key/value store.
    */
   public function __construct(
     protected readonly AssetCollectionGrouperInterface $grouper,
@@ -56,7 +54,6 @@ class JsCollectionOptimizerLazy implements AssetCollectionGroupOptimizerInterfac
     protected readonly FileUrlGeneratorInterface $fileUrlGenerator,
     protected readonly TimeInterface $time,
     protected readonly LanguageManagerInterface $languageManager,
-    protected readonly StateInterface $state
   ) {}
 
   /**
@@ -118,8 +115,7 @@ class JsCollectionOptimizerLazy implements AssetCollectionGroupOptimizerInterfac
         'theme' => $this->themeManager->getActiveTheme()->getName(),
         'include' => UrlHelper::compressQueryParameter(implode(',', $this->dependencyResolver->getMinimalRepresentativeSubset($libraries))),
       ];
-      $ajax_page_state = $this->requestStack->getCurrentRequest()
-        ->get('ajax_page_state');
+      $ajax_page_state = $this->requestStack->getCurrentRequest()->attributes->get('ajax_page_state');
       $already_loaded = isset($ajax_page_state) ? explode(',', $ajax_page_state['libraries']) : [];
       if ($already_loaded) {
         $query_args['exclude'] = UrlHelper::compressQueryParameter(implode(',', $this->dependencyResolver->getMinimalRepresentativeSubset($already_loaded)));
@@ -149,16 +145,17 @@ class JsCollectionOptimizerLazy implements AssetCollectionGroupOptimizerInterfac
   /**
    * {@inheritdoc}
    */
-  public function getAll() {
-    return $this->state->get('system.js_cache_files', []);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function deleteAll() {
-    $this->state->delete('system.js_cache_files');
-    $this->fileSystem->deleteRecursive('assets://js');
+    if (!\is_dir('assets://js')) {
+      return;
+    }
+    $directory_iterator = new \DirectoryIterator('assets://js');
+    $threshold = Settings::get('aggregate_gc_threshold', 86400 * 45);
+    foreach ($directory_iterator as $file) {
+      if ($file->isFile() && $this->time->getRequestTime() - $file->getMtime() > $threshold) {
+        $this->fileSystem->delete($file->getPathName());
+      }
+    }
   }
 
   /**

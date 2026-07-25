@@ -4,12 +4,14 @@ namespace Drupal\media\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\media\Entity\MediaType;
 use Drupal\media\IFrameUrlHelper;
@@ -18,26 +20,23 @@ use Drupal\media\OEmbed\ResourceException;
 use Drupal\media\OEmbed\ResourceFetcherInterface;
 use Drupal\media\OEmbed\UrlResolverInterface;
 use Drupal\media\Plugin\media\Source\OEmbedInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
-// cspell:ignore allowtransparency
 /**
  * Plugin implementation of the 'oembed' formatter.
  *
  * @internal
  *   This is an internal part of the oEmbed system and should only be used by
  *   oEmbed-related code in Drupal core.
- *
- * @FieldFormatter(
- *   id = "oembed",
- *   label = @Translation("oEmbed content"),
- *   field_types = {
- *     "link",
- *     "string",
- *     "string_long",
- *   },
- * )
  */
+#[FieldFormatter(
+  id: 'oembed',
+  label: new TranslatableMarkup('oEmbed content'),
+  field_types: [
+    'link',
+    'string',
+    'string_long',
+  ],
+)]
 class OEmbedFormatter extends FormatterBase {
 
   /**
@@ -125,27 +124,6 @@ class OEmbedFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $plugin_id,
-      $plugin_definition,
-      $configuration['field_definition'],
-      $configuration['settings'],
-      $configuration['label'],
-      $configuration['view_mode'],
-      $configuration['third_party_settings'],
-      $container->get('messenger'),
-      $container->get('media.oembed.resource_fetcher'),
-      $container->get('media.oembed.url_resolver'),
-      $container->get('logger.factory'),
-      $container->get('config.factory'),
-      $container->get('media.oembed.iframe_url_helper')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public static function defaultSettings() {
     return [
       'max_width' => 0,
@@ -177,7 +155,11 @@ class OEmbedFormatter extends FormatterBase {
         $resource = $this->resourceFetcher->fetchResource($resource_url);
       }
       catch (ResourceException $exception) {
-        $this->logger->error("Could not retrieve the remote URL (@url).", ['@url' => $value]);
+        $this->logger->error("Could not retrieve the remote URL (@url): %error", [
+          '@url' => $value,
+          '%error' => $exception->getPrevious() ? $exception->getPrevious()->getMessage() : $exception->getMessage(),
+          'exception' => $exception,
+        ]);
         continue;
       }
 
@@ -192,8 +174,8 @@ class OEmbedFormatter extends FormatterBase {
         $element[$delta] = [
           '#theme' => 'image',
           '#uri' => $resource->getUrl()->toString(),
-          '#width' => $max_width ?: $resource->getWidth(),
-          '#height' => $max_height ?: $resource->getHeight(),
+          '#width' => $resource->getWidth(),
+          '#height' => $resource->getHeight(),
           '#attributes' => [
             'loading' => $this->getSetting('loading')['attribute'],
           ],
@@ -222,11 +204,11 @@ class OEmbedFormatter extends FormatterBase {
           '#tag' => 'iframe',
           '#attributes' => [
             'src' => $url->toString(),
-            'frameborder' => 0,
             'scrolling' => FALSE,
-            'allowtransparency' => TRUE,
-            'width' => $max_width ?: $resource->getWidth(),
-            'height' => $max_height ?: $resource->getHeight(),
+            // External service is not supposed to send something larger
+            // than the max width or max height, so those values should be used.
+            'width' => $resource->getWidth() ?: $max_width,
+            'height' => $resource->getHeight() ?: $max_height,
             'class' => ['media-oembed-content'],
             'loading' => $this->getSetting('loading')['attribute'],
           ],

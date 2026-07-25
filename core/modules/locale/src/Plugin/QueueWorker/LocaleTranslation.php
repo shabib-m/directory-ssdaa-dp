@@ -4,27 +4,22 @@ namespace Drupal\locale\Plugin\QueueWorker;
 
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Queue\Attribute\QueueWorker;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Utility\CallableResolver;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Executes interface translation queue tasks.
- *
- * @QueueWorker(
- *   id = "locale_translation",
- *   title = @Translation("Update translations"),
- *   cron = {"time" = 30}
- * )
  */
+#[QueueWorker(
+  id: 'locale_translation',
+  title: new TranslatableMarkup('Update translations'),
+  cron: ['time' => 30]
+)]
 class LocaleTranslation extends QueueWorkerBase implements ContainerFactoryPluginInterface {
-
-  /**
-   * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
 
   /**
    * The queue object.
@@ -33,24 +28,15 @@ class LocaleTranslation extends QueueWorkerBase implements ContainerFactoryPlugi
    */
   protected $queue;
 
-  /**
-   * Constructs a new LocaleTranslation object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param array $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   * @param \Drupal\Core\Queue\QueueInterface $queue
-   *   The queue object.
-   */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, QueueInterface $queue) {
+  public function __construct(
+    array $configuration,
+    string $plugin_id,
+    array $plugin_definition,
+    protected ModuleHandlerInterface $moduleHandler,
+    QueueInterface $queue,
+    protected readonly CallableResolver $callableResolver,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->moduleHandler = $module_handler;
     $this->queue = $queue;
   }
 
@@ -63,7 +49,8 @@ class LocaleTranslation extends QueueWorkerBase implements ContainerFactoryPlugi
       $plugin_id,
       $plugin_definition,
       $container->get('module_handler'),
-      $container->get('queue')->get('locale_translation', TRUE)
+      $container->get('queue')->get('locale_translation', TRUE),
+      $container->get(CallableResolver::class),
     );
   }
 
@@ -80,7 +67,7 @@ class LocaleTranslation extends QueueWorkerBase implements ContainerFactoryPlugi
    */
   public function processItem($data) {
     $this->moduleHandler->loadInclude('locale', 'batch.inc');
-    [$function, $args] = $data;
+    [$callable, $args] = $data;
 
     // We execute batch operation functions here to check, download and import
     // the translation files. Batch functions use a context variable as last
@@ -104,13 +91,14 @@ class LocaleTranslation extends QueueWorkerBase implements ContainerFactoryPlugi
     $args = array_merge($args, [&$batch_context]);
 
     // Call the batch operation function.
-    call_user_func_array($function, $args);
+    $resolvedCallable = $this->callableResolver->getCallableFromDefinition($callable);
+    $resolvedCallable(... $args);
 
     // If the batch operation is not finished we create a new queue task to
     // continue the task. This is typically the translation import task.
     if ($batch_context['finished'] < 1) {
       unset($batch_context['strings']);
-      $this->queue->createItem([$function, $args]);
+      $this->queue->createItem([$callable, $args]);
     }
   }
 

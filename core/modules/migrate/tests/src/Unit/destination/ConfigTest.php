@@ -1,21 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit\destination;
 
-use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\migrate\Plugin\migrate\destination\Config;
+use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\migrate\Plugin\migrate\destination\Config
- * @group migrate
+ * Tests Drupal\migrate\Plugin\migrate\destination\Config.
  */
+#[CoversClass(Config::class)]
+#[Group('migrate')]
 class ConfigTest extends UnitTestCase {
 
   /**
    * Tests the import method.
    */
-  public function testImport() {
+  public function testImport(): void {
     $source = [
       'test' => 'x',
     ];
@@ -33,7 +39,7 @@ class ConfigTest extends UnitTestCase {
     }
     $config->expects($this->once())
       ->method('save');
-    $config->expects($this->once())
+    $config->expects($this->atLeastOnce())
       ->method('getName')
       ->willReturn('d8_config');
     $config_factory = $this->createMock('Drupal\Core\Config\ConfigFactoryInterface');
@@ -54,7 +60,7 @@ class ConfigTest extends UnitTestCase {
       ->method('getLanguageConfigOverride')
       ->with('fr', 'd8_config')
       ->willReturn($config);
-    $destination = new Config(['config_name' => 'd8_config'], 'd8_config', ['pluginId' => 'd8_config'], $migration, $config_factory, $language_manager);
+    $destination = new Config(['config_name' => 'd8_config'], 'd8_config', ['pluginId' => 'd8_config'], $migration, $config_factory, $language_manager, $this->createMock(TypedConfigManagerInterface::class));
     $destination_id = $destination->import($row);
     $this->assertEquals(['d8_config'], $destination_id);
   }
@@ -62,7 +68,7 @@ class ConfigTest extends UnitTestCase {
   /**
    * Tests the import method.
    */
-  public function testLanguageImport() {
+  public function testLanguageImport(): void {
     $source = [
       'langcode' => 'mi',
     ];
@@ -104,7 +110,7 @@ class ConfigTest extends UnitTestCase {
       ->method('getLanguageConfigOverride')
       ->with('mi', 'd8_config')
       ->willReturn($config);
-    $destination = new Config(['config_name' => 'd8_config', 'translations' => 'true'], 'd8_config', ['pluginId' => 'd8_config'], $migration, $config_factory, $language_manager);
+    $destination = new Config(['config_name' => 'd8_config', 'translations' => 'true'], 'd8_config', ['pluginId' => 'd8_config'], $migration, $config_factory, $language_manager, $this->createMock(TypedConfigManagerInterface::class));
     $destination_id = $destination->import($row);
     $this->assertEquals(['d8_config', 'mi'], $destination_id);
   }

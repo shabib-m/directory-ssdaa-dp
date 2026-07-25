@@ -102,8 +102,8 @@ class AliasUniquifier implements AliasUniquifierInterface {
     // Check if this alias already exists.
     if ($existing_source = $this->aliasManager->getPathByAlias($alias, $langcode)) {
       if ($existing_source != $alias) {
-        // If it is an alias for the provided source, it is allowed to keep using
-        // it. If not, then it is reserved.
+        // If it is an alias for the provided source, it is allowed to keep
+        // using it. If not, then it is reserved.
         return $existing_source != $source;
       }
 
@@ -119,19 +119,13 @@ class AliasUniquifier implements AliasUniquifierInterface {
       $source,
       $langcode,
     ];
-    if (method_exists($this->moduleHandler, 'invokeAllWith')) {
-      $implementations = [];
-      $this->moduleHandler->invokeAllWith(
-        'pathauto_is_alias_reserved',
-        function (callable $hook, string $module) use (&$implementations) {
-          $implementations[] = $module;
-        }
-      );
-    }
-    else {
-      // Use the deprecated getImplementations() for Drupal < 9.4.
-      $implementations = $this->moduleHandler->getImplementations('pathauto_is_alias_reserved');
-    }
+    $implementations = [];
+    $this->moduleHandler->invokeAllWith(
+      'pathauto_is_alias_reserved',
+      function (callable $hook, string $module) use (&$implementations) {
+        $implementations[] = $module;
+      }
+    );
     foreach ($implementations as $module) {
 
       $result = $this->moduleHandler->invoke($module, 'pathauto_is_alias_reserved', $args);

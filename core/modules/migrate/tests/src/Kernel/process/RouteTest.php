@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel\process;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -8,16 +10,18 @@ use Drupal\migrate\Plugin\migrate\process\Route;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore nzdt
-
 /**
  * Tests the route process plugin.
- *
- * @coversDefaultClass \Drupal\migrate\Plugin\migrate\process\Route
- *
- * @group migrate
  */
+#[CoversClass(Route::class)]
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class RouteTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -34,10 +38,9 @@ class RouteTest extends KernelTestBase {
    *   Input value for the Route process plugin.
    * @param array $expected
    *   The expected results from the Route transform process.
-   *
-   * @dataProvider providerTestRoute
    */
-  public function testRoute($value, $expected) {
+  #[DataProvider('providerTestRoute')]
+  public function testRoute($value, $expected): void {
     $actual = $this->doTransform($value);
     $this->assertSame($expected, $actual);
   }
@@ -49,7 +52,7 @@ class RouteTest extends KernelTestBase {
    *   An array of arrays, where the first element is the input to the Route
    *   process plugin, and the second is the expected results.
    */
-  public function providerTestRoute() {
+  public static function providerTestRoute() {
     // Internal link tests.
     // Valid link path and options.
     $values[0] = [
@@ -195,10 +198,9 @@ class RouteTest extends KernelTestBase {
    *   Input value for the Route process plugin.
    * @param array $expected
    *   The expected results from the Route transform process.
-   *
-   * @dataProvider providerTestRouteWithParamQuery
    */
-  public function testRouteWithParamQuery($value, $expected) {
+  #[DataProvider('providerTestRouteWithParamQuery')]
+  public function testRouteWithParamQuery($value, $expected): void {
     // Create a user so that user/1/edit is a valid path.
     $this->setUpCurrentUser();
     $this->installConfig(['user']);
@@ -214,7 +216,7 @@ class RouteTest extends KernelTestBase {
    *   An array of arrays, where the first element is the input to the Route
    *   process plugin, and the second is the expected results.
    */
-  public function providerTestRouteWithParamQuery() {
+  public static function providerTestRouteWithParamQuery() {
     $values = [];
     $expected = [];
     // Valid link path with query options and parameters.

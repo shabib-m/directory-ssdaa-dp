@@ -17,8 +17,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Each meta tag will extend this base.
  */
-abstract class MetaNameBase extends PluginBase {//implements ContainerFactoryPluginInterface {
-
+abstract class MetaNameBase extends PluginBase {
+  // Implements ContainerFactoryPluginInterface {.
   use MetatagSeparator;
   use StringTranslationTrait;
 
@@ -426,12 +426,15 @@ abstract class MetaNameBase extends PluginBase {//implements ContainerFactoryPlu
       $form['#description'] .= ' ' . $this->t('Any URLs which start with "http://" will be converted to "https://".');
     }
 
+    // Add a final note about adding the "<none>" value.
+    $form['#description'] .= ' ' . $this->t('Set to %none to disable inheritance of the parent value and prevent the output of this metatag entirely.', ['%none' => '<none>']);
+
     $settings = \Drupal::config('metatag.settings');
     $trimlengths = $settings->get('tag_trim_maxlength') ?? [];
     if (!empty($trimlengths['metatag_maxlength_' . $this->id])) {
       $maxlength = intval($trimlengths['metatag_maxlength_' . $this->id]);
       if (is_numeric($maxlength) && $maxlength > 0) {
-        $form['#description'] .= ' ' . $this->t('This will be truncated to a maximum of %max characters after any tokens are processed.', array('%max' => $maxlength));
+        $form['#description'] .= ' ' . $this->t('This will be truncated to a maximum of %max characters after any tokens are processed.', ['%max' => $maxlength]);
 
         // Optional support for the Maxlength module.
         if (\Drupal::moduleHandler()->moduleExists('maxlength')) {
@@ -494,7 +497,7 @@ abstract class MetaNameBase extends PluginBase {//implements ContainerFactoryPlu
     }
 
     $value = str_replace(["\r\n", "\n", "\r", "\t"], ' ', $value);
-    $value = preg_replace('/\s+/', ' ', $value);
+    $value = preg_replace('/\s+/u', ' ', $value);
     return trim($value);
   }
 
@@ -505,8 +508,19 @@ abstract class MetaNameBase extends PluginBase {//implements ContainerFactoryPlu
    *   A render array.
    */
   public function output(): array {
-    // If there is no value, just return either an empty array or empty string.
+    // If there is no value, meaning the parent value is also empty, hide all
+    // output for this meta tag:
+    // @todo It is quite hard to understand, that the parent value will be set
+    // as "$this->value" on form submit ONLY. It is not possible, to
+    // set the value programmatically to an empty string. Otherwise we would end
+    // up inside this return statement here, even if we'd like the parent value
+    // instead.
     if (is_null($this->value) || $this->value == '') {
+      return [];
+    }
+
+    // Do the same if the value is explicitly set to "<none>":
+    if (!is_array($this->value) && $this->value == '<none>') {
       return [];
     }
 
@@ -644,6 +658,7 @@ abstract class MetaNameBase extends PluginBase {//implements ContainerFactoryPlu
       $settings = \Drupal::config('metatag.settings');
       $trimMethod = $settings->get('tag_trim_method');
       $trimMaxlengthArray = $settings->get('tag_trim_maxlength');
+      $trimEndChars = $settings->get('tag_trim_end');
       if (empty($trimMethod) || empty($trimMaxlengthArray)) {
         return $value;
       }
@@ -653,8 +668,9 @@ abstract class MetaNameBase extends PluginBase {//implements ContainerFactoryPlu
           $currentMaxValue = $maxValue;
         }
       }
+      $suffix = (string) $settings->get('trim_suffix');
       $trimmerService = \Drupal::service('metatag.trimmer');
-      $value = $trimmerService->trimByMethod($value, $currentMaxValue, $trimMethod);
+      $value = $trimmerService->trimByMethod($value, $currentMaxValue, $trimMethod, $trimEndChars, $suffix);
     }
     return $value;
   }
@@ -664,8 +680,8 @@ abstract class MetaNameBase extends PluginBase {//implements ContainerFactoryPlu
    *
    * To skip testing the form field exists, return an empty array.
    *
-   * @return string
-   *   An xpath-formatted string for matching a field on the form.
+   * @return array
+   *   A list of xpath-formatted strings for matching a field on the form.
    */
   public function getTestFormXpath(): array {
     // "Long" values use a text area on the form, so handle them automatically.

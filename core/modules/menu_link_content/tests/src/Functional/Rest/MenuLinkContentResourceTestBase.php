@@ -1,19 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_link_content\Functional\Rest;
 
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\Tests\rest\Functional\EntityResource\EntityResourceTestBase;
 
 /**
- * ResourceTestBase for MenuLinkContent entity.
+ * Resource test base for MenuLinkContent entity.
  */
 abstract class MenuLinkContentResourceTestBase extends EntityResourceTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['menu_link_content'];
+  protected static $modules = ['content_translation', 'menu_link_content'];
 
   /**
    * {@inheritdoc}
@@ -58,6 +60,7 @@ abstract class MenuLinkContentResourceTestBase extends EntityResourceTestBase {
       'description' => 'Llama Gabilondo',
       'link' => [
         'uri' => 'https://nl.wikipedia.org/wiki/Llama',
+        'resolvable_uri' => 'https://nl.wikipedia.org/wiki/Llama#a-fragment',
         'options' => [
           'fragment' => 'a-fragment',
           'attributes' => [
@@ -80,12 +83,13 @@ abstract class MenuLinkContentResourceTestBase extends EntityResourceTestBase {
     return [
       'title' => [
         [
-          'value' => 'Dramallama',
+          'value' => 'Drama llama',
         ],
       ],
       'link' => [
         [
           'uri' => 'http://www.urbandictionary.com/define.php?term=drama%20llama',
+          'resolvable_uri' => 'http://www.urbandictionary.com/define.php?term=drama%20llama#a-fragment',
           'options' => [
             'fragment' => 'a-fragment',
             'attributes' => [
@@ -130,6 +134,7 @@ abstract class MenuLinkContentResourceTestBase extends EntityResourceTestBase {
       'link' => [
         [
           'uri' => 'https://nl.wikipedia.org/wiki/Llama',
+          'resolvable_uri' => 'https://nl.wikipedia.org/wiki/Llama#a-fragment',
           'title' => NULL,
           'options' => [
             'fragment' => 'a-fragment',
@@ -227,6 +232,17 @@ abstract class MenuLinkContentResourceTestBase extends EntityResourceTestBase {
       default:
         return parent::getExpectedUnauthorizedAccessMessage($method);
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getExpectedCacheContexts() {
+    return [
+      'languages:language_interface',
+      'url.site',
+      'user.permissions',
+    ];
   }
 
 }

@@ -1,12 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filter\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\CookieResourceTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Filter Format Json Cookie.
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class FilterFormatJsonCookieTest extends FilterFormatResourceTestBase {
 
   use CookieResourceTestTrait;

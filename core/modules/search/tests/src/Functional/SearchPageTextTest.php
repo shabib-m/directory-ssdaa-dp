@@ -1,21 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Functional;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the search help text and search page text.
- *
- * @group search
  */
+#[Group('search')]
+#[RunTestsInSeparateProcesses]
 class SearchPageTextTest extends BrowserTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['block', 'node', 'search'];
+  protected static $modules = ['block', 'node', 'search', 'search_node'];
 
   /**
    * {@inheritdoc}
@@ -52,7 +56,7 @@ class SearchPageTextTest extends BrowserTestBase {
    *
    * This is a regression test for https://www.drupal.org/node/2338081
    */
-  public function testSearchLabelXSS() {
+  public function testSearchLabelXSS(): void {
     $this->drupalLogin($this->drupalCreateUser(['administer search']));
 
     $keys['label'] = '<script>alert("Don\'t Panic");</script>';
@@ -67,7 +71,7 @@ class SearchPageTextTest extends BrowserTestBase {
   /**
    * Tests the failed search text, and various other text on the search page.
    */
-  public function testSearchText() {
+  public function testSearchText(): void {
     $this->drupalLogin($this->searchingUser);
     $this->drupalGet('search/node');
     $this->assertSession()->pageTextContains('Enter your keywords');
@@ -138,26 +142,26 @@ class SearchPageTextTest extends BrowserTestBase {
     $this->assertSession()->statusMessageContains("Your search used too many AND/OR expressions. Only the first {$limit} terms were included in this search.", 'warning');
 
     // Test that a search on Node or User with no keywords entered generates
-    // the "Please enter some keywords" message.
+    // the "Enter some keywords" message.
     $this->drupalGet('search/node');
     $this->submitForm([], 'Search');
-    $this->assertSession()->statusMessageContains('Please enter some keywords', 'error');
+    $this->assertSession()->statusMessageContains('Enter some keywords', 'error');
     $this->drupalGet('search/user');
     $this->submitForm([], 'Search');
-    $this->assertSession()->statusMessageContains('Please enter some keywords', 'error');
+    $this->assertSession()->statusMessageContains('Enter some keywords', 'error');
 
-    // Make sure the "Please enter some keywords" message is NOT displayed if
-    // you use "or" words or phrases in Advanced Search.
+    // Make sure the "Enter some keywords" message is NOT displayed if you use
+    // "or" words or phrases in Advanced Search.
     $this->drupalGet('search/node');
     $this->submitForm([
       'or' => $this->randomMachineName() . ' ' . $this->randomMachineName(),
     ], 'edit-submit--2');
-    $this->assertSession()->statusMessageNotContains('Please enter some keywords');
+    $this->assertSession()->statusMessageNotContains('Enter some keywords');
     $this->drupalGet('search/node');
     $this->submitForm([
       'phrase' => '"' . $this->randomMachineName() . '" "' . $this->randomMachineName() . '"',
     ], 'edit-submit--2');
-    $this->assertSession()->statusMessageNotContains('Please enter some keywords');
+    $this->assertSession()->statusMessageNotContains('Enter some keywords');
 
     // Verify that if you search for a too-short keyword, you get the right
     // message, and that if after that you search for a longer keyword, you
@@ -165,7 +169,7 @@ class SearchPageTextTest extends BrowserTestBase {
     $this->drupalGet('search/node');
     $this->submitForm(['keys' => $this->randomMachineName(1)], 'Search');
     $this->assertSession()->statusMessageContains('You must include at least one keyword', 'warning');
-    $this->assertSession()->statusMessageNotContains('Please enter some keywords');
+    $this->assertSession()->statusMessageNotContains('Enter some keywords');
     $this->submitForm(['keys' => $this->randomMachineName()], 'Search');
     $this->assertSession()->statusMessageNotContains('You must include at least one keyword');
 

@@ -23,7 +23,7 @@ class FileStorage implements PhpStorageInterface {
    *   An associative array, containing at least these two keys:
    *   - directory: The directory where the files should be stored.
    *   - bin: The storage bin. Multiple storage objects can be instantiated with
-   *     the same configuration, but for different bins..
+   *     the same configuration, but for different bins.
    */
   public function __construct(array $configuration) {
     $this->directory = $configuration['directory'] . '/' . $configuration['bin'];
@@ -119,7 +119,9 @@ class FileStorage implements PhpStorageInterface {
         return TRUE;
       }
       else {
-        // Something failed and the directory doesn't exist.
+        // The directory path is not disclosed to avoid an information
+        // disclosure vulnerability. For security reasons, further details are
+        // not provided in the error message.
         trigger_error('mkdir(): Permission Denied', E_USER_WARNING);
       }
     }
@@ -142,14 +144,6 @@ class FileStorage implements PhpStorageInterface {
    */
   public function getFullPath($name) {
     return $this->directory . '/' . $name;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function writeable() {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and will be removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3155413', E_USER_DEPRECATED);
-    return TRUE;
   }
 
   /**

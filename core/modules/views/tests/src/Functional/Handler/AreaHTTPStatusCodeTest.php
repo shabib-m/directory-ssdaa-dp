@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Handler;
 
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the http_status_code area handler.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\area\HTTPStatusCode
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class AreaHTTPStatusCodeTest extends ViewTestBase {
 
   /**
@@ -21,9 +26,7 @@ class AreaHTTPStatusCodeTest extends ViewTestBase {
   public static $testViews = ['test_http_status_code'];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node'];
 
@@ -35,7 +38,7 @@ class AreaHTTPStatusCodeTest extends ViewTestBase {
   /**
    * Tests the area handler.
    */
-  public function testHTTPStatusCodeHandler() {
+  public function testHTTPStatusCodeHandler(): void {
     $this->drupalGet('test-http-status-code');
     $this->assertSession()->statusCodeEquals(200);
 

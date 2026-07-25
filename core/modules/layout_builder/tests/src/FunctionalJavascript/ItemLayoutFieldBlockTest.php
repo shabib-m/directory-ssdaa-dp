@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Field blocks tests for the override layout.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class ItemLayoutFieldBlockTest extends WebDriverTestBase {
 
   /**
@@ -47,7 +51,7 @@ class ItemLayoutFieldBlockTest extends WebDriverTestBase {
   /**
    * Tests configuring a field block for a user field.
    */
-  public function testAddAjaxBlock() {
+  public function testAddAjaxBlock(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 

@@ -2,6 +2,7 @@
 
 namespace Drupal\image;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
@@ -32,24 +33,18 @@ class ImageStyleListBuilder extends ConfigEntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOperations(EntityInterface $entity) {
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $args = func_get_args();
+    $cacheability = $args[1] ?? new CacheableMetadata();
     $flush = [
-      'title' => t('Flush'),
+      'title' => $this->t('Flush'),
       'weight' => 200,
       'url' => $entity->toUrl('flush-form'),
     ];
 
-    $operations = parent::getDefaultOperations($entity) + [
+    return parent::getDefaultOperations($entity, $cacheability) + [
       'flush' => $flush,
     ];
-
-    // Remove destination URL from the edit link to allow editing image
-    // effects.
-    if (isset($operations['edit'])) {
-      $operations['edit']['url'] = $entity->toUrl('edit-form');
-    }
-
-    return $operations;
   }
 
   /**

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Route;
 
 use Drupal\Core\Access\AccessResult;
@@ -8,14 +10,18 @@ use Drupal\Core\DependencyInjection\Container;
 use Drupal\Core\Session\UserSession;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\Access\RoleAccessCheck;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
- * @coversDefaultClass \Drupal\user\Access\RoleAccessCheck
- * @group Access
- * @group Route
+ * Tests Drupal\user\Access\RoleAccessCheck.
  */
+#[CoversClass(RoleAccessCheck::class)]
+#[Group('Access')]
+#[Group('Route')]
 class RoleAccessCheckTest extends UnitTestCase {
 
   /**
@@ -24,7 +30,7 @@ class RoleAccessCheckTest extends UnitTestCase {
    * @return \Symfony\Component\Routing\RouteCollection
    *   Returns the test route collection.
    */
-  protected function getTestRouteCollection() {
+  protected function getTestRouteCollection(): RouteCollection {
     $route_collection = new RouteCollection();
     $route_collection->add('role_test_1', new Route('/role_test_1',
       [
@@ -85,7 +91,7 @@ class RoleAccessCheckTest extends UnitTestCase {
    *
    * @see \Drupal\Tests\Core\Route\RouterRoleTest::testRoleAccess
    */
-  public function roleAccessProvider() {
+  public static function roleAccessProvider(): array {
     // Setup two different roles used in the test.
     $rid_1 = 'role_test_1';
     $rid_2 = 'role_test_2';
@@ -136,10 +142,9 @@ class RoleAccessCheckTest extends UnitTestCase {
    *
    * @see \Drupal\Tests\Core\Route\RouterRoleTest::getTestRouteCollection
    * @see \Drupal\Tests\Core\Route\RouterRoleTest::roleAccessProvider
-   *
-   * @dataProvider roleAccessProvider
    */
-  public function testRoleAccess($path, $grant_accounts, $deny_accounts) {
+  #[DataProvider('roleAccessProvider')]
+  public function testRoleAccess($path, $grant_accounts, $deny_accounts): void {
     $cache_contexts_manager = $this->prophesize(CacheContextsManager::class);
     $cache_contexts_manager->assertValidTokens()->willReturn(TRUE);
     $cache_contexts_manager->reveal();

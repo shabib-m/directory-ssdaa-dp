@@ -1,26 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Functional\EntityReference;
 
-use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\SchemaCheckTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests entity reference field default values storage in CMI.
- *
- * @group entity_reference
  */
+#[Group('entity_reference')]
+#[RunTestsInSeparateProcesses]
 class EntityReferenceFieldDefaultValueTest extends BrowserTestBase {
 
   use SchemaCheckTestTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['field_ui', 'node'];
 
@@ -60,11 +62,11 @@ class EntityReferenceFieldDefaultValueTest extends BrowserTestBase {
   /**
    * Tests that default values are correctly translated to UUIDs in config.
    */
-  public function testEntityReferenceDefaultValue() {
+  public function testEntityReferenceDefaultValue(): void {
     // Create a node to be referenced.
     $referenced_node = $this->drupalCreateNode(['type' => 'referenced_content']);
 
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $field_storage = FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'node',
@@ -124,12 +126,12 @@ class EntityReferenceFieldDefaultValueTest extends BrowserTestBase {
    *
    * @see \Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem::onDependencyRemoval()
    */
-  public function testEntityReferenceDefaultConfigValue() {
+  public function testEntityReferenceDefaultConfigValue(): void {
     // Create a node to be referenced.
     $referenced_node_type = $this->drupalCreateContentType(['type' => 'referenced_config_to_delete']);
     $referenced_node_type2 = $this->drupalCreateContentType(['type' => 'referenced_config_to_preserve']);
 
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $field_storage = FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'node',

@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Kernel\Views;
 
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the filter language handler.
  *
- * @group language
  * @see \Drupal\language\Plugin\views\filter\Language
  */
+#[Group('language')]
+#[RunTestsInSeparateProcesses]
 class FilterLanguageTest extends LanguageTestBase {
 
   /**
@@ -22,7 +27,7 @@ class FilterLanguageTest extends LanguageTestBase {
   /**
    * Tests the language filter.
    */
-  public function testFilter() {
+  public function testFilter(): void {
     $view = Views::getView('test_view');
     foreach (['en' => 'John', 'xx-lolspeak' => 'George'] as $langcode => $name) {
       $view->setDisplay();

@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Kernel\Plugin\migrate\source\d7;
 
+use Drupal\content_translation\Plugin\migrate\source\d7\EntityTranslationSettings;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests entity translation settings source plugin.
- *
- * @covers \Drupal\content_translation\Plugin\migrate\source\d7\EntityTranslationSettings
- *
- * @group content_translation
  */
+#[CoversClass(EntityTranslationSettings::class)]
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class EntityTranslationSettingsTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -18,14 +23,13 @@ class EntityTranslationSettingsTest extends MigrateSqlSourceTestBase {
    */
   protected static $modules = [
     'content_translation',
-    'language',
     'migrate_drupal',
   ];
 
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // Source data when there's no entity type that uses entity translation.

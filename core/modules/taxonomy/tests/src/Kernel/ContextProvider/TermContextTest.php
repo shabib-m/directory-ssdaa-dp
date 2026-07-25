@@ -1,17 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\ContextProvider;
 
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\taxonomy\ContextProvider\TermRouteContext;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\taxonomy\ContextProvider\TermRouteContext
- *
- * @group taxonomy
+ * Tests Drupal\taxonomy\ContextProvider\TermRouteContext.
  */
+#[CoversClass(TermRouteContext::class)]
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermContextTest extends KernelTestBase {
 
   use TaxonomyTestTrait;
@@ -32,9 +38,9 @@ class TermContextTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::getAvailableContexts
+   * Tests get available contexts.
    */
-  public function testGetAvailableContexts() {
+  public function testGetAvailableContexts(): void {
     $context_repository = $this->container->get('context.repository');
 
     // Test taxonomy_term.taxonomy_term_route_context:taxonomy_term exists.
@@ -45,9 +51,9 @@ class TermContextTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::getRuntimeContexts
+   * Tests get runtime contexts.
    */
-  public function testGetRuntimeContexts() {
+  public function testGetRuntimeContexts(): void {
     // Create term.
     $vocabulary = $this->createVocabulary();
     $term = $this->createTerm($vocabulary);

@@ -19,6 +19,23 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
  * }
  * batch_set($batch_builder->toArray());
  * @endcode
+ *
+ * To prevent duplicate batches from being created inadvertently in the same
+ * page request, you can use ::isSetIdRegistered and ::registerSetId to check
+ * and see if this batch has been built before.
+ * @code
+ * if (!BatchBuilder::isSetIdRegistered('my_unique_id')) {
+ *   $batch_builder = (new BatchBuilder())
+ *     ->registerSetId('my_unique_id')
+ *     ->setTitle(t('Batch Title'))
+ *     ->setFinishCallback('batch_example_finished_callback')
+ *     ->setInitMessage(t('The initialization message (optional)'));
+ *   foreach ($ids as $id) {
+ *     $batch_builder->addOperation('batch_example_callback', [$id]);
+ *   }
+ *   batch_set($batch_builder->toArray());
+ * }
+ * @endcode
  */
 class BatchBuilder {
 
@@ -111,6 +128,13 @@ class BatchBuilder {
   protected $queue;
 
   /**
+   * A static array of custom batch ids.
+   *
+   * @var string[]
+   */
+  protected static array $registeredSetIds = [];
+
+  /**
    * Sets the default values for the batch builder.
    */
   public function __construct() {
@@ -138,12 +162,12 @@ class BatchBuilder {
    *
    * This callback will be executed if the batch process is done.
    *
-   * @param callable $callback
+   * @param callable|string $callback
    *   The callback.
    *
    * @return $this
    */
-  public function setFinishCallback(callable $callback) {
+  public function setFinishCallback(callable|string $callback) {
     $this->finished = $callback;
     return $this;
   }
@@ -305,15 +329,41 @@ class BatchBuilder {
   /**
    * Adds a batch operation.
    *
-   * @param callable $callback
+   * @param callable|string $callback
    *   The name of the callback function.
    * @param array $arguments
    *   An array of arguments to pass to the callback function.
    *
    * @return $this
    */
-  public function addOperation(callable $callback, array $arguments = []) {
+  public function addOperation(callable|string $callback, array $arguments = []) {
     $this->operations[] = [$callback, $arguments];
+    return $this;
+  }
+
+  /**
+   * Checks if a set ID has been registered during this request.
+   *
+   * @param string $setId
+   *   The set ID to check.
+   *
+   * @return bool
+   *   True if this set ID has been registered.
+   */
+  public static function isSetIdRegistered(string $setId): bool {
+    return isset(static::$registeredSetIds[$setId]);
+  }
+
+  /**
+   * Registers a set ID for this batch.
+   *
+   * @param string $setId
+   *   The set ID to register.
+   *
+   * @return $this
+   */
+  public function registerSetId(string $setId): self {
+    static::$registeredSetIds[$setId] = TRUE;
     return $this;
   }
 

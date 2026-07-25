@@ -1,29 +1,40 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\ckeditor5\Unit;
 
 use Drupal\ckeditor5\Annotation\CKEditor5Plugin;
 use Drupal\ckeditor5\HTMLRestrictions;
 use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
+use Drupal\ckeditor5\Plugin\CKEditor5PluginManagerInterface;
 use Drupal\ckeditor5\SmartDefaultSettings;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\editor\EditorInterface;
 use Drupal\Tests\ckeditor5\Traits\PrivateMethodUnitTestTrait;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use Psr\Log\LoggerInterface;
 
 /**
- * @coversDefaultClass \Drupal\ckeditor5\SmartDefaultSettings
- * @group ckeditor5
+ * Tests Drupal\ckeditor5\SmartDefaultSettings.
  */
+#[CoversClass(SmartDefaultSettings::class)]
+#[Group('ckeditor5')]
 class SmartDefaultSettingsTest extends UnitTestCase {
 
   use PrivateMethodUnitTestTrait;
 
   /**
-   * @covers ::computeSurplusScore
-   * @dataProvider providerSurplusScore
+   * Tests surplus score.
+   *
+   * @legacy-covers ::computeSurplusScore
    */
+  #[DataProvider('providerSurplusScore')]
   public function testSurplusScore(HTMLRestrictions $surplus, HTMLRestrictions $needed, int $expected): void {
     $method = self::getMethod(SmartDefaultSettings::class, 'computeSurplusScore');
     $this->assertSame($expected, $method->invoke(NULL, $surplus, $needed));
@@ -33,8 +44,9 @@ class SmartDefaultSettingsTest extends UnitTestCase {
    * Data provider for testing computeSurplusScore().
    *
    * @return \Generator
+   *   Yields the data for testSurplusScore().
    */
-  public function providerSurplusScore(): \Generator {
+  public static function providerSurplusScore(): \Generator {
     $needed = new HTMLRestrictions(['code' => FALSE]);
 
     yield 'surplus: 1 tag, 1 attribute, 1 attribute with wildcard restriction' => [
@@ -76,13 +88,22 @@ class SmartDefaultSettingsTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getCandidates
-   * @covers ::selectCandidate
-   * @dataProvider providerCandidates
+   * Tests candidates.
+   *
+   * @legacy-covers ::getCandidates
+   * @legacy-covers ::selectCandidate
    */
+  #[DataProvider('providerCandidates')]
   public function testCandidates(HTMLRestrictions $provided, HTMLRestrictions $still_needed, array $disabled_plugin_definitions, array $expected_candidates, array $expected_selection = []): void {
     $get_candidates = self::getMethod(SmartDefaultSettings::class, 'getCandidates');
-    $this->assertSame($expected_candidates, $get_candidates->invoke(NULL, $provided, $still_needed, $disabled_plugin_definitions));
+    $smart_default_settings = new SmartDefaultSettings(
+      $this->prophesize(CKEditor5PluginManagerInterface::class)->reveal(),
+      $this->prophesize(LoggerInterface::class)->reveal(),
+      $this->prophesize(ModuleHandlerInterface::class)->reveal(),
+      $this->prophesize(AccountInterface::class)->reveal(),
+    );
+    $editor = $this->prophesize(EditorInterface::class);
+    $this->assertSame($expected_candidates, $get_candidates->invoke($smart_default_settings, $provided, $still_needed, $disabled_plugin_definitions, $editor->reveal()));
     $select_candidate = self::getMethod(SmartDefaultSettings::class, 'selectCandidate');
     $this->assertSame($expected_selection, $select_candidate->invoke(NULL, $expected_candidates, $still_needed, array_keys($provided->getAllowedElements())));
   }
@@ -91,8 +112,9 @@ class SmartDefaultSettingsTest extends UnitTestCase {
    * Data provider for testing getCandidates() and ::selectCandidate().
    *
    * @return \Generator
+   *   Yields the data for testCandidates().
    */
-  public function providerCandidates(): \Generator {
+  public static function providerCandidates(): \Generator {
     $generate_definition = function (string $label_and_id, array $overrides): CKEditor5PluginDefinition {
       $annotation = [
         'provider' => 'test',

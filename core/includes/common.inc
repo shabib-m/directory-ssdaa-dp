@@ -8,11 +8,10 @@
  * a cached page are instead located in bootstrap.inc.
  */
 
-use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheTagsPurgeInterface;
 use Drupal\Core\DrupalKernel;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * @defgroup php_wrappers PHP wrapper functions
@@ -57,6 +56,11 @@ const SAVED_UPDATED = 2;
 
 /**
  * Return status for saving which deleted an existing item.
+ *
+ * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0.
+ *   There is no replacement.
+ *
+ * @see https://www.drupal.org/node/3328750
  */
 const SAVED_DELETED = 3;
 
@@ -81,17 +85,19 @@ const CSS_BASE = -200;
 const CSS_LAYOUT = -100;
 
 /**
- * The default weight for CSS rules that style design components (and their associated states and themes.)
+ * The default weight for CSS rules that style design components.
+ *
+ * This applies to the associated states and themes of the component.
  */
 const CSS_COMPONENT = 0;
 
 /**
- * The default weight for CSS rules that style states and are not included with components.
+ * The default weight for rules that style states not included with components.
  */
 const CSS_STATE = 100;
 
 /**
- * The default weight for CSS rules that style themes and are not included with components.
+ * The default weight for rules that style themes not included with components.
  */
 const CSS_THEME = 200;
 
@@ -114,71 +120,6 @@ const JS_DEFAULT = 0;
  * The default group for theme JavaScript code added to the page.
  */
 const JS_THEME = 100;
-
-/**
- * @defgroup format Formatting
- * @{
- * Functions to format numbers, strings, dates, etc.
- */
-
-/**
- * Generates a string representation for the given byte count.
- *
- * @param $size
- *   A size in bytes.
- * @param $langcode
- *   Optional language code to translate to a language other than what is used
- *   to display the page.
- *
- * @return \Drupal\Core\StringTranslation\TranslatableMarkup
- *   A translated string representation of the size.
- */
-function format_size($size, $langcode = NULL) {
-  $absolute_size = abs($size);
-  if ($absolute_size < Bytes::KILOBYTE) {
-    return \Drupal::translation()->formatPlural($size, '1 byte', '@count bytes', [], ['langcode' => $langcode]);
-  }
-  // Create a multiplier to preserve the sign of $size.
-  $sign = $absolute_size / $size;
-  foreach (['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] as $unit) {
-    $absolute_size /= Bytes::KILOBYTE;
-    $rounded_size = round($absolute_size, 2);
-    if ($rounded_size < Bytes::KILOBYTE) {
-      break;
-    }
-  }
-  $args = ['@size' => $rounded_size * $sign];
-  $options = ['langcode' => $langcode];
-  switch ($unit) {
-    case 'KB':
-      return new TranslatableMarkup('@size KB', $args, $options);
-
-    case 'MB':
-      return new TranslatableMarkup('@size MB', $args, $options);
-
-    case 'GB':
-      return new TranslatableMarkup('@size GB', $args, $options);
-
-    case 'TB':
-      return new TranslatableMarkup('@size TB', $args, $options);
-
-    case 'PB':
-      return new TranslatableMarkup('@size PB', $args, $options);
-
-    case 'EB':
-      return new TranslatableMarkup('@size EB', $args, $options);
-
-    case 'ZB':
-      return new TranslatableMarkup('@size ZB', $args, $options);
-
-    case 'YB':
-      return new TranslatableMarkup('@size YB', $args, $options);
-  }
-}
-
-/**
- * @} End of "defgroup format".
- */
 
 /**
  * Returns the base URL path (i.e., directory) of the Drupal installation.
@@ -206,14 +147,14 @@ function base_path() {
  * into a table. The table must have an ID attribute set and it
  * may be set as follows:
  * @code
- * $table = array(
+ * $table = [
  *   '#type' => 'table',
  *   '#header' => $header,
  *   '#rows' => $rows,
- *   '#attributes' => array(
+ *   '#attributes' => [
  *     'id' => 'my-module-table',
- *   ),
- * );
+ *   ],
+ * ];
  * return \Drupal::service('renderer')->render($table);
  * @endcode
  *
@@ -223,17 +164,17 @@ function base_path() {
  * In a situation where a single weight column is being sorted in the table, the
  * classes could be added like this (in the theme function):
  * @code
- * $form['my_elements'][$delta]['weight']['#attributes']['class'] = array('my-elements-weight');
+ * $form['my_elements'][$delta]['weight']['#attributes']['class'] = ['my-elements-weight'];
  * @endcode
  *
  * Each row of the table must also have a class of "draggable" in order to
  * enable the drag handles:
  * @code
- * $row = array(...);
- * $rows[] = array(
+ * $row = [...];
+ * $rows[] = [
  *   'data' => $row,
- *   'class' => array('draggable'),
- * );
+ *   'class' => ['draggable'],
+ * ];
  * @endcode
  *
  * When tree relationships are present, the two additional classes
@@ -243,18 +184,18 @@ function base_path() {
  *
  * Calling drupal_attach_tabledrag() would then be written as such:
  * @code
- * drupal_attach_tabledrag('my-module-table', array(
+ * drupal_attach_tabledrag('my-module-table', [
  *   'action' => 'order',
  *   'relationship' => 'sibling',
  *   'group' => 'my-elements-weight',
- * );
+ * ];
  * @endcode
  *
  * In a more complex case where there are several groups in one column (such as
  * the block regions on the admin/structure/block page), a separate subgroup
  * class must also be added to differentiate the groups.
  * @code
- * $form['my_elements'][$region][$delta]['weight']['#attributes']['class'] = array('my-elements-weight', 'my-elements-weight-' . $region);
+ * $form['my_elements'][$region][$delta]['weight']['#attributes']['class'] = ['my-elements-weight', 'my-elements-weight-' . $region];
  * @endcode
  *
  * The 'group' option is still 'my-element-weight', and the additional
@@ -264,12 +205,12 @@ function base_path() {
  *
  * @code
  * foreach ($regions as $region) {
- *   drupal_attach_tabledrag('my-module-table', array(
+ *   drupal_attach_tabledrag('my-module-table', [
  *     'action' => 'order',
  *     'relationship' => 'sibling',
  *     'group' => 'my-elements-weight',
  *     'subgroup' => 'my-elements-weight-' . $region,
- *   ));
+ *   ]);
  * }
  * @endcode
  *
@@ -279,7 +220,7 @@ function base_path() {
  * MenuForm::BuildOverviewForm for an example creating a table
  * containing parent relationships.
  *
- * @param $element
+ * @param array $element
  *   A form element to attach the tableDrag behavior to.
  * @param array $options
  *   These options are used to generate JavaScript settings necessary to
@@ -302,13 +243,14 @@ function base_path() {
  *     - 'self' affects the dragged row itself.
  *     - 'group' affects the dragged row, plus any children below it (the entire
  *       dragged group).
- *   - 'group': A class name applied on all related form elements for this action.
+ *   - 'group': A class name applied on all related form elements for this
+ *      action.
  *   - 'subgroup': (optional) If the group has several subgroups within it, this
  *     string should contain the class name identifying fields in the same
  *     subgroup.
- *   - 'source': (optional) If the $action is 'match', this string should contain
- *     the classname identifying what field will be used as the source value
- *     when matching the value in $subgroup.
+ *   - 'source': (optional) If the $action is 'match', this string should
+ *     contain the classname identifying what field will be used as the source
+ *     value when matching the value in $subgroup.
  *   - 'hidden': (optional) The column containing the field elements may be
  *     entirely hidden from view dynamically when the JavaScript is loaded. Set
  *     to FALSE if the column should not be hidden.
@@ -316,7 +258,7 @@ function base_path() {
  *
  * @see MenuForm::BuildOverviewForm()
  */
-function drupal_attach_tabledrag(&$element, array $options) {
+function drupal_attach_tabledrag(&$element, array $options): void {
   // Add default values to elements.
   $options = $options + [
     'subgroup' => NULL,
@@ -348,26 +290,24 @@ function drupal_attach_tabledrag(&$element, array $options) {
 /**
  * Hides an element from later rendering.
  *
- * The first time render() or RenderInterface::render() is called on an element
- * tree, as each element in the tree is rendered, it is marked with a #printed
- * flag and the rendered children of the element are cached. Subsequent calls to
- * render() or RenderInterface::render() will not traverse the child tree of
- * this element again: they will just use the cached children. So if you want to
- * hide an element, be sure to call hide() on the element before its parent tree
- * is rendered for the first time, as it will have no effect on subsequent
- * renderings of the parent tree.
+ * Refer to \Drupal\Core\Render\RendererInterface::render()
+ * for additional documentation.
  *
- * @param $element
+ * @param array $element
  *   The element to be hidden.
  *
  * @return array
  *   The element.
  *
- * @see \Drupal\Core\Render\RendererInterface
- * @see render()
- * @see show()
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. To hide form
+ *   elements, use ['#access'] = FALSE. For render elements, use
+ *   ['#printed'] = TRUE.
+ *
+ * @see https://www.drupal.org/node/3261271
+ * @see \Drupal\Core\Render\RendererInterface::render()
  */
 function hide(&$element) {
+  @trigger_error("The global hide() function is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. To hide form elements, use ['#access'] = FALSE. For render elements, use ['#printed'] = TRUE. See https://www.drupal.org/node/3261271", E_USER_DEPRECATED);
   $element['#printed'] = TRUE;
   return $element;
 }
@@ -375,35 +315,33 @@ function hide(&$element) {
 /**
  * Shows a hidden element for later rendering.
  *
- * You can also use render($element), which shows the element while rendering
- * it.
+ * Refer to \Drupal\Core\Render\RendererInterface::render()
+ * for additional documentation.
  *
- * The first time render() or RenderInterface::render() is called on an element
- * tree, as each element in the tree is rendered, it is marked with a #printed
- * flag and the rendered children of the element are cached. Subsequent calls to
- * render() or RenderInterface::render() will not traverse the child tree of
- * this element again: they will just use the cached children. So if you want to
- * show an element, be sure to call show() on the element before its parent tree
- * is rendered for the first time, as it will have no effect on subsequent
- * renderings of the parent tree.
- *
- * @param $element
+ * @param array $element
  *   The element to be shown.
  *
  * @return array
  *   The element.
  *
- * @see \Drupal\Core\Render\RendererInterface
- * @see render()
- * @see hide()
+ * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. To show form
+ *   elements, use ['#access'] = TRUE. For render elements, use
+ *   ['#printed'] = FALSE.
+ *
+ * @see https://www.drupal.org/node/3261271
+ * @see \Drupal\Core\Render\RendererInterface::render()
  */
 function show(&$element) {
+  @trigger_error("The global show() function is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. To show form elements, use ['#access'] = TRUE. For render elements, use ['#printed'] = FALSE. See https://www.drupal.org/node/3261271", E_USER_DEPRECATED);
   $element['#printed'] = FALSE;
   return $element;
 }
 
 /**
- * Rebuilds the container, flushes all persistent caches, resets all variables, and rebuilds all data structures.
+ * Re-initializes the entire system.
+ *
+ * To re-initialize the system, the container is rebuilt, all persistent caches
+ * are flushed, all variables are reset and all data structures are rebuilt.
  *
  * At times, it is necessary to re-initialize the entire system to account for
  * changed or new code. This function:
@@ -442,10 +380,6 @@ function show(&$element) {
  * longer exist. All following hook_rebuild() operations must be based on fresh
  * and current system data. All modules must be able to rely on this contract.
  *
- * @see \Drupal\Core\Cache\CacheHelper::getBins()
- * @see hook_cache_flush()
- * @see hook_rebuild()
- *
  * This function also resets the theme, which means it is not initialized
  * anymore and all previously added JavaScript and CSS is gone. Normally, this
  * function is called as an end-of-POST-request operation that is followed by a
@@ -455,25 +389,36 @@ function show(&$element) {
  * convenience, this function automatically re-initializes the maintenance theme
  * if it was initialized before.
  *
- * @todo Try to clear page/JS/CSS caches last, so cached pages can still be
- *   served during this possibly long-running operation. (Conflict on bootstrap
- *   cache though.)
- * @todo Add a global lock to ensure that caches are not primed in concurrent
- *   requests.
- *
  * @param \Drupal\Core\DrupalKernel|array $kernel
  *   (optional) The Drupal Kernel. It is the caller's responsibility to rebuild
  *   the container if this is passed in. Sometimes drupal_flush_all_caches is
  *   used as a batch operation so $kernel will be an array, in this instance it
  *   will be treated as if it is NULL.
+ *
+ * @see \Drupal\Core\Cache\CacheHelper::getBins()
+ * @see hook_cache_flush()
+ * @see hook_rebuild()
+ *
+ * @todo Try to clear page/JS/CSS caches last, so cached pages can still be
+ *   served during this possibly long-running operation. (Conflict on bootstrap
+ *   cache though.)
+ * @todo Add a global lock to ensure that caches are not primed in concurrent
+ *   requests.
  */
-function drupal_flush_all_caches($kernel = NULL) {
+function drupal_flush_all_caches($kernel = NULL): void {
   // This is executed based on old/previously known information if $kernel is
   // not passed in, which is sufficient, since new extensions cannot have any
   // primed caches yet.
   $module_handler = \Drupal::moduleHandler();
   // Flush all persistent caches.
   $module_handler->invokeAll('cache_flush');
+  // Purge cache tags immediately before flushing cache bins. If a cache tag is
+  // invalidated between the tags being purged and cache bins are flushed, then
+  // it will be included in the checksum of any new cache items, but still valid
+  // because the tag was written before the creation of cache item.
+  if (($invalidator = \Drupal::service('cache_tags.invalidator')) && ($invalidator instanceof CacheTagsPurgeInterface)) {
+    $invalidator->purge();
+  }
   foreach (Cache::getBins() as $cache_backend) {
     $cache_backend->deleteAll();
   }
@@ -481,7 +426,7 @@ function drupal_flush_all_caches($kernel = NULL) {
   // Flush asset file caches.
   \Drupal::service('asset.css.collection_optimizer')->deleteAll();
   \Drupal::service('asset.js.collection_optimizer')->deleteAll();
-  _drupal_flush_css_js();
+  \Drupal::service('asset.query_string')->reset();
 
   // Reset all static caches.
   drupal_static_reset();
@@ -506,11 +451,11 @@ function drupal_flush_all_caches($kernel = NULL) {
   // Rebuild module data that is stored in state.
   \Drupal::service('extension.list.module')->reset();
 
+  // Reload modules.
+  \Drupal::moduleHandler()->reload();
+
   // Rebuild all information based on new module data.
   \Drupal::moduleHandler()->invokeAll('rebuild');
-
-  // Clear all plugin caches.
-  \Drupal::service('plugin.cache_clearer')->clearCachedDefinitions();
 
   // Rebuild the menu router based on all rebuilt data.
   // Important: This rebuild must happen last, so the menu router is guaranteed
@@ -524,17 +469,6 @@ function drupal_flush_all_caches($kernel = NULL) {
     \Drupal::theme()->resetActiveTheme();
     drupal_maintenance_theme();
   }
-}
-
-/**
- * Changes the dummy query string added to all CSS and JavaScript files.
- *
- * Changing the dummy query string appended to CSS and JavaScript files forces
- * all browsers to reload fresh files.
- */
-function _drupal_flush_css_js() {
-  // The timestamp is converted to base 36 in order to make it more compact.
-  Drupal::state()->set('system.css_js_query_string', base_convert(\Drupal::time()->getRequestTime(), 10, 36));
 }
 
 /**
@@ -552,10 +486,12 @@ function _drupal_flush_css_js() {
  * @see hook_updater_info_alter()
  */
 function drupal_get_updaters() {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+
   $updaters = &drupal_static(__FUNCTION__);
   if (!isset($updaters)) {
-    $updaters = \Drupal::moduleHandler()->invokeAll('updater_info');
-    \Drupal::moduleHandler()->alter('updater_info', $updaters);
+    $updaters = \Drupal::moduleHandler()->invokeAllDeprecated('There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', 'updater_info');
+    \Drupal::moduleHandler()->alterDeprecated('There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', 'updater_info', $updaters);
     uasort($updaters, [SortArray::class, 'sortByWeightElement']);
   }
   return $updaters;
@@ -572,10 +508,12 @@ function drupal_get_updaters() {
  * @see hook_filetransfer_info_alter()
  */
 function drupal_get_filetransfer_info() {
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+
   $info = &drupal_static(__FUNCTION__);
   if (!isset($info)) {
-    $info = \Drupal::moduleHandler()->invokeAll('filetransfer_info');
-    \Drupal::moduleHandler()->alter('filetransfer_info', $info);
+    $info = \Drupal::moduleHandler()->invokeAllDeprecated('There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', 'filetransfer_info');
+    \Drupal::moduleHandler()->alterDeprecated('There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', 'filetransfer_info', $info);
     uasort($info, [SortArray::class, 'sortByWeightElement']);
   }
   return $info;

@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 9d1c4124-d501-40fb-8ab0-aff5c7b6afe1
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: SA.png
+  uri:
+    -
+      value: 'public://term-country/2026-07/SA.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 59660
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

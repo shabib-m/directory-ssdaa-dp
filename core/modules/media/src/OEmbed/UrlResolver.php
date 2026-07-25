@@ -6,8 +6,11 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Site\Settings;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\TransferException;
+use Psr\Http\Client\ClientExceptionInterface;
+
+// cspell:ignore omitscript
 
 /**
  * Converts oEmbed media URLs into endpoint-specific resource URLs.
@@ -87,19 +90,41 @@ class UrlResolver implements UrlResolverInterface {
    * @param string $url
    *   The resource's URL.
    *
-   * @return string|bool
+   * @return string|false
    *   URL of the oEmbed endpoint, or FALSE if the discovery was unsuccessful.
    */
   protected function discoverResourceUrl($url) {
+    $patterns = \array_map(static fn ($hostPattern) => \sprintf('{%s}i', $hostPattern), Settings::get('media_oembed_discovery_trusted_host_patterns', []));
+    $host = \parse_url($url, \PHP_URL_HOST);
+    if (!$host) {
+      return FALSE;
+    }
+    $allowed = FALSE;
+    foreach ($patterns as $pattern) {
+      if (\preg_match($pattern, $host)) {
+        $allowed = TRUE;
+        break;
+      }
+    }
+    if (!$allowed) {
+      return FALSE;
+    }
+
     try {
       $response = $this->httpClient->get($url);
     }
-    catch (TransferException $e) {
+    catch (ClientExceptionInterface) {
+      return FALSE;
+    }
+
+    // Only care about HTML responses.
+    $response_type = strtolower($response->getHeaderLine('Content-Type'));
+    if (!str_contains($response_type, 'text/html')) {
       return FALSE;
     }
 
     $document = Html::load((string) $response->getBody());
-    $xpath = new \DOMXpath($document);
+    $xpath = new \DOMXPath($document);
 
     return $this->findUrl($xpath, 'json') ?: $this->findUrl($xpath, 'xml');
   }
@@ -139,7 +164,7 @@ class UrlResolver implements UrlResolverInterface {
       return $this->resourceFetcher->fetchResource($resource_url)->getProvider();
     }
 
-    throw new ResourceException('No matching provider found.', $url);
+    throw new ResourceException("No matching oEmbed provider found for resource: \"{$url}\"", $url);
   }
 
   /**
@@ -174,7 +199,7 @@ class UrlResolver implements UrlResolverInterface {
     // provide extra parameters in the query string. For example, Instagram also
     // supports the 'omitscript' parameter.
     $this->moduleHandler->alter('oembed_resource_url', $parsed_url, $provider);
-    $resource_url = $parsed_url['path'] . '?' . rawurldecode(UrlHelper::buildQuery($parsed_url['query']));
+    $resource_url = $parsed_url['path'] . '?' . UrlHelper::buildQuery($parsed_url['query']);
 
     $this->urlCache[$url] = $resource_url;
     $this->cacheBackend->set($cache_id, $resource_url);

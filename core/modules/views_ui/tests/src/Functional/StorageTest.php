@@ -1,16 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the UI of storage properties of views.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class StorageTest extends UITestBase {
 
   /**
@@ -26,9 +29,7 @@ class StorageTest extends UITestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['views_ui', 'language'];
 
@@ -37,7 +38,7 @@ class StorageTest extends UITestBase {
    *
    * @see views_ui_edit_details_form
    */
-  public function testDetails() {
+  public function testDetails(): void {
     $view_name = 'test_view';
 
     ConfigurableLanguage::createFromLangcode('fr')->save();
@@ -56,7 +57,7 @@ class StorageTest extends UITestBase {
     $view = Views::getView($view_name);
 
     foreach (['label', 'tag', 'description', 'langcode'] as $property) {
-      $this->assertEquals($edit[$property], $view->storage->get($property), new FormattableMarkup('Make sure the property @property got probably saved.', ['@property' => $property]));
+      $this->assertEquals($edit[$property], $view->storage->get($property), "Make sure the property $property got probably saved.");
     }
   }
 

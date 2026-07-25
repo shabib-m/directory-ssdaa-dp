@@ -1,20 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal_ui\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that only user 1 can access the migrate UI.
- *
- * @group migrate_drupal_ui
  */
+#[Group('migrate_drupal_ui')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class MigrateAccessTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['migrate_drupal_ui'];
 
@@ -26,7 +30,7 @@ class MigrateAccessTest extends BrowserTestBase {
   /**
    * Tests that only user 1 can access the migrate UI.
    */
-  public function testAccess() {
+  public function testAccess(): void {
     $this->drupalLogin($this->rootUser);
     $this->drupalGet('upgrade');
     $this->assertSession()->statusCodeEquals(200);

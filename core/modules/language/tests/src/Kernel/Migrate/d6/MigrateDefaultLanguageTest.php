@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Kernel\Migrate\d6;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the default language variable migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateDefaultLanguageTest extends MigrateDrupal6TestBase {
 
   /**
@@ -21,7 +25,7 @@ class MigrateDefaultLanguageTest extends MigrateDrupal6TestBase {
   /**
    * Tests language_default migration with an existing language.
    */
-  public function testMigrationWithExistingLanguage() {
+  public function testMigrationWithExistingLanguage(): void {
     $this->setDefaultLanguage('fr');
     $this->startCollectingMessages();
     $this->executeMigrations(['language', 'default_language']);
@@ -35,7 +39,7 @@ class MigrateDefaultLanguageTest extends MigrateDrupal6TestBase {
   /**
    * Tests language_default migration with a non-existing language.
    */
-  public function testMigrationWithNonExistentLanguage() {
+  public function testMigrationWithNonExistentLanguage(): void {
     $this->setDefaultLanguage('tv');
     $this->startCollectingMessages();
     $this->executeMigrations(['language', 'default_language']);
@@ -54,7 +58,7 @@ class MigrateDefaultLanguageTest extends MigrateDrupal6TestBase {
   /**
    * Tests language_default migration with unset default language variable.
    */
-  public function testMigrationWithUnsetVariable() {
+  public function testMigrationWithUnsetVariable(): void {
     // Delete the language_default variable.
     $this->sourceDatabase->delete('variable')
       ->condition('name', 'language_default')
@@ -75,7 +79,7 @@ class MigrateDefaultLanguageTest extends MigrateDrupal6TestBase {
    * @param string $langcode
    *   The langcode of the default language.
    */
-  protected function setDefaultLanguage($langcode) {
+  protected function setDefaultLanguage($langcode): void {
     // The default language of the test fixture is English. Change it to
     // something else before migrating, to be sure that the source site
     // default language is migrated.

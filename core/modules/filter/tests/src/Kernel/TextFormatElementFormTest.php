@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filter\Kernel;
 
 use Drupal\Core\Form\FormInterface;
@@ -8,12 +10,14 @@ use Drupal\filter\Entity\FilterFormat;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests PathElement validation and conversion functionality.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class TextFormatElementFormTest extends KernelTestBase implements FormInterface {
 
   /**
@@ -24,16 +28,13 @@ class TextFormatElementFormTest extends KernelTestBase implements FormInterface 
   protected $testUser;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'system',
     'user',
     'filter',
     'filter_test',
-    'editor',
   ];
 
   /**
@@ -42,7 +43,6 @@ class TextFormatElementFormTest extends KernelTestBase implements FormInterface 
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('user');
-    $this->installSchema('system', ['sequences']);
     $this->installConfig(['filter', 'filter_test']);
 
     // Create user 1 so that the user created later in the test has a different
@@ -72,8 +72,7 @@ class TextFormatElementFormTest extends KernelTestBase implements FormInterface 
       'name' => 'foobar',
       'mail' => 'foobar@example.com',
     ]);
-    $this->testUser->addRole($role->id());
-    $this->testUser->save();
+    $this->testUser->addRole($role->id())->save();
     \Drupal::service('current_user')->setAccount($this->testUser);
   }
 
@@ -88,8 +87,8 @@ class TextFormatElementFormTest extends KernelTestBase implements FormInterface 
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // A textformat field.
-    $form['textformat'] = [
+    // A text_format field.
+    $form['text_format'] = [
       '#type' => 'text_format',
       '#required' => TRUE,
       '#title' => 'Text',
@@ -119,13 +118,13 @@ class TextFormatElementFormTest extends KernelTestBase implements FormInterface 
   /**
    * Tests that values are returned.
    */
-  public function testTextFormatElement() {
+  public function testTextFormatElement(): void {
     /** @var \Drupal\Core\Form\FormBuilder $form_builder */
     $form_builder = $this->container->get('form_builder');
     $form = $form_builder->getForm($this);
     $output = $this->render($form);
     $this->setRawContent($output);
-    $this->assertFieldByName('textformat[value]');
+    $this->assertFieldByName('text_format[value]');
     $this->assertRaw('<h4>Full HTML</h4>');
     $this->assertRaw('<h4>Filtered HTML</h4>');
     $this->assertRaw('<h4>Test format</h4>');

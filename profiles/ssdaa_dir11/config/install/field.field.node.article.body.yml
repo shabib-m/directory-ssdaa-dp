@@ -1,0 +1,24 @@
+uuid: 91e70f75-2a55-4c40-af8b-ca82128c2378
+langcode: ar
+status: true
+dependencies:
+  config:
+    - field.storage.node.body
+    - node.type.article
+  module:
+    - text
+id: node.article.body
+field_name: body
+entity_type: node
+bundle: article
+label: المتن
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  display_summary: true
+  required_summary: false
+  allowed_formats: {  }
+field_type: text_with_summary

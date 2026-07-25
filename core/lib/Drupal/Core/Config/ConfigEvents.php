@@ -126,24 +126,6 @@ final class ConfigEvents {
   const IMPORT_MISSING_CONTENT = 'config.importer.missing_content';
 
   /**
-   * Name of event fired to collect information on all config collections.
-   *
-   * This event allows modules to add to the list of configuration collections
-   * retrieved by \Drupal\Core\Config\ConfigManager::getConfigCollectionInfo().
-   * The event listener method receives a
-   * \Drupal\Core\Config\ConfigCollectionInfo instance.
-   *
-   * @Event
-   *
-   * @see \Drupal\Core\Config\ConfigCollectionInfo
-   * @see \Drupal\Core\Config\ConfigManager::getConfigCollectionInfo()
-   * @see \Drupal\Core\Config\ConfigFactoryOverrideBase
-   *
-   * @var string
-   */
-  const COLLECTION_INFO = 'config.collection_info';
-
-  /**
    * Name of the event fired just before importing configuration.
    *
    * This event allows subscribers to modify the configuration which is about to

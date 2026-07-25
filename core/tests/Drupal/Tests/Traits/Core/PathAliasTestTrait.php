@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Traits\Core;
 
 use Drupal\Core\Language\LanguageInterface;
@@ -69,7 +71,7 @@ trait PathAliasTestTrait {
    * @param string|null $message
    *   (optional) A message to display with the assertion.
    */
-  protected function assertPathAliasExists($alias, $langcode = NULL, $path = NULL, $message = '') {
+  protected function assertPathAliasExists($alias, $langcode = NULL, $path = NULL, $message = ''): void {
     $query = \Drupal::entityTypeManager()
       ->getStorage('path_alias')
       ->getQuery()
@@ -98,7 +100,7 @@ trait PathAliasTestTrait {
    * @param string|null $message
    *   (optional) A message to display with the assertion.
    */
-  protected function assertPathAliasNotExists($alias, $langcode = NULL, $path = NULL, $message = '') {
+  protected function assertPathAliasNotExists($alias, $langcode = NULL, $path = NULL, $message = ''): void {
     $query = \Drupal::entityTypeManager()
       ->getStorage('path_alias')
       ->getQuery()

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional;
 
 use Drupal\Core\Test\AssertMailTrait;
@@ -7,12 +9,14 @@ use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Ensure that login works as expected.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserLoginTest extends BrowserTestBase {
 
   use AssertMailTrait {
@@ -32,7 +36,7 @@ class UserLoginTest extends BrowserTestBase {
   /**
    * Tests login with destination.
    */
-  public function testLoginCacheTagsAndDestination() {
+  public function testLoginCacheTagsAndDestination(): void {
     $this->drupalGet('user/login');
     // The user login form says "Enter your <site name> username.", hence it
     // depends on config:system.site, and its cache tags should be present.
@@ -48,7 +52,7 @@ class UserLoginTest extends BrowserTestBase {
   /**
    * Tests the global login flood control.
    */
-  public function testGlobalLoginFloodControl() {
+  public function testGlobalLoginFloodControl(): void {
     $this->config('user.flood')
       ->set('ip_limit', 10)
       // Set a high per-user limit out so that it is not relevant in the test.
@@ -92,7 +96,7 @@ class UserLoginTest extends BrowserTestBase {
   /**
    * Tests the per-user login flood control.
    */
-  public function testPerUserLoginFloodControl() {
+  public function testPerUserLoginFloodControl(): void {
     $this->config('user.flood')
       // Set a high global limit out so that it is not relevant in the test.
       ->set('ip_limit', 4000)
@@ -139,7 +143,7 @@ class UserLoginTest extends BrowserTestBase {
   /**
    * Tests user password is re-hashed upon login after changing $count_log2.
    */
-  public function testPasswordRehashOnLogin() {
+  public function testPasswordRehashOnLogin(): void {
     // Retrieve instance of password hashing algorithm.
     $password_hasher = $this->container->get('password');
 
@@ -150,7 +154,6 @@ class UserLoginTest extends BrowserTestBase {
     $this->drupalLogout();
 
     // Load the stored user. The password hash shouldn't need a rehash.
-    $user_storage = $this->container->get('entity_type.manager')->getStorage('user');
     $account = User::load($account->id());
 
     // Check that the stored password doesn't need rehash.
@@ -167,10 +170,15 @@ class UserLoginTest extends BrowserTestBase {
     $this->assertTrue($password_hasher->needsRehash($account->getPassword()));
 
     $account->passRaw = $password;
-    $this->drupalLogin($account);
+    $this->drupalGet('user/login');
+    $edit = [
+      'name' => $account->getAccountName(),
+      'pass' => $account->passRaw,
+    ];
+    $this->submitForm($edit, 'Log in');
+
     // Load the stored user, which should have a different password hash now.
-    $user_storage->resetCache([$account->id()]);
-    $account = $user_storage->load($account->id());
+    $account = User::load($account->id());
 
     // Check that the stored password doesn't need rehash.
     $this->assertFalse($password_hasher->needsRehash($account->getPassword()));
@@ -180,7 +188,7 @@ class UserLoginTest extends BrowserTestBase {
   /**
    * Tests log in with a maximum length and a too long password.
    */
-  public function testPasswordLengthLogin() {
+  public function testPasswordLengthLogin(): void {
     // Create a new user and authenticate.
     $account = $this->drupalCreateUser([]);
     $current_password = $account->passRaw;
@@ -241,7 +249,7 @@ class UserLoginTest extends BrowserTestBase {
   /**
    * Tests with a browser that denies cookies.
    */
-  public function testCookiesNotAccepted() {
+  public function testCookiesNotAccepted(): void {
     $this->drupalGet('user/login');
     $form_build_id = $this->getSession()->getPage()->findField('form_build_id');
 
@@ -283,7 +291,7 @@ class UserLoginTest extends BrowserTestBase {
    *
    * @internal
    */
-  public function assertFailedLogin(User $account, string $flood_trigger = NULL): void {
+  public function assertFailedLogin(User $account, ?string $flood_trigger = NULL): void {
     $database = \Drupal::database();
     $edit = [
       'name' => $account->getAccountName(),
@@ -303,7 +311,7 @@ class UserLoginTest extends BrowserTestBase {
         ->fetchField();
       if ($flood_trigger == 'user') {
         $this->assertSession()->pageTextMatches("/There (has|have) been more than \w+ failed login attempt.* for this account. It is temporarily blocked. Try again later or request a new password./");
-        $this->assertSession()->elementExists('css', 'body.maintenance-page');
+        $this->assertSession()->elementExists('css', 'body.maintenance-page--flood');
         $this->assertSession()->linkExists("request a new password");
         $this->assertSession()->linkByHrefExists(Url::fromRoute('user.pass')->toString());
         $this->assertEquals('Flood control blocked login attempt for uid %uid from %ip', $last_log, 'A watchdog message was logged for the login attempt blocked by flood control per user.');
@@ -311,7 +319,7 @@ class UserLoginTest extends BrowserTestBase {
       else {
         // No uid, so the limit is IP-based.
         $this->assertSession()->pageTextContains("Too many failed login attempts from your IP address. This IP address is temporarily blocked. Try again later or request a new password.");
-        $this->assertSession()->elementExists('css', 'body.maintenance-page');
+        $this->assertSession()->elementExists('css', 'body.maintenance-page--flood');
         $this->assertSession()->linkExists("request a new password");
         $this->assertSession()->linkByHrefExists(Url::fromRoute('user.pass')->toString());
         $this->assertEquals('Flood control blocked login attempt from %ip', $last_log, 'A watchdog message was logged for the login attempt blocked by flood control per IP.');
@@ -330,7 +338,7 @@ class UserLoginTest extends BrowserTestBase {
    * @param object $user
    *   A user object.
    */
-  public function resetUserPassword($user) {
+  public function resetUserPassword($user): void {
     $this->drupalGet('user/password');
     $edit['name'] = $user->getDisplayName();
     $this->submitForm($edit, 'Submit');
@@ -341,6 +349,17 @@ class UserLoginTest extends BrowserTestBase {
     $resetURL = $urls[0];
     $this->drupalGet($resetURL);
     $this->submitForm([], 'Log in');
+  }
+
+  /**
+   * Tests that user login form has the autocomplete attributes.
+   */
+  public function testAutocompleteHtmlAttributes(): void {
+    $this->drupalGet('user/login');
+    $name_field = $this->getSession()->getPage()->findField('name');
+    $pass_field = $this->getSession()->getPage()->findField('pass');
+    $this->assertEquals('username', $name_field->getAttribute('autocomplete'));
+    $this->assertEquals('current-password', $pass_field->getAttribute('autocomplete'));
   }
 
 }

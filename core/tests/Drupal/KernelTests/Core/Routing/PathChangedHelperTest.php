@@ -1,38 +1,41 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Routing;
 
 use Drupal\Core\Routing\PathChangedHelper;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the PathChangedHelper class.
- *
- * @coversDefaultClass \Drupal\Core\Routing\PathChangedHelper
- * @group Routing
  */
+#[CoversClass(PathChangedHelper::class)]
+#[Group('Routing')]
+#[RunTestsInSeparateProcesses]
 class PathChangedHelperTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['path_changed_helper_test', 'system'];
 
   /**
    * Tests creating a PathChangedHelper object and getting paths.
    *
-   * @covers ::__construct
-   * @covers ::oldPath
-   * @covers ::newPath
-   * @covers ::redirect
+   * @legacy-covers ::__construct
+   * @legacy-covers ::oldPath
+   * @legacy-covers ::newPath
+   * @legacy-covers ::redirect
    */
-  public function testPathChangedHelper() {
+  public function testPathChangedHelper(): void {
     $route = \Drupal::service('router.route_provider')->getRouteByName('path.changed.bc');
     $raw_parameters = [
       'block_type' => 'test_block_type',

@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\RequirementsPageTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tries to update a module which has no pre-existing schema.
- *
- * @group Update
  */
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
 class NoPreExistingSchemaUpdateTest extends BrowserTestBase {
   use RequirementsPageTrait;
 
@@ -47,7 +51,7 @@ class NoPreExistingSchemaUpdateTest extends BrowserTestBase {
   /**
    * Tests the system module updates with no dependencies installed.
    */
-  public function testNoPreExistingSchema() {
+  public function testNoPreExistingSchema(): void {
     $schema = \Drupal::service('update.update_hook_registry')->getAllInstalledVersions();
     $this->assertArrayNotHasKey('update_test_no_preexisting', $schema);
     $this->assertFalse(\Drupal::state()->get('update_test_no_preexisting_update_8001', FALSE));

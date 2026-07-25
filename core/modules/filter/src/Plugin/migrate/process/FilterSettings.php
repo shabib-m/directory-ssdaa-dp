@@ -2,6 +2,7 @@
 
 namespace Drupal\filter\Plugin\migrate\process;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\Row;
@@ -11,12 +12,21 @@ use Drupal\migrate\Row;
  *
  * E.g. map '<a>' to '<a href hreflang dir>'.
  *
- * @MigrateProcessPlugin(
- *   id = "filter_settings",
- *   handle_multiples = TRUE
- * )
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3533560
  */
+#[MigrateProcess(
+  id: "filter_settings",
+  handle_multiples: TRUE,
+)]
 class FilterSettings extends ProcessPluginBase {
+
+  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560', E_USER_DEPRECATED);
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
   /**
    * Default attributes for migrating filter_html's 'allowed_html' setting.

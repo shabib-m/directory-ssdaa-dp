@@ -1,14 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the JavaScript functionality of the module filter.
- *
- * @group system
  */
+#[Group('system')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class ModuleFilterTest extends WebDriverTestBase {
 
   /**
@@ -36,8 +41,9 @@ class ModuleFilterTest extends WebDriverTestBase {
   /**
    * Tests that filter results announcement has correct pluralization.
    */
-  public function testModuleFilter() {
-
+  public function testModuleFilter(): void {
+    // @todo skipped due to random test failures, re-enable in https://www.drupal.org/project/drupal/issues/3028968.
+    $this->markTestSkipped();
     // Find the module filter field.
     $this->drupalGet('admin/modules');
     $assertSession = $this->assertSession();

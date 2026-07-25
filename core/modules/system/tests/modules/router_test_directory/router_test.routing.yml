@@ -23,7 +23,7 @@ router_test.4:
   path: '/router_test/test4/{value}'
   defaults:
     _controller: '\Drupal\router_test\TestControllers::test4'
-    value: 'narf'
+    value: 'Lassie'
   requirements:
     _access: 'TRUE'
 
@@ -165,7 +165,7 @@ router_test.25:
 router_test.26:
   path: '/router_test/test26'
   defaults:
-    _form: '\Drupal\system\Form\LoggingForm'
+    _form: '\Drupal\router_test\Form'
     _title: 'Cron'
   requirements:
     _access: 'TRUE'
@@ -247,3 +247,29 @@ router_test.case_sensitive_duplicate3:
     _controller: '\Drupal\router_test\TestControllers::testRouteName'
   requirements:
     _access: 'TRUE'
+
+router_test.rejects_query_strings:
+  path: '/router-test/rejects-query-strings'
+  defaults:
+    _controller: '\Drupal\router_test\TestControllers::rejectsQueryStrings'
+  requirements:
+    _access: 'TRUE'
+
+router_test.string_method_scheme:
+  path: '/router_test/test_string_method_scheme'
+  defaults:
+    _controller: '\Drupal\router_test\TestControllers::test1'
+  requirements:
+    _access: 'TRUE'
+  methods: 'GET'
+  schemes: 'https'
+
+router_test.alias:
+  alias: 'router_test.1'
+
+router_test.deprecated:
+  alias: 'router_test.1'
+  deprecated:
+    package: 'drupal/core'
+    version: '11.2.0'
+    message: 'The "%alias_id%" route is deprecated in drupal:11.2.0 and will be removed in drupal:12.0.0. Use the "router_test.1" route instead.'

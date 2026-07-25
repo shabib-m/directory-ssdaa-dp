@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\menu_test\Plugin\Menu\ContextualLink;
 
 use Drupal\Core\Menu\ContextualLinkDefault;
@@ -13,7 +15,7 @@ class TestContextualLink extends ContextualLinkDefault {
   /**
    * {@inheritdoc}
    */
-  public function getTitle(Request $request = NULL) {
+  public function getTitle(?Request $request = NULL) {
     return "<script>alert('Welcome to the jungle!')</script>";
   }
 

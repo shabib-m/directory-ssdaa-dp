@@ -3,18 +3,20 @@
 namespace Drupal\views\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\ResultRow;
 
 /**
  * Field handler which allows to show machine name content as human name.
+ *
  * @ingroup views_field_handlers
  *
  * Definition items:
- * - options callback: The function to call in order to generate the value options. If omitted, the options 'Yes' and 'No' will be used.
+ * - options callback: The function to call in order to generate the value
+ *   options. If omitted, the options 'Yes' and 'No' will be used.
  * - options arguments: An array of arguments to pass to the options callback.
- *
- * @ViewsField("machine_name")
  */
+#[ViewsField("machine_name")]
 class MachineName extends FieldPluginBase {
 
   /**
@@ -24,6 +26,9 @@ class MachineName extends FieldPluginBase {
    */
   protected $valueOptions;
 
+  /**
+   * {@inheritdoc}
+   */
   public function getValueOptions() {
     if (isset($this->valueOptions)) {
       return;

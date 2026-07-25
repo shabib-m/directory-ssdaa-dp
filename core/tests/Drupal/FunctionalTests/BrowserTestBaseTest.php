@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests;
 
 use Behat\Mink\Exception\ElementNotFoundException;
@@ -7,31 +9,37 @@ use Behat\Mink\Exception\ExpectationException;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\StreamCapturer;
 use Drupal\Tests\Traits\Core\CronRunTrait;
-use Drupal\user\Entity\Role;
+use Drupal\Tests\Traits\Core\PathAliasTestTrait;
+use Drupal\TestTools\Extension\Dump\DebugDump;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\ExpectationFailedException;
+
+// cspell:ignore htkey
 
 /**
  * Tests BrowserTestBase functionality.
  *
- * @group browsertestbase
- * @group #slow
+ * @final
  */
+#[Group('browsertestbase')]
+#[RunTestsInSeparateProcesses]
 class BrowserTestBaseTest extends BrowserTestBase {
 
+  use PathAliasTestTrait;
   use CronRunTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'test_page_test',
     'form_test',
     'system_test',
     'node',
+    'deprecation_test',
   ];
 
   /**
@@ -40,9 +48,25 @@ class BrowserTestBaseTest extends BrowserTestBase {
   protected $defaultTheme = 'stark';
 
   /**
+   * Tests that JavaScript Drupal settings can be read.
+   */
+  public function testDrupalSettings(): void {
+    // Trigger a 403 because those pages have very little else going on.
+    $this->drupalGet('admin');
+    $this->assertSame([], $this->getDrupalSettings());
+
+    // Now try the same 403 as an authenticated user and verify that Drupal
+    // settings do show up.
+    $account = $this->drupalCreateUser();
+    $this->drupalLogin($account);
+    $this->drupalGet('admin');
+    $this->assertNotSame([], $this->getDrupalSettings());
+  }
+
+  /**
    * Tests basic page test.
    */
-  public function testGoTo() {
+  public function testGoTo(): void {
     $account = $this->drupalCreateUser();
     $this->drupalLogin($account);
 
@@ -92,7 +116,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
   /**
    * Tests drupalGet().
    */
-  public function testDrupalGet() {
+  public function testDrupalGet(): void {
     $this->drupalGet('test-page');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->addressEquals('test-page');
@@ -102,12 +126,25 @@ class BrowserTestBaseTest extends BrowserTestBase {
     $this->drupalGet('/test-page/');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->addressEquals('/test-page/');
+    // Test alias handling.
+    $this->createPathAlias('/test-page', '/test-alias');
+    $this->rebuildAll();
+    $this->drupalGet('test-page');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->addressEquals('test-alias');
+    $this->drupalGet('/test-page');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->addressEquals('test-alias');
+    $this->drupalGet('/test-page/');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->addressEquals('/test-page/');
+
   }
 
   /**
    * Tests basic form functionality.
    */
-  public function testForm() {
+  public function testForm(): void {
     // Ensure the proper response code for a _form route.
     $this->drupalGet('form-test/object-builder');
     $this->assertSession()->statusCodeEquals(200);
@@ -119,7 +156,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
     // Check that the hidden field exists and has a specific value.
     $this->assertSession()->hiddenFieldExists('strawberry');
     $this->assertSession()->hiddenFieldExists('red');
-    $this->assertSession()->hiddenFieldExists('redstrawberryhiddenfield');
+    $this->assertSession()->hiddenFieldExists('red-strawberry-hidden-field');
     $this->assertSession()->hiddenFieldValueNotEquals('strawberry', 'brown');
     $this->assertSession()->hiddenFieldValueEquals('strawberry', 'red');
 
@@ -156,6 +193,12 @@ class BrowserTestBaseTest extends BrowserTestBase {
     $value = $config_factory->get('form_test.object')->get('bananas');
     $this->assertSame('purple', $value);
 
+    // Submit using the form attribute of a button.
+    $this->drupalGet('form-test/button-form-attribute');
+    $this->submitForm(['bananas' => 'purple'], 'Attribute Button');
+    $value = $config_factory->get('form_test.object')->get('bananas');
+    $this->assertSame('purple', $value);
+
     // Test submitForm() with no-html response.
     $this->drupalGet('form_test/form-state-values-clean');
     $this->submitForm([], 'Submit');
@@ -175,7 +218,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
   /**
    * Tests clickLink() functionality.
    */
-  public function testClickLink() {
+  public function testClickLink(): void {
     $this->drupalGet('test-page');
     $this->clickLink('Visually identical test links');
     $this->assertStringContainsString('user/login', $this->getSession()->getCurrentUrl());
@@ -187,7 +230,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
     $this->assertStringContainsString('user/register', $this->getSession()->getCurrentUrl());
   }
 
-  public function testError() {
+  public function testError(): void {
     $this->expectException('\Exception');
     $this->expectExceptionMessage('User notice: foo');
     $this->drupalGet('test-error');
@@ -196,22 +239,22 @@ class BrowserTestBaseTest extends BrowserTestBase {
   /**
    * Tests legacy field asserts which use xpath directly.
    */
-  public function testXpathAsserts() {
+  public function testXpathAsserts(): void {
     $this->drupalGet('test-field-xpath');
     $this->assertSession()->elementTextContains('xpath', '//table/tbody/tr[2]/td[1]', 'one');
 
     $this->assertSession()->fieldValueEquals('edit-name', 'Test name');
     $this->assertSession()->fieldValueEquals('edit-options', '2');
 
-    $this->assertSession()->elementNotExists('xpath', '//notexisting');
+    $this->assertSession()->elementNotExists('xpath', '//nonexisting');
     $this->assertSession()->fieldValueNotEquals('edit-name', 'wrong value');
 
     // Test that the assertion fails correctly.
     try {
-      $this->assertSession()->fieldExists('notexisting');
-      $this->fail('The "notexisting" field was found.');
+      $this->assertSession()->fieldExists('nonexisting');
+      $this->fail('The "nonexisting" field was found.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
 
@@ -219,7 +262,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertSession()->fieldNotExists('edit-name');
       $this->fail('The "edit-name" field was not found.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
   }
@@ -227,7 +270,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
   /**
    * Tests field asserts using textfields.
    */
-  public function testFieldAssertsForTextfields() {
+  public function testFieldAssertsForTextfields(): void {
     $this->drupalGet('test-field-xpath');
 
     // *** 1. fieldNotExists().
@@ -238,7 +281,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertSession()->fieldNotExists('name');
       $this->fail('The "name" field was not found based on name.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
 
@@ -247,7 +290,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertSession()->fieldNotExists('edit-name');
       $this->fail('The "name" field was not found based on id.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
 
@@ -260,18 +303,18 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertSession()->fieldExists('invalid_name_and_id');
       $this->fail('The "invalid_name_and_id" field was found.');
     }
-    catch (ElementNotFoundException $e) {
+    catch (ElementNotFoundException) {
       // Expected exception; just continue testing.
     }
     // *** 3. assertNoFieldById().
     $this->assertSession()->fieldValueNotEquals('name', 'not the value');
-    $this->assertSession()->fieldNotExists('notexisting');
+    $this->assertSession()->fieldNotExists('nonexisting');
     // Test that the assertion fails correctly if no value is passed in.
     try {
       $this->assertSession()->fieldNotExists('edit-description');
       $this->fail('The "description" field, with no value was not found.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
 
@@ -280,7 +323,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertSession()->fieldNotExists('name', NULL);
       $this->fail('The "name" field was not found.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
 
@@ -294,7 +337,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
     try {
       $this->assertSession()->fieldValueNotEquals('edit-name', '');
     }
-    catch (ExpectationFailedException $e) {
+    catch (ExpectationFailedException) {
       // Expected exception; just continue testing.
     }
 
@@ -302,7 +345,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
     try {
       $this->assertSession()->fieldValueNotEquals('edit-name', 'not the value');
     }
-    catch (ExpectationFailedException $e) {
+    catch (ExpectationFailedException) {
       // Expected exception; just continue testing.
     }
 
@@ -314,7 +357,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertSession()->fieldValueNotEquals('name', 'Test name');
       $this->fail('fieldValueNotEquals failed to throw an exception.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
 
@@ -327,7 +370,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertSession()->fieldValueEquals('name', 'not the value');
       $this->fail('fieldValueEquals failed to throw an exception.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
 
@@ -338,18 +381,18 @@ class BrowserTestBaseTest extends BrowserTestBase {
   /**
    * Tests legacy field asserts for checkbox field type.
    */
-  public function testFieldAssertsForCheckbox() {
+  public function testFieldAssertsForCheckbox(): void {
     $this->drupalGet('test-field-xpath');
 
     // Part 1 - Test by name.
     // Test that checkboxes are found/not found correctly by name, when using
-    // TRUE or FALSE to match their 'checked' state.
+    // '1' or '' to match their 'checked' state.
     $this->assertSession()->fieldExists('checkbox_enabled');
     $this->assertSession()->fieldExists('checkbox_disabled');
-    $this->assertSession()->fieldValueEquals('checkbox_enabled', TRUE);
-    $this->assertSession()->fieldValueEquals('checkbox_disabled', FALSE);
-    $this->assertSession()->fieldValueNotEquals('checkbox_enabled', FALSE);
-    $this->assertSession()->fieldValueNotEquals('checkbox_disabled', TRUE);
+    $this->assertSession()->fieldValueEquals('checkbox_enabled', '1');
+    $this->assertSession()->fieldValueEquals('checkbox_disabled', '');
+    $this->assertSession()->fieldValueNotEquals('checkbox_enabled', '');
+    $this->assertSession()->fieldValueNotEquals('checkbox_disabled', '1');
 
     // Test that we have legacy support.
     $this->assertSession()->fieldValueEquals('checkbox_enabled', '1');
@@ -357,20 +400,20 @@ class BrowserTestBaseTest extends BrowserTestBase {
 
     // Test that the assertion fails correctly if given the right value.
     try {
-      $this->assertSession()->fieldValueNotEquals('checkbox_enabled', TRUE);
+      $this->assertSession()->fieldValueNotEquals('checkbox_enabled', '1');
       $this->fail('fieldValueNotEquals failed to throw an exception.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
 
     // Part 2 - Test by ID.
     // Test that checkboxes are found/not found correctly by ID, when using
-    // TRUE or FALSE to match their 'checked' state.
-    $this->assertSession()->fieldValueEquals('edit-checkbox-enabled', TRUE);
-    $this->assertSession()->fieldValueEquals('edit-checkbox-disabled', FALSE);
-    $this->assertSession()->fieldValueNotEquals('edit-checkbox-enabled', FALSE);
-    $this->assertSession()->fieldValueNotEquals('edit-checkbox-disabled', TRUE);
+    // '1' or '' to match their 'checked' state.
+    $this->assertSession()->fieldValueEquals('edit-checkbox-enabled', '1');
+    $this->assertSession()->fieldValueEquals('edit-checkbox-disabled', '');
+    $this->assertSession()->fieldValueNotEquals('edit-checkbox-enabled', '');
+    $this->assertSession()->fieldValueNotEquals('edit-checkbox-disabled', '1');
 
     // Test that checkboxes are found by ID, when using NULL to ignore the
     // 'checked' state.
@@ -390,7 +433,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertSession()->fieldNotExists('edit-checkbox-disabled', NULL);
       $this->fail('The "edit-checkbox-disabled" field was not found by ID, using NULL value.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
 
@@ -403,7 +446,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertSession()->checkboxNotChecked('incorrect_checkbox_id');
       $this->fail('The "incorrect_checkbox_id" field was found');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
 
@@ -412,7 +455,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertSession()->checkboxNotChecked('edit-checkbox-enabled');
       $this->fail('The "edit-checkbox-enabled" field was not found in a checked state.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
 
@@ -422,7 +465,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertSession()->checkboxChecked('edit-checkbox-disabled');
       $this->fail('The "edit-checkbox-disabled" field was found and checked.');
     }
-    catch (ExpectationException $e) {
+    catch (ExpectationException) {
       // Expected exception; just continue testing.
     }
   }
@@ -430,7 +473,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
   /**
    * Tests the ::cronRun() method.
    */
-  public function testCronRun() {
+  public function testCronRun(): void {
     $last_cron_time = \Drupal::state()->get('system.cron_last');
     $this->cronRun();
     $this->assertSession()->statusCodeEquals(204);
@@ -442,20 +485,20 @@ class BrowserTestBaseTest extends BrowserTestBase {
   /**
    * Tests the Drupal install done in \Drupal\Tests\BrowserTestBase::setUp().
    */
-  public function testInstall() {
+  public function testInstall(): void {
     $htaccess_filename = $this->tempFilesDirectory . '/.htaccess';
     $this->assertFileExists($htaccess_filename);
 
-    // Ensure the update module is not installed.
-    $this->assertFalse(\Drupal::moduleHandler()->moduleExists('update'), 'The Update module is not installed.');
+    // Ensure the Update Status module is not installed.
+    $this->assertFalse(\Drupal::moduleHandler()->moduleExists('update'), 'The Update Status module should not be installed.');
   }
 
   /**
    * Tests the assumption that local time is in 'Australia/Sydney'.
    */
-  public function testLocalTimeZone() {
+  public function testLocalTimeZone(): void {
     $expected = 'Australia/Sydney';
-    // The 'Australia/Sydney' time zone is set in core/tests/bootstrap.php
+    // The 'Australia/Sydney' time zone is set in core/tests/bootstrap.php.
     $this->assertEquals($expected, date_default_timezone_get());
 
     // The 'Australia/Sydney' time zone is also set in
@@ -473,7 +516,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
   /**
    * Tests the ::checkForMetaRefresh() method.
    */
-  public function testCheckForMetaRefresh() {
+  public function testCheckForMetaRefresh(): void {
     // Disable following redirects in the client.
     $this->getSession()->getDriver()->getClient()->followRedirects(FALSE);
     // Set the maximumMetaRefreshCount to zero to make sure the redirect doesn't
@@ -488,7 +531,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('Test page text.');
   }
 
-  public function testGetDefaultDriveInstance() {
+  public function testGetDefaultDriveInstance(): void {
     putenv('MINK_DRIVER_ARGS=' . json_encode([NULL, ['key1' => ['key2' => ['key3' => 3, 'key3.1' => 3.1]]]]));
     $this->getDefaultDriverInstance();
     $this->assertEquals([NULL, ['key1' => ['key2' => ['key3' => 3, 'key3.1' => 3.1]]]], $this->minkDefaultDriverArgs);
@@ -497,7 +540,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
   /**
    * Ensures we can't access modules we shouldn't be able to after install.
    */
-  public function testProfileModules() {
+  public function testProfileModules(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('The module demo_umami_content does not exist.');
     $this->assertFileExists('core/profiles/demo_umami/modules/demo_umami_content/demo_umami_content.info.yml');
@@ -507,7 +550,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
   /**
    * Tests the protections provided by .htkey.
    */
-  public function testHtkey() {
+  public function testHtKey(): void {
     // Remove the Simpletest private key file so we can test the protection
     // against requests that forge a valid testing user agent to gain access
     // to the installer.
@@ -522,13 +565,26 @@ class BrowserTestBaseTest extends BrowserTestBase {
   }
 
   /**
+   * Tests that a usable session is on the request in test-runner.
+   */
+  public function testSessionOnRequest(): void {
+    /** @var \Symfony\Component\HttpFoundation\Session\Session $session */
+    $session = $this->container->get('request_stack')->getSession();
+
+    $session->set('some-val', 'do-not-cleanup');
+    $this->assertEquals('do-not-cleanup', $session->get('some-val'));
+
+    $session->set('some-other-val', 'do-cleanup');
+    $this->assertEquals('do-cleanup', $session->remove('some-other-val'));
+  }
+
+  /**
    * Tests that deprecation headers do not get duplicated.
-   *
-   * @group legacy
    *
    * @see \Drupal\Core\Test\HttpClientMiddleware\TestHttpClientMiddleware::__invoke()
    */
-  public function testDeprecationHeaders() {
+  #[IgnoreDeprecations]
+  public function testDeprecationHeaders(): void {
     $this->drupalGet('/test-deprecations');
 
     $deprecation_messages = [];
@@ -553,23 +609,38 @@ class BrowserTestBaseTest extends BrowserTestBase {
   }
 
   /**
+   * Tests deprecation message from deprecated route.
+   *
+   * This test verifies that TestHttpClientMiddleware is properly re-throwing
+   * deprecations occurred in the SUT and collected in the response header.
+   *
+   * @see \Drupal\Core\Test\HttpClientMiddleware\TestHttpClientMiddleware
+   * @see _drupal_error_handler
+   * @see _drupal_error_handler_real
+   */
+  #[IgnoreDeprecations]
+  public function testDeprecationTriggeredInSystemUnderTest(): void {
+    $this->expectUserDeprecationMessage('This is the deprecation message for deprecation_test_function().');
+    $this->drupalGet(Url::fromRoute('deprecation_test.route'));
+  }
+
+  /**
    * Tests the dump() function provided by the var-dumper Symfony component.
    */
-  public function testVarDump() {
-    // Append the stream capturer to the STDOUT stream, so that we can test the
-    // dump() output and also prevent it from actually outputting in this
-    // particular test.
-    stream_filter_register("capture", StreamCapturer::class);
-    stream_filter_append(STDOUT, "capture");
+  public function testVarDump(): void {
+    // Dump some variables.
+    $object = (object) [
+      'Aldebaran' => 'Betelgeuse',
+    ];
+    dump($object);
+    dump('Alpheratz');
 
-    // Dump some variables to check that dump() in test code produces output
-    // on the command line that is running the test.
-    $role = Role::load('authenticated');
-    dump($role);
-    dump($role->id());
+    $dumpString = json_encode(DebugDump::getDumps());
 
-    $this->assertStringContainsString('Drupal\user\Entity\Role', StreamCapturer::$cache);
-    $this->assertStringContainsString('authenticated', StreamCapturer::$cache);
+    $this->assertStringContainsString('BrowserTestBaseTest::testVarDump', $dumpString);
+    $this->assertStringContainsString('Aldebaran', $dumpString);
+    $this->assertStringContainsString('Betelgeuse', $dumpString);
+    $this->assertStringContainsString('Alpheratz', $dumpString);
 
     // Visit a Drupal page with call to the dump() function to check that dump()
     // in site code produces output in the requested web page's HTML.
@@ -585,12 +656,15 @@ class BrowserTestBaseTest extends BrowserTestBase {
     $this->assertStringContainsString('  #<span class=sf-dump-protected title="Protected property">permissions</span>: []', $body);
     $this->assertStringContainsString('  #<span class=sf-dump-protected title="Protected property">uuid</span>: "', $body);
     $this->assertStringContainsString('</samp>}', $body);
+
+    // Check that dump() in SUT did not leak into the test's dumps.
+    $this->assertSame($dumpString, json_encode(DebugDump::getDumps()));
   }
 
   /**
-   * Test if setting an invalid scheme in SIMPLETEST_BASE_URL throws an exception.
+   * Tests an invalid scheme in SIMPLETEST_BASE_URL throws an exception.
    */
-  public function testSimpleTestBaseUrlValidation() {
+  public function testSimpleTestBaseUrlValidation(): void {
     putenv('SIMPLETEST_BASE_URL=mysql://user:pass@localhost/database');
     $this->expectException(\Exception::class);
     $this->expectExceptionMessage('You must provide valid scheme for the SIMPLETEST_BASE_URL environment variable. Valid schema are: http, https.');

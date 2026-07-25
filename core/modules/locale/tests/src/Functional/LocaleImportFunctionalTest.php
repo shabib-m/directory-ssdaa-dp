@@ -1,24 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\locale\Functional;
 
-use Drupal\Core\Url;
 use Drupal\Core\Database\Database;
-use Drupal\Core\File\FileSystemInterface;
-use Drupal\Tests\BrowserTestBase;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
+use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore chien chiens deutsch januari lundi montag moutons műveletek
+// cspell:ignore svibanj svib räme
 /**
  * Tests the import of locale files.
- *
- * @group locale
  */
+#[Group('locale')]
+#[RunTestsInSeparateProcesses]
 class LocaleImportFunctionalTest extends BrowserTestBase {
 
+  use StringTranslationTrait;
+
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['locale', 'dblog'];
 
@@ -50,8 +57,8 @@ class LocaleImportFunctionalTest extends BrowserTestBase {
     // Copy test po files to the translations directory.
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
     $file_system = \Drupal::service('file_system');
-    $file_system->copy(__DIR__ . '/../../../tests/test.de.po', 'translations://', FileSystemInterface::EXISTS_REPLACE);
-    $file_system->copy(__DIR__ . '/../../../tests/test.xx.po', 'translations://', FileSystemInterface::EXISTS_REPLACE);
+    $file_system->copy(__DIR__ . '/../../../tests/test.de.po', 'translations://', FileExists::Replace);
+    $file_system->copy(__DIR__ . '/../../../tests/test.xx.po', 'translations://', FileExists::Replace);
 
     $this->adminUser = $this->drupalCreateUser([
       'administer languages',
@@ -77,7 +84,7 @@ class LocaleImportFunctionalTest extends BrowserTestBase {
   /**
    * Tests import of standalone .po files.
    */
-  public function testStandalonePoFile() {
+  public function testStandalonePoFile(): void {
     // Try importing a .po file.
     $this->importPoFile($this->getPoFile(), [
       'langcode' => 'fr',
@@ -116,7 +123,7 @@ class LocaleImportFunctionalTest extends BrowserTestBase {
 
     $this->assertSession()->pageTextContains("2 translation strings were skipped because of disallowed or malformed HTML. See the log for details.");
 
-    // Check empty files import with a user that cannot access site reports..
+    // Check empty files import with a user that cannot access site reports.
     $this->drupalLogin($this->adminUser);
     // Try importing a zero byte sized .po file.
     $this->importPoFile($this->getEmptyPoFile(), [
@@ -247,12 +254,15 @@ class LocaleImportFunctionalTest extends BrowserTestBase {
     $this->submitForm($search, 'Filter');
     $this->assertSession()->pageTextNotContains('No strings available.');
 
+    // Try importing a .po file with invalid encoding.
+    $this->importPoFile($this->getInvalidEncodedPoFile(), [], ['Windows-1252']);
+    $this->assertSession()->pageTextContains('The file is encoded with ASCII. It must be encoded with UTF-8');
   }
 
   /**
    * Tests msgctxt context support.
    */
-  public function testLanguageContext() {
+  public function testLanguageContext(): void {
     // Try importing a .po file.
     $this->importPoFile($this->getPoFileWithContext(), [
       'langcode' => 'hr',
@@ -260,14 +270,21 @@ class LocaleImportFunctionalTest extends BrowserTestBase {
 
     // We cast the return value of t() to string so as to retrieve the
     // translated value, rendered as a string.
-    $this->assertSame('Svibanj', (string) t('May', [], ['langcode' => 'hr', 'context' => 'Long month name']), 'Long month name context is working.');
-    $this->assertSame('Svi.', (string) t('May', [], ['langcode' => 'hr']), 'Default context is working.');
+    $this->assertSame('Svibanj', (string) $this->t('May', [], ['langcode' => 'hr', 'context' => 'Long month name']), 'Long month name context is working.');
+    $this->assertSame('Svib.', (string) $this->t('May', [], ['langcode' => 'hr', 'context' => 'Abbreviated month name']), 'Abbreviated month name context is working.');
+    $this->assertSame('Svi.', (string) $this->t('May', [], ['langcode' => 'hr']), 'Default context is working.');
+    $this->assertSame('sv', (string) $this->t('st', [], ['langcode' => 'hr']), 'Default context for "saint" is working.');
+    $this->assertSame('.', (string) $this->t('st', [], ['langcode' => 'hr', 'context' => 'Day ordinal suffix']), 'Day ordinal suffix context is working.');
+
+    // Ensure that the date formatter applies the right translation context.
+    $formatted_date = $this->container->get('date.formatter')->format(483820620, 'custom', 'jS F Y', 'America/New_York', 'hr');
+    $this->assertEquals('1. Svibanj 1985', $formatted_date, 'Got the right formatted date using the date format translation pattern.');
   }
 
   /**
    * Tests empty msgstr at end of .po file see #611786.
    */
-  public function testEmptyMsgstr() {
+  public function testEmptyMsgstr(): void {
     $langcode = 'hu';
 
     // Try importing a .po file.
@@ -276,7 +293,7 @@ class LocaleImportFunctionalTest extends BrowserTestBase {
     ]);
 
     $this->assertSession()->pageTextContains("One translation file imported. 1 translations were added, 0 translations were updated and 0 translations were removed.");
-    $this->assertSame('Műveletek', (string) t('Operations', [], ['langcode' => $langcode]), 'String imported and translated.');
+    $this->assertSame('Műveletek', (string) $this->t('Operations', [], ['langcode' => $langcode]), 'String imported and translated.');
 
     // Try importing a .po file.
     $this->importPoFile($this->getPoFileWithEmptyMsgstr(), [
@@ -300,7 +317,7 @@ class LocaleImportFunctionalTest extends BrowserTestBase {
   /**
    * Tests .po file import with configuration translation.
    */
-  public function testConfigPoFile() {
+  public function testConfigPoFile(): void {
     // Values for translations to assert. Config key, original string,
     // translation and config property name.
     $config_strings = [
@@ -366,7 +383,7 @@ class LocaleImportFunctionalTest extends BrowserTestBase {
   /**
    * Tests .po file import with user.settings configuration.
    */
-  public function testConfigTranslationImportingPoFile() {
+  public function testConfigTranslationImportingPoFile(): void {
     // Set the language code.
     $langcode = 'de';
 
@@ -383,7 +400,7 @@ class LocaleImportFunctionalTest extends BrowserTestBase {
   /**
    * Tests the translation are imported when a new language is created.
    */
-  public function testCreatedLanguageTranslation() {
+  public function testCreatedLanguageTranslation(): void {
     // Import a .po file to add de language.
     $this->importPoFile($this->getPoFileWithConfigDe(), ['langcode' => 'de']);
 
@@ -399,10 +416,15 @@ class LocaleImportFunctionalTest extends BrowserTestBase {
    *   Contents of the .po file to import.
    * @param array $options
    *   (optional) Additional options to pass to the translation import form.
+   * @param array $encodings
+   *   (optional) The encoding of the file.
    */
-  public function importPoFile($contents, array $options = []) {
+  public function importPoFile($contents, array $options = [], array $encodings = []): void {
     $file_system = \Drupal::service('file_system');
     $name = $file_system->tempnam('temporary://', "po_") . '.po';
+    foreach ($encodings as $encoding) {
+      $contents = mb_convert_encoding($contents, $encoding);
+    }
     file_put_contents($name, $contents);
     $options['files[file]'] = $name;
     $this->drupalGet('admin/config/regional/translate/import');
@@ -419,7 +441,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 
@@ -467,7 +489,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 
@@ -492,7 +514,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\\n"
 
@@ -513,7 +535,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 
@@ -548,7 +570,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 
@@ -574,7 +596,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\\n"
 
@@ -582,8 +604,19 @@ msgctxt "Long month name"
 msgid "May"
 msgstr "Svibanj"
 
+msgctxt "Abbreviated month name"
+msgid "May"
+msgstr "Svib."
+
 msgid "May"
 msgstr "Svi."
+
+msgctxt "Day ordinal suffix"
+msgid "st"
+msgstr "."
+
+msgid "st"
+msgstr "sv"
 EOF;
   }
 
@@ -596,7 +629,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 
@@ -615,7 +648,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 
@@ -637,7 +670,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 
@@ -659,7 +692,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 
@@ -669,6 +702,24 @@ msgstr "Anonymous German"
 msgid "German"
 msgstr "Deutsch"
 
+EOF;
+  }
+
+  /**
+   * Helper function that returns a .po file with invalid encoding.
+   */
+  public function getInvalidEncodedPoFile() {
+    return <<< EOF
+msgid ""
+msgstr ""
+"Project-Id-Version: Drupal 8\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=Windows-1252\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\\n"
+
+msgid "Swamp"
+msgstr "Räme"
 EOF;
   }
 

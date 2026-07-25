@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\KeyValueStore;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\KeyValueStore\KeyValueDatabaseFactory;
 use Drupal\Core\KeyValueStore\KeyValueFactory;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the key-value database storage.
- *
- * @group KeyValueStore
  */
+#[Group('KeyValueStore')]
+#[RunTestsInSeparateProcesses]
 class DatabaseStorageTest extends StorageTestBase {
 
   /**
@@ -25,7 +29,7 @@ class DatabaseStorageTest extends StorageTestBase {
   /**
    * {@inheritdoc}
    */
-  public function register(ContainerBuilder $container) {
+  public function register(ContainerBuilder $container): void {
     parent::register($container);
 
     $parameter[KeyValueFactory::DEFAULT_SETTING] = 'keyvalue.database';
@@ -35,7 +39,8 @@ class DatabaseStorageTest extends StorageTestBase {
   /**
    * Tests asynchronous table creation.
    */
-  public function testConcurrent() {
+  public function testConcurrent(): void {
+    $this->markTestSkipped("Skipped due to frequent random test failures. See https://www.drupal.org/project/drupal/issues/3398063");
     if (!function_exists('pcntl_fork')) {
       $this->markTestSkipped('Requires the pcntl_fork() function');
     }

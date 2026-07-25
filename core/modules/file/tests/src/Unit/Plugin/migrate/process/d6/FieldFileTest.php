@@ -1,23 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Unit\Plugin\migrate\process\d6;
 
 use Drupal\file\Plugin\migrate\process\d6\FieldFile;
+use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\MigrateLookupInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
-use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\Row;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 
 /**
- * @group file
+ * Tests the file field process plugin.
  */
+#[Group('file')]
+#[IgnoreDeprecations]
 class FieldFileTest extends UnitTestCase {
 
   /**
    * Tests that alt and title attributes are included in transformed values.
    */
-  public function testTransformAltTitle() {
+  public function testTransformAltTitle(): void {
     $executable = $this->prophesize(MigrateExecutableInterface::class)->reveal();
     $row = $this->prophesize(Row::class)->reveal();
     $migration = $this->prophesize(MigrationInterface::class)->reveal();

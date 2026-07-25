@@ -5,11 +5,12 @@ namespace Drupal\migrate\Plugin\migrate\process;
 use Drupal\Component\Transliteration\TransliterationInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\Row;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Creates a machine name.
@@ -57,11 +58,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * is 'áéí!.jpg' then the destination value of bar will be 'aei_.jpg'.
  *
  * @see \Drupal\migrate\Plugin\MigrateProcessInterface
- *
- * @MigrateProcessPlugin(
- *   id = "machine_name"
- * )
  */
+#[MigrateProcess('machine_name')]
 class MachineName extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -90,7 +88,13 @@ class MachineName extends ProcessPluginBase implements ContainerFactoryPluginInt
    * @param \Drupal\Component\Transliteration\TransliterationInterface $transliteration
    *   The transliteration service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, TransliterationInterface $transliteration) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    #[Autowire(service: 'transliteration')]
+    TransliterationInterface $transliteration,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->transliteration = $transliteration;
 
@@ -98,18 +102,6 @@ class MachineName extends ProcessPluginBase implements ContainerFactoryPluginInt
     if (!is_string($this->replacePattern)) {
       throw new MigrateException('The replace pattern should be a string');
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('transliteration')
-    );
   }
 
   /**

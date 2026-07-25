@@ -3,17 +3,14 @@
 namespace Drupal\Core\Access;
 
 use Drupal\Core\Routing\Access\AccessInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
  * Loads access checkers from the container.
  */
-class CheckProvider implements CheckProviderInterface, ContainerAwareInterface {
-
-  use ContainerAwareTrait;
+class CheckProvider implements CheckProviderInterface {
 
   /**
    * Array of registered access check service ids.
@@ -38,6 +35,8 @@ class CheckProvider implements CheckProviderInterface, ContainerAwareInterface {
 
   /**
    * Array of access checks which only will be run on the incoming request.
+   *
+   * @var string[]
    */
   protected $checksNeedsRequest = [];
 
@@ -54,6 +53,21 @@ class CheckProvider implements CheckProviderInterface, ContainerAwareInterface {
    * @var array
    */
   protected $dynamicRequirementMap;
+
+  /**
+   * Constructs a CheckProvider object.
+   *
+   * @param array $dynamic_requirements_map
+   *   An array to map dynamic requirement keys to service IDs.
+   * @param \Psr\Container\ContainerInterface $container
+   *   The check provider service locator.
+   */
+  public function __construct(
+    array $dynamic_requirements_map,
+    protected ContainerInterface $container,
+  ) {
+    $this->dynamicRequirementMap = $dynamic_requirements_map;
+  }
 
   /**
    * {@inheritdoc}
@@ -80,7 +94,6 @@ class CheckProvider implements CheckProviderInterface, ContainerAwareInterface {
    * {@inheritdoc}
    */
   public function setChecks(RouteCollection $routes) {
-    $this->loadDynamicRequirementMap();
     foreach ($routes as $route) {
       if ($checks = $this->applies($route)) {
         $route->setOption('_access_checks', $checks);

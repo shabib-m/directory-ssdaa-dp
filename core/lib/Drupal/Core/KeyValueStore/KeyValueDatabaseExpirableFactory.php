@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\KeyValueStore;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Serialization\SerializationInterface;
 use Drupal\Core\Database\Connection;
 
@@ -18,30 +19,20 @@ class KeyValueDatabaseExpirableFactory implements KeyValueExpirableFactoryInterf
   protected $storages = [];
 
   /**
-   * The serialization class to use.
-   *
-   * @var \Drupal\Component\Serialization\SerializationInterface
-   */
-  protected $serializer;
-
-  /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
-
-  /**
    * Constructs this factory object.
    *
    * @param \Drupal\Component\Serialization\SerializationInterface $serializer
    *   The serialization class to use.
    * @param \Drupal\Core\Database\Connection $connection
    *   The Connection object containing the key-value tables.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    */
-  public function __construct(SerializationInterface $serializer, Connection $connection) {
-    $this->serializer = $serializer;
-    $this->connection = $connection;
+  public function __construct(
+    protected SerializationInterface $serializer,
+    protected Connection $connection,
+    protected TimeInterface $time,
+  ) {
   }
 
   /**
@@ -49,7 +40,7 @@ class KeyValueDatabaseExpirableFactory implements KeyValueExpirableFactoryInterf
    */
   public function get($collection) {
     if (!isset($this->storages[$collection])) {
-      $this->storages[$collection] = new DatabaseStorageExpirable($collection, $this->serializer, $this->connection);
+      $this->storages[$collection] = new DatabaseStorageExpirable($collection, $this->serializer, $this->connection, $this->time);
     }
     return $this->storages[$collection];
   }
@@ -60,7 +51,7 @@ class KeyValueDatabaseExpirableFactory implements KeyValueExpirableFactoryInterf
   public function garbageCollection() {
     try {
       $this->connection->delete('key_value_expire')
-        ->condition('expire', REQUEST_TIME, '<')
+        ->condition('expire', $this->time->getRequestTime(), '<')
         ->execute();
     }
     catch (\Exception $e) {

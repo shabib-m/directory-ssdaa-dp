@@ -28,7 +28,7 @@
  * - metadata_attributes: HTML attributes for the expandable metadata area.
  * - status: Whether or not the Media is published.
  *
- * @see template_preprocess_media()
+ * @see \Drupal\media\MediaThemeHooks::preprocessMedia
  * @see media_library_preprocess_media()
  *
  * @ingroup themeable
@@ -40,7 +40,7 @@
       {{ content|without('name') }}
     </div>
     {% if not status %}
-      {{ "unpublished" | t }}
+      {{ "unpublished"|t }}
     {% endif %}
     <div{{ metadata_attributes }}>
       {{ name }}

@@ -1,0 +1,57 @@
+# محتوى دليل المواقع (نوع المحتوى: directory)
+
+- type: "directory"
+  title: "ﻣﻮﻗﻊ العلامه ﺻﺎﻟﺢ ﺑﻦ ﻓﻮﺯﺍﻥ ﺍﻟﻔﻮﺯﺍﻥ"
+  status: 1
+  body: "<p>موقع الامام العلامة الشيخ صالح الفوزان حفظة الله واطال في عمره على طاعته ونفع بعلمه </p>"
+  format: "full_html"
+  alias: "/website/alfawzan"
+  country_name: "المملكة العربية السعودية"  # اسم الدولة للبحث عنها وربطها
+  category_child: "العلماء والدعاة"        # اسم القسم المراد ربط الموقع به
+  website_url: "https://www.alfawzan.af.org.sa"
+  site_image: "alfawzan.png"               # اسم ملف صورة الموقع فقط
+
+- type: "directory"
+  title: "موقع العلامة عبدالعزيز بن باز"
+  status: 1
+  body: "<p>موقع الامام الشيخ عبدالعزيز بن باز رحمة الله رحمة واسعة ورفع درجاته</p>"
+  format: "full_html"
+  alias: "/website/binbaz"
+  country_name: "المملكة العربية السعودية"
+  category_child: "العلماء والدعاة"
+  website_url: "https://binbaz.org.sa/"
+  site_image: "binbaz.png"
+
+- type: "directory"
+  title: "موقع الشيخ العلامة الشيخ بن عثيمين"
+  status: 1
+  body: "<p>موقع الشيخ العلامة محمد بن صالح العثيمين رحمة الله رحمة واسعة ورفع درجاته</p>"
+  format: "full_html"
+  alias: "/website/binothaimeen"
+  country_name: "المملكة العربية السعودية"
+  category_child: "العلماء والدعاة"
+  website_url: "https://binothaimeen.net/index.php"
+  site_image: "binothaimeen.png"
+
+- type: "directory"
+  title: "ﻣﻮﻗﻊ ﺍﻟﺸﻴﺦ ﻣﺤﻤﺪ ﻧﺎﺻﺮ ﺍﻟﺪﻳﻦ ﺍﻷﻟﺒﺎﻧﻲ"
+  status: 1
+  body: "<p>موقع الشيخ محمد ناصر الدين الالباني رحمة الله رحمه واسعة ورفع درجاته ونفع بعلمة</p>"
+  format: "full_html"
+  alias: "/website/alalbany"
+  country_name: "أخرى ومنوعه"
+  category_child: "العلماء والدعاة"
+  website_url: "https://alalbany.net"
+  site_image: "alalbany.png"
+
+- type: "directory"
+  title: "ﻣﻮﻗﻊ ﺍﻟﺸﻴﺦ ﻣﻘﺒﻞ ﺑﻦ ﻫﺎﺩﻱ ﺍﻟﻮﺍﺩﻋﻲ"
+  status: 1
+  body: "<p>موقع الشيخ مقبل بن هادي الوادعي رحمة الله رحمة واسعه ورفع درجاته ونفع بعلمه</p>"
+  format: "full_html"
+  alias: "/website/muqbel"
+  country_name: "اليمن"
+  category_child: "العلماء والدعاة"
+  website_url: "https://muqbel.net"
+  site_image: "muqbel.png"
+

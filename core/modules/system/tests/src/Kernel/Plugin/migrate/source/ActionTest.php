@@ -1,26 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Plugin\migrate\source;
 
+use Drupal\system\Plugin\migrate\source\Action;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests actions source plugin.
- *
- * @covers \Drupal\system\Plugin\migrate\source\Action
- * @group action
  */
+#[CoversClass(Action::class)]
+#[Group('action')]
+#[RunTestsInSeparateProcesses]
 class ActionTest extends MigrateSqlSourceTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['action', 'migrate_drupal', 'system'];
+  protected static $modules = ['migrate_drupal', 'system'];
 
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     $tests[0][0]['actions'] = [

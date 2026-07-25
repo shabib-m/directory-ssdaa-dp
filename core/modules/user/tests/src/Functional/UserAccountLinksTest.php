@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests user-account links.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserAccountLinksTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['menu_ui', 'block', 'test_page_test'];
 
@@ -36,7 +38,7 @@ class UserAccountLinksTest extends BrowserTestBase {
   /**
    * Tests the secondary menu.
    */
-  public function testSecondaryMenu() {
+  public function testSecondaryMenu(): void {
     // Create a regular user.
     $user = $this->drupalCreateUser([]);
 
@@ -60,7 +62,7 @@ class UserAccountLinksTest extends BrowserTestBase {
   /**
    * Tests disabling the 'My account' link.
    */
-  public function testDisabledAccountLink() {
+  public function testDisabledAccountLink(): void {
     // Create an admin user and log in.
     $this->drupalLogin($this->drupalCreateUser([
       'access administration pages',
@@ -93,7 +95,7 @@ class UserAccountLinksTest extends BrowserTestBase {
   /**
    * Tests page title is set correctly on user account tabs.
    */
-  public function testAccountPageTitles() {
+  public function testAccountPageTitles(): void {
     // Default page titles are suffixed with the site name - Drupal.
     $title_suffix = ' | Drupal';
 
@@ -119,7 +121,7 @@ class UserAccountLinksTest extends BrowserTestBase {
   /**
    * Ensures that logout URL redirects an anonymous user to the front page.
    */
-  public function testAnonymousLogout() {
+  public function testAnonymousLogout(): void {
     $this->drupalGet('user/logout');
     $this->assertSession()->addressEquals('/');
     $this->assertSession()->statusCodeEquals(200);

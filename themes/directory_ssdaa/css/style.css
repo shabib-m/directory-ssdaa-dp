@@ -35,7 +35,10 @@
 	margin: 0 20px;
 	padding: 0 20px;
 }
-#block-directory-ssdaa-main-menu .nav-link {
+.node--type-directory {
+	text-align: right;
+}
+#block-directory-ssdaa-alqaymtalryysyt .nav-link {
 	color: white !important;
 	font-size: 1.1rem !important;
 	border-bottom: 3px solid #09d2d2;
@@ -70,11 +73,12 @@
 	color: #4d4c4c;
 	font-size: 21px;
 }
-#block-views-block-block-country-term-block-1 {
+#block-views-block-block-country-term-block-1, .region-featured-top,
+#content {
 	text-align: center;
 	font-size: 1.1rem;
 	color: #4d4c4c;
-	background: #fafafa;
+	background: #f8f8f8;
 	padding: 30px 0;
 }
 #block-views-block-block-country-term-block-1 a {

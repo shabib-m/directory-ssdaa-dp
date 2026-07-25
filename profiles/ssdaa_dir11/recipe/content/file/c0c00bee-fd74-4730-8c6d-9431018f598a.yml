@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: c0c00bee-fd74-4730-8c6d-9431018f598a
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: ML.png
+  uri:
+    -
+      value: 'public://term-country/2026-07/ML.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 3009
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

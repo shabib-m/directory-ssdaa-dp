@@ -1,18 +1,3 @@
-entity.media.revision:
-  path: '/media/{media}/revisions/{media_revision}/view'
-  defaults:
-    _controller: '\Drupal\Core\Entity\Controller\EntityRevisionViewController'
-    _title_callback: '\Drupal\Core\Entity\Controller\EntityController::title'
-  options:
-    parameters:
-      media:
-        type: entity:media
-      media_revision:
-        type: entity_revision:media
-  requirements:
-    _entity_access: 'media_revision.view all revisions'
-    media: \d+
-
 media.oembed_iframe:
   path: '/media/oembed'
   defaults:
@@ -36,12 +21,3 @@ media.filter.preview:
   requirements:
     _entity_access: 'filter_format.use'
     _custom_access: '\Drupal\media\Controller\MediaFilterController::formatUsesMediaEmbedFilter'
-
-editor.media_dialog:
-  path: '/editor/dialog/media/{editor}'
-  defaults:
-    _form: '\Drupal\media\Form\EditorMediaDialog'
-    _title: 'Edit media'
-  methods: [POST]
-  requirements:
-    _entity_access: 'editor.use'

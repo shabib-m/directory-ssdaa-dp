@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 305de896-24e3-45bd-936b-0d573d15efd6
+  bundle: country
+  default_langcode: ar
+  depends:
+    a85fb25d-db63-4545-87dd-fd60a7140cbb: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: المغرب
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: a85fb25d-db63-4545-87dd-fd60a7140cbb
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

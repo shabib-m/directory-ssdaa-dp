@@ -85,8 +85,13 @@
           $details.each(function () {
             const $that = $(this);
             const $summary = $that.find('> summary');
+            // Summary elements often have 2 child nodes: a text title and a
+            // dynamic summary wrapped in <span>. To set the vertical tab title,
+            // we only want to copy the summary title, which is the first child
+            // node.
+            const title = $summary[0]?.firstChild?.textContent || '';
             const verticalTab = new Drupal.verticalTab({
-              title: $summary.length ? $summary[0].textContent : '',
+              title,
               details: $that,
             });
             tabList.append(verticalTab.item);
@@ -196,8 +201,11 @@
         })
         .end()
         .show()
-        .siblings(':hidden.vertical-tabs__active-tab')[0].value =
-        this.details.attr('id');
+        .siblings(':hidden.vertical-tabs__active-tab')
+        .get()
+        .forEach((hidden) => {
+          hidden.value = this.details.attr('id');
+        });
       this.details.attr('open', true);
       this.item.addClass('is-selected');
       // Mark the active tab for screen readers.

@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Unit;
 
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\UserNameItem;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Defines a test for the UserNameItem field-type.
- *
- * @group Field
- * @coversDefaultClass \Drupal\user\UserNameItem
  */
+#[CoversClass(UserNameItem::class)]
+#[Group('Field')]
 class UserNameItemTest extends UnitTestCase {
 
   /**
@@ -19,10 +23,8 @@ class UserNameItemTest extends UnitTestCase {
    *
    * @param int $max_length
    *   Maximum field length.
-   *
-   * @covers ::generateSampleValue
-   * @dataProvider providerMaxLength
    */
+  #[DataProvider('providerMaxLength')]
   public function testGenerateSampleValue(int $max_length): void {
     $definition = $this->prophesize(FieldDefinitionInterface::class);
     $definition->getSetting('max_length')->willReturn($max_length);
@@ -40,7 +42,7 @@ class UserNameItemTest extends UnitTestCase {
    * @return array
    *   Test cases.
    */
-  public function providerMaxLength(): array {
+  public static function providerMaxLength(): array {
     return [
       '32' => [32],
       '255' => [255],

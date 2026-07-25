@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 49f623d0-9617-447b-b645-738ec88fce61
+  bundle: country
+  default_langcode: ar
+  depends:
+    c00eb274-ecea-4ced-8746-67d25604aeab: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: سوريا
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: c00eb274-ecea-4ced-8746-67d25604aeab
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

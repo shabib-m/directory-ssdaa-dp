@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Uuid\Php;
-use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Config\ConfigImporterException;
+use Drupal\Core\Config\ConfigImporterFactory;
 use Drupal\Core\Config\StorageComparer;
-use Drupal\node\Entity\NodeType;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests validating renamed configuration in a configuration import.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigImportRenameValidationTest extends KernelTestBase {
 
   /**
@@ -25,16 +28,13 @@ class ConfigImportRenameValidationTest extends KernelTestBase {
   protected $configImporter;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'system',
     'user',
     'node',
     'field',
-    'text',
     'config_test',
   ];
 
@@ -53,25 +53,13 @@ class ConfigImportRenameValidationTest extends KernelTestBase {
       $this->container->get('config.storage.sync'),
       $this->container->get('config.storage')
     );
-    $this->configImporter = new ConfigImporter(
-      $storage_comparer->createChangelist(),
-      $this->container->get('event_dispatcher'),
-      $this->container->get('config.manager'),
-      $this->container->get('lock.persistent'),
-      $this->container->get('config.typed'),
-      $this->container->get('module_handler'),
-      $this->container->get('module_installer'),
-      $this->container->get('theme_handler'),
-      $this->container->get('string_translation'),
-      $this->container->get('extension.list.module'),
-      $this->container->get('extension.list.theme')
-    );
+    $this->configImporter = $this->container->get(ConfigImporterFactory::class)->get($storage_comparer->createChangelist());
   }
 
   /**
    * Tests configuration renaming validation.
    */
-  public function testRenameValidation() {
+  public function testRenameValidation(): void {
     // Create a test entity.
     $test_entity_id = $this->randomMachineName();
     $test_entity = \Drupal::entityTypeManager()->getStorage('config_test')->create([
@@ -89,7 +77,7 @@ class ConfigImportRenameValidationTest extends KernelTestBase {
 
     // Create a content type with a matching UUID in the active storage.
     $content_type = NodeType::create([
-      'type' => mb_strtolower($this->randomMachineName(16)),
+      'type' => $this->randomMachineName(16),
       'name' => $this->randomMachineName(),
       'uuid' => $uuid,
     ]);
@@ -110,9 +98,9 @@ class ConfigImportRenameValidationTest extends KernelTestBase {
       $this->configImporter->import();
       $this->fail('Expected ConfigImporterException thrown when a renamed configuration entity does not match the existing entity type.');
     }
-    catch (ConfigImporterException $e) {
+    catch (ConfigImporterException) {
       $expected = [
-        new FormattableMarkup('Entity type mismatch on rename. @old_type not equal to @new_type for existing configuration @old_name and staged configuration @new_name.', ['@old_type' => 'node_type', '@new_type' => 'config_test', '@old_name' => 'node.type.' . $content_type->id(), '@new_name' => 'config_test.dynamic.' . $test_entity_id]),
+        "Entity type mismatch on rename. node_type not equal to config_test for existing configuration node.type.{$content_type->id()} and staged configuration config_test.dynamic.$test_entity_id.",
       ];
       $this->assertEquals($expected, $this->configImporter->getErrors());
     }
@@ -121,7 +109,7 @@ class ConfigImportRenameValidationTest extends KernelTestBase {
   /**
    * Tests configuration renaming validation for simple configuration.
    */
-  public function testRenameSimpleConfigValidation() {
+  public function testRenameSimpleConfigValidation(): void {
     $uuid = new Php();
     // Create a simple configuration with a UUID.
     $config = $this->config('config_test.new');
@@ -152,9 +140,9 @@ class ConfigImportRenameValidationTest extends KernelTestBase {
       $this->configImporter->import();
       $this->fail('Expected ConfigImporterException thrown when simple configuration is renamed.');
     }
-    catch (ConfigImporterException $e) {
+    catch (ConfigImporterException) {
       $expected = [
-        new FormattableMarkup('Rename operation for simple configuration. Existing configuration @old_name and staged configuration @new_name.', ['@old_name' => 'config_test.old', '@new_name' => 'config_test.new']),
+        'Rename operation for simple configuration. Existing configuration config_test.old and staged configuration config_test.new.',
       ];
       $this->assertEquals($expected, $this->configImporter->getErrors());
     }

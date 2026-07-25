@@ -2,55 +2,62 @@
 
 namespace Drupal\user\Entity;
 
+use Drupal\Core\Config\Action\Attribute\ActionMethod;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Entity\Attribute\ConfigEntityType;
+use Drupal\Core\Entity\EntityDeleteForm;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\user\RoleAccessControlHandler;
+use Drupal\user\RoleForm;
 use Drupal\user\RoleInterface;
+use Drupal\user\RoleListBuilder;
+use Drupal\user\RoleStorage;
 
 /**
  * Defines the user role entity class.
- *
- * @ConfigEntityType(
- *   id = "user_role",
- *   label = @Translation("Role"),
- *   label_collection = @Translation("Roles"),
- *   label_singular = @Translation("role"),
- *   label_plural = @Translation("roles"),
- *   label_count = @PluralTranslation(
- *     singular = "@count role",
- *     plural = "@count roles",
- *   ),
- *   handlers = {
- *     "storage" = "Drupal\user\RoleStorage",
- *     "access" = "Drupal\user\RoleAccessControlHandler",
- *     "list_builder" = "Drupal\user\RoleListBuilder",
- *     "form" = {
- *       "default" = "Drupal\user\RoleForm",
- *       "delete" = "Drupal\Core\Entity\EntityDeleteForm"
- *     }
- *   },
- *   admin_permission = "administer permissions",
- *   config_prefix = "role",
- *   static_cache = TRUE,
- *   entity_keys = {
- *     "id" = "id",
- *     "weight" = "weight",
- *     "label" = "label"
- *   },
- *   links = {
- *     "delete-form" = "/admin/people/roles/manage/{user_role}/delete",
- *     "edit-form" = "/admin/people/roles/manage/{user_role}",
- *     "edit-permissions-form" = "/admin/people/permissions/{user_role}",
- *     "collection" = "/admin/people/roles",
- *   },
- *   config_export = {
- *     "id",
- *     "label",
- *     "weight",
- *     "is_admin",
- *     "permissions",
- *   }
- * )
  */
+#[ConfigEntityType(
+  id: 'user_role',
+  label: new TranslatableMarkup('Role'),
+  label_collection: new TranslatableMarkup('Roles'),
+  label_singular: new TranslatableMarkup('role'),
+  label_plural: new TranslatableMarkup('roles'),
+  config_prefix: 'role',
+  static_cache: TRUE,
+  entity_keys: [
+    'id' => 'id',
+    'weight' => 'weight',
+    'label' => 'label',
+  ],
+  handlers: [
+    'storage' => RoleStorage::class,
+    'access' => RoleAccessControlHandler::class,
+    'list_builder' => RoleListBuilder::class,
+    'form' => [
+      'default' => RoleForm::class,
+      'delete' => EntityDeleteForm::class,
+    ],
+  ],
+  links: [
+    'delete-form' => '/admin/people/roles/manage/{user_role}/delete',
+    'edit-form' => '/admin/people/roles/manage/{user_role}',
+    'edit-permissions-form' => '/admin/people/permissions/{user_role}',
+    'collection' => '/admin/people/roles',
+  ],
+  admin_permission: 'administer permissions',
+  label_count: [
+    'singular' => '@count role',
+    'plural' => '@count roles',
+  ],
+  config_export: [
+    'id',
+    'label',
+    'weight',
+    'is_admin',
+    'permissions',
+  ],
+)]
 class Role extends ConfigEntityBase implements RoleInterface {
 
   /**
@@ -86,7 +93,7 @@ class Role extends ConfigEntityBase implements RoleInterface {
    *
    * @var bool
    */
-  protected $is_admin;
+  protected $is_admin = FALSE;
 
   /**
    * {@inheritdoc}
@@ -126,6 +133,7 @@ class Role extends ConfigEntityBase implements RoleInterface {
   /**
    * {@inheritdoc}
    */
+  #[ActionMethod(adminLabel: new TranslatableMarkup('Add permission to role'))]
   public function grantPermission($permission) {
     if ($this->isAdmin()) {
       return $this;
@@ -178,15 +186,14 @@ class Role extends ConfigEntityBase implements RoleInterface {
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
-    if (!isset($this->weight) && ($roles = $storage->loadMultiple())) {
+    if (!isset($this->weight)) {
       // Set a role weight to make this new role last.
-      $max = array_reduce($roles, function ($max, $role) {
-        return $max > $role->weight ? $max : $role->weight;
-      });
-      $this->weight = $max + 1;
+      $this->weight = array_reduce($storage->loadMultiple(), function ($max, $role) {
+        return $max > $role->weight ? $max : $role->weight + 1;
+      }, 0);
     }
 
-    if (!$this->isSyncing() && $this->hasTrustedData()) {
+    if (!$this->isSyncing()) {
       // Permissions are always ordered alphabetically to avoid conflicts in the
       // exported configuration. If the save is not trusted then the
       // configuration will be sorted by StorableConfigBase.
@@ -204,10 +211,15 @@ class Role extends ConfigEntityBase implements RoleInterface {
     $valid_permissions = array_intersect($this->permissions, array_keys($permission_definitions));
     $invalid_permissions = array_diff($this->permissions, $valid_permissions);
     if (!empty($invalid_permissions)) {
-      throw new \RuntimeException('Adding non-existent permissions to a role is not allowed. The incorrect permissions are "' . implode('", "', $invalid_permissions) . '".');
+      \Drupal::logger('user')->error('Non-existent permission(s) assigned to role "@label" (@id) were removed. Invalid permission(s): @permissions.', [
+        '@label' => $this->label(),
+        '@id' => $this->id(),
+        '@permissions' => implode(', ', $invalid_permissions),
+      ]);
+      $this->permissions = $valid_permissions;
     }
     foreach ($valid_permissions as $permission) {
-      // Depend on the module that is providing this permissions.
+      // Depend on the module that is providing this permission.
       $this->addDependency('module', $permission_definitions[$permission]['provider']);
       // Depend on any other dependencies defined by permissions granted to
       // this role.
@@ -260,6 +272,21 @@ class Role extends ConfigEntityBase implements RoleInterface {
     }
 
     return $changed;
+  }
+
+  /**
+   * Returns all valid permissions.
+   *
+   * @return string[]
+   *   All possible valid permissions.
+   *
+   * @see \Drupal\user\PermissionHandler::getPermissions()
+   *
+   * @internal
+   * @todo Revisit in https://www.drupal.org/node/3446364
+   */
+  public static function getAllValidPermissions(): array {
+    return array_keys(\Drupal::service('user.permissions')->getPermissions());
   }
 
 }

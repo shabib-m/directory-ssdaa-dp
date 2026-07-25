@@ -1,9 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Condition;
 
 use Drupal\node\Entity\Node;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that condition plugins basic form handling is working.
@@ -11,11 +15,14 @@ use Drupal\Tests\BrowserTestBase;
  * Checks condition forms and submission and gives a very cursory check to make
  * sure the configuration that was submitted actually causes the condition to
  * validate correctly.
- *
- * @group Condition
  */
+#[Group('Condition')]
+#[RunTestsInSeparateProcesses]
 class ConditionFormTest extends BrowserTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['node', 'condition_test'];
 
   /**
@@ -26,7 +33,7 @@ class ConditionFormTest extends BrowserTestBase {
   /**
    * Submit the condition_node_type_test_form to test condition forms.
    */
-  public function testConfigForm() {
+  public function testConfigForm(): void {
     $this->drupalCreateContentType(['type' => 'page', 'name' => 'Page']);
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
 

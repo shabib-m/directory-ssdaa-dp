@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 11358088-07f2-4e10-bc02-391ecb8e0930
+  bundle: country
+  default_langcode: ar
+  depends:
+    3e3100b4-b38e-484c-96ad-fde2af4459d2: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: تونس
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 3e3100b4-b38e-484c-96ad-fde2af4459d2
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

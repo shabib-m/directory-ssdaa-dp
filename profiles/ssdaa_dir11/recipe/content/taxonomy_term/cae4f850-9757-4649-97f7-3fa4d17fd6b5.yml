@@ -1,0 +1,28 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: cae4f850-9757-4649-97f7-3fa4d17fd6b5
+  bundle: main
+  default_langcode: ar
+  depends:
+    b522b62f-7021-4434-b625-d587b2d912f9: taxonomy_term
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'مواقع كمبيوتر عامة'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      entity: b522b62f-7021-4434-b625-d587b2d912f9
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

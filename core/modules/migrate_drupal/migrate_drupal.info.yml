@@ -3,11 +3,13 @@ type: module
 description: 'Provides a framework to migrate data from previous versions of Drupal into the site.'
 package: Migration
 # version: VERSION
+lifecycle: deprecated
+lifecycle_link: https://www.drupal.org/node/3223395#s-migrate-drupal
 dependencies:
   - drupal:migrate
   - drupal:phpass
 
-# Information added by Drupal.org packaging script on 2023-11-01
-version: '10.1.6'
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
 project: 'drupal'
-datestamp: 1698841355
+datestamp: 1784141321

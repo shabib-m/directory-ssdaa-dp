@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Queue;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -9,24 +11,26 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Queue\DatabaseQueue;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests serializing a form with an injected DatabaseQueue instance.
- *
- * @group Queue
  */
+#[Group('Queue')]
+#[RunTestsInSeparateProcesses]
 class QueueSerializationTest extends KernelTestBase implements FormInterface {
 
   use DependencySerializationTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system', 'user'];
 
   /**
+   * The queue object.
+   *
    * @var \Drupal\Core\Queue\DatabaseQueue
    */
   protected DatabaseQueue $queue;
@@ -34,7 +38,7 @@ class QueueSerializationTest extends KernelTestBase implements FormInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'queue_test_injection_form';
   }
 
@@ -42,7 +46,7 @@ class QueueSerializationTest extends KernelTestBase implements FormInterface {
    * Process callback.
    *
    * @param array $element
-   *   Form element
+   *   Form element.
    *
    * @return array
    *   Processed element.
@@ -54,7 +58,7 @@ class QueueSerializationTest extends KernelTestBase implements FormInterface {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $form['#process'][] = [$this, 'process'];
     return $form;
   }
@@ -67,7 +71,7 @@ class QueueSerializationTest extends KernelTestBase implements FormInterface {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $form_state->setRebuild();
   }
 
@@ -76,7 +80,6 @@ class QueueSerializationTest extends KernelTestBase implements FormInterface {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
     // We only need a valid \Drupal\Core\Queue\DatabaseQueue object here, not
     // an actual valid queue.
@@ -92,7 +95,7 @@ class QueueSerializationTest extends KernelTestBase implements FormInterface {
   /**
    * Tests queue injection serialization.
    */
-  public function testQueueSerialization() {
+  public function testQueueSerialization(): void {
     $form_state = new FormState();
     $form_state->setRequestMethod('POST');
     $form_state->setCached();

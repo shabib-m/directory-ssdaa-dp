@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Menu;
 
 use Drupal\Core\Access\AccessResult;
@@ -10,16 +12,16 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Menu\DefaultMenuLinkTreeManipulators;
 use Drupal\Core\Menu\MenuLinkTreeElement;
-use Drupal\Tests\UnitTestCase;
 use Drupal\node\NodeInterface;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the default menu link tree manipulators.
- *
- * @group Menu
- *
- * @coversDefaultClass \Drupal\Core\Menu\DefaultMenuLinkTreeManipulators
  */
+#[CoversClass(DefaultMenuLinkTreeManipulators::class)]
+#[Group('Menu')]
 class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
 
   /**
@@ -116,17 +118,63 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
    *
    * With link 6 being the only external link.
    */
-  protected function mockTree() {
+  protected function mockTree(): void {
     $this->links = [
-      1 => MenuLinkMock::create(['id' => 'test.example1', 'route_name' => 'example1', 'title' => 'foo', 'parent' => '']),
-      2 => MenuLinkMock::create(['id' => 'test.example2', 'route_name' => 'example2', 'title' => 'bar', 'parent' => 'test.example1', 'route_parameters' => ['foo' => 'bar']]),
-      3 => MenuLinkMock::create(['id' => 'test.example3', 'route_name' => 'example3', 'title' => 'baz', 'parent' => 'test.example2', 'route_parameters' => ['baz' => 'qux']]),
-      4 => MenuLinkMock::create(['id' => 'test.example4', 'route_name' => 'example4', 'title' => 'qux', 'parent' => 'test.example3']),
-      5 => MenuLinkMock::create(['id' => 'test.example5', 'route_name' => 'example5', 'title' => 'foofoo', 'parent' => '']),
-      6 => MenuLinkMock::create(['id' => 'test.example6', 'route_name' => '', 'url' => 'https://www.drupal.org/', 'title' => 'barbar', 'parent' => '']),
-      7 => MenuLinkMock::create(['id' => 'test.example7', 'route_name' => 'example7', 'title' => 'bazbaz', 'parent' => '']),
-      8 => MenuLinkMock::create(['id' => 'test.example8', 'route_name' => 'example8', 'title' => 'quxqux', 'parent' => '']),
-      9 => DynamicMenuLinkMock::create(['id' => 'test.example9', 'parent' => ''])->setCurrentUser($this->currentUser),
+      1 => MenuLinkMock::createMock([
+        'id' => 'test.example1',
+        'route_name' => 'example1',
+        'title' => 'foo',
+        'parent' => '',
+      ]),
+      2 => MenuLinkMock::createMock([
+        'id' => 'test.example2',
+        'route_name' => 'example2',
+        'title' => 'bar',
+        'parent' => 'test.example1',
+        'route_parameters' => ['foo' => 'bar'],
+      ]),
+      3 => MenuLinkMock::createMock([
+        'id' => 'test.example3',
+        'route_name' => 'example3',
+        'title' => 'baz',
+        'parent' => 'test.example2',
+        'route_parameters' => ['baz' => 'qux'],
+      ]),
+      4 => MenuLinkMock::createMock([
+        'id' => 'test.example4',
+        'route_name' => 'example4',
+        'title' => 'qux',
+        'parent' => 'test.example3',
+      ]),
+      5 => MenuLinkMock::createMock([
+        'id' => 'test.example5',
+        'route_name' => 'example5',
+        'title' => 'title5',
+        'parent' => '',
+      ]),
+      6 => MenuLinkMock::createMock([
+        'id' => 'test.example6',
+        'route_name' => '',
+        'url' => 'https://www.drupal.org/',
+        'title' => 'bar_bar',
+        'parent' => '',
+      ]),
+      7 => MenuLinkMock::createMock([
+        'id' => 'test.example7',
+        'route_name' => 'example7',
+        'title' => 'title7',
+        'parent' => '',
+      ]),
+      8 => MenuLinkMock::createMock([
+        'id' => 'test.example8',
+        'route_name' => 'example8',
+        'title' => 'title8',
+        'parent' => '',
+      ]),
+      9 => DynamicMenuLinkMock::createMock([
+        'id' => 'test.example9',
+        'parent' => '',
+      ])->setCurrentUser($this->currentUser),
     ];
     $this->originalTree = [];
     $this->originalTree[1] = new MenuLinkTreeElement($this->links[1], FALSE, 1, FALSE, []);
@@ -145,10 +193,8 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
 
   /**
    * Tests the generateIndexAndSort() tree manipulator.
-   *
-   * @covers ::generateIndexAndSort
    */
-  public function testGenerateIndexAndSort() {
+  public function testGenerateIndexAndSort(): void {
     $this->mockTree();
     $tree = $this->originalTree;
     $tree = $this->defaultMenuTreeManipulators->generateIndexAndSort($tree);
@@ -156,23 +202,23 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
     // Validate that parent elements #1, #2, #5 and #6 exist on the root level.
     $this->assertEquals($this->links[1]->getPluginId(), $tree['50000 foo test.example1']->link->getPluginId());
     $this->assertEquals($this->links[2]->getPluginId(), $tree['50000 bar test.example2']->link->getPluginId());
-    $this->assertEquals($this->links[5]->getPluginId(), $tree['50000 foofoo test.example5']->link->getPluginId());
-    $this->assertEquals($this->links[6]->getPluginId(), $tree['50000 barbar test.example6']->link->getPluginId());
-    $this->assertEquals($this->links[8]->getPluginId(), $tree['50000 quxqux test.example8']->link->getPluginId());
+    $this->assertEquals($this->links[5]->getPluginId(), $tree['50000 title5 test.example5']->link->getPluginId());
+    $this->assertEquals($this->links[6]->getPluginId(), $tree['50000 bar_bar test.example6']->link->getPluginId());
+    $this->assertEquals($this->links[8]->getPluginId(), $tree['50000 title8 test.example8']->link->getPluginId());
 
     // Verify that child element #4 is at the correct location in the hierarchy.
     $this->assertEquals($this->links[4]->getPluginId(), $tree['50000 bar test.example2']->subtree['50000 baz test.example3']->subtree['50000 qux test.example4']->link->getPluginId());
     // Verify that child element #7 is at the correct location in the hierarchy.
-    $this->assertEquals($this->links[7]->getPluginId(), $tree['50000 foofoo test.example5']->subtree['50000 bazbaz test.example7']->link->getPluginId());
+    $this->assertEquals($this->links[7]->getPluginId(), $tree['50000 title5 test.example5']->subtree['50000 title7 test.example7']->link->getPluginId());
   }
 
   /**
    * Tests the checkAccess() tree manipulator.
    *
-   * @covers ::checkAccess
-   * @covers ::menuLinkCheckAccess
+   * @legacy-covers ::checkAccess
+   * @legacy-covers ::menuLinkCheckAccess
    */
-  public function testCheckAccess() {
+  public function testCheckAccess(): void {
     // Those menu links that are non-external will have their access checks
     // performed. 9 routes, but 1 is external, 2 already have their 'access'
     // property set, and 1 is a child if an inaccessible menu link, so only 5
@@ -205,15 +251,12 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
     $this->cacheContextManager->assertValidTokens(['user'])->shouldBeCalled()->willReturn(TRUE);
     $this->originalTree[8]->access = AccessResult::allowed()->cachePerUser();
 
-    // Since \Drupal\Core\Menu\DefaultMenuLinkTreeManipulators::checkAccess()
-    // allows access to any link if the user has the 'link to any page'
-    // permission, *every* single access result is varied by permissions.
     $tree = $this->defaultMenuTreeManipulators->checkAccess($this->originalTree);
 
     // Menu link 1: route without parameters, access forbidden, but at level 0,
     // hence kept.
     $element = $tree[1];
-    $this->assertEquals(AccessResult::forbidden()->cachePerPermissions(), $element->access);
+    $this->assertEquals(AccessResult::forbidden(), $element->access);
     $this->assertInstanceOf('\Drupal\Core\Menu\InaccessibleMenuLink', $element->link);
     // Menu link 2: route with parameters, access granted.
     $element = $tree[2];
@@ -221,21 +264,19 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
     $this->assertNotInstanceOf('\Drupal\Core\Menu\InaccessibleMenuLink', $element->link);
     // Menu link 3: route with parameters, AccessResult::neutral(), top-level
     // inaccessible link, hence kept for its cacheability metadata.
-    // Note that the permissions cache context is added automatically, because
-    // we always check the "link to any page" permission.
     $element = $tree[2]->subtree[3];
-    $this->assertEquals(AccessResult::neutral()->cachePerPermissions(), $element->access);
+    $this->assertEquals(AccessResult::neutral(), $element->access);
     $this->assertInstanceOf('\Drupal\Core\Menu\InaccessibleMenuLink', $element->link);
     // Menu link 4: child of menu link 3, which was AccessResult::neutral(),
     // hence menu link 3's subtree is removed, of which this menu link is one.
     $this->assertArrayNotHasKey(4, $tree[2]->subtree[3]->subtree);
     // Menu link 5: no route name, treated as external, hence access granted.
     $element = $tree[5];
-    $this->assertEquals(AccessResult::allowed()->cachePerPermissions(), $element->access);
+    $this->assertEquals(AccessResult::allowed(), $element->access);
     $this->assertNotInstanceOf('\Drupal\Core\Menu\InaccessibleMenuLink', $element->link);
     // Menu link 6: external URL, hence access granted.
     $element = $tree[6];
-    $this->assertEquals(AccessResult::allowed()->cachePerPermissions(), $element->access);
+    $this->assertEquals(AccessResult::allowed(), $element->access);
     $this->assertNotInstanceOf('\Drupal\Core\Menu\InaccessibleMenuLink', $element->link);
     // Menu link 7: 'access' already set: AccessResult::neutral(), top-level
     // inaccessible link, hence kept for its cacheability metadata.
@@ -245,31 +286,31 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
     $element = $tree[5]->subtree[7];
     $this->assertEquals(AccessResult::neutral(), $element->access);
     $this->assertInstanceOf('\Drupal\Core\Menu\InaccessibleMenuLink', $element->link);
-    // Menu link 8: 'access' already set, note that 'per permissions' caching
-    // is not added.
+    // Menu link 8: 'access' already set.
     $element = $tree[8];
     $this->assertEquals(AccessResult::allowed()->cachePerUser(), $element->access);
     $this->assertNotInstanceOf('\Drupal\Core\Menu\InaccessibleMenuLink', $element->link);
   }
 
   /**
-   * Tests checkAccess() tree manipulator with 'link to any page' permission.
+   * Tests checkAccess() tree manipulator.
    *
-   * @covers ::checkAccess
-   * @covers ::menuLinkCheckAccess
+   * @legacy-covers ::checkAccess
+   * @legacy-covers ::menuLinkCheckAccess
    */
-  public function testCheckAccessWithLinkToAnyPagePermission() {
+  public function testCheckAccessTreeManipulator(): void {
     $this->mockTree();
-    $this->currentUser->expects($this->exactly(9))
-      ->method('hasPermission')
-      ->with('link to any page')
-      ->willReturn(TRUE);
+    // There are 9 checks but one is on an external link, so the route access
+    // checker should be called only 8 times.
+    // @see \Drupal\Core\Menu\DefaultMenuLinkTreeManipulators::menuLinkCheckAccess()
+    $this->accessManager->expects($this->exactly(8))
+      ->method('checkNamedRoute')
+      ->willReturn(AccessResult::allowed());
 
     $this->mockTree();
-    $this->cacheContextManager->assertValidTokens(['user.permissions'])->shouldBeCalled()->willReturn(TRUE);
     $this->defaultMenuTreeManipulators->checkAccess($this->originalTree);
 
-    $expected_access_result = AccessResult::allowed()->cachePerPermissions();
+    $expected_access_result = AccessResult::allowed();
     $this->assertEquals($expected_access_result, $this->originalTree[1]->access);
     $this->assertEquals($expected_access_result, $this->originalTree[2]->access);
     $this->assertEquals($expected_access_result, $this->originalTree[2]->subtree[3]->access);
@@ -282,10 +323,8 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
 
   /**
    * Tests the flatten() tree manipulator.
-   *
-   * @covers ::flatten
    */
-  public function testFlatten() {
+  public function testFlatten(): void {
     $this->mockTree();
     $tree = $this->defaultMenuTreeManipulators->flatten($this->originalTree);
     $this->assertEquals([1, 2, 5, 6, 8, 9], array_keys($this->originalTree));
@@ -295,18 +334,52 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
   /**
    * Tests the optimized node access checking.
    *
-   * @covers ::checkNodeAccess
-   * @covers ::collectNodeLinks
-   * @covers ::checkAccess
+   * @legacy-covers ::checkNodeAccess
+   * @legacy-covers ::collectNodeLinks
+   * @legacy-covers ::checkAccess
    */
-  public function testCheckNodeAccess() {
+  public function testCheckNodeAccess(): void {
     $links = [
-      1 => MenuLinkMock::create(['id' => 'node.1', 'route_name' => 'entity.node.canonical', 'title' => 'foo', 'parent' => '', 'route_parameters' => ['node' => 1]]),
-      2 => MenuLinkMock::create(['id' => 'node.2', 'route_name' => 'entity.node.canonical', 'title' => 'bar', 'parent' => '', 'route_parameters' => ['node' => 2]]),
-      3 => MenuLinkMock::create(['id' => 'node.3', 'route_name' => 'entity.node.canonical', 'title' => 'baz', 'parent' => 'node.2', 'route_parameters' => ['node' => 3]]),
-      4 => MenuLinkMock::create(['id' => 'node.4', 'route_name' => 'entity.node.canonical', 'title' => 'qux', 'parent' => 'node.3', 'route_parameters' => ['node' => 4]]),
-      5 => MenuLinkMock::create(['id' => 'test.1', 'route_name' => 'test_route', 'title' => 'qux', 'parent' => '']),
-      6 => MenuLinkMock::create(['id' => 'test.2', 'route_name' => 'test_route', 'title' => 'qux', 'parent' => 'test.1']),
+      1 => MenuLinkMock::createMock([
+        'id' => 'node.1',
+        'route_name' => 'entity.node.canonical',
+        'title' => 'foo',
+        'parent' => '',
+        'route_parameters' => ['node' => 1],
+      ]),
+      2 => MenuLinkMock::createMock([
+        'id' => 'node.2',
+        'route_name' => 'entity.node.canonical',
+        'title' => 'bar',
+        'parent' => '',
+        'route_parameters' => ['node' => 2],
+      ]),
+      3 => MenuLinkMock::createMock([
+        'id' => 'node.3',
+        'route_name' => 'entity.node.canonical',
+        'title' => 'baz',
+        'parent' => 'node.2',
+        'route_parameters' => ['node' => 3],
+      ]),
+      4 => MenuLinkMock::createMock([
+        'id' => 'node.4',
+        'route_name' => 'entity.node.canonical',
+        'title' => 'qux',
+        'parent' => 'node.3',
+        'route_parameters' => ['node' => 4],
+      ]),
+      5 => MenuLinkMock::createMock([
+        'id' => 'test.1',
+        'route_name' => 'test_route',
+        'title' => 'qux',
+        'parent' => '',
+      ]),
+      6 => MenuLinkMock::createMock([
+        'id' => 'test.2',
+        'route_name' => 'test_route',
+        'title' => 'qux',
+        'parent' => 'test.1',
+      ]),
     ];
     $tree = [];
     $tree[1] = new MenuLinkTreeElement($links[1], FALSE, 1, FALSE, []);
@@ -319,23 +392,16 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
       6 => new MenuLinkTreeElement($links[6], FALSE, 2, FALSE, []),
     ]);
 
-    $query = $this->createMock('Drupal\Core\Entity\Query\QueryInterface');
-    $query->expects($this->once())
-      ->method('accessCheck')
-      ->with(TRUE);
-    $query->expects($this->exactly(2))
-      ->method('condition')
-      ->withConsecutive(
-        ['nid', [1, 2, 3, 4]],
-        ['status', NodeInterface::PUBLISHED],
-      );
-    $query->expects($this->once())
-      ->method('execute')
-      ->willReturn([1, 2, 4]);
+    $query = $this->prophesize('Drupal\Core\Entity\Query\QueryInterface');
+    $query->accessCheck(TRUE)->shouldBeCalled();
+    $query->condition('nid', [1, 2, 3, 4], 'IN')->shouldBeCalled();
+    $query->condition('status', NodeInterface::PUBLISHED)->shouldBeCalled();
+    $query->execute()->willReturn([1, 2, 4]);
+
     $storage = $this->createMock(EntityStorageInterface::class);
     $storage->expects($this->once())
       ->method('getQuery')
-      ->willReturn($query);
+      ->willReturn($query->reveal());
     $this->entityTypeManager->expects($this->once())
       ->method('getStorage')
       ->with('node')
@@ -371,16 +437,8 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
     $this->assertEquals($node_access_result, $tree[1]->access);
     $this->assertEquals($node_access_result, $tree[2]->access);
     $this->assertEquals(AccessResult::neutral(), $tree[2]->subtree[3]->access);
-    $this->assertEquals(AccessResult::allowed()->cachePerPermissions(), $tree[5]->access);
-    $this->assertEquals(AccessResult::neutral()->cachePerPermissions(), $tree[5]->subtree[6]->access);
-  }
-
-  /**
-   * @group legacy
-   */
-  public function testDeprecation(): void {
-    $this->expectDeprecation('Calling DefaultMenuLinkTreeManipulators::__construct() without the $module_handler argument is deprecated in drupal:10.1.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3336973');
-    new DefaultMenuLinkTreeManipulators($this->accessManager, $this->currentUser, $this->entityTypeManager);
+    $this->assertEquals(AccessResult::allowed(), $tree[5]->access);
+    $this->assertEquals(AccessResult::neutral(), $tree[5]->subtree[6]->access);
   }
 
 }

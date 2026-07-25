@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Views;
 
 use Drupal\node\Entity\Node;
@@ -9,12 +11,14 @@ use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Tests\ViewResultAssertionTrait;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the node_revision_uid field.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class RevisionUidTest extends ViewsKernelTestBase {
 
   use UserCreationTrait;
@@ -26,9 +30,6 @@ class RevisionUidTest extends ViewsKernelTestBase {
   protected static $modules = [
     'node',
     'node_test_views',
-    'system',
-    'user',
-    'views',
   ];
 
   /**
@@ -68,12 +69,13 @@ class RevisionUidTest extends ViewsKernelTestBase {
   /**
    * Tests the node_revision_uid relationship.
    */
-  public function testRevisionUid() {
+  public function testRevisionUid(): void {
     $primary_author = $this->createUser();
     $secondary_author = $this->createUser();
 
     $node_type = NodeType::create([
       'type' => 'page',
+      'name' => 'Page',
     ]);
     $node_type->save();
     $node = Node::create([

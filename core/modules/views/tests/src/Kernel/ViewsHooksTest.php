@@ -1,19 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Render\RenderContext;
 use Drupal\views\Form\ViewsFormMainForm;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that views hooks are registered when defined in $module.views.inc.
  *
- * @group views
- *
  * @see views_hook_info()
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ViewsHooksTest extends ViewsKernelTestBase {
 
   /**
@@ -72,16 +75,24 @@ class ViewsHooksTest extends ViewsKernelTestBase {
   /**
    * Tests the hooks.
    */
-  public function testHooks() {
+  public function testHooks(): void {
     $view = Views::getView('test_view');
     $view->setDisplay();
 
     // Test each hook is found in the implementations array and is invoked.
     foreach (static::$hooks as $hook => $type) {
-      $this->assertTrue($this->moduleHandler->hasImplementations($hook, 'views_test_data'), new FormattableMarkup('The hook @hook was registered.', ['@hook' => $hook]));
+      $this->assertTrue($this->moduleHandler->hasImplementations($hook, 'views_test_data'), "The hook $hook was registered.");
 
       if ($hook == 'views_post_render') {
-        $this->moduleHandler->invoke('views_test_data', $hook, [$view, &$view->display_handler->output, $view->display_handler->getPlugin('cache')]);
+        $this->moduleHandler->invoke(
+          'views_test_data',
+          $hook,
+          [
+            $view,
+            &$view->display_handler->output,
+            $view->display_handler->getPlugin('cache'),
+          ]
+        );
         continue;
       }
 
@@ -99,7 +110,7 @@ class ViewsHooksTest extends ViewsKernelTestBase {
           $this->moduleHandler->invoke('views_test_data', $hook);
       }
 
-      $this->assertTrue($this->container->get('state')->get('views_hook_test_' . $hook), new FormattableMarkup('The %hook hook was invoked.', ['%hook' => $hook]));
+      $this->assertTrue($this->container->get('state')->get('views_hook_test_' . $hook), "The $hook hook was invoked.");
       // Reset the module implementations cache, so we ensure that the
       // .views.inc file is loaded actively.
       $this->moduleHandler->resetImplementations();
@@ -112,7 +123,7 @@ class ViewsHooksTest extends ViewsKernelTestBase {
    * @see views_test_data_views_form_substitutions()
    * @see \Drupal\views\Form\ViewsFormMainForm::preRenderViewsForm()
    */
-  public function testViewsFormMainFormPreRender() {
+  public function testViewsFormMainFormPreRender(): void {
     $element = [
       'output' => [
         '#plain_text' => '<!--will-be-escaped--><!--will-be-not-escaped-->',
@@ -130,7 +141,7 @@ class ViewsHooksTest extends ViewsKernelTestBase {
   /**
    * Test that hook_views_invalidate_cache() is called when a view is deleted.
    */
-  public function testViewsInvalidateCacheOnDelete() {
+  public function testViewsInvalidateCacheOnDelete(): void {
     $this->container->get('state')->set('views_hook_test_views_invalidate_cache', FALSE);
     $view = $this->viewStorage->load('test_view');
     $view->delete();

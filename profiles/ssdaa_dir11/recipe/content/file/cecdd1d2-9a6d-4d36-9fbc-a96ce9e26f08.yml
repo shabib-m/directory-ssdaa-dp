@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: cecdd1d2-9a6d-4d36-9fbc-a96ce9e26f08
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: neom.jpg
+  uri:
+    -
+      value: 'public://2026-07/neom.jpg'
+  filemime:
+    -
+      value: image/jpeg
+  filesize:
+    -
+      value: 330836
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

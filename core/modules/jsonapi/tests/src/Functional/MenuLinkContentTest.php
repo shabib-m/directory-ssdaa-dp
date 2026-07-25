@@ -1,19 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Url;
+use Drupal\jsonapi\JsonApiSpec;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\Tests\jsonapi\Traits\CommonCollectionFilterAccessTestPatternsTrait;
 use GuzzleHttp\RequestOptions;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * JSON:API integration test for the "MenuLinkContent" content entity type.
- *
- * @group jsonapi
  */
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class MenuLinkContentTest extends ResourceTestBase {
 
   use CommonCollectionFilterAccessTestPatternsTrait;
@@ -60,7 +65,7 @@ class MenuLinkContentTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpAuthorization($method) {
+  protected function setUpAuthorization($method): void {
     $this->grantPermissionsToTestedRole(['administer menu']);
   }
 
@@ -73,6 +78,7 @@ class MenuLinkContentTest extends ResourceTestBase {
       'title' => 'Llama Gabilondo',
       'description' => 'Llama Gabilondo',
       'link' => 'https://nl.wikipedia.org/wiki/Llama',
+      'resolvable_uri' => 'https://nl.wikipedia.org/wiki/Llama',
       'weight' => 0,
       'menu_name' => 'main',
     ]);
@@ -84,7 +90,7 @@ class MenuLinkContentTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedDocument() {
+  protected function getExpectedDocument(): array {
     $base_url = Url::fromUri('base:/jsonapi/menu_link_content/menu_link_content/' . $this->entity->uuid())->setAbsolute();
     $self_url = clone $base_url;
     $version_identifier = 'id:' . $this->entity->getRevisionId();
@@ -94,10 +100,10 @@ class MenuLinkContentTest extends ResourceTestBase {
       'jsonapi' => [
         'meta' => [
           'links' => [
-            'self' => ['href' => 'http://jsonapi.org/format/1.0/'],
+            'self' => ['href' => JsonApiSpec::SUPPORTED_SPECIFICATION_PERMALINK],
           ],
         ],
-        'version' => '1.0',
+        'version' => JsonApiSpec::SUPPORTED_SPECIFICATION_VERSION,
       ],
       'links' => [
         'self' => ['href' => $base_url->toString()],
@@ -112,6 +118,7 @@ class MenuLinkContentTest extends ResourceTestBase {
           'bundle' => 'menu_link_content',
           'link' => [
             'uri' => 'https://nl.wikipedia.org/wiki/Llama',
+            'resolvable_uri' => 'https://nl.wikipedia.org/wiki/Llama',
             'title' => NULL,
             'options' => [],
           ],
@@ -129,7 +136,7 @@ class MenuLinkContentTest extends ResourceTestBase {
           'weight' => 0,
           'drupal_internal__id' => 1,
           'drupal_internal__revision_id' => 1,
-          'revision_created' => (new \DateTime())->setTimestamp($this->entity->getRevisionCreationTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
+          'revision_created' => (new \DateTime())->setTimestamp((int) $this->entity->getRevisionCreationTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
           'revision_log_message' => NULL,
           // @todo Attempt to remove this in https://www.drupal.org/project/drupal/issues/2933518.
           'revision_translation_affected' => TRUE,
@@ -154,12 +161,12 @@ class MenuLinkContentTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getPostDocument() {
+  protected function getPostDocument(): array {
     return [
       'data' => [
         'type' => 'menu_link_content--menu_link_content',
         'attributes' => [
-          'title' => 'Dramallama',
+          'title' => 'Drama llama',
           'link' => [
             'uri' => 'http://www.urbandictionary.com/define.php?term=drama%20llama',
           ],
@@ -184,7 +191,7 @@ class MenuLinkContentTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function testCollectionFilterAccess() {
+  public function testCollectionFilterAccess(): void {
     $this->doTestCollectionFilterAccessBasedOnPermissions('title', 'administer menu');
   }
 
@@ -193,8 +200,8 @@ class MenuLinkContentTest extends ResourceTestBase {
    *
    * @see https://security.drupal.org/node/161923
    */
-  public function testLinkOptionsSerialization() {
-    $this->config('jsonapi.settings')->set('read_only', FALSE)->save(TRUE);
+  public function testLinkOptionsSerialization(): void {
+    $this->config('jsonapi.settings')->set('read_only', FALSE)->save();
 
     $document = $this->getPostDocument();
     $document['data']['attributes']['link']['options'] = "O:44:\"Symfony\\Component\\Process\\Pipes\\WindowsPipes\":8:{s:51:\"\\Symfony\\Component\\Process\\Pipes\\WindowsPipes\0files\";a:1:{i:0;s:3:\"foo\";}s:57:\"\0Symfony\\Component\\Process\\Pipes\\WindowsPipes\0fileHandles\";a:0:{}s:55:\"\0Symfony\\Component\\Process\\Pipes\\WindowsPipes\0readBytes\";a:2:{i:1;i:0;i:2;i:0;}s:59:\"\0Symfony\\Component\\Process\\Pipes\\WindowsPipes\0disableOutput\";b:0;s:5:\"pipes\";a:0:{}s:58:\"\0Symfony\\Component\\Process\\Pipes\\AbstractPipes\0inputBuffer\";s:0:\"\";s:52:\"\0Symfony\\Component\\Process\\Pipes\\AbstractPipes\0input\";N;s:54:\"\0Symfony\\Component\\Process\\Pipes\\AbstractPipes\0blocked\";b:1;}";
@@ -220,7 +227,7 @@ class MenuLinkContentTest extends ResourceTestBase {
     unset($document['data']['attributes']['link']['options']);
     $request_options[RequestOptions::BODY] = Json::encode($document);
     $response = $this->request('POST', $url, $request_options);
-    $document = Json::decode((string) $response->getBody());
+    $document = $this->getDocumentFromResponse($response);
     $internal_id = $document['data']['attributes']['drupal_internal__id'];
 
     // Load the created menu item and add link options to it.

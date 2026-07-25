@@ -1,21 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Language;
 
 use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Language\Language
- * @group Language
+ * Tests Drupal\Core\Language\Language.
  */
+#[CoversClass(Language::class)]
+#[Group('Language')]
 class LanguageUnitTest extends UnitTestCase {
 
   /**
-   * @covers ::__construct
+   * Tests construct.
+   *
+   * @legacy-covers ::__construct
    */
-  public function testConstruct() {
+  public function testConstruct(): void {
     $name = $this->randomMachineName();
     $language_code = $this->randomMachineName(2);
     $uuid = $this->randomMachineName();
@@ -27,9 +35,9 @@ class LanguageUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getName
+   * Tests get name.
    */
-  public function testGetName() {
+  public function testGetName(): void {
     $name = $this->randomMachineName();
     $language_code = $this->randomMachineName(2);
     $language = new Language(['id' => $language_code, 'name' => $name]);
@@ -37,27 +45,29 @@ class LanguageUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getId
+   * Tests get langcode.
+   *
+   * @legacy-covers ::getId
    */
-  public function testGetLangcode() {
+  public function testGetLangcode(): void {
     $language_code = $this->randomMachineName(2);
     $language = new Language(['id' => $language_code]);
     $this->assertSame($language_code, $language->getId());
   }
 
   /**
-   * @covers ::getDirection
+   * Tests get direction.
    */
-  public function testGetDirection() {
+  public function testGetDirection(): void {
     $language_code = $this->randomMachineName(2);
     $language = new Language(['id' => $language_code, 'direction' => LanguageInterface::DIRECTION_RTL]);
     $this->assertSame(LanguageInterface::DIRECTION_RTL, $language->getDirection());
   }
 
   /**
-   * @covers ::isDefault
+   * Tests is default.
    */
-  public function testIsDefault() {
+  public function testIsDefault(): void {
     $language_default = $this->getMockBuilder('Drupal\Core\Language\LanguageDefault')->disableOriginalConstructor()->getMock();
     $container = $this->createMock('Symfony\Component\DependencyInjection\ContainerInterface');
     $container->expects($this->any())
@@ -83,16 +93,13 @@ class LanguageUnitTest extends UnitTestCase {
   /**
    * Tests sorting an array of language objects.
    *
-   * @covers ::sort
-   *
-   * @dataProvider providerTestSortArrayOfLanguages
-   *
    * @param \Drupal\Core\Language\LanguageInterface[] $languages
    *   An array of language objects.
    * @param array $expected
    *   The expected array of keys.
    */
-  public function testSortArrayOfLanguages(array $languages, array $expected) {
+  #[DataProvider('providerTestSortArrayOfLanguages')]
+  public function testSortArrayOfLanguages(array $languages, array $expected): void {
     Language::sort($languages);
     $this->assertSame($expected, array_keys($languages));
   }
@@ -103,7 +110,7 @@ class LanguageUnitTest extends UnitTestCase {
    * @return array
    *   An array of test data.
    */
-  public function providerTestSortArrayOfLanguages() {
+  public static function providerTestSortArrayOfLanguages(): array {
     $language9A = new Language(['id' => 'dd', 'name' => 'A', 'weight' => 9]);
     $language10A = new Language(['id' => 'ee', 'name' => 'A', 'weight' => 10]);
     $language10B = new Language(['id' => 'ff', 'name' => 'B', 'weight' => 10]);

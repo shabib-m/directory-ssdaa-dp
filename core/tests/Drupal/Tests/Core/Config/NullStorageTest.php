@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Config;
 
 use Drupal\Core\Config\NullStorage;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the NullStorage.
- *
- * @group Config
  */
+#[Group('Config')]
 class NullStorageTest extends UnitTestCase {
 
   /**
    * Tests createCollection.
    */
-  public function testCollection() {
+  public function testCollection(): void {
     $nullStorage = new NullStorage();
     $collection = $nullStorage->createCollection('test');
     $this->assertInstanceOf(StorageInterface::class, $collection);

@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\update\Kernel\Migrate\d6;
 
-use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use Drupal\Tests\SchemaCheckTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Upgrade variables to update.settings.yml.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateUpdateConfigsTest extends MigrateDrupal6TestBase {
 
   use SchemaCheckTestTrait;
@@ -30,7 +34,7 @@ class MigrateUpdateConfigsTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of update variables to update.settings.yml.
    */
-  public function testUpdateSettings() {
+  public function testUpdateSettings(): void {
     $config = $this->config('update.settings');
     $this->assertSame(2, $config->get('fetch.max_attempts'));
     $this->assertSame('https://updates.drupal.org/release-history', $config->get('fetch.url'));

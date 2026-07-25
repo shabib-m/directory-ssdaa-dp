@@ -2,6 +2,7 @@
 
 namespace Drupal\field\Plugin\migrate\process\d6;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
@@ -9,11 +10,20 @@ use Drupal\migrate\Row;
 // cspell:ignore imagefield
 
 /**
- * @MigrateProcessPlugin(
- *   id = "d6_field_instance_defaults"
- * )
+ * Determines the default field settings.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3533560
  */
+#[MigrateProcess('d6_field_instance_defaults')]
 class FieldInstanceDefaults extends ProcessPluginBase {
+
+  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560', E_USER_DEPRECATED);
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
   /**
    * {@inheritdoc}
@@ -34,7 +44,7 @@ class FieldInstanceDefaults extends ProcessPluginBase {
         break;
 
       case 'imagefield_widget':
-        // @todo, load the image and populate the defaults.
+        // @todo load the image and populate the defaults.
         // $default['default_image'] = $widget_settings['default_image'];
         break;
 

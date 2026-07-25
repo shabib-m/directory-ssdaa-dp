@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Core\Url;
 use Drupal\entity_test\Entity\EntityTestMapField;
+use Drupal\jsonapi\JsonApiSpec;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * JSON:API integration test for the "EntityTestMapField" content entity type.
- *
- * @group jsonapi
  */
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class EntityTestMapFieldTest extends ResourceTestBase {
 
   /**
@@ -64,7 +69,7 @@ class EntityTestMapFieldTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpAuthorization($method) {
+  protected function setUpAuthorization($method): void {
     $this->grantPermissionsToTestedRole(['administer entity_test content']);
   }
 
@@ -87,17 +92,17 @@ class EntityTestMapFieldTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedDocument() {
+  protected function getExpectedDocument(): array {
     $self_url = Url::fromUri('base:/jsonapi/entity_test_map_field/entity_test_map_field/' . $this->entity->uuid())->setAbsolute()->toString(TRUE)->getGeneratedUrl();
     $author = User::load(0);
     return [
       'jsonapi' => [
         'meta' => [
           'links' => [
-            'self' => ['href' => 'http://jsonapi.org/format/1.0/'],
+            'self' => ['href' => JsonApiSpec::SUPPORTED_SPECIFICATION_PERMALINK],
           ],
         ],
-        'version' => '1.0',
+        'version' => JsonApiSpec::SUPPORTED_SPECIFICATION_VERSION,
       ],
       'links' => [
         'self' => ['href' => $self_url],
@@ -109,7 +114,7 @@ class EntityTestMapFieldTest extends ResourceTestBase {
           'self' => ['href' => $self_url],
         ],
         'attributes' => [
-          'created' => (new \DateTime())->setTimestamp($this->entity->get('created')->value)->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
+          'created' => (new \DateTime())->setTimestamp((int) $this->entity->get('created')->value)->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
           'langcode' => 'en',
           'name' => 'Llama',
           'data' => static::$mapValue,
@@ -137,12 +142,12 @@ class EntityTestMapFieldTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getPostDocument() {
+  protected function getPostDocument(): array {
     return [
       'data' => [
         'type' => 'entity_test_map_field--entity_test_map_field',
         'attributes' => [
-          'name' => 'Dramallama',
+          'name' => 'Drama llama',
           'data' => static::$mapValue,
         ],
       ],
@@ -152,14 +157,14 @@ class EntityTestMapFieldTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedUnauthorizedAccessMessage($method) {
+  protected function getExpectedUnauthorizedAccessMessage($method): string {
     return "The 'administer entity_test content' permission is required.";
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getSparseFieldSets() {
+  protected function getSparseFieldSets(): array {
     // EntityTestMapField's owner field name is `user_id`, not `uid`, which
     // breaks nested sparse fieldset tests.
     return array_diff_key(parent::getSparseFieldSets(), array_flip([

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Unit;
 
 use Drupal\Core\TempStore\SharedTempStore;
@@ -7,18 +9,23 @@ use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Drupal\layout_builder\LayoutTempstoreRepository;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\layout_builder\LayoutTempstoreRepository
- * @group layout_builder
+ * Tests Drupal\layout_builder\LayoutTempstoreRepository.
  */
+#[CoversClass(LayoutTempstoreRepository::class)]
+#[Group('layout_builder')]
 class LayoutTempstoreRepositoryTest extends UnitTestCase {
 
   /**
-   * @covers ::get
-   * @covers ::has
+   * Tests get empty tempstore.
+   *
+   * @legacy-covers ::get
+   * @legacy-covers ::has
    */
-  public function testGetEmptyTempstore() {
+  public function testGetEmptyTempstore(): void {
     $section_storage = $this->prophesize(SectionStorageInterface::class);
     $section_storage->getStorageType()->willReturn('my_storage_type');
     $section_storage->getStorageId()->willReturn('my_storage_id');
@@ -38,10 +45,12 @@ class LayoutTempstoreRepositoryTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::get
-   * @covers ::has
+   * Tests get loaded tempstore.
+   *
+   * @legacy-covers ::get
+   * @legacy-covers ::has
    */
-  public function testGetLoadedTempstore() {
+  public function testGetLoadedTempstore(): void {
     $section_storage = $this->prophesize(SectionStorageInterface::class);
     $section_storage->getStorageType()->willReturn('my_storage_type');
     $section_storage->getStorageId()->willReturn('my_storage_id');
@@ -62,9 +71,9 @@ class LayoutTempstoreRepositoryTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::get
+   * Tests get invalid entry.
    */
-  public function testGetInvalidEntry() {
+  public function testGetInvalidEntry(): void {
     $section_storage = $this->prophesize(SectionStorageInterface::class);
     $section_storage->getStorageType()->willReturn('my_storage_type');
     $section_storage->getStorageId()->willReturn('my_storage_id');

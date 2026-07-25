@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal\Kernel\d7;
 
 use Drupal\KernelTests\FileSystemModuleDiscoveryDataProviderTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the getProcess() method of all Drupal 7 migrations.
- *
- * @group migrate_drupal
  */
+#[Group('migrate_drupal')]
+#[RunTestsInSeparateProcesses]
 class MigrationProcessTest extends MigrateDrupal7TestBase {
 
   use FileSystemModuleDiscoveryDataProviderTrait;
@@ -26,7 +30,7 @@ class MigrationProcessTest extends MigrateDrupal7TestBase {
    *
    * @throws \Exception
    */
-  public function testGetProcess() {
+  public function testGetProcess(): void {
     /** @var \Drupal\migrate\Plugin\MigrationPluginManagerInterface $plugin_manager */
     $plugin_manager = $this->container->get('plugin.manager.migration');
     $migrations = $plugin_manager->createInstancesByTag('Drupal 7');

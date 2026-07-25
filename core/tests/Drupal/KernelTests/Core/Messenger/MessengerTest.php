@@ -1,16 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Messenger;
 
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group Messenger
- * @coversDefaultClass \Drupal\Core\Messenger\Messenger
+ * Tests Drupal\Core\Messenger\Messenger.
  */
+#[CoversClass(Messenger::class)]
+#[Group('Messenger')]
+#[RunTestsInSeparateProcesses]
 class MessengerTest extends KernelTestBase {
 
   /**
@@ -29,11 +37,13 @@ class MessengerTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::addStatus
-   * @covers ::deleteByType
-   * @covers ::messagesByType
+   * Tests remove single message.
+   *
+   * @legacy-covers ::addStatus
+   * @legacy-covers ::deleteByType
+   * @legacy-covers ::messagesByType
    */
-  public function testRemoveSingleMessage() {
+  public function testRemoveSingleMessage(): void {
 
     // Set two messages.
     $this->messenger->addStatus('First message (removed).');
@@ -56,14 +66,14 @@ class MessengerTest extends KernelTestBase {
   /**
    * Tests we don't add duplicates.
    *
-   * @covers ::all
-   * @covers ::addStatus
-   * @covers ::addWarning
-   * @covers ::addError
-   * @covers ::deleteByType
-   * @covers ::deleteAll
+   * @legacy-covers ::all
+   * @legacy-covers ::addStatus
+   * @legacy-covers ::addWarning
+   * @legacy-covers ::addError
+   * @legacy-covers ::deleteByType
+   * @legacy-covers ::deleteAll
    */
-  public function testAddNoDuplicates() {
+  public function testAddNoDuplicates(): void {
 
     $this->messenger->addStatus('Non Duplicated status message');
     $this->messenger->addStatus('Non Duplicated status message');
@@ -99,12 +109,12 @@ class MessengerTest extends KernelTestBase {
   /**
    * Tests we do add duplicates with repeat flag.
    *
-   * @covers ::addStatus
-   * @covers ::addWarning
-   * @covers ::addError
-   * @covers ::deleteByType
+   * @legacy-covers ::addStatus
+   * @legacy-covers ::addWarning
+   * @legacy-covers ::addError
+   * @legacy-covers ::deleteByType
    */
-  public function testAddWithDuplicates() {
+  public function testAddWithDuplicates(): void {
 
     $this->messenger->addStatus('Duplicated status message', TRUE);
     $this->messenger->addStatus('Duplicated status message', TRUE);
@@ -126,11 +136,11 @@ class MessengerTest extends KernelTestBase {
   /**
    * Tests adding markup.
    *
-   * @covers ::addStatus
-   * @covers ::deleteByType
-   * @covers ::messagesByType
+   * @legacy-covers ::addStatus
+   * @legacy-covers ::deleteByType
+   * @legacy-covers ::messagesByType
    */
-  public function testAddMarkup() {
+  public function testAddMarkup(): void {
 
     // Add a Markup message.
     $this->messenger->addStatus(Markup::create('Markup with <em>markup!</em>'));

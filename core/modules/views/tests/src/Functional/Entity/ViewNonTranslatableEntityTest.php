@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Entity;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language_test\Entity\NoLanguageEntityTest;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the view creation of non-translatable entities.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ViewNonTranslatableEntityTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'entity_test',
@@ -33,7 +35,7 @@ class ViewNonTranslatableEntityTest extends BrowserTestBase {
   /**
    * Tests displaying a view of non-translatable entities.
    */
-  public function testViewNoTranslatableEntity() {
+  public function testViewNoTranslatableEntity(): void {
     // Add a new language.
     ConfigurableLanguage::createFromLangcode('sr')->save();
 

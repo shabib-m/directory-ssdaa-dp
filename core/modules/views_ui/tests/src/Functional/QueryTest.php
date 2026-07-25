@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
-use Drupal\views\Views;
 use Drupal\views\Entity\View;
+use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests query plugins.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class QueryTest extends UITestBase {
 
   /**
@@ -37,7 +41,7 @@ class QueryTest extends UITestBase {
   /**
    * Tests query plugins settings.
    */
-  public function testQueryUI() {
+  public function testQueryUI(): void {
     $view = View::load('test_view');
     $display = &$view->getDisplay('default');
     $display['display_options']['query'] = ['type' => 'query_test'];

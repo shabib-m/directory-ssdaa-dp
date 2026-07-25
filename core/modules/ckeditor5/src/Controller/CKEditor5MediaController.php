@@ -13,12 +13,13 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\editor\Entity\Editor;
 use Drupal\image\Plugin\Field\FieldType\ImageItem;
 use Drupal\media\MediaInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
+// cspell:ignore mediaimagetextalternative mediaimagetextalternativeui
 
 /**
  * Provides an API for checking if a media entity has image field.
@@ -63,17 +64,6 @@ class CKEditor5MediaController extends ControllerBase {
     $this->currentUser = $current_user;
     $this->entityRepository = $entity_repository;
     $this->requestStack = $request_stack;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('current_user'),
-      $container->get('entity.repository'),
-      $container->get('request_stack')
-    );
   }
 
   /**

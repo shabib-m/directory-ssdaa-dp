@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_no_migrate_drupal_test\Controller;
 
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
@@ -30,7 +32,7 @@ class ExecuteMigration extends ControllerBase {
     if ($definitions['node_migration_no_migrate_drupal']['label'] !== 'Node Migration No Migrate Drupal') {
       throw new InvalidPluginDefinitionException('node_migration_no_migrate_drupal');
     }
-    $migrations = $migration_plugin_manager->createInstances('');
+    $migrations = $migration_plugin_manager->createInstances('node_migration_no_migrate_drupal');
     $result = (new MigrateExecutable($migrations['node_migration_no_migrate_drupal']))->import();
     if ($result !== MigrationInterface::RESULT_COMPLETED) {
       throw new \RuntimeException('Migration failed');

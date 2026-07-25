@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\File;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests file system configuration operations.
- *
- * @group File
  */
+#[Group('File')]
+#[RunTestsInSeparateProcesses]
 class ConfigTest extends BrowserTestBase {
 
   /**
@@ -29,7 +33,7 @@ class ConfigTest extends BrowserTestBase {
   /**
    * Tests file configuration page.
    */
-  public function testFileConfigurationPage() {
+  public function testFileConfigurationPage(): void {
     $this->drupalGet('admin/config/media/file-system');
 
     // Set the file paths to non-default values.

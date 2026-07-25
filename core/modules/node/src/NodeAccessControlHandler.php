@@ -3,6 +3,8 @@
 namespace Drupal\node;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityHandlerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -86,7 +88,7 @@ class NodeAccessControlHandler extends EntityAccessControlHandler implements Nod
   /**
    * {@inheritdoc}
    */
-  public function access(EntityInterface $entity, $operation, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access(EntityInterface $entity, $operation, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $account = $this->prepareUser($account);
 
     // Only bypass if not a revision operation, to retain compatibility.
@@ -106,7 +108,7 @@ class NodeAccessControlHandler extends EntityAccessControlHandler implements Nod
   /**
    * {@inheritdoc}
    */
-  public function createAccess($entity_bundle = NULL, AccountInterface $account = NULL, array $context = [], $return_as_object = FALSE) {
+  public function createAccess($entity_bundle = NULL, ?AccountInterface $account = NULL, array $context = [], $return_as_object = FALSE) {
     $account = $this->prepareUser($account);
 
     if ($account->hasPermission('bypass node access')) {
@@ -126,15 +128,15 @@ class NodeAccessControlHandler extends EntityAccessControlHandler implements Nod
    * {@inheritdoc}
    */
   protected function checkAccess(EntityInterface $node, $operation, AccountInterface $account) {
+    assert($node instanceof NodeInterface);
+    $cacheability = new CacheableMetadata();
+
     /** @var \Drupal\node\NodeInterface $node */
-
-    // Fetch information from the node object if possible.
-    $status = $node->isPublished();
-    $uid = $node->getOwnerId();
-
-    // Check if authors can view their own unpublished nodes.
-    if ($operation === 'view' && !$status && $account->hasPermission('view own unpublished content') && $account->isAuthenticated() && $account->id() == $uid) {
-      return AccessResult::allowed()->cachePerPermissions()->cachePerUser()->addCacheableDependency($node);
+    if ($operation === 'view') {
+      $result = $this->checkViewAccess($node, $account, $cacheability);
+      if ($result !== NULL) {
+        return $result;
+      }
     }
 
     [$revision_permission_operation, $entity_operation] = static::REVISION_OPERATION_MAP[$operation] ?? [
@@ -144,25 +146,28 @@ class NodeAccessControlHandler extends EntityAccessControlHandler implements Nod
 
     // Revision operations.
     if ($revision_permission_operation) {
+      $cacheability->addCacheContexts(['user.permissions']);
       $bundle = $node->bundle();
+
       // If user doesn't have any of these then quit.
       if (!$account->hasPermission("$revision_permission_operation all revisions") && !$account->hasPermission("$revision_permission_operation $bundle revisions") && !$account->hasPermission('administer nodes')) {
-        return AccessResult::neutral()->cachePerPermissions();
+        return AccessResult::neutral()->addCacheableDependency($cacheability);
       }
 
       // If the user has the view all revisions permission and this is the view
       // all revisions operation then we can allow access.
       if ($operation === 'view all revisions') {
-        return AccessResult::allowed()->cachePerPermissions();
+        return AccessResult::allowed()->addCacheableDependency($cacheability);
       }
 
       // If this is the default revision, return access denied for revert or
       // delete operations.
+      $cacheability->addCacheableDependency($node);
       if ($node->isDefaultRevision() && ($operation === 'revert revision' || $operation === 'delete revision')) {
-        return AccessResult::forbidden()->addCacheableDependency($node);
+        return AccessResult::forbidden()->addCacheableDependency($cacheability);
       }
       elseif ($account->hasPermission('administer nodes')) {
-        return AccessResult::allowed()->cachePerPermissions();
+        return AccessResult::allowed()->addCacheableDependency($cacheability);
       }
 
       // First check the access to the default revision and finally, if the
@@ -173,20 +178,66 @@ class NodeAccessControlHandler extends EntityAccessControlHandler implements Nod
       if (!$node->isDefaultRevision()) {
         $access = $access->andIf($this->access($node, $entity_operation, $account, TRUE));
       }
-      return $access->cachePerPermissions()->addCacheableDependency($node);
+      return $access->addCacheableDependency($cacheability);
     }
 
     // Evaluate node grants.
     $access_result = $this->grantStorage->access($node, $operation, $account);
-    if ($operation === 'view' && $access_result instanceof RefinableCacheableDependencyInterface) {
-      // Node variations can affect the access to the node. For instance, the
-      // access result cache varies on the node's published status. Only the
-      // 'view' node grant can currently be cached. The 'update' and 'delete'
-      // grants are already marked as uncacheable in the node grant storage.
-      // @see \Drupal\node\NodeGrantDatabaseStorage::access()
-      $access_result->addCacheableDependency($node);
+    if ($access_result instanceof RefinableCacheableDependencyInterface) {
+      $access_result->addCacheableDependency($cacheability);
     }
     return $access_result;
+  }
+
+  /**
+   * Performs view access checks.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node for which to check access.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user for which to check access.
+   * @param \Drupal\Core\Cache\CacheableMetadata $cacheability
+   *   Allows cacheability information bubble up from this method.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface|null
+   *   The calculated access result or null when no opinion.
+   */
+  protected function checkViewAccess(NodeInterface $node, AccountInterface $account, CacheableMetadata $cacheability): ?AccessResultInterface {
+    // If the node status changes, so does the outcome of the check below, so
+    // we need to add the node as a cacheable dependency.
+    $cacheability->addCacheableDependency($node);
+
+    if ($node->isPublished()) {
+      return NULL;
+    }
+    $cacheability->addCacheContexts(['user.permissions']);
+
+    if (!$account->hasPermission('view own unpublished content')) {
+      return NULL;
+    }
+
+    $cacheability->addCacheContexts(['user.roles:authenticated']);
+    // The "view own unpublished content" permission must not be granted
+    // to anonymous users for security reasons.
+    if (!$account->isAuthenticated()) {
+      return NULL;
+    }
+
+    // When access is granted due to the 'view own unpublished content'
+    // permission and for no other reason, node grants are bypassed. However,
+    // to ensure the full set of cacheable metadata is available to variation
+    // cache, additionally add the node_grants cache context so that if the
+    // status or the owner of the node changes, cache redirects will continue to
+    // reflect the latest state without needing to be invalidated.
+    $cacheability->addCacheContexts(['user']);
+    if ($this->moduleHandler->hasImplementations('node_grants')) {
+      $cacheability->addCacheContexts(['user.node_grants:view']);
+    }
+    if ($account->id() != $node->getOwnerId()) {
+      return NULL;
+    }
+
+    return AccessResult::allowed()->addCacheableDependency($cacheability);
   }
 
   /**
@@ -199,23 +250,27 @@ class NodeAccessControlHandler extends EntityAccessControlHandler implements Nod
   /**
    * {@inheritdoc}
    */
-  protected function checkFieldAccess($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
+  protected function checkFieldAccess($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, ?FieldItemListInterface $items = NULL) {
+    $fieldName = $field_definition->getName();
+    if ($operation == 'edit' && $fieldName === 'status') {
+      return AccessResult::allowedIfHasPermissions($account, ['administer node published status', 'administer nodes'], 'OR');
+    }
     // Only users with the administer nodes permission can edit administrative
     // fields.
-    $administrative_fields = ['uid', 'status', 'created', 'promote', 'sticky'];
-    if ($operation == 'edit' && in_array($field_definition->getName(), $administrative_fields, TRUE)) {
+    $administrative_fields = ['uid', 'created', 'promote', 'sticky'];
+    if ($operation == 'edit' && in_array($fieldName, $administrative_fields, TRUE)) {
       return AccessResult::allowedIfHasPermission($account, 'administer nodes');
     }
 
     // No user can change read only fields.
     $read_only_fields = ['revision_timestamp', 'revision_uid'];
-    if ($operation == 'edit' && in_array($field_definition->getName(), $read_only_fields, TRUE)) {
+    if ($operation == 'edit' && in_array($fieldName, $read_only_fields, TRUE)) {
       return AccessResult::forbidden();
     }
 
     // Users have access to the revision_log field either if they have
     // administrative permissions or if the new revision option is enabled.
-    if ($operation == 'edit' && $field_definition->getName() == 'revision_log') {
+    if ($operation == 'edit' && $fieldName == 'revision_log') {
       if ($account->hasPermission('administer nodes')) {
         return AccessResult::allowed()->cachePerPermissions();
       }
@@ -231,7 +286,8 @@ class NodeAccessControlHandler extends EntityAccessControlHandler implements Nod
     $grants = $this->moduleHandler->invokeAll('node_access_records', [$node]);
     // Let modules alter the grants.
     $this->moduleHandler->alter('node_access_records', $grants, $node);
-    // If no grants are set and the node is published, then use the default grant.
+    // If no grants are set and the node is published, then use the default
+    // grant.
     if (empty($grants) && $node->isPublished()) {
       $grants[] = ['realm' => 'all', 'gid' => 0, 'grant_view' => 1, 'grant_update' => 0, 'grant_delete' => 0];
     }

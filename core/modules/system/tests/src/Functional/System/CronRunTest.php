@@ -1,23 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\Traits\Core\CronRunTrait;
+use Drupal\Tests\WaitTerminateTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests cron runs.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class CronRunTest extends BrowserTestBase {
 
   use CronRunTrait;
+  use WaitTerminateTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'common_test',
@@ -33,7 +37,7 @@ class CronRunTest extends BrowserTestBase {
   /**
    * Tests cron runs.
    */
-  public function testCronRun() {
+  public function testCronRun(): void {
     // Run cron anonymously without any cron key.
     $this->drupalGet('cron');
     $this->assertSession()->statusCodeEquals(404);
@@ -52,11 +56,16 @@ class CronRunTest extends BrowserTestBase {
   /**
    * Ensure that the automated cron run module is working.
    *
-   * In these tests we do not use REQUEST_TIME to track start time, because we
-   * need the exact time when cron is triggered.
+   * In these tests we do not use \Drupal::time()->getRequestTime() to track
+   * start time, because we need the exact time when cron is triggered.
    */
-  public function testAutomatedCron() {
-    // Test with a logged in user; anonymous users likely don't cause Drupal to
+  public function testAutomatedCron(): void {
+    // To prevent race conditions between the admin_user login triggering cron
+    // and updating its state, and this test doing the same thing, we use
+    // \Drupal\Tests\WaitTerminateTestTrait::setWaitForTerminate.
+    $this->setWaitForTerminate();
+
+    // Test with a logged-in user; anonymous users likely don't cause Drupal to
     // fully bootstrap, because of the internal page cache or an external
     // reverse proxy. Reuse this user for disabling cron later in the test.
     $admin_user = $this->drupalCreateUser(['administer site configuration']);
@@ -97,7 +106,7 @@ class CronRunTest extends BrowserTestBase {
   /**
    * Make sure exceptions thrown on hook_cron() don't affect other modules.
    */
-  public function testCronExceptions() {
+  public function testCronExceptions(): void {
     \Drupal::state()->delete('common_test.cron');
     // The common_test module throws an exception. If it isn't caught, the tests
     // won't finish successfully.
@@ -110,14 +119,25 @@ class CronRunTest extends BrowserTestBase {
   /**
    * Make sure the cron UI reads from the state storage.
    */
-  public function testCronUI() {
+  public function testCronUI(): void {
+    // To prevent race conditions between the admin_user login triggering cron
+    // and updating its state, and this test doing the same thing, we use
+    // \Drupal\Tests\WaitTerminateTestTrait::setWaitForTerminate().
+    $this->setWaitForTerminate();
+
     $admin_user = $this->drupalCreateUser(['administer site configuration']);
     $this->drupalLogin($admin_user);
+    \Drupal::state()->delete('system.cron_last');
     $this->drupalGet('admin/config/system/cron');
-    // Don't use REQUEST to calculate the exact time, because that will
-    // fail randomly. Look for the word 'years', because without a timestamp,
-    // the time will start at 1 January 1970.
-    $this->assertSession()->pageTextNotContains('years');
+    // Check that cron has never run.
+    $this->assertSession()->pageTextContains('Last run: never');
+
+    // Now check that it has run.
+    // Sleep to allow cron time to complete since it happens during kernel
+    // terminate after the page response is set.
+    sleep(3);
+    $this->drupalGet('admin/config/system/cron');
+    $this->assertSession()->pageTextNotContains('Last run: never');
 
     $cron_last = time() - 200;
     \Drupal::state()->set('system.cron_last', $cron_last);
@@ -138,7 +158,7 @@ class CronRunTest extends BrowserTestBase {
   /**
    * Ensure that the manual cron run is working.
    */
-  public function testManualCron() {
+  public function testManualCron(): void {
     $admin_user = $this->drupalCreateUser(['administer site configuration']);
     $this->drupalLogin($admin_user);
 

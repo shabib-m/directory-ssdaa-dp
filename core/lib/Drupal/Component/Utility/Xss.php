@@ -18,7 +18,86 @@ class Xss {
    *
    * @see \Drupal\Component\Utility\Xss::filterAdmin()
    */
-  protected static $adminTags = ['a', 'abbr', 'acronym', 'address', 'article', 'aside', 'b', 'bdi', 'bdo', 'big', 'blockquote', 'br', 'caption', 'cite', 'code', 'col', 'colgroup', 'command', 'dd', 'del', 'details', 'dfn', 'div', 'dl', 'dt', 'em', 'figcaption', 'figure', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hgroup', 'hr', 'i', 'img', 'ins', 'kbd', 'li', 'mark', 'menu', 'meter', 'nav', 'ol', 'output', 'p', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'section', 'small', 'span', 'strong', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'time', 'tr', 'tt', 'u', 'ul', 'var', 'wbr'];
+  protected static $adminTags = [
+    'a',
+    'abbr',
+    'acronym',
+    'address',
+    'article',
+    'aside',
+    'b',
+    'bdi',
+    'bdo',
+    'big',
+    'blockquote',
+    'br',
+    'caption',
+    'cite',
+    'code',
+    'col',
+    'colgroup',
+    'command',
+    'dd',
+    'del',
+    'details',
+    'dfn',
+    'div',
+    'dl',
+    'dt',
+    'em',
+    'figcaption',
+    'figure',
+    'footer',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'header',
+    'hgroup',
+    'hr',
+    'i',
+    'img',
+    'ins',
+    'kbd',
+    'li',
+    'mark',
+    'menu',
+    'meter',
+    'nav',
+    'ol',
+    'output',
+    'p',
+    'pre',
+    'progress',
+    'q',
+    'rp',
+    'rt',
+    'ruby',
+    's',
+    'samp',
+    'section',
+    'small',
+    'span',
+    'strong',
+    'sub',
+    'summary',
+    'sup',
+    'table',
+    'tbody',
+    'td',
+    'tfoot',
+    'th',
+    'thead',
+    'time',
+    'tr',
+    'tt',
+    'u',
+    'ul',
+    'var',
+    'wbr',
+  ];
 
   /**
    * The default list of HTML tags allowed by filter().
@@ -56,7 +135,7 @@ class Xss {
    *
    * @ingroup sanitization
    */
-  public static function filter($string, array $allowed_html_tags = NULL) {
+  public static function filter($string, ?array $allowed_html_tags = NULL) {
     if (is_null($allowed_html_tags)) {
       $allowed_html_tags = static::$htmlTags;
     }
@@ -141,7 +220,7 @@ class Xss {
    *   version of the HTML element.
    */
   protected static function split($string, array $html_tags, $class) {
-    if (substr($string, 0, 1) != '<') {
+    if (!str_starts_with($string, '<')) {
       // We matched a lone ">" character.
       return '&gt;';
     }
@@ -196,7 +275,7 @@ class Xss {
    * @param string $attributes
    *   The html attribute to process.
    *
-   * @return string
+   * @return array
    *   Cleaned up version of the HTML attributes.
    */
   protected static function attributes($attributes) {
@@ -216,9 +295,11 @@ class Xss {
           if (preg_match('/^([-a-zA-Z][-a-zA-Z0-9]*)/', $attributes, $match)) {
             $attribute_name = strtolower($match[1]);
             $skip = (
-              $attribute_name == 'style' ||
-              substr($attribute_name, 0, 2) == 'on' ||
-              substr($attribute_name, 0, 1) == '-' ||
+              in_array($attribute_name, ['style', 'srcdoc']) ||
+              str_starts_with($attribute_name, 'on') ||
+              str_starts_with($attribute_name, 'data-hx') ||
+              str_starts_with($attribute_name, 'hx') ||
+              str_starts_with($attribute_name, '-') ||
               // Ignore long attributes to avoid unnecessary processing
               // overhead.
               strlen($attribute_name) > 96
@@ -231,8 +312,8 @@ class Xss {
             // to be mangled. We prevent this by skipping protocol filtering on
             // such attributes.
             // @see \Drupal\Component\Utility\UrlHelper::filterBadProtocol()
-            // @see http://www.w3.org/TR/html4/index/attributes.html
-            $skip_protocol_filtering = substr($attribute_name, 0, 5) === 'data-' || in_array($attribute_name, [
+            // @see https://www.w3.org/TR/html4/index/attributes.html
+            $skip_protocol_filtering = str_starts_with($attribute_name, 'data-') || in_array($attribute_name, [
               'title',
               'alt',
               'rel',

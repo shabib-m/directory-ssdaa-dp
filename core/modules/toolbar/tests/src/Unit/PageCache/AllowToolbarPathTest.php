@@ -1,16 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\toolbar\Unit\PageCache;
 
-use Drupal\toolbar\PageCache\AllowToolbarPath;
 use Drupal\Core\PageCache\RequestPolicyInterface;
 use Drupal\Tests\UnitTestCase;
+use Drupal\toolbar\PageCache\AllowToolbarPath;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @coversDefaultClass \Drupal\toolbar\PageCache\AllowToolbarPath
- * @group toolbar
+ * Tests Drupal\toolbar\PageCache\AllowToolbarPath.
  */
+#[CoversClass(AllowToolbarPath::class)]
+#[Group('toolbar')]
 class AllowToolbarPathTest extends UnitTestCase {
 
   /**
@@ -32,10 +38,10 @@ class AllowToolbarPathTest extends UnitTestCase {
   /**
    * Asserts that caching is allowed if the request goes to toolbar subtree.
    *
-   * @dataProvider providerTestAllowToolbarPath
-   * @covers ::check
+   * @legacy-covers ::check
    */
-  public function testAllowToolbarPath($expected_result, $path) {
+  #[DataProvider('providerTestAllowToolbarPath')]
+  public function testAllowToolbarPath($expected_result, $path): void {
     $request = Request::create($path);
     $result = $this->policy->check($request);
     $this->assertSame($expected_result, $result);
@@ -47,7 +53,7 @@ class AllowToolbarPathTest extends UnitTestCase {
    * @return array
    *   Data and expected results.
    */
-  public function providerTestAllowToolbarPath() {
+  public static function providerTestAllowToolbarPath() {
     return [
       [NULL, '/'],
       [NULL, '/other-path?q=/toolbar/subtrees/'],

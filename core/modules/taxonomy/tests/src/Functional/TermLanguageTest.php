@@ -1,17 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional;
 
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the language functionality for the taxonomy terms.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermLanguageTest extends TaxonomyTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['language'];
 
   /**
@@ -47,7 +54,10 @@ class TermLanguageTest extends TaxonomyTestBase {
     }
   }
 
-  public function testTermLanguage() {
+  /**
+   * Tests the language of a term.
+   */
+  public function testTermLanguage(): void {
     // Configure the vocabulary to not hide the language selector.
     $edit = [
       'default_language[language_alterable]' => TRUE,
@@ -85,7 +95,10 @@ class TermLanguageTest extends TaxonomyTestBase {
     $this->assertTrue($this->assertSession()->optionExists('edit-langcode-0-value', $edit['langcode[0][value]'])->isSelected());
   }
 
-  public function testDefaultTermLanguage() {
+  /**
+   * Tests the default language selection for taxonomy terms.
+   */
+  public function testDefaultTermLanguage(): void {
     // Configure the vocabulary to not hide the language selector, and make the
     // default language of the terms fixed.
     $edit = [
@@ -125,7 +138,7 @@ class TermLanguageTest extends TaxonomyTestBase {
   /**
    * Tests that translated terms are displayed correctly on the term overview.
    */
-  public function testTermTranslatedOnOverviewPage() {
+  public function testTermTranslatedOnOverviewPage(): void {
     // Configure the vocabulary to not hide the language selector.
     $edit = [
       'default_language[language_alterable]' => TRUE,
@@ -153,7 +166,7 @@ class TermLanguageTest extends TaxonomyTestBase {
     ]);
     $term->save();
 
-    // Overview page in the other language shows the translated term
+    // Overview page in the other language shows the translated term.
     $this->drupalGet('bb/admin/structure/taxonomy/manage/' . $this->vocabulary->id() . '/overview');
     $this->assertSession()->responseMatches('|<a[^>]*>' . $translated_title . '</a>|');
   }

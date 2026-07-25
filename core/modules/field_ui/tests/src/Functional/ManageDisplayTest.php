@@ -1,31 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_ui\Functional;
 
+use Behat\Mink\Element\NodeElement;
 use Behat\Mink\Exception\ExpectationException;
 use Drupal\Core\Entity\Entity\EntityFormMode;
-use Drupal\Core\Url;
-use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Url;
 use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Field UI "Manage display" and "Manage form display" screens.
- *
- * @group field_ui
  */
+#[Group('field_ui')]
+#[RunTestsInSeparateProcesses]
 class ManageDisplayTest extends BrowserTestBase {
 
   use FieldUiTestTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'node',
@@ -70,6 +72,7 @@ class ManageDisplayTest extends BrowserTestBase {
       'administer node display',
       'administer taxonomy',
       'administer taxonomy_term fields',
+      'administer taxonomy_term form display',
       'administer taxonomy_term display',
       'administer users',
       'administer account settings',
@@ -79,7 +82,7 @@ class ManageDisplayTest extends BrowserTestBase {
     $this->drupalLogin($admin_user);
 
     // Create content type, with underscores.
-    $type_name = strtolower($this->randomMachineName(8)) . '_test';
+    $type_name = $this->randomMachineName(8) . '_test';
     $type = $this->drupalCreateContentType(['name' => $type_name, 'type' => $type_name]);
     $this->type = $type->id();
 
@@ -87,7 +90,7 @@ class ManageDisplayTest extends BrowserTestBase {
     $vocabulary = Vocabulary::create([
       'name' => $this->randomMachineName(),
       'description' => $this->randomMachineName(),
-      'vid' => mb_strtolower($this->randomMachineName()),
+      'vid' => $this->randomMachineName(),
       'langcode' => LanguageInterface::LANGCODE_NOT_SPECIFIED,
       'help' => '',
       'nodes' => ['article' => 'article'],
@@ -100,14 +103,14 @@ class ManageDisplayTest extends BrowserTestBase {
   /**
    * Tests switching view modes to use custom or 'default' settings'.
    */
-  public function testViewModeCustom() {
+  public function testViewModeCustom(): void {
     // Create a field, and a node with some data for the field.
     $this->fieldUIAddNewField('admin/structure/types/manage/' . $this->type, 'test', 'Test field');
     \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
     // For this test, use a formatter setting value that is an integer unlikely
     // to appear in a rendered node other than as part of the field being tested
     // (for example, unlikely to be part of the "Submitted by ... on ..." line).
-    $value = 12345;
+    $value = '12345';
     $settings = [
       'type' => $this->type,
       'field_test' => [['value' => $value]],
@@ -124,7 +127,8 @@ class ManageDisplayTest extends BrowserTestBase {
     ];
 
     // Check that the field is displayed with the default formatter in 'rss'
-    // mode (uses 'default'), and hidden in 'teaser' mode (uses custom settings).
+    // mode (uses 'default'), and hidden in 'teaser' mode (uses custom
+    // settings).
     $this->assertNodeViewText($node, 'rss', $output['field_test_default'], "The field is displayed as expected in view modes that use 'default' settings.");
     $this->assertNodeViewNoText($node, 'teaser', $value, "The field is hidden in view modes that use custom settings.");
 
@@ -134,16 +138,17 @@ class ManageDisplayTest extends BrowserTestBase {
       'fields[field_test][type]' => 'field_test_with_prepare_view',
       'fields[field_test][region]' => 'content',
     ];
-    $this->drupalGet('admin/structure/types/manage/' . $this->type . '/display');
+    $this->drupalGet('admin/structure/types/manage/' . $this->type . '/display/default');
     $this->submitForm($edit, 'Save');
     $this->assertNodeViewText($node, 'rss', $output['field_test_with_prepare_view'], "The field is displayed as expected in view modes that use 'default' settings.");
 
     // Specialize the 'rss' mode, check that the field is displayed the same.
-    $edit = [
-      "display_modes_custom[rss]" => TRUE,
-    ];
     $this->drupalGet('admin/structure/types/manage/' . $this->type . '/display');
-    $this->submitForm($edit, 'Save');
+    $page = $this->getSession()->getPage();
+    $type_normalized = str_replace(['.', '_'], '-', $this->type);
+    $enable_link = $page->find('xpath', "//tr[contains(@id, 'display-mode-node-{$type_normalized}-rss')]//a[contains(., 'Enable')]");
+    $this->assertNotNull($enable_link, 'Enable link should exist for the RSS view mode.');
+    $enable_link->click();
     $this->assertNodeViewText($node, 'rss', $output['field_test_with_prepare_view'], "The field is displayed as expected in newly specialized 'rss' mode.");
 
     // Set the field to 'hidden' in the view mode, check that the field is
@@ -157,19 +162,21 @@ class ManageDisplayTest extends BrowserTestBase {
 
     // Set the view mode back to 'default', check that the field is displayed
     // accordingly.
-    $edit = [
-      "display_modes_custom[rss]" => FALSE,
-    ];
     $this->drupalGet('admin/structure/types/manage/' . $this->type . '/display');
-    $this->submitForm($edit, 'Save');
+    $page = $this->getSession()->getPage();
+    $type_normalized = str_replace(['.', '_'], '-', $this->type);
+    $disable_link = $page->find('xpath', "//tr[contains(@id, 'display-mode-node-{$type_normalized}-rss')]//a[contains(., 'Disable')]");
+    $this->assertNotNull($disable_link, 'Disable link should exist for the RSS view mode.');
+    $disable_link->click();
     $this->assertNodeViewText($node, 'rss', $output['field_test_with_prepare_view'], "The field is displayed as expected when 'rss' mode is set back to 'default' settings.");
 
     // Specialize the view mode again.
-    $edit = [
-      "display_modes_custom[rss]" => TRUE,
-    ];
     $this->drupalGet('admin/structure/types/manage/' . $this->type . '/display');
-    $this->submitForm($edit, 'Save');
+    $page = $this->getSession()->getPage();
+    $type_normalized = str_replace(['.', '_'], '-', $this->type);
+    $enable_link = $page->find('xpath', "//tr[contains(@id, 'display-mode-node-{$type_normalized}-rss')]//a[contains(., 'Enable')]");
+    $this->assertNotNull($enable_link, 'Enable link should exist for the RSS view mode.');
+    $enable_link->click();
     // Check that the previous settings for the view mode have been kept.
     $this->assertNodeViewNoText($node, 'rss', $value, "The previous settings are kept when 'rss' mode is specialized again.");
   }
@@ -177,21 +184,21 @@ class ManageDisplayTest extends BrowserTestBase {
   /**
    * Tests the local tasks are displayed correctly for view modes.
    */
-  public function testViewModeLocalTasks() {
+  public function testViewModeLocalTasks(): void {
     $manage_display = 'admin/structure/types/manage/' . $this->type . '/display';
     $this->drupalGet($manage_display);
-    $this->assertSession()->linkNotExists('Full content');
+    $this->assertSession()->linkNotExistsExact('Full content');
     $this->assertSession()->linkExists('Teaser');
 
     $this->drupalGet($manage_display . '/teaser');
-    $this->assertSession()->linkNotExists('Full content');
+    $this->assertSession()->linkNotExistsExact('Full content');
     $this->assertSession()->linkExists('Default');
   }
 
   /**
    * Tests that fields with no explicit display settings do not break.
    */
-  public function testNonInitializedFields() {
+  public function testNonInitializedFields(): void {
     // Create a test field.
     $this->fieldUIAddNewField('admin/structure/types/manage/' . $this->type, 'test', 'Test');
 
@@ -202,28 +209,37 @@ class ManageDisplayTest extends BrowserTestBase {
   }
 
   /**
-   * Tests hiding the view modes fieldset when there's only one available.
+   * Tests view mode management screens.
    */
-  public function testSingleViewMode() {
-    $this->drupalGet('admin/structure/taxonomy/manage/' . $this->vocabulary . '/display');
+  public function testViewModeUi(): void {
+    // Tests table headers on "Manage form" and "Manage display" screens.
+    $this->drupalGet('admin/structure/taxonomy/manage/' . $this->vocabulary . '/overview/form-display');
+    $this->assertTableHeaderExistsByLabel('field-display-overview', 'Machine name');
+    // Add a field to the taxonomy vocabulary so the display form has a table.
+    $this->fieldUIAddNewField('admin/structure/taxonomy/manage/' . $this->vocabulary . '/overview', 'test', 'Test field');
+    $this->drupalGet('admin/structure/taxonomy/manage/' . $this->vocabulary . '/overview/display/default');
+    $this->assertTableHeaderExistsByLabel('field-display-overview', 'Machine name');
+
+    // Tests hiding the view modes fieldset when there's only one available.
+    $this->drupalGet('admin/structure/taxonomy/manage/' . $this->vocabulary . '/overview/display');
     $this->assertSession()->pageTextNotContains('Use custom display settings for the following view modes');
 
     // This may not trigger a notice when 'view_modes_custom' isn't available.
-    $this->drupalGet('admin/structure/taxonomy/manage/' . $this->vocabulary . '/overview/display');
+    $this->drupalGet('admin/structure/taxonomy/manage/' . $this->vocabulary . '/overview/display/default');
     $this->submitForm([], 'Save');
   }
 
   /**
    * Tests that a message is shown when there are no fields.
    */
-  public function testNoFieldsDisplayOverview() {
+  public function testNoFieldsDisplayOverview(): void {
     // Create a fresh content type without any fields.
     NodeType::create([
       'type' => 'no_fields',
       'name' => 'No fields',
     ])->save();
 
-    $this->drupalGet('admin/structure/types/manage/no_fields/display');
+    $this->drupalGet('admin/structure/types/manage/no_fields/display/default');
     $this->assertSession()->pageTextContains("There are no fields yet added. You can add new fields on the Manage fields page.");
     $this->assertSession()->linkByHrefExists(Url::fromRoute('entity.node.field_ui_fields', ['node_type' => 'no_fields'])->toString());
   }
@@ -231,36 +247,38 @@ class ManageDisplayTest extends BrowserTestBase {
   /**
    * Tests if display mode local tasks appear in alphabetical order by label.
    */
-  public function testViewModeLocalTasksOrder() {
+  public function testViewModeLocalTasksOrder(): void {
     $manage_display = 'admin/structure/types/manage/' . $this->type . '/display';
 
-    // Specify the 'rss' mode, check that the field is displayed the same.
-    $edit = [
-      'display_modes_custom[rss]' => TRUE,
-      'display_modes_custom[teaser]' => TRUE,
-    ];
+    // Specify the 'rss' and 'teaser' modes.
     $this->drupalGet($manage_display);
-    $this->submitForm($edit, 'Save');
+    $page = $this->getSession()->getPage();
+    $type_normalized = str_replace(['.', '_'], '-', $this->type);
+    $enable_rss_link = $page->find('xpath', "//tr[contains(@id, 'display-mode-node-{$type_normalized}-rss')]//a[contains(., 'Enable')]");
+    $this->assertNotNull($enable_rss_link, 'Enable link should exist for the RSS view mode.');
+    $enable_rss_link->click();
 
-    $this->assertOrderInPage(['RSS', 'Teaser']);
+    $this->assertOrderInPage(['RSS', 'Teaser'], '#enabled-display-modes-wrapper');
 
     $edit = [
-      'label' => 'Breezer',
+      'label' => 'Breezier',
     ];
     $this->drupalGet('admin/structure/display-modes/view/manage/node.teaser');
     $this->submitForm($edit, 'Save');
 
-    $this->assertOrderInPage(['Breezer', 'RSS']);
+    $this->drupalGet($manage_display);
+    $this->assertOrderInPage(['Breezier', 'RSS'], '#enabled-display-modes-wrapper');
   }
 
   /**
    * Tests if form mode local tasks appear in alphabetical order by label.
    */
-  public function testFormModeLocalTasksOrder() {
+  public function testFormModeLocalTasksOrder(): void {
     EntityFormMode::create([
       'id' => 'node.big',
       'label' => 'Big Form',
       'targetEntityType' => 'node',
+      'description' => 'Test description',
     ])->save();
     EntityFormMode::create([
       'id' => 'node.little',
@@ -390,14 +408,14 @@ class ManageDisplayTest extends BrowserTestBase {
    * @return array
    *   An array of option values as strings.
    */
-  protected function getAllOptionsList(NodeElement $element) {
+  protected function getAllOptionsList(NodeElement $element): array {
     $options = [];
     // Add all options items.
     foreach ($element->option as $option) {
       $options[] = $option->getValue();
     }
 
-    // Loops trough all the option groups
+    // Loops trough all the option groups.
     foreach ($element->optgroup as $optgroup) {
       $options = array_merge($this->getAllOptionsList($optgroup), $options);
     }
@@ -410,6 +428,8 @@ class ManageDisplayTest extends BrowserTestBase {
    *
    * @param string[] $items
    *   An ordered list of strings.
+   * @param string|null $scope_selector
+   *   Optional CSS selector to scope the search to a specific element.
    *
    * @throws \Behat\Mink\Exception\ExpectationException
    *   When any of the given string is not found.
@@ -418,9 +438,21 @@ class ManageDisplayTest extends BrowserTestBase {
    *
    * @todo Remove this once https://www.drupal.org/node/2817657 is committed.
    */
-  protected function assertOrderInPage(array $items): void {
+  protected function assertOrderInPage(array $items, ?string $scope_selector = NULL): void {
     $session = $this->getSession();
-    $text = $session->getPage()->getHtml();
+    $page = $session->getPage();
+
+    if ($scope_selector) {
+      $scope_element = $page->find('css', $scope_selector);
+      if (!$scope_element) {
+        throw new ExpectationException("Cannot find scope element '$scope_selector'", $session->getDriver());
+      }
+      $text = $scope_element->getHtml();
+    }
+    else {
+      $text = $page->getHtml();
+    }
+
     $strings = [];
     foreach ($items as $item) {
       if (($pos = strpos($text, $item)) === FALSE) {

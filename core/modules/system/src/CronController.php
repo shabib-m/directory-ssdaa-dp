@@ -4,7 +4,6 @@ namespace Drupal\system;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\CronInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -30,13 +29,6 @@ class CronController extends ControllerBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static($container->get('cron'));
-  }
-
-  /**
    * Run Cron once.
    *
    * @return \Symfony\Component\HttpFoundation\Response
@@ -45,7 +37,7 @@ class CronController extends ControllerBase {
   public function run() {
     $this->cron->run();
 
-    // HTTP 204 is "No content", meaning "I did what you asked and we're done."
+    // HTTP 204 is "No content", meaning "I did what you asked and we're done.".
     return new Response('', 204);
   }
 

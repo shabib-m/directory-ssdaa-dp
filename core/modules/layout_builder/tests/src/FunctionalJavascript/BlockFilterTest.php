@@ -1,16 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Behat\Mink\Element\NodeElement;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the JavaScript functionality of the block add filter.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class BlockFilterTest extends WebDriverTestBase {
 
   /**
@@ -21,6 +27,7 @@ class BlockFilterTest extends WebDriverTestBase {
     'node',
     'datetime',
     'layout_builder',
+    'layout_builder_expose_all_field_blocks',
     'user',
   ];
 
@@ -49,7 +56,9 @@ class BlockFilterTest extends WebDriverTestBase {
   /**
    * Tests block filter.
    */
-  public function testBlockFilter() {
+  public function testBlockFilter(): void {
+    // @todo skipped due to random test failures, re-enable in https://www.drupal.org/project/drupal/issues/3028968.
+    $this->markTestSkipped();
     $assert_session = $this->assertSession();
     $session = $this->getSession();
     $page = $session->getPage();
@@ -89,9 +98,9 @@ class BlockFilterTest extends WebDriverTestBase {
     $fewer_blocks_message = ' blocks are available in the modified list';
     $this->assertAnnounceContains($fewer_blocks_message);
     $visible_rows = $this->filterVisibleElements($blocks);
-    $this->assertCount(4, $visible_rows);
+    $this->assertCount(3, $visible_rows);
     $visible_categories = $this->filterVisibleElements($categories);
-    $this->assertCount(4, $visible_categories);
+    $this->assertCount(3, $visible_categories);
 
     // Test Drupal.announce() message when multiple matches are present.
     $expected_message = count($visible_rows) . $fewer_blocks_message;
@@ -100,18 +109,18 @@ class BlockFilterTest extends WebDriverTestBase {
     // Test 3 letter search.
     $filter->setValue('adm');
     $visible_rows = $this->filterVisibleElements($blocks);
-    $this->assertCount(3, $visible_rows);
+    $this->assertCount(2, $visible_rows);
     $visible_categories = $this->filterVisibleElements($categories);
-    $this->assertCount(3, $visible_categories);
+    $this->assertCount(2, $visible_categories);
 
     // Retest that blocks appear when reducing letters.
     $filter->setValue('ad');
     $visible_rows = $this->filterVisibleElements($blocks);
-    $this->assertCount(4, $visible_rows);
+    $this->assertCount(3, $visible_rows);
     $visible_categories = $this->filterVisibleElements($categories);
-    $this->assertCount(4, $visible_categories);
+    $this->assertCount(3, $visible_categories);
 
-    // Test blocks reappear after being filtered by repeating search for "a"
+    // Test blocks reappear after being filtered by repeating search for "a".
     $filter->setValue('a');
     $this->assertAnnounceContains('All available blocks are listed.');
 
@@ -151,7 +160,7 @@ class BlockFilterTest extends WebDriverTestBase {
    * @return \Behat\Mink\Element\NodeElement[]
    *   An array of visible node elements.
    */
-  protected function filterVisibleElements(array $elements) {
+  protected function filterVisibleElements(array $elements): array {
     return array_filter($elements, function (NodeElement $element) {
       return $element->isVisible();
     });

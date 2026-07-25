@@ -1,13 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\locale\Functional;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\file\Entity\File;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Component\Render\FormattableMarkup;
+
+// cspell:ignore februar januar juni marz
 
 /**
  * Base class for testing updates to string translations.
@@ -43,9 +47,7 @@ abstract class LocaleUpdateBase extends BrowserTestBase {
   protected $timestampNow;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['locale', 'locale_test'];
 
@@ -56,10 +58,10 @@ abstract class LocaleUpdateBase extends BrowserTestBase {
     parent::setUp();
 
     // Setup timestamps to identify old and new translation sources.
-    $this->timestampOld = REQUEST_TIME - 300;
-    $this->timestampMedium = REQUEST_TIME - 200;
-    $this->timestampNew = REQUEST_TIME - 100;
-    $this->timestampNow = REQUEST_TIME;
+    $this->timestampOld = \Drupal::time()->getRequestTime() - 300;
+    $this->timestampMedium = \Drupal::time()->getRequestTime() - 200;
+    $this->timestampNew = \Drupal::time()->getRequestTime() - 100;
+    $this->timestampNow = \Drupal::time()->getRequestTime();
 
     // Enable import of translations. By default this is disabled for automated
     // tests.
@@ -78,7 +80,14 @@ abstract class LocaleUpdateBase extends BrowserTestBase {
    */
   protected function setTranslationsDirectory($path) {
     \Drupal::service('file_system')->prepareDirectory($path, FileSystemInterface::CREATE_DIRECTORY);
-    $this->config('locale.settings')->set('translation.path', $path)->save();
+    $settings['settings']['locale_translation_path'] = (object) [
+      'value' => $path,
+      'required' => TRUE,
+    ];
+    $this->writeSettings($settings);
+    $settings = Settings::getAll();
+    $settings['locale_translation_path'] = $path;
+    new Settings($settings);
   }
 
   /**
@@ -92,7 +101,7 @@ abstract class LocaleUpdateBase extends BrowserTestBase {
     $this->drupalGet('admin/config/regional/language/add');
     $this->submitForm($edit, 'Add language');
     $this->container->get('language_manager')->reset();
-    $this->assertNotEmpty(\Drupal::languageManager()->getLanguage($langcode), new FormattableMarkup('Language %langcode added.', ['%langcode' => $langcode]));
+    $this->assertNotEmpty(\Drupal::languageManager()->getLanguage($langcode), "Language $langcode added.");
   }
 
   /**
@@ -110,7 +119,7 @@ abstract class LocaleUpdateBase extends BrowserTestBase {
    *   in source and translations strings.
    */
   protected function makePoFile($path, $filename, $timestamp = NULL, array $translations = []) {
-    $timestamp = $timestamp ? $timestamp : REQUEST_TIME;
+    $timestamp = $timestamp ?: \Drupal::time()->getRequestTime();
     $path = 'public://' . $path;
     $text = '';
     $po_header = <<<EOF
@@ -118,7 +127,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Drupal 8\\n"
 "MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Type: text/plain; charset=utf-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
 
@@ -133,10 +142,11 @@ EOF;
     }
 
     \Drupal::service('file_system')->prepareDirectory($path, FileSystemInterface::CREATE_DIRECTORY);
+    $fileUri = $path . '/' . $filename;
     $file = File::create([
       'uid' => 1,
       'filename' => $filename,
-      'uri' => $path . '/' . $filename,
+      'uri' => $fileUri,
       'filemime' => 'text/x-gettext-translation',
       'timestamp' => $timestamp,
     ]);
@@ -144,6 +154,9 @@ EOF;
     file_put_contents($file->getFileUri(), $po_header . $text);
     touch(\Drupal::service('file_system')->realpath($file->getFileUri()), $timestamp);
     $file->save();
+
+    $this->assertTrue(file_exists($fileUri));
+    $this->assertEquals($timestamp, filemtime($fileUri));
   }
 
   /**
@@ -309,7 +322,7 @@ EOF;
       ->execute()
       ->fetchField();
     $db_translation = $db_translation == FALSE ? '' : $db_translation;
-    $this->assertEquals($translation, $db_translation, $message ? $message : new FormattableMarkup('Correct translation of %source (%language)', ['%source' => $source, '%language' => $langcode]));
+    $this->assertEquals($translation, $db_translation, $message ?: "Correct translation of $source ($langcode)");
   }
 
 }

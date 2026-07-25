@@ -1,0 +1,13 @@
+name: 'Views Test Aggregation'
+type: module
+description: 'Provides a view with aggregation enabled.'
+package: Testing
+# version: VERSION
+dependencies:
+  - drupal:user
+  - drupal:views
+
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
+project: 'drupal'
+datestamp: 1784141321

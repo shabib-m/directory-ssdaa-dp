@@ -1,29 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests configuration entity status functionality.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigEntityStatusTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['config_test'];
 
   /**
    * Tests the enabling/disabling of entities.
    */
-  public function testCRUD() {
+  public function testCRUD(): void {
     $entity = \Drupal::entityTypeManager()->getStorage('config_test')->create([
-      'id' => strtolower($this->randomMachineName()),
+      'id' => $this->randomMachineName(),
     ]);
     $this->assertTrue($entity->status(), 'Default status is enabled.');
     $entity->save();

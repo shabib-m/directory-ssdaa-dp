@@ -1,25 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Routing;
 
-use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\Traits\Core\PathAliasTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the route cache when the language is not in the path.
- *
- * @group language
  */
+#[Group('language')]
+#[RunTestsInSeparateProcesses]
 class RouteCachingNonPathLanguageNegotiationTest extends BrowserTestBase {
 
   use PathAliasTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['language', 'block'];
 
@@ -79,7 +81,7 @@ class RouteCachingNonPathLanguageNegotiationTest extends BrowserTestBase {
   /**
    * Tests aliases when the negotiated language is not in the path.
    */
-  public function testAliases() {
+  public function testAliases(): void {
     // Switch to French and try to access the now inaccessible block.
     $this->drupalGet('');
 

@@ -73,6 +73,17 @@ internal.drupal.ckeditor5.emphasis:
     - core/ckeditor5
     - core/ckeditor5.basic
 
+internal.drupal.ckeditor5.link-entity-suggestions:
+  js:
+    js/build/drupalEntityLinkSuggestions.js: { minified: true }
+  css:
+    component:
+      css/entity-link-suggestions.css: {}
+  dependencies:
+    - core/ckeditor5
+    - core/drupal
+    - core/drupal.autocomplete
+
 internal.drupal.ckeditor5.media:
   js:
     js/build/drupalMedia.js: { minified: true }
@@ -99,6 +110,14 @@ internal.drupal.ckeditor5.filter.admin:
     - core/once
     - core/drupal.ajax
     - core/drupalSettings
+    - core/drupal.vertical-tabs
+
+internal.drupal.ckeditor5.table:
+  css:
+    theme:
+      css/table.css: { }
+  dependencies:
+    - core/ckeditor5.table
 
 internal.admin:
   js:
@@ -180,6 +199,11 @@ internal.admin.drupalmedia:
     theme:
       css/drupalmedia.admin.css: { }
 
+internal.admin.showBlocks:
+  css:
+    theme:
+      css/show-blocks.admin.css: { }
+
 internal.admin.sourceEditing:
   css:
     theme:
@@ -215,3 +239,8 @@ internal.admin.image:
   dependencies:
     - core/jquery
     - core/drupal
+
+internal.admin.fullscreen:
+  css:
+    theme:
+      css/fullscreen.admin.css: { }

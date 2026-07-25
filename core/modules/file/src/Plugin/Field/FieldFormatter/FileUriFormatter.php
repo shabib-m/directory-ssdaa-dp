@@ -2,22 +2,23 @@
 
 namespace Drupal\file\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Formatter to render the file URI to its download path.
- *
- * @FieldFormatter(
- *   id = "file_uri",
- *   label = @Translation("File URI"),
- *   field_types = {
- *     "uri",
- *     "file_uri",
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'file_uri',
+  label: new TranslatableMarkup('File URI'),
+  field_types: [
+    'uri',
+    'file_uri',
+  ],
+)]
 class FileUriFormatter extends BaseFieldFileFormatterBase {
 
   /**
@@ -51,7 +52,7 @@ class FileUriFormatter extends BaseFieldFileFormatterBase {
   protected function viewValue(FieldItemInterface $item) {
     $value = $item->value;
     if ($this->getSetting('file_download_path')) {
-      $value = $this->fileUrlGenerator->generateString($value);
+      $value = $this->fileUrlGenerator->generateAbsoluteString($value);
     }
     return $value;
   }

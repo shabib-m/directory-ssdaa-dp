@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests media Install / Uninstall logic.
- *
- * @group media
  */
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaInstallTest extends BrowserTestBase {
 
   /**
@@ -32,7 +36,7 @@ class MediaInstallTest extends BrowserTestBase {
   /**
    * Tests reinstalling after being uninstalled.
    */
-  public function testReinstallAfterUninstall() {
+  public function testReinstallAfterUninstall(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 
@@ -43,7 +47,7 @@ class MediaInstallTest extends BrowserTestBase {
     $page->checkField('modules[media][enable]');
     $page->pressButton('Install');
     $assert_session->pageTextNotContains('could not be moved/copied because a file by that name already exists in the destination directory');
-    $assert_session->pageTextContains('Module Media has been enabled');
+    $assert_session->pageTextContains('Module Media has been installed');
   }
 
 }

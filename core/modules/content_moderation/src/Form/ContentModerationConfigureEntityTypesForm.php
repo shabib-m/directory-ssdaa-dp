@@ -98,12 +98,12 @@ class ContentModerationConfigureEntityTypesForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WorkflowInterface $workflow = NULL, $entity_type_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WorkflowInterface $workflow = NULL, $entity_type_id = NULL) {
     $this->workflow = $workflow;
     try {
       $this->entityType = $this->entityTypeManager->getDefinition($entity_type_id);
     }
-    catch (PluginNotFoundException $e) {
+    catch (PluginNotFoundException) {
       throw new NotFoundHttpException();
     }
 
@@ -147,7 +147,7 @@ class ContentModerationConfigureEntityTypesForm extends FormBase {
     // Get unsupported features for this entity type.
     $warnings = $this->moderationInformation->getUnsupportedFeatures($this->entityType);
     // Display message into the Ajax form returned.
-    if ($this->getRequest()->get(MainContentViewSubscriber::WRAPPER_FORMAT) == 'drupal_modal' && !empty($warnings)) {
+    if ($this->getRequest()->query->get(MainContentViewSubscriber::WRAPPER_FORMAT) == 'drupal_modal' && !empty($warnings)) {
       $form['warnings'] = ['#type' => 'status_messages', '#weight' => -1];
     }
     // Set warning message.
@@ -161,14 +161,14 @@ class ContentModerationConfigureEntityTypesForm extends FormBase {
       '#button_type' => 'primary',
       '#value' => $this->t('Save'),
       '#ajax' => [
-        'callback' => [$this, 'ajaxcallback'],
+        'callback' => [$this, 'ajaxCallback'],
       ],
     ];
     $form['actions']['cancel'] = [
       '#type' => 'button',
       '#value' => $this->t('Cancel'),
       '#ajax' => [
-        'callback' => [$this, 'ajaxcallback'],
+        'callback' => [$this, 'ajaxCallback'],
       ],
     ];
 
@@ -218,12 +218,18 @@ class ContentModerationConfigureEntityTypesForm extends FormBase {
   /**
    * Route title callback.
    */
-  public function getTitle(WorkflowInterface $workflow = NULL, $entity_type_id) {
+  public function getTitle(WorkflowInterface $workflow, $entity_type_id) {
     $this->entityType = $this->entityTypeManager->getDefinition($entity_type_id);
 
-    $title = $this->t('Select the @entity_type types for the @workflow workflow', ['@entity_type' => $this->entityType->getLabel(), '@workflow' => $workflow->label()]);
+    $title = $this->t('Select the @entity_type types for the @workflow workflow', [
+      '@entity_type' => $this->entityType->getLabel(),
+      '@workflow' => $workflow->label(),
+    ]);
     if ($bundle_entity_type_id = $this->entityType->getBundleEntityType()) {
-      $title = $this->t('Select the @entity_type_plural_label for the @workflow workflow', ['@entity_type_plural_label' => $this->entityTypeManager->getDefinition($bundle_entity_type_id)->getPluralLabel(), '@workflow' => $workflow->label()]);
+      $title = $this->t('Select the @entity_type_plural_label for the @workflow workflow', [
+        '@entity_type_plural_label' => $this->entityTypeManager->getDefinition($bundle_entity_type_id)->getPluralLabel(),
+        '@workflow' => $workflow->label(),
+      ]);
     }
 
     return $title;

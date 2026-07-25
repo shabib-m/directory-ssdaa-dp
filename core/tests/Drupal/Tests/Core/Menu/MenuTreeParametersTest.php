@@ -1,23 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Menu;
 
 use Drupal\Core\Menu\MenuTreeParameters;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the menu link tree parameters value object.
- *
- * @group Menu
- *
- * @coversDefaultClass \Drupal\Core\Menu\MenuTreeParameters
  */
+#[CoversClass(MenuTreeParameters::class)]
+#[Group('Menu')]
 class MenuTreeParametersTest extends UnitTestCase {
 
   /**
    * Provides test data for testSetMinDepth().
    */
-  public function providerTestSetMinDepth() {
+  public static function providerTestSetMinDepth(): array {
     $data = [];
 
     // Valid values at the extremes and in the middle.
@@ -40,11 +43,9 @@ class MenuTreeParametersTest extends UnitTestCase {
 
   /**
    * Tests setMinDepth().
-   *
-   * @covers ::setMinDepth
-   * @dataProvider providerTestSetMinDepth
    */
-  public function testSetMinDepth($min_depth, $expected) {
+  #[DataProvider('providerTestSetMinDepth')]
+  public function testSetMinDepth($min_depth, $expected): void {
     $parameters = new MenuTreeParameters();
     $parameters->setMinDepth($min_depth);
     $this->assertEquals($expected, $parameters->minDepth);
@@ -53,9 +54,9 @@ class MenuTreeParametersTest extends UnitTestCase {
   /**
    * Tests addExpandedParents().
    *
-   * @covers ::addExpandedParents
+   * @legacy-covers ::addExpandedParents
    */
-  public function testAddExpanded() {
+  public function testAddExpanded(): void {
     $parameters = new MenuTreeParameters();
 
     // Verify default value.
@@ -67,21 +68,19 @@ class MenuTreeParametersTest extends UnitTestCase {
 
     // Add additional menu link plugin IDs; they should be merged, not replacing
     // the old ones.
-    $parameters->addExpandedParents(['qux', 'quux']);
-    $this->assertEquals(['foo', 'bar', 'baz', 'qux', 'quux'], $parameters->expandedParents);
+    $parameters->addExpandedParents(['qux', 'foobar']);
+    $this->assertEquals(['foo', 'bar', 'baz', 'qux', 'foobar'], $parameters->expandedParents);
 
     // Add pre-existing menu link plugin IDs; they should not be added again;
     // this is a set.
-    $parameters->addExpandedParents(['bar', 'quux']);
-    $this->assertEquals(['foo', 'bar', 'baz', 'qux', 'quux'], $parameters->expandedParents);
+    $parameters->addExpandedParents(['bar', 'foobar']);
+    $this->assertEquals(['foo', 'bar', 'baz', 'qux', 'foobar'], $parameters->expandedParents);
   }
 
   /**
    * Tests addCondition().
-   *
-   * @covers ::addCondition
    */
-  public function testAddCondition() {
+  public function testAddCondition(): void {
     $parameters = new MenuTreeParameters();
 
     // Verify default value.
@@ -101,7 +100,12 @@ class MenuTreeParametersTest extends UnitTestCase {
 
     // Add another condition with an operator.
     $parameters->addCondition('id', 1337, '<');
-    $this->assertEquals(['expanded' => 1, 'has_children' => 0, 'provider' => [['module1', 'module2'], 'IN'], 'id' => [1337, '<']], $parameters->conditions);
+    $this->assertEquals([
+      'expanded' => 1,
+      'has_children' => 0,
+      'provider' => [['module1', 'module2'], 'IN'],
+      'id' => [1337, '<'],
+    ], $parameters->conditions);
 
     // It's impossible to add two conditions on the same field; in that case,
     // the old condition will be overwritten.
@@ -111,10 +115,8 @@ class MenuTreeParametersTest extends UnitTestCase {
 
   /**
    * Tests onlyEnabledLinks().
-   *
-   * @covers ::onlyEnabledLinks
    */
-  public function testOnlyEnabledLinks() {
+  public function testOnlyEnabledLinks(): void {
     $parameters = new MenuTreeParameters();
     $parameters->onlyEnabledLinks();
     $this->assertEquals(1, $parameters->conditions['enabled']);
@@ -122,10 +124,8 @@ class MenuTreeParametersTest extends UnitTestCase {
 
   /**
    * Tests setTopLevelOnly().
-   *
-   * @covers ::setTopLevelOnly
    */
-  public function testSetTopLevelOnly() {
+  public function testSetTopLevelOnly(): void {
     $parameters = new MenuTreeParameters();
     $parameters->setTopLevelOnly();
     $this->assertEquals(1, $parameters->maxDepth);
@@ -133,20 +133,20 @@ class MenuTreeParametersTest extends UnitTestCase {
 
   /**
    * Tests excludeRoot().
-   *
-   * @covers ::excludeRoot
    */
-  public function testExcludeRoot() {
+  public function testExcludeRoot(): void {
     $parameters = new MenuTreeParameters();
     $parameters->excludeRoot();
     $this->assertEquals(1, $parameters->minDepth);
   }
 
   /**
-   * @covers ::serialize
-   * @covers ::unserialize
+   * Tests serialize.
+   *
+   * @legacy-covers ::serialize
+   * @legacy-covers ::unserialize
    */
-  public function testSerialize() {
+  public function testSerialize(): void {
     $parameters = new MenuTreeParameters();
     $parameters->setRoot(1);
     $parameters->setMinDepth('2');

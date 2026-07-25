@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
 use Drupal\Core\Database\Database;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\UpdatePathTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Ensures that a broken or out-of-date element info cache is not used.
- *
- * @group Update
  */
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
 class BrokenCacheUpdateTest extends BrowserTestBase {
   use UpdatePathTestTrait;
 
@@ -30,7 +34,7 @@ class BrokenCacheUpdateTest extends BrowserTestBase {
   /**
    * Ensures that a broken or out-of-date element info cache is not used.
    */
-  public function testUpdate() {
+  public function testUpdate(): void {
     $connection = Database::getConnection();
 
     // Create broken element info caches entries.
@@ -47,7 +51,6 @@ class BrokenCacheUpdateTest extends BrowserTestBase {
     ];
     $insert->fields($fields);
     $fields['cid'] = 'element_info_build:claro';
-    $fields['tags'] = 'element_info_build';
     $insert->values(array_values($fields));
     $fields['cid'] = 'element_info_build:stark';
     $insert->values(array_values($fields));

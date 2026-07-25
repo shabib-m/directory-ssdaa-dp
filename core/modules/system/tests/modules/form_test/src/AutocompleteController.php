@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\form_test;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -10,13 +12,17 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class AutocompleteController {
 
   /**
-   * Returns some autocompletion content.
+   * Returns some autocompletion content with a slight delay.
+   *
+   * The delay is present so tests can make assertions on the "processing"
+   * layout of autocompletion.
    *
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   A JSON response.
    */
-  public function autocomplete1() {
-    return new JsonResponse(['key' => 'value']);
+  public function delayed_autocomplete() {
+    sleep(1);
+    return new JsonResponse([['value' => 'value', 'label' => 'label']]);
   }
 
 }

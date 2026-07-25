@@ -1,4 +1,9 @@
+parameters:
+  phpass.skip_procedural_hook_scan: true
+
 services:
+  _defaults:
+    autoconfigure: true
   phpass.password:
     public: false
     class: Drupal\phpass\Password\PhpassHashedPassword

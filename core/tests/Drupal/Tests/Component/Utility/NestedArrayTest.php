@@ -1,14 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Utility;
 
 use Drupal\Component\Utility\NestedArray;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @coversDefaultClass \Drupal\Component\Utility\NestedArray
- * @group Utility
+ * Tests Drupal\Component\Utility\NestedArray.
  */
+#[CoversClass(NestedArray::class)]
+#[Group('Utility')]
 class NestedArrayTest extends TestCase {
 
   /**
@@ -42,10 +48,8 @@ class NestedArrayTest extends TestCase {
 
   /**
    * Tests getting nested array values.
-   *
-   * @covers ::getValue
    */
-  public function testGetValue() {
+  public function testGetValue(): void {
     // Verify getting a value of a nested element.
     $value = NestedArray::getValue($this->form, $this->parents);
     $this->assertSame('Nested element', $value['#value'], 'Nested element value found.');
@@ -72,10 +76,8 @@ class NestedArrayTest extends TestCase {
 
   /**
    * Tests setting nested array values.
-   *
-   * @covers ::setValue
    */
-  public function testSetValue() {
+  public function testSetValue(): void {
     $new_value = [
       '#value' => 'New value',
       '#required' => TRUE,
@@ -85,14 +87,16 @@ class NestedArrayTest extends TestCase {
     NestedArray::setValue($this->form, $this->parents, $new_value);
     $this->assertSame('New value', $this->form['details']['element']['#value'], 'Changed nested element value found.');
     $this->assertTrue($this->form['details']['element']['#required'], 'New nested element value found.');
+
+    $this->expectException(\LogicException::class);
+    $this->expectExceptionMessage('Cannot create key "child" on non-array value.');
+    NestedArray::setValue($this->form, ['details', 'element', '#value', 'child'], $new_value);
   }
 
   /**
    * Tests force-setting values.
-   *
-   * @covers ::setValue
    */
-  public function testSetValueForce() {
+  public function testSetValueForce(): void {
     $new_value = [
       'one',
     ];
@@ -104,10 +108,8 @@ class NestedArrayTest extends TestCase {
 
   /**
    * Tests unsetting nested array values.
-   *
-   * @covers ::unsetValue
    */
-  public function testUnsetValue() {
+  public function testUnsetValue(): void {
     // Verify unsetting a non-existing nested element throws no errors and the
     // non-existing key is properly reported.
     $key_existed = NULL;
@@ -127,7 +129,7 @@ class NestedArrayTest extends TestCase {
   /**
    * Tests existence of array key.
    */
-  public function testKeyExists() {
+  public function testKeyExists(): void {
     // Verify that existing key is found.
     $this->assertTrue(NestedArray::keyExists($this->form, $this->parents), 'Nested key found.');
 
@@ -140,10 +142,10 @@ class NestedArrayTest extends TestCase {
   /**
    * Tests NestedArray::mergeDeepArray().
    *
-   * @covers ::mergeDeep
-   * @covers ::mergeDeepArray
+   * @legacy-covers ::mergeDeep
+   * @legacy-covers ::mergeDeepArray
    */
-  public function testMergeDeepArray() {
+  public function testMergeDeepArray(): void {
     $link_options_1 = [
       'fragment' => 'x',
       'attributes' => ['title' => 'X', 'class' => ['a', 'b']],
@@ -168,9 +170,9 @@ class NestedArrayTest extends TestCase {
   /**
    * Tests that arrays with implicit keys are appended, not merged.
    *
-   * @covers ::mergeDeepArray
+   * @legacy-covers ::mergeDeepArray
    */
-  public function testMergeImplicitKeys() {
+  public function testMergeImplicitKeys(): void {
     $a = [
       'subkey' => ['X', 'Y'],
     ];
@@ -189,9 +191,9 @@ class NestedArrayTest extends TestCase {
   /**
    * Tests that even with explicit keys, values are appended, not merged.
    *
-   * @covers ::mergeDeepArray
+   * @legacy-covers ::mergeDeepArray
    */
-  public function testMergeExplicitKeys() {
+  public function testMergeExplicitKeys(): void {
     $a = [
       'subkey' => [
         0 => 'A',
@@ -225,9 +227,9 @@ class NestedArrayTest extends TestCase {
    * before those in the first one, they are still appended, and the keys on
    * the first array are deleted and regenerated.
    *
-   * @covers ::mergeDeepArray
+   * @legacy-covers ::mergeDeepArray
    */
-  public function testMergeOutOfSequenceKeys() {
+  public function testMergeOutOfSequenceKeys(): void {
     $a = [
       'subkey' => [
         10 => 'A',
@@ -255,14 +257,14 @@ class NestedArrayTest extends TestCase {
   }
 
   /**
-   * @covers ::filter
-   * @dataProvider providerTestFilter
+   * Tests filter.
    */
-  public function testFilter($array, $callable, $expected) {
+  #[DataProvider('providerTestFilter')]
+  public function testFilter($array, $callable, $expected): void {
     $this->assertEquals($expected, NestedArray::filter($array, $callable));
   }
 
-  public function providerTestFilter() {
+  public static function providerTestFilter(): array {
     $data = [];
     $data['1d-array'] = [
       [0, 1, '', TRUE], NULL, [1 => 1, 3 => TRUE],

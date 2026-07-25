@@ -6,6 +6,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
@@ -21,14 +22,20 @@ use Drupal\migrate\Row;
 use Drupal\user\EntityOwnerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-// cspell:ignore validatable
+// cspell:ignore huhuu maailma otsikko sivun validatable
 
 /**
  * Provides destination class for all content entities lacking a specific class.
  *
  * Available configuration keys:
- * - translations: (optional) Boolean, indicates if the entity is translatable,
- *   defaults to FALSE.
+ * - translations: (optional) A boolean that indicates if the entity is
+ *   translatable. When TRUE, migration rows will be considered as translations.
+ *   This means the migration will attempt to load an existing entity and, if
+ *   found, save the row data into it as a new translation rather than creating
+ *   a new entity. For this functionality, the migration process definition must
+ *   include mappings for the entity ID and the entity language field. If this
+ *   property is TRUE, the migration will also have an additional destination ID
+ *   for the language code.
  * - overwrite_properties: (optional) A list of properties that will be
  *   overwritten if an entity with the same ID already exists. Any properties
  *   that are not listed will not be overwritten.
@@ -108,6 +115,13 @@ class EntityContentBase extends Entity implements HighestIdInterface, MigrateVal
   protected $accountSwitcher;
 
   /**
+   * Entity type bundle info.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
+  protected EntityTypeBundleInfoInterface $entityTypeBundleInfo;
+
+  /**
    * Constructs a content entity.
    *
    * @param array $configuration
@@ -128,18 +142,25 @@ class EntityContentBase extends Entity implements HighestIdInterface, MigrateVal
    *   The field type plugin manager service.
    * @param \Drupal\Core\Session\AccountSwitcherInterface $account_switcher
    *   The account switcher service.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface|null $entity_type_bundle_info
+   *   The entity type bundle info service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, EntityStorageInterface $storage, array $bundles, EntityFieldManagerInterface $entity_field_manager, FieldTypePluginManagerInterface $field_type_manager, AccountSwitcherInterface $account_switcher = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, EntityStorageInterface $storage, array $bundles, EntityFieldManagerInterface $entity_field_manager, FieldTypePluginManagerInterface $field_type_manager, ?AccountSwitcherInterface $account_switcher = NULL, ?EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $migration, $storage, $bundles);
     $this->entityFieldManager = $entity_field_manager;
     $this->fieldTypeManager = $field_type_manager;
     $this->accountSwitcher = $account_switcher;
+    if ($entity_type_bundle_info === NULL) {
+      @trigger_error('Calling ' . __NAMESPACE__ . '\EntityContentBase::__construct() without the $entity_type_bundle_info argument is deprecated in drupal:11.2.0 and will be required in drupal:12.0.0. See https://www.drupal.org/node/3476634', E_USER_DEPRECATED);
+      $entity_type_bundle_info = \Drupal::service('entity_type.bundle.info');
+    }
+    $this->entityTypeBundleInfo = $entity_type_bundle_info;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     $entity_type = static::getEntityTypeId($plugin_id);
     return new static(
       $configuration,
@@ -150,7 +171,8 @@ class EntityContentBase extends Entity implements HighestIdInterface, MigrateVal
       array_keys($container->get('entity_type.bundle.info')->getBundleInfo($entity_type)),
       $container->get('entity_field.manager'),
       $container->get('plugin.manager.field.field_type'),
-      $container->get('account_switcher')
+      $container->get('account_switcher'),
+      $container->get('entity_type.bundle.info'),
     );
   }
 
@@ -184,7 +206,7 @@ class EntityContentBase extends Entity implements HighestIdInterface, MigrateVal
    */
   public function isEntityValidationRequired(FieldableEntityInterface $entity) {
     // Prioritize the entity method over migration config because it won't be
-    // possible to save that entity unvalidated.
+    // possible to save that entity non validated.
     /* @see \Drupal\Core\Entity\ContentEntityBase::preSave() */
     return $entity->isValidationRequired() || !empty($this->configuration['validate']);
   }
@@ -233,6 +255,7 @@ class EntityContentBase extends Entity implements HighestIdInterface, MigrateVal
    *   An array containing the entity ID.
    */
   protected function save(ContentEntityInterface $entity, array $old_destination_id_values = []) {
+    $entity->setSyncing(TRUE);
     $entity->save();
     return [$entity->id()];
   }
@@ -265,15 +288,7 @@ class EntityContentBase extends Entity implements HighestIdInterface, MigrateVal
   }
 
   /**
-   * Updates an entity with the new values from row.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity to update.
-   * @param \Drupal\migrate\Row $row
-   *   The row object to update from.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   An updated entity from row values.
+   * {@inheritdoc}
    */
   protected function updateEntity(EntityInterface $entity, Row $row) {
     $empty_destinations = $row->getEmptyDestinationProperties();
@@ -324,10 +339,7 @@ class EntityContentBase extends Entity implements HighestIdInterface, MigrateVal
   }
 
   /**
-   * Populates as much of the stub row as possible.
-   *
-   * @param \Drupal\migrate\Row $row
-   *   The row of data.
+   * {@inheritdoc}
    */
   protected function processStubRow(Row $row) {
     $bundle_key = $this->getKey('bundle');
@@ -380,6 +392,7 @@ class EntityContentBase extends Entity implements HighestIdInterface, MigrateVal
               $translation = $entity->getTranslation($langcode);
               if (!$translation->isDefaultTranslation()) {
                 $entity->removeTranslation($langcode);
+                $entity->setSyncing(TRUE);
                 $entity->save();
               }
             }
@@ -402,6 +415,50 @@ class EntityContentBase extends Entity implements HighestIdInterface, MigrateVal
       ->range(0, 1)
       ->execute();
     return (int) current($values);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fields(): array {
+    $entity_type = $this->storage->getEntityType();
+    // Retrieving fields from a non-fieldable content entity will return a
+    // LogicException. Return an empty list of fields instead.
+    if (!$entity_type->entityClassImplements(FieldableEntityInterface::class)) {
+      return [];
+    }
+
+    // Try to determine the bundle to use when getting fields.
+    $bundle_info = $this->entityTypeBundleInfo->getBundleInfo($entity_type->id());
+
+    if (!empty($this->configuration['default_bundle'])) {
+      // If the migration destination configuration specifies a default_bundle,
+      // then use that.
+      $bundle = $this->configuration['default_bundle'];
+
+      if (!isset($bundle_info[$bundle])) {
+        throw new MigrateException(sprintf("The default_bundle value '%s' is not a valid bundle for the destination entity type '%s'.", $bundle, $entity_type->id()));
+      }
+    }
+    elseif (count($bundle_info) === 1) {
+      // If the destination entity type has only one bundle, use that.
+      $bundle = array_key_first($bundle_info);
+    }
+
+    if (isset($bundle)) {
+      // If we have a bundle, get all the fields.
+      $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity_type->id(), $bundle);
+    }
+    else {
+      // Without a bundle, we can only get the base fields.
+      $field_definitions = $this->entityFieldManager->getBaseFieldDefinitions($entity_type->id());
+    }
+
+    $fields = [];
+    foreach ($field_definitions as $field_name => $definition) {
+      $fields[$field_name] = (string) $definition->getLabel();
+    }
+    return $fields;
   }
 
 }

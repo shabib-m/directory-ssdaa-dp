@@ -1,7 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\dynamic_page_cache_test;
 
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Cache\CacheableResponse;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\user\Entity\User;
@@ -23,6 +28,16 @@ class DynamicPageCacheTestController {
    */
   public function response() {
     return new Response('foobar');
+  }
+
+  /**
+   * A route returning a cacheable JSON response.
+   *
+   * @return \Drupal\Core\Cache\CacheableJsonResponse
+   *   The response object.
+   */
+  public function cacheableJsonResponse(): CacheableJsonResponse {
+    return new CacheableJsonResponse(['OK']);
   }
 
   /**
@@ -135,6 +150,16 @@ class DynamicPageCacheTestController {
       ],
     ];
     return $build;
+  }
+
+  /**
+   * Returns an uncacheable access result.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public function uncacheableAccessCheck(): AccessResultInterface {
+    return AccessResult::allowed()->addCacheContexts(['user']);
   }
 
 }

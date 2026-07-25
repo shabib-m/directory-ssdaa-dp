@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_ui\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests indentation on Field UI.
- *
- * @group field_ui
  */
+#[Group('field_ui')]
+#[RunTestsInSeparateProcesses]
 class FieldUIIndentationTest extends BrowserTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node', 'field_ui', 'field_ui_test'];
 
@@ -42,8 +44,11 @@ class FieldUIIndentationTest extends BrowserTestBase {
 
   }
 
-  public function testIndentation() {
-    $this->drupalGet('admin/structure/types/manage/page/display');
+  /**
+   * Tests that the indentation classes are present in the content type display settings.
+   */
+  public function testIndentation(): void {
+    $this->drupalGet('admin/structure/types/manage/page/display/default');
     $this->assertSession()->responseContains('js-indentation indentation');
   }
 

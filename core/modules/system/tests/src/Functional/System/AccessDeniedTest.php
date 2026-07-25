@@ -1,32 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests page access denied functionality, including custom 403 pages.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class AccessDeniedTest extends BrowserTestBase {
 
   use AssertPageCacheContextsAndTagsTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  protected static $modules = ['block', 'node', 'system_test'];
+  protected static $modules = ['block', 'node', 'path', 'system_test'];
 
   /**
    * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
 
+  /**
+   * The test user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
   protected $adminUser;
 
   /**
@@ -51,7 +58,10 @@ class AccessDeniedTest extends BrowserTestBase {
     user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, ['access user profiles']);
   }
 
-  public function testAccessDenied() {
+  /**
+   * Tests access denied functionality.
+   */
+  public function testAccessDenied(): void {
     $this->drupalGet('admin');
     $this->assertSession()->pageTextContains('Access denied');
     $this->assertSession()->statusCodeEquals(403);
@@ -107,7 +117,7 @@ class AccessDeniedTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(403);
     $this->assertSession()->pageTextContains('Username');
 
-    // Log back in, set the custom 403 page to /user/login and remove the block
+    // Log back in, set the custom 403 page to /user/login and remove the block.
     $this->drupalLogin($this->adminUser);
     $this->config('system.site')->set('page.403', '/user/login')->save();
     $block->disable()->save();
@@ -128,7 +138,7 @@ class AccessDeniedTest extends BrowserTestBase {
   /**
    * Tests that an inaccessible custom 403 page falls back to the default.
    */
-  public function testAccessDeniedCustomPageWithAccessDenied() {
+  public function testAccessDeniedCustomPageWithAccessDenied(): void {
     // Sets up a 403 page not accessible by the anonymous user.
     $this->config('system.site')->set('page.403', '/system-test/custom-4xx')->save();
 
@@ -145,6 +155,22 @@ class AccessDeniedTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(403);
     // Verify the access cacheability metadata for custom 403 is bubbled.
     $this->assertCacheContext('user.roles');
+
+    // Create a custom 403 page with a path alias.
+    $this->drupalCreateContentType(['type' => 'page']);
+    $this->drupalCreateNode([
+      'body' => "Dave, I'm afraid you can't do that.",
+      'path' => '/custom-access-denied',
+    ]);
+    $edit = ['site_403' => '/custom-access-denied'];
+    $this->drupalGet('admin/config/system/site-information');
+    $this->submitForm($edit, 'Save configuration');
+    $assert_session = $this->assertSession();
+    $assert_session->statusMessageContains('The configuration options have been saved.');
+    $this->assertSame('/custom-access-denied', $this->config('system.site')->get('page.403'));
+    $this->drupalGet('/system-test/always-denied');
+    $assert_session->statusCodeEquals(403);
+    $assert_session->pageTextContains("Dave, I'm afraid you can't do that.");
   }
 
 }

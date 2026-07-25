@@ -1,25 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\telephone\Kernel;
 
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldItemInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\Tests\field\Kernel\FieldKernelTestBase;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\Tests\field\Kernel\FieldKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the new entity API for the telephone field type.
- *
- * @group telephone
  */
+#[Group('telephone')]
+#[RunTestsInSeparateProcesses]
 class TelephoneItemTest extends FieldKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['telephone'];
 
@@ -46,7 +48,7 @@ class TelephoneItemTest extends FieldKernelTestBase {
   /**
    * Tests using entity fields of the telephone field type.
    */
-  public function testTestItem() {
+  public function testTestItem(): void {
     // Verify entity creation.
     $entity = EntityTest::create();
     $value = '+0123456789';

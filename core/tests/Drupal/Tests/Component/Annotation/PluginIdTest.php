@@ -1,20 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Annotation;
 
 use Drupal\Component\Annotation\PluginID;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @coversDefaultClass \Drupal\Component\Annotation\PluginId
- * @group Annotation
+ * Tests Drupal\Component\Annotation\PluginID.
  */
+#[CoversClass(PluginID::class)]
+#[Group('Annotation')]
 class PluginIdTest extends TestCase {
 
   /**
-   * @covers ::get
+   * Tests get.
    */
-  public function testGet() {
+  public function testGet(): void {
     // Assert plugin starts empty.
     $plugin = new PluginID();
     $this->assertEquals([
@@ -35,9 +40,9 @@ class PluginIdTest extends TestCase {
   }
 
   /**
-   * @covers ::getId
+   * Tests get id.
    */
-  public function testGetId() {
+  public function testGetId(): void {
     $plugin = new PluginID();
     $plugin->value = 'example';
     $this->assertEquals('example', $plugin->getId());

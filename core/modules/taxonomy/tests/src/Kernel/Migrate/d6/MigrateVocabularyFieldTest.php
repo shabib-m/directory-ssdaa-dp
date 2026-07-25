@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d6;
 
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Vocabulary field migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateVocabularyFieldTest extends MigrateDrupal6TestBase {
 
   /**
@@ -28,7 +32,7 @@ class MigrateVocabularyFieldTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal 6 vocabulary-node type association to Drupal 8 migration.
    */
-  public function testVocabularyField() {
+  public function testVocabularyField(): void {
     // Test that the field exists.
     $field_storage_id = 'node.field_tags';
     /** @var \Drupal\field\FieldStorageConfigInterface $field_storage */

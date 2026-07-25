@@ -2,6 +2,7 @@
 
 namespace Drupal\comment;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -9,9 +10,15 @@ use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\user\EntityOwnerInterface;
 
+/**
+ * Service for storing and retrieving comment statistics.
+ */
 class CommentStatistics implements CommentStatisticsInterface {
+
+  use StringTranslationTrait;
 
   /**
    * The current database connection.
@@ -59,15 +66,24 @@ class CommentStatistics implements CommentStatisticsInterface {
    *   The entity type manager.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    * @param \Drupal\Core\Database\Connection|null $database_replica
    *   (Optional) the replica database connection.
    */
-  public function __construct(Connection $database, AccountInterface $current_user, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, Connection $database_replica = NULL) {
+  public function __construct(
+    Connection $database,
+    AccountInterface $current_user,
+    EntityTypeManagerInterface $entity_type_manager,
+    StateInterface $state,
+    protected TimeInterface $time,
+    ?Connection $database_replica = NULL,
+  ) {
     $this->database = $database;
-    $this->databaseReplica = $database_replica ?: $database;
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
     $this->state = $state;
+    $this->databaseReplica = $database_replica ?: $database;
   }
 
   /**
@@ -129,8 +145,8 @@ class CommentStatistics implements CommentStatisticsInterface {
         // EntityOwnerInterface or author is not set.
         $last_comment_uid = $this->currentUser->id();
       }
-      // Default to REQUEST_TIME when entity does not have a changed property.
-      $last_comment_timestamp = REQUEST_TIME;
+      // Default to request time when entity does not have a changed property.
+      $last_comment_timestamp = $this->time->getRequestTime();
       // @todo Make comment statistics language aware and add some tests. See
       //   https://www.drupal.org/node/2318875
       if ($entity instanceof EntityChangedInterface) {
@@ -163,7 +179,7 @@ class CommentStatistics implements CommentStatisticsInterface {
   public function getRankingInfo() {
     return [
       'comments' => [
-        'title' => t('Number of comments'),
+        'title' => $this->t('Number of comments'),
         'join' => [
           'type' => 'LEFT',
           'table' => 'comment_entity_statistics',
@@ -217,19 +233,18 @@ class CommentStatistics implements CommentStatisticsInterface {
         ->range(0, 1)
         ->execute()
         ->fetchObject();
-      // Use merge here because entity could be created before comment field.
-      $this->database->merge('comment_entity_statistics')
+      // Use upsert here because entity could be created before comment field.
+      $this->database->upsert('comment_entity_statistics')
+        ->key(['entity_id', 'entity_type', 'field_name'])
         ->fields([
+          'entity_id' => $comment->getCommentedEntityId(),
+          'entity_type' => $comment->getCommentedEntityTypeId(),
+          'field_name' => $comment->getFieldName(),
           'cid' => $last_reply->cid,
           'comment_count' => $count,
           'last_comment_timestamp' => $last_reply->changed,
           'last_comment_name' => $last_reply->uid ? '' : $last_reply->name,
           'last_comment_uid' => $last_reply->uid,
-        ])
-        ->keys([
-          'entity_id' => $comment->getCommentedEntityId(),
-          'entity_type' => $comment->getCommentedEntityTypeId(),
-          'field_name' => $comment->getFieldName(),
         ])
         ->execute();
     }
@@ -251,8 +266,8 @@ class CommentStatistics implements CommentStatisticsInterface {
           'cid' => 0,
           'comment_count' => 0,
           // Use the changed date of the entity if it's set, or default to
-          // REQUEST_TIME.
-          'last_comment_timestamp' => ($entity instanceof EntityChangedInterface) ? $entity->getChangedTimeAcrossTranslations() : REQUEST_TIME,
+          // request time.
+          'last_comment_timestamp' => ($entity instanceof EntityChangedInterface) ? $entity->getChangedTimeAcrossTranslations() : $this->time->getRequestTime(),
           'last_comment_name' => '',
           'last_comment_uid' => $last_comment_uid,
         ])

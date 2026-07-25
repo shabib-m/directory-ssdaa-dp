@@ -3,13 +3,13 @@
 namespace Drupal\Core\Installer\Form;
 
 use Drupal\Core\Datetime\TimeZoneFormHelper;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleInstallerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Locale\CountryManagerInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\user\UserStorageInterface;
 use Drupal\user\UserInterface;
+use Drupal\user\UserNameValidator;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -20,61 +20,29 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SiteConfigureForm extends ConfigFormBase {
 
   /**
-   * The site path.
-   *
-   * @var string
-   */
-  protected $sitePath;
-
-  /**
-   * The user storage.
-   *
-   * @var \Drupal\user\UserStorageInterface
-   */
-  protected $userStorage;
-
-  /**
-   * The module installer.
-   *
-   * @var \Drupal\Core\Extension\ModuleInstallerInterface
-   */
-  protected $moduleInstaller;
-
-  /**
-   * The country manager.
-   *
-   * @var \Drupal\Core\Locale\CountryManagerInterface
-   */
-  protected $countryManager;
-
-  /**
-   * The app root.
-   *
-   * @var string
-   */
-  protected $root;
-
-  /**
    * Constructs a new SiteConfigureForm.
    *
    * @param string $root
    *   The app root.
-   * @param string $site_path
+   * @param string $sitePath
    *   The site path.
-   * @param \Drupal\user\UserStorageInterface $user_storage
-   *   The user storage.
-   * @param \Drupal\Core\Extension\ModuleInstallerInterface $module_installer
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
+   * @param \Drupal\Core\Extension\ModuleInstallerInterface $moduleInstaller
    *   The module installer.
-   * @param \Drupal\Core\Locale\CountryManagerInterface $country_manager
-   *   The country manager.
+   * @param \Drupal\user\UserNameValidator $userNameValidator
+   *   The user validator.
+   * @param bool $superUserAccessPolicy
+   *   The value of the 'security.enable_super_user' container parameter.
    */
-  public function __construct($root, $site_path, UserStorageInterface $user_storage, ModuleInstallerInterface $module_installer, CountryManagerInterface $country_manager) {
-    $this->root = $root;
-    $this->sitePath = $site_path;
-    $this->userStorage = $user_storage;
-    $this->moduleInstaller = $module_installer;
-    $this->countryManager = $country_manager;
-  }
+  public function __construct(
+    protected $root,
+    protected $sitePath,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected ModuleInstallerInterface $moduleInstaller,
+    protected UserNameValidator $userNameValidator,
+    protected bool $superUserAccessPolicy,
+  ) {}
 
   /**
    * {@inheritdoc}
@@ -83,9 +51,13 @@ class SiteConfigureForm extends ConfigFormBase {
     return new static(
       $container->getParameter('app.root'),
       $container->getParameter('site.path'),
-      $container->get('entity_type.manager')->getStorage('user'),
+      $container->get('entity_type.manager'),
       $container->get('module_installer'),
-      $container->get('country_manager')
+      $container->get('user.name_validator'),
+      // In order to disable the super user policy this must be set to FALSE. If
+      // the container parameter is missing then the policy is enabled. See
+      // \Drupal\Core\DependencyInjection\Compiler\SuperUserAccessPolicyPass.
+      $container->getParameter('security.enable_super_user') ?? TRUE,
     );
   }
 
@@ -114,7 +86,7 @@ class SiteConfigureForm extends ConfigFormBase {
     global $install_state;
     $form['#title'] = $this->t('Configure site');
 
-    // Warn about settings.php permissions risk
+    // Warn about settings.php permissions risk.
     $settings_dir = $this->sitePath;
     $settings_file = $settings_dir . '/settings.php';
     // Check that $_POST is empty so we only show this message when the form is
@@ -126,9 +98,15 @@ class SiteConfigureForm extends ConfigFormBase {
     // successfully.)
     $post_params = $this->getRequest()->request->all();
     if (empty($post_params) && (Settings::get('skip_permissions_hardening') || !drupal_verify_install_file($this->root . '/' . $settings_file, FILE_EXIST | FILE_READABLE | FILE_NOT_WRITABLE) || !drupal_verify_install_file($this->root . '/' . $settings_dir, FILE_NOT_WRITABLE, 'dir'))) {
-      $this->messenger()->addWarning($this->t('All necessary changes to %dir and %file have been made, so you should remove write permissions to them now in order to avoid security risks. If you are unsure how to do so, consult the <a href=":handbook_url">online handbook</a>.', ['%dir' => $settings_dir, '%file' => $settings_file, ':handbook_url' => 'https://www.drupal.org/server-permissions']));
+      $this->messenger()
+        ->addWarning($this->t('All necessary changes to %dir and %file have been made, so you should remove write permissions to them now in order to avoid security risks. If you are unsure how to do so, consult the <a href=":handbook_url">online handbook</a>.', [
+          '%dir' => $settings_dir,
+          '%file' => $settings_file,
+          ':handbook_url' => 'https://www.drupal.org/server-permissions',
+        ]));
     }
 
+    $form['#attached']['library'][] = 'core/drupal.fieldgroup';
     $form['#attached']['library'][] = 'system/drupal.system';
     // Add JavaScript time zone detection.
     $form['#attached']['library'][] = 'core/drupal.timezone';
@@ -137,7 +115,8 @@ class SiteConfigureForm extends ConfigFormBase {
     $form['#attached']['drupalSettings']['copyFieldValue']['edit-site-mail'] = ['edit-account-mail'];
 
     $form['site_information'] = [
-      '#type' => 'fieldgroup',
+      '#type' => 'fieldset',
+      '#attributes' => ['class' => ['fieldgroup']],
       '#title' => $this->t('Site information'),
       '#access' => empty($install_state['config_install_path']),
     ];
@@ -161,9 +140,17 @@ class SiteConfigureForm extends ConfigFormBase {
       '#access' => empty($install_state['config_install_path']),
     ];
 
+    if (count($this->getAdminRoles()) === 0 && $this->superUserAccessPolicy === FALSE) {
+      $account_label = $this->t('Site account');
+    }
+    else {
+      $account_label = $this->t('Site maintenance account');
+    }
+
     $form['admin_account'] = [
-      '#type' => 'fieldgroup',
-      '#title' => $this->t('Site maintenance account'),
+      '#type' => 'fieldset',
+      '#attributes' => ['class' => ['fieldgroup']],
+      '#title' => $account_label,
     ];
     $form['admin_account']['account']['name'] = [
       '#type' => 'textfield',
@@ -186,18 +173,9 @@ class SiteConfigureForm extends ConfigFormBase {
     ];
 
     $form['regional_settings'] = [
-      '#type' => 'fieldgroup',
+      '#type' => 'fieldset',
+      '#attributes' => ['class' => ['fieldgroup']],
       '#title' => $this->t('Regional settings'),
-      '#access' => empty($install_state['config_install_path']),
-    ];
-    $countries = $this->countryManager->getList();
-    $form['regional_settings']['site_default_country'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Default country'),
-      '#empty_value' => '',
-      '#default_value' => $this->config('system.date')->get('country.default'),
-      '#options' => $countries,
-      '#weight' => 0,
       '#access' => empty($install_state['config_install_path']),
     ];
     // Use the default site timezone if one is already configured, or fall back
@@ -215,9 +193,10 @@ class SiteConfigureForm extends ConfigFormBase {
     ];
 
     $form['update_notifications'] = [
-      '#type' => 'fieldgroup',
+      '#type' => 'fieldset',
+      '#attributes' => ['class' => ['fieldgroup']],
       '#title' => $this->t('Update notifications'),
-      '#description' => $this->t('When checking for updates, anonymous information about your site is sent to <a href="@drupal">Drupal.org</a>.', ['@drupal' => 'https://drupal.org']),
+      '#description' => $this->t('When checking for updates, your site automatically sends anonymous information to Drupal.org. See the <a href="@update-status-module-docs" target="_blank">Update Status module documentation</a> for details.', ['@update-status-module-docs' => 'https://www.drupal.org/node/178772']),
       '#access' => empty($install_state['config_install_path']),
     ];
     $form['update_notifications']['enable_update_status_module'] = [
@@ -253,8 +232,9 @@ class SiteConfigureForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    if ($error = user_validate_name($form_state->getValue(['account', 'name']))) {
-      $form_state->setErrorByName('account][name', $error);
+    $violations = $this->userNameValidator->validateName($form_state->getValue(['account', 'name']));
+    if ($violations->count() > 0) {
+      $form_state->setErrorByName('account][name', $violations[0]->getMessage());
     }
   }
 
@@ -268,12 +248,11 @@ class SiteConfigureForm extends ConfigFormBase {
       $this->config('system.site')
         ->set('name', (string) $form_state->getValue('site_name'))
         ->set('mail', (string) $form_state->getValue('site_mail'))
-        ->save(TRUE);
+        ->save();
 
       $this->config('system.date')
         ->set('timezone.default', (string) $form_state->getValue('date_default_timezone'))
-        ->set('country.default', (string) $form_state->getValue('site_default_country'))
-        ->save(TRUE);
+        ->save();
     }
 
     $account_values = $form_state->getValue('account');
@@ -282,26 +261,74 @@ class SiteConfigureForm extends ConfigFormBase {
     $update_status_module = $form_state->getValue('enable_update_status_module');
     if (empty($install_state['config_install_path']) && $update_status_module) {
       $this->moduleInstaller->install(['update']);
+      // After a module is installed, there is a new container, so all class
+      // properties dependent on the container need to be reset.
+      $this->resetPropertiesFromContainer();
 
       // Add the site maintenance account's email address to the list of
       // addresses to be notified when updates are available, if selected.
       $email_update_status_emails = $form_state->getValue('enable_update_status_emails');
       if ($email_update_status_emails) {
-        // Reset the configuration factory so it is updated with the new module.
-        $this->resetConfigFactory();
-        $this->config('update.settings')->set('notification.emails', [$account_values['mail']])->save(TRUE);
+        // Reset the configuration so it is updated with the new module.
+        $this->config('update.settings')->set('notification.emails', [$account_values['mail']])->save();
       }
     }
 
-    // We precreated user 1 with placeholder values. Let's save the real values.
-    $account = $this->userStorage->load(1);
+    // We created user 1 with placeholder values. Let's save the real values.
+    /** @var \Drupal\user\UserInterface $account */
+    $account = $this->entityTypeManager->getStorage('user')->load(1);
     $account->init = $account->mail = $account_values['mail'];
     $account->roles = $account->getRoles();
     $account->activate();
     $account->timezone = $form_state->getValue('date_default_timezone');
     $account->pass = $account_values['pass'];
     $account->name = $account_values['name'];
+
+    // Ensure user 1 has an administrator role if one exists.
+    /** @var \Drupal\user\RoleInterface[] $admin_roles */
+    $admin_roles = $this->getAdminRoles();
+    if (count(array_intersect($account->getRoles(), array_keys($admin_roles))) === 0) {
+      if (count($admin_roles) > 0) {
+        foreach ($admin_roles as $role) {
+          $account->addRole($role->id());
+        }
+      }
+      elseif ($this->superUserAccessPolicy === FALSE) {
+        $this->messenger()->addWarning($this->t(
+          'The user %username does not have administrator access. For more information, see the documentation on <a href="@secure-user-1-docs">securing the admin super user</a>.',
+          [
+            '%username' => $account->getDisplayName(),
+            '@secure-user-1-docs' => 'https://www.drupal.org/docs/administering-a-drupal-site/security-in-drupal/securing-the-admin-super-user-1#s-disable-the-super-user-access-policy',
+          ]
+        ));
+      }
+    }
+
     $account->save();
+  }
+
+  /**
+   * Returns the list of admin roles.
+   *
+   * @return \Drupal\user\RoleInterface[]
+   *   The list of admin roles.
+   */
+  protected function getAdminRoles(): array {
+    return $this->entityTypeManager->getStorage('user_role')->loadByProperties(['is_admin' => TRUE]);
+  }
+
+  /**
+   * Repopulate class properties from container.
+   */
+  protected function resetPropertiesFromContainer(): void {
+    $this->resetConfigFactory();
+    $container = \Drupal::getContainer();
+    $this->root = $container->getParameter('app.root');
+    $this->sitePath = $container->getParameter('site.path');
+    $this->entityTypeManager = $container->get('entity_type.manager');
+    $this->moduleInstaller = $container->get('module_installer');
+    $this->userNameValidator = $container->get('user.name_validator');
+    $this->superUserAccessPolicy = $container->getParameter('security.enable_super_user') ?? TRUE;
   }
 
 }

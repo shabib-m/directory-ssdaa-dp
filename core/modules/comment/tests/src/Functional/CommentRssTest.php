@@ -1,25 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional;
 
-use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
+use Drupal\comment\CommentingStatus;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests comments as part of an RSS feed.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentRssTest extends CommentTestBase {
 
   use AssertPageCacheContextsAndTagsTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['views'];
 
@@ -47,7 +49,7 @@ class CommentRssTest extends CommentTestBase {
   /**
    * Tests comments as part of an RSS feed.
    */
-  public function testCommentRss() {
+  public function testCommentRss(): void {
     // Find comment in RSS feed.
     $this->drupalLogin($this->webUser);
     $this->postComment($this->node, $this->randomMachineName(), $this->randomMachineName());
@@ -75,7 +77,7 @@ class CommentRssTest extends CommentTestBase {
     $this->assertSession()->responseContains($raw);
 
     // Hide comments from RSS feed and check presence.
-    $this->node->set('comment', CommentItemInterface::HIDDEN);
+    $this->node->set('comment', CommentingStatus::Hidden->value);
     $this->node->save();
     $this->drupalGet('rss.xml');
     $this->assertSession()->responseNotContains($raw);

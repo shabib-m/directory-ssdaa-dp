@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Core\Session\AccountInterface;
@@ -8,12 +10,14 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the core Drupal\views\Plugin\views\field\EntityOperations handler.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldEntityLinkTest extends ViewsKernelTestBase {
 
   use UserCreationTrait;
@@ -26,9 +30,7 @@ class FieldEntityLinkTest extends ViewsKernelTestBase {
   public static $testViews = ['test_entity_test_link'];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['user', 'entity_test'];
 
@@ -42,7 +44,7 @@ class FieldEntityLinkTest extends ViewsKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpFixtures() {
+  protected function setUpFixtures(): void {
     parent::setUpFixtures();
 
     // Create the anonymous user account and set it as current user.
@@ -67,13 +69,25 @@ class FieldEntityLinkTest extends ViewsKernelTestBase {
   /**
    * Tests entity link fields.
    */
-  public function testEntityLink() {
+  public function testEntityLink(): void {
     // Anonymous users cannot see edit/delete links.
-    $expected_results = ['canonical' => TRUE, 'edit-form' => FALSE, 'delete-form' => FALSE, 'canonical_raw' => TRUE, 'canonical_raw_absolute' => TRUE];
+    $expected_results = [
+      'canonical' => TRUE,
+      'edit-form' => FALSE,
+      'delete-form' => FALSE,
+      'canonical_raw' => TRUE,
+      'canonical_raw_absolute' => TRUE,
+    ];
     $this->doTestEntityLink(\Drupal::currentUser(), $expected_results);
 
     // Admin users cannot see all links.
-    $expected_results = ['canonical' => TRUE, 'edit-form' => TRUE, 'delete-form' => TRUE, 'canonical_raw' => TRUE, 'canonical_raw_absolute' => TRUE];
+    $expected_results = [
+      'canonical' => TRUE,
+      'edit-form' => TRUE,
+      'delete-form' => TRUE,
+      'canonical_raw' => TRUE,
+      'canonical_raw_absolute' => TRUE,
+    ];
     $this->doTestEntityLink($this->adminUser, $expected_results);
   }
 
@@ -81,11 +95,11 @@ class FieldEntityLinkTest extends ViewsKernelTestBase {
    * Tests whether entity links behave as expected.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
-   *   The user account to be used to run the test;
+   *   The user account to be used to run the test.
    * @param bool[] $expected_results
    *   An associative array of expected results keyed by link template name.
    */
-  protected function doTestEntityLink(AccountInterface $account, $expected_results) {
+  protected function doTestEntityLink(AccountInterface $account, $expected_results): void {
     \Drupal::currentUser()->setAccount($account);
 
     $view = Views::getView('test_entity_test_link');

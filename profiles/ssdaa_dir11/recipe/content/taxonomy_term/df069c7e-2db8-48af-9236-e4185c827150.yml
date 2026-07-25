@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: df069c7e-2db8-48af-9236-e4185c827150
+  bundle: country
+  default_langcode: ar
+  depends:
+    a90daf85-7532-49e1-9989-24ab60b726c7: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: الصومال
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: a90daf85-7532-49e1-9989-24ab60b726c7
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

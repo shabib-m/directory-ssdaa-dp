@@ -3,25 +3,28 @@
 namespace Drupal\language\Plugin\Block;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Cache\CacheOptionalInterface;
 use Drupal\Core\Path\PathMatcherInterface;
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\language\Plugin\Derivative\LanguageBlock as LanguageBlockDeriver;
 
 /**
  * Provides a 'Language switcher' block.
- *
- * @Block(
- *   id = "language_block",
- *   admin_label = @Translation("Language switcher"),
- *   category = @Translation("System"),
- *   deriver = "Drupal\language\Plugin\Derivative\LanguageBlock"
- * )
  */
-class LanguageBlock extends BlockBase implements ContainerFactoryPluginInterface {
+#[Block(
+  id: "language_block",
+  admin_label: new TranslatableMarkup("Language switcher"),
+  category: new TranslatableMarkup("System"),
+  deriver: LanguageBlockDeriver::class
+)]
+class LanguageBlock extends BlockBase implements ContainerFactoryPluginInterface, CacheOptionalInterface {
 
   /**
    * The language manager.
@@ -43,7 +46,7 @@ class LanguageBlock extends BlockBase implements ContainerFactoryPluginInterface
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
@@ -55,19 +58,6 @@ class LanguageBlock extends BlockBase implements ContainerFactoryPluginInterface
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->languageManager = $language_manager;
     $this->pathMatcher = $path_matcher;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('language_manager'),
-      $container->get('path.matcher')
-    );
   }
 
   /**
@@ -87,9 +77,23 @@ class LanguageBlock extends BlockBase implements ContainerFactoryPluginInterface
     $route_match = \Drupal::routeMatch();
     // If there is no route match, for example when creating blocks on 404 pages
     // for logged-in users with big_pipe enabled using the front page instead.
-    $url = $route_match->getRouteObject() ? Url::fromRouteMatch($route_match) : Url::fromRoute('<front>');
+    if ($this->pathMatcher->isFrontPage() || !$route_match->getRouteObject()) {
+      // We are skipping the route match on both 404 and front page.
+      // Example: If on front page, there is no route match like when creating
+      // blocks on 404 pages for logged-in users with big_pipe enabled, use the
+      // front page.
+      $url = Url::fromRoute('<front>');
+    }
+    else {
+      $url = Url::fromRouteMatch($route_match);
+    }
     $links = $this->languageManager->getLanguageSwitchLinks($type, $url);
 
+    // In any render cache items wrapping this block, account for variations
+    // by user access to each switcher link, the current path and query
+    // arguments, and language negotiation.
+    $cache_metadata = BubbleableMetadata::createFromRenderArray($build)
+      ->addCacheContexts(['url.path', 'url.query_args', 'url.site', 'languages:' . $type]);
     if (isset($links->links)) {
       $build = [
         '#theme' => 'links__language_block',
@@ -101,17 +105,23 @@ class LanguageBlock extends BlockBase implements ContainerFactoryPluginInterface
         ],
         '#set_active_class' => TRUE,
       ];
+
+      foreach ($links->links as $link) {
+        if ($link['url'] instanceof Url) {
+          $cache_metadata->addCacheableDependency($link['url']->access(NULL, TRUE));
+        }
+      }
     }
+    $cache_metadata->applyTo($build);
+
     return $build;
   }
 
   /**
    * {@inheritdoc}
-   *
-   * @todo Make cacheable in https://www.drupal.org/node/2232375.
    */
-  public function getCacheMaxAge() {
-    return 0;
+  public function createPlaceholder(): bool {
+    return TRUE;
   }
 
 }

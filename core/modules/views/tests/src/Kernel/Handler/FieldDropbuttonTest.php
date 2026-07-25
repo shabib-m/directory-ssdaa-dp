@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Core\Render\RenderContext;
@@ -9,12 +11,14 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the core Drupal\views\Plugin\views\field\Dropbutton handler.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldDropbuttonTest extends ViewsKernelTestBase {
 
   use ContentTypeCreationTrait;
@@ -30,13 +34,10 @@ class FieldDropbuttonTest extends ViewsKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'system',
-    'user',
     'node',
     'field',
     'text',
     'filter',
-    'views',
   ];
 
   /**
@@ -87,26 +88,27 @@ class FieldDropbuttonTest extends ViewsKernelTestBase {
     $admin = $this->createUser();
 
     // And three nodes.
+    $requestTime = \Drupal::time()->getRequestTime();
     $this->node1 = $this->createNode([
       'type' => 'bar',
-      'title' => 'bazs',
+      'title' => 'foo',
       'status' => 1,
       'uid' => $admin->id(),
-      'created' => REQUEST_TIME - 10,
+      'created' => $requestTime - 10,
     ]);
     $this->node2 = $this->createNode([
       'type' => 'foo',
       'title' => 'foo',
       'status' => 1,
       'uid' => $admin->id(),
-      'created' => REQUEST_TIME - 5,
+      'created' => $requestTime - 5,
     ]);
     $this->node3 = $this->createNode([
       'type' => 'bar',
       'title' => 'bars',
       'status' => 1,
       'uid' => $admin->id(),
-      'created' => REQUEST_TIME,
+      'created' => $requestTime,
     ]);
 
     // Now create a user with the ability to edit bar but not foo.
@@ -123,7 +125,7 @@ class FieldDropbuttonTest extends ViewsKernelTestBase {
   /**
    * Tests that dropbutton markup doesn't leak between rows.
    */
-  public function testDropbuttonMarkupShouldNotLeakBetweenRows() {
+  public function testDropbuttonMarkupShouldNotLeakBetweenRows(): void {
     $view = Views::getView('test_dropbutton');
     $view->setDisplay();
     $view->preExecute([]);
@@ -135,6 +137,7 @@ class FieldDropbuttonTest extends ViewsKernelTestBase {
     // Render each row and field in turn - the dropbutton plugin relies on
     // output being set in previous versions.
     foreach ($view->result as $index => $row) {
+      $view->row_index = $index;
       foreach (array_keys($view->field) as $field) {
         $output = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $row, $field) {
           return $view->field[$field]->advancedRender($row);

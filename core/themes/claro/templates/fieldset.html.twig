@@ -22,7 +22,7 @@
  * - prefix: The content to add before the fieldset children.
  * - suffix: The content to add after the fieldset children.
  *
- * @see template_preprocess_fieldset()
+ * @see \Drupal\Core\Form\FormPreprocess::preprocessFieldset()
  * @see claro_preprocess_fieldset()
  */
 #}
@@ -65,7 +65,7 @@
 %}
 
 <fieldset{{ attributes.addClass(classes) }}>
-  {#  Always wrap fieldset legends in a <span> for CSS positioning. #}
+  {# Always wrap fieldset legends in a <span> for CSS positioning. #}
   {% if legend.title %}
   <legend{{ legend.attributes.addClass(legend_classes) }}>
     <span{{ legend_span.attributes.addClass(legend_span_classes) }}>{{ legend.title }}</span>

@@ -1,17 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Rest;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 use Drupal\system\Entity\Action;
 use Drupal\user\RoleInterface;
 
+/**
+ * Resource test base for the action entity.
+ */
 abstract class ActionResourceTestBase extends ConfigEntityResourceTestBase {
+
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['action', 'user'];
+  protected static $modules = ['user'];
 
   /**
    * {@inheritdoc}
@@ -37,7 +45,7 @@ abstract class ActionResourceTestBase extends ConfigEntityResourceTestBase {
     $action = Action::create([
       'id' => 'user_add_role_action.' . RoleInterface::ANONYMOUS_ID,
       'type' => 'user',
-      'label' => t('Add the anonymous role to the selected users'),
+      'label' => $this->t('Add the anonymous role to the selected users'),
       'configuration' => [
         'rid' => RoleInterface::ANONYMOUS_ID,
       ],
@@ -76,6 +84,15 @@ abstract class ActionResourceTestBase extends ConfigEntityResourceTestBase {
   protected function getNormalizedPostEntity() {
     // @todo Update in https://www.drupal.org/node/2300677.
     return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getExpectedCacheContexts() {
+    return [
+      'user.permissions',
+    ];
   }
 
 }

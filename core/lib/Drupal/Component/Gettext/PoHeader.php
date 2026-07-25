@@ -39,7 +39,7 @@ class PoHeader {
   /**
    * Author(s) of the file.
    *
-   * @var string
+   * @var string[]
    */
   protected $authors;
 
@@ -180,10 +180,10 @@ class PoHeader {
   /**
    * Parses a Plural-Forms entry from a Gettext Portable Object file header.
    *
-   * @param string $pluralforms
+   * @param string $plural_forms
    *   The Plural-Forms entry value.
    *
-   * @return array|bool
+   * @return array|false
    *   An indexed array of parsed plural formula data. Containing:
    *   - 'nplurals': The number of plural forms defined by the plural formula.
    *   - 'plurals': Array of plural positions keyed by plural value.
@@ -191,13 +191,13 @@ class PoHeader {
    *
    * @throws \Exception
    */
-  public function parsePluralForms($pluralforms) {
+  public function parsePluralForms($plural_forms) {
     $plurals = [];
     // First, delete all whitespace.
-    $pluralforms = strtr($pluralforms, [" " => "", "\t" => ""]);
+    $plural_forms = strtr($plural_forms, [" " => "", "\t" => ""]);
 
     // Select the parts that define nplurals and plural.
-    $nplurals = strstr($pluralforms, "nplurals=");
+    $nplurals = strstr($plural_forms, "nplurals=");
     if (strpos($nplurals, ";")) {
       // We want the string from the 10th char, because "nplurals=" length is 9.
       $nplurals = substr($nplurals, 9, strpos($nplurals, ";") - 9);
@@ -205,7 +205,7 @@ class PoHeader {
     else {
       return FALSE;
     }
-    $plural = strstr($pluralforms, "plural=");
+    $plural = strstr($plural_forms, "plural=");
     if (strpos($plural, ";")) {
       // We want the string from the 8th char, because "plural=" length is 7.
       $plural = substr($plural, 7, strpos($plural, ";") - 7);
@@ -271,13 +271,31 @@ class PoHeader {
    * @param string $string
    *   A string containing the arithmetic formula.
    *
-   * @return array|bool
+   * @return array|false
    *   A stack of values and operations to be evaluated. False if the formula
    *   could not be parsed.
    */
   private function parseArithmetic($string) {
     // Operator precedence table.
-    $precedence = ["(" => -1, ")" => -1, "?" => 1, ":" => 1, "||" => 3, "&&" => 4, "==" => 5, "!=" => 5, "<" => 6, ">" => 6, "<=" => 6, ">=" => 6, "+" => 7, "-" => 7, "*" => 8, "/" => 8, "%" => 8];
+    $precedence = [
+      "(" => -1,
+      ")" => -1,
+      "?" => 1,
+      ":" => 1,
+      "||" => 3,
+      "&&" => 4,
+      "==" => 5,
+      "!=" => 5,
+      "<" => 6,
+      ">" => 6,
+      "<=" => 6,
+      ">=" => 6,
+      "+" => 7,
+      "-" => 7,
+      "*" => 8,
+      "/" => 8,
+      "%" => 8,
+    ];
     // Right associativity.
     $right_associativity = ["?" => 1, ":" => 1];
 
@@ -303,24 +321,24 @@ class PoHeader {
         $operator_stack[] = $current_token;
       }
       elseif ($current_token == ")") {
-        $topop = array_pop($operator_stack);
-        while (isset($topop) && ($topop != "(")) {
-          $element_stack[] = $topop;
-          $topop = array_pop($operator_stack);
+        $top_op = array_pop($operator_stack);
+        while (isset($top_op) && ($top_op != "(")) {
+          $element_stack[] = $top_op;
+          $top_op = array_pop($operator_stack);
         }
       }
       elseif (!empty($precedence[$current_token])) {
         // If it's an operator, then pop from $operator_stack into
         // $element_stack until the precedence in $operator_stack is less
         // than current, then push into $operator_stack.
-        $topop = array_pop($operator_stack);
-        while (isset($topop) && ($precedence[$topop] >= $precedence[$current_token]) && !(($precedence[$topop] == $precedence[$current_token]) && !empty($right_associativity[$topop]) && !empty($right_associativity[$current_token]))) {
-          $element_stack[] = $topop;
-          $topop = array_pop($operator_stack);
+        $top_op = array_pop($operator_stack);
+        while (isset($top_op) && ($precedence[$top_op] >= $precedence[$current_token]) && !(($precedence[$top_op] == $precedence[$current_token]) && !empty($right_associativity[$top_op]) && !empty($right_associativity[$current_token]))) {
+          $element_stack[] = $top_op;
+          $top_op = array_pop($operator_stack);
         }
-        if ($topop) {
+        if ($top_op) {
           // Return element to top.
-          $operator_stack[] = $topop;
+          $operator_stack[] = $top_op;
         }
         // Parentheses are not needed.
         $operator_stack[] = $current_token;
@@ -331,10 +349,10 @@ class PoHeader {
     }
 
     // Flush operator stack.
-    $topop = array_pop($operator_stack);
-    while ($topop != NULL) {
-      $element_stack[] = $topop;
-      $topop = array_pop($operator_stack);
+    $top_op = array_pop($operator_stack);
+    while ($top_op != NULL) {
+      $element_stack[] = $top_op;
+      $top_op = array_pop($operator_stack);
     }
     $return = $element_stack;
 
@@ -440,20 +458,24 @@ class PoHeader {
    * An example of plural formula parting and evaluation:
    *   Plural formula: 'n!=1'
    * This formula is parsed by parseArithmetic() to a stack (array) of elements:
-   *   array(
+   * @code
+   *   [
    *     0 => '$n',
    *     1 => '1',
    *     2 => '!=',
-   *   );
+   *   ];
+   * @endcode
    * The evaluatePlural() method evaluates the $element_stack using the plural
    * value $n. Before the actual evaluation, the '$n' in the array is replaced
    * by the value of $n.
    *   For example: $n = 2 results in:
-   *   array(
+   * @code
+   *   [
    *     0 => '2',
    *     1 => '1',
    *     2 => '!=',
-   *   );
+   *   ]
+   * @endcode
    * The stack is processed until only one element is (the result) is left. In
    * every iteration the top elements of the stack, up until the first operator,
    * are evaluated. After evaluation the arguments and the operator itself are
@@ -462,9 +484,11 @@ class PoHeader {
    *   Because the operator is '!=' the example stack is evaluated as:
    *   $f = (int) 2 != 1;
    *   The resulting stack is:
-   *   array(
+   * @code
+   *   [
    *     0 => 1,
-   *   );
+   *   ]
+   * @endcode
    * With only one element left in the stack (the final result) the loop is
    * terminated and the result is returned.
    *

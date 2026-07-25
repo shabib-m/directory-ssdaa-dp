@@ -10,6 +10,8 @@ use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the behavior of the linkset controller.
@@ -17,10 +19,10 @@ use Drupal\node\NodeInterface;
  * The purpose of this test is to validate that the a typical menu can be
  * correctly serialized as using the application/linkset+json media type.
  *
- * @group decoupled_menus
- *
  * @see https://tools.ietf.org/html/draft-ietf-httpapi-linkset-00
  */
+#[Group('decoupled_menus')]
+#[RunTestsInSeparateProcesses]
 final class LinksetControllerTest extends LinksetControllerTestBase {
 
   /**
@@ -69,6 +71,7 @@ final class LinksetControllerTest extends LinksetControllerTestBase {
 
     NodeType::create([
       'type' => 'page',
+      'name' => 'Page',
     ])->save();
 
     $home_page_link = $this->createMenuItem([
@@ -120,14 +123,11 @@ final class LinksetControllerTest extends LinksetControllerTestBase {
           'bar',
           1729,
           TRUE,
-          FALSE,
-          0,
           -1,
           3.141592,
         ],
         'data-baz' => '42',
         '*ignored' => '¯\_(ツ)_/¯',
-        '¯\_(ツ)_/¯' => 'ok',
         "hreflang" => "en-mx",
         "media" => "???",
         "type" => "???",
@@ -156,7 +156,7 @@ final class LinksetControllerTest extends LinksetControllerTestBase {
    *
    * @throws \Exception
    */
-  public function testBasicFunctions() {
+  public function testBasicFunctions(): void {
     $this->enableEndpoint(TRUE);
     $expected_linkset = $this->getReferenceLinksetDataFromFile(__DIR__ . '/../../../fixtures/linkset/linkset-menu-main.json');
     $response = $this->doRequest('GET', Url::fromUri('base:/system/menu/main/linkset'));
@@ -174,7 +174,7 @@ final class LinksetControllerTest extends LinksetControllerTestBase {
    * assert a cache hit. Finally, a new menu item is created to ensure that the
    * cached response is properly invalidated.
    */
-  public function testCacheability() {
+  public function testCacheability(): void {
     $this->enableEndpoint(TRUE);
     $expected_cacheability = new CacheableMetadata();
     $expected_cacheability->addCacheContexts([
@@ -218,7 +218,7 @@ final class LinksetControllerTest extends LinksetControllerTestBase {
    * access controls. E.g. it does not output links to which the current user
    * does not have access (if it can be determined).
    */
-  public function testAccess() {
+  public function testAccess(): void {
     $this->enableEndpoint(TRUE);
     $expected_cacheability = new CacheableMetadata();
     $expected_cacheability->addCacheContexts(['user.permissions']);
@@ -275,16 +275,14 @@ final class LinksetControllerTest extends LinksetControllerTestBase {
    * YAML-defined link ("My account") and a dynamic code-defined link
    * ("Log in/out")
    */
-  public function testUserAccountMenu() {
+  public function testUserAccountMenu(): void {
     $this->enableEndpoint(TRUE);
     $expected_cacheability = new CacheableMetadata();
     $expected_cacheability->addCacheContexts([
-      'user.permissions',
       'user.roles:authenticated',
     ]);
     $expected_cacheability->addCacheTags([
       'config:system.menu.account',
-      'config:user.role.anonymous',
       'http_response',
     ]);
     $response = $this->doRequest('GET', Url::fromUri('base:/system/menu/account/linkset'));
@@ -301,6 +299,12 @@ final class LinksetControllerTest extends LinksetControllerTestBase {
       'config:system.menu.account',
       'http_response',
     ]);
+    // The account menu surfaces the CSRF-protected /user/logout URL for
+    // authenticated users; URL generation bubbles the 'session' cache context
+    // so the response can vary by session. The response header lists contexts
+    // alphabetically — re-set them in that order so optimizeTokens() yields a
+    // matching expectation.
+    $expected_cacheability->setCacheContexts(['session', 'user.roles:authenticated']);
     // Authenticated requests do not use the page cache, so a "HIT" or "MISS"
     // isn't expected either.
     $this->assertDrupalResponseCacheability(FALSE, $expected_cacheability, $response);
@@ -314,7 +318,7 @@ final class LinksetControllerTest extends LinksetControllerTestBase {
   /**
    * Tests that menu items can use a custom link relation.
    */
-  public function testCustomLinkRelation() {
+  public function testCustomLinkRelation(): void {
     $this->enableEndpoint(TRUE);
     $this->assertTrue($this->container->get('module_installer')->install(['decoupled_menus_test'], TRUE), 'Installed modules.');
     $response = $this->doRequest('GET', Url::fromUri('base:/system/menu/account/linkset'), 200, $this->authorAccount);
@@ -327,7 +331,7 @@ final class LinksetControllerTest extends LinksetControllerTestBase {
   /**
    * Test that api route does not exist if the config option is disabled.
    */
-  public function testDisabledEndpoint() {
+  public function testDisabledEndpoint(): void {
     $this->doRequest('GET', Url::fromUri('base:/system/menu/main/linkset'), 404);
   }
 

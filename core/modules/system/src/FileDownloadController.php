@@ -3,8 +3,8 @@
 namespace Drupal\system;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Site\Settings;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -33,15 +33,6 @@ class FileDownloadController extends ControllerBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('stream_wrapper_manager')
-    );
-  }
-
-  /**
    * Handles private file transfers.
    *
    * Call modules that implement hook_file_download() to find out if a file is
@@ -50,8 +41,6 @@ class FileDownloadController extends ControllerBase {
    * If a module returns -1 an AccessDeniedHttpException will be thrown. If the
    * file exists but no modules responded an AccessDeniedHttpException will be
    * thrown. If the file does not exist a NotFoundHttpException will be thrown.
-   *
-   * @see hook_file_download()
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request object.
@@ -65,6 +54,8 @@ class FileDownloadController extends ControllerBase {
    *   Thrown when the requested file does not exist.
    * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
    *   Thrown when the user does not have access to the file.
+   *
+   * @see hook_file_download()
    */
   public function download(Request $request, $scheme = 'private') {
     $target = $request->query->get('file');
@@ -84,9 +75,24 @@ class FileDownloadController extends ControllerBase {
       if (count($headers)) {
         // \Drupal\Core\EventSubscriber\FinishResponseSubscriber::onRespond()
         // sets response as not cacheable if the Cache-Control header is not
-        // already modified. We pass in FALSE for non-private schemes for the
-        // $public parameter to make sure we don't change the headers.
-        return new BinaryFileResponse($uri, 200, $headers, $scheme !== 'private');
+        // already modified. Pass in FALSE for the $public parameter so that
+        // existing headers from hook_file_download() are preserved. If any of
+        // those headers set a Cache-Control header, return the response.
+        $response = new BinaryFileResponse($uri, 200, $headers, FALSE);
+        if ($response->headers->has('Cache-Control')) {
+          return $response;
+        }
+
+        // If there is no Cache-Control header, then respect the
+        // file_additional_public_schemes setting, but never treat the core
+        // 'private' or 'temporary' schemes as cacheable.
+        $additional_public_schemes = array_diff(
+          Settings::get('file_additional_public_schemes', []),
+          ['private', 'temporary'],
+        );
+        return in_array($scheme, $additional_public_schemes, TRUE)
+          ? $response->setPublic()
+          : $response->setPrivate();
       }
 
       throw new AccessDeniedHttpException();

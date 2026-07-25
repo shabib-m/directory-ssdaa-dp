@@ -2,6 +2,8 @@
 
 namespace Drupal\redirect\Plugin\Validation\Constraint;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Validation\Attribute\Constraint as ConstraintAttribute;
 use Drupal\link\LinkItemInterface;
 use Drupal\Core\Url;
 use Drupal\Core\ParamConverter\ParamNotConvertedException;
@@ -20,8 +22,17 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
  *   label = @Translation("Link data valid for redirect source link type.", context = "Validation"),
  * )
  */
+#[ConstraintAttribute(
+  id: 'RedirectSourceLinkType',
+  label: new TranslatableMarkup('Link data valid for redirect source link type.', [], ['context' => 'Validation']),
+)]
 class SourceLinkTypeConstraint extends Constraint implements ConstraintValidatorInterface {
 
+  /**
+   * The violation message when the URL is not valid.
+   *
+   * @var string
+   */
   public $message = 'The URL %url is not valid.';
 
   /**
@@ -30,7 +41,7 @@ class SourceLinkTypeConstraint extends Constraint implements ConstraintValidator
   protected $context;
 
   /**
-   * {@inheritDoc}
+   * {@inheritdoc}
    */
   public function initialize(ExecutionContextInterface $context) {
     $this->context = $context;
@@ -39,7 +50,7 @@ class SourceLinkTypeConstraint extends Constraint implements ConstraintValidator
   /**
    * {@inheritdoc}
    */
-  public function validatedBy() {
+  public function validatedBy(): string {
     return get_class($this);
   }
 
@@ -49,7 +60,7 @@ class SourceLinkTypeConstraint extends Constraint implements ConstraintValidator
   public function validate($value, Constraint $constraint) {
     if (isset($value)) {
       $url_is_valid = TRUE;
-      /** @var $link_item \Drupal\link\LinkItemInterface */
+      /** @var \Drupal\link\LinkItemInterface $link_item */
       $link_item = $value;
       $link_type = $link_item->getFieldDefinition()->getSetting('link_type');
       $url_string = $link_item->url;
@@ -71,15 +82,15 @@ class SourceLinkTypeConstraint extends Constraint implements ConstraintValidator
             }
           }
         }
-        catch (NotFoundHttpException $e) {
+        catch (NotFoundHttpException) {
           $url_is_valid = FALSE;
         }
-        catch (ResourceNotFoundException $e) {
+        catch (ResourceNotFoundException) {
           // User is creating a redirect from non existing path. This is not an
           // error state.
           $url_is_valid = TRUE;
         }
-        catch (ParamNotConvertedException $e) {
+        catch (ParamNotConvertedException) {
           $url_is_valid = FALSE;
         }
       }
@@ -88,5 +99,5 @@ class SourceLinkTypeConstraint extends Constraint implements ConstraintValidator
       }
     }
   }
-}
 
+}

@@ -1,17 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Functional;
 
-use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\Tests\language\Traits\LanguageTestTrait;
 use Drupal\Tests\node\Functional\NodeTestBase;
 use Drupal\user\Entity\Role;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the content translation operations available in the content listing.
- *
- * @group content_translation
  */
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class ContentTranslationOperationsTest extends NodeTestBase {
+
+  use LanguageTestTrait;
 
   /**
    * A base user.
@@ -33,9 +39,7 @@ class ContentTranslationOperationsTest extends NodeTestBase {
   protected $baseUser2;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'language',
@@ -54,7 +58,7 @@ class ContentTranslationOperationsTest extends NodeTestBase {
     // Enable additional languages.
     $langcodes = ['es', 'ast'];
     foreach ($langcodes as $langcode) {
-      ConfigurableLanguage::createFromLangcode($langcode)->save();
+      static::createLanguageFromLangcode($langcode);
     }
 
     // Enable translation for the current entity type and ensure the change is
@@ -73,7 +77,7 @@ class ContentTranslationOperationsTest extends NodeTestBase {
   /**
    * Tests that the operation "Translate" is displayed in the content listing.
    */
-  public function testOperationTranslateLink() {
+  public function testOperationTranslateLink(): void {
     $node = $this->drupalCreateNode(['type' => 'article', 'langcode' => 'es']);
     // Verify no translation operation links are displayed for users without
     // permission.
@@ -129,8 +133,7 @@ class ContentTranslationOperationsTest extends NodeTestBase {
     $this->drupalLogin($this->baseUser2);
     $this->drupalGet('node/' . $node->id());
     $this->assertSession()->linkByHrefExists('node/' . $node->id() . '/translations');
-    $this->drupalGet('admin/config/regional/content-language');
-    $this->submitForm(['settings[node][article][translatable]' => FALSE], 'Save configuration');
+    static::disableBundleTranslation('node', 'article');
     $this->drupalGet('node/' . $node->id());
     $this->assertSession()->linkByHrefNotExists('node/' . $node->id() . '/translations');
   }
@@ -138,20 +141,21 @@ class ContentTranslationOperationsTest extends NodeTestBase {
   /**
    * Tests the access to the overview page for translations.
    *
-   * @see content_translation_translate_access()
+   * @see \Drupal\content_translation\ContentTranslationManagerInterface::access()
    */
-  public function testContentTranslationOverviewAccess() {
+  public function testContentTranslationOverviewAccess(): void {
     $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler('node');
+    $content_translation_manager = \Drupal::service('content_translation.manager');
     $user = $this->createUser(['create content translations', 'access content']);
     $this->drupalLogin($user);
 
     $node = $this->drupalCreateNode(['status' => FALSE, 'type' => 'article']);
-    $this->assertFalse(content_translation_translate_access($node)->isAllowed());
+    $this->assertFalse($content_translation_manager->access($node)->isAllowed());
     $access_control_handler->resetCache();
 
     $node->setPublished();
     $node->save();
-    $this->assertTrue(content_translation_translate_access($node)->isAllowed());
+    $this->assertTrue($content_translation_manager->access($node)->isAllowed());
     $access_control_handler->resetCache();
 
     user_role_change_permissions(
@@ -163,7 +167,7 @@ class ContentTranslationOperationsTest extends NodeTestBase {
 
     $user = $this->createUser(['create content translations']);
     $this->drupalLogin($user);
-    $this->assertFalse(content_translation_translate_access($node)->isAllowed());
+    $this->assertFalse($content_translation_manager->access($node)->isAllowed());
     $access_control_handler->resetCache();
   }
 

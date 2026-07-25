@@ -1,19 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Module;
 
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\node\Traits\NodeAccessTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use Drupal\node\NodeAccessRebuild;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that modules which provide entity types can be uninstalled.
- *
- * @group Module
  */
+#[Group('Module')]
+#[RunTestsInSeparateProcesses]
 class PrepareUninstallTest extends BrowserTestBase {
 
   use TaxonomyTestTrait;
+  use NodeAccessTrait;
 
   /**
    * {@inheritdoc}
@@ -35,9 +42,7 @@ class PrepareUninstallTest extends BrowserTestBase {
   protected $terms;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node', 'taxonomy', 'entity_test', 'node_access_test'];
 
@@ -51,14 +56,15 @@ class PrepareUninstallTest extends BrowserTestBase {
     $this->drupalLogin($admin_user);
 
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
-    node_access_rebuild();
-    node_access_test_add_field(NodeType::load('article'));
+    \Drupal::service(NodeAccessRebuild::class)->rebuild();
+    $this->addPrivateField(NodeType::load('article'));
     \Drupal::state()->set('node_access_test.private', TRUE);
 
     // Create 10 nodes.
     for ($i = 1; $i <= 5; $i++) {
       $this->nodes[] = $this->drupalCreateNode(['type' => 'page']);
-      // These 5 articles are inaccessible to the admin user doing the uninstalling.
+      // These 5 articles are inaccessible to the admin user doing the
+      // uninstalling.
       $this->nodes[] = $this->drupalCreateNode(['type' => 'article', 'uid' => 0, 'private' => TRUE]);
     }
 
@@ -76,7 +82,7 @@ class PrepareUninstallTest extends BrowserTestBase {
   /**
    * Tests that Node and Taxonomy can be uninstalled.
    */
-  public function testUninstall() {
+  public function testUninstall(): void {
     // Check that Taxonomy cannot be uninstalled yet.
     $this->drupalGet('admin/modules/uninstall');
     $this->assertSession()->pageTextContains('Remove content items');
@@ -118,7 +124,8 @@ class PrepareUninstallTest extends BrowserTestBase {
 
     // Delete Node data.
     $this->drupalGet('admin/modules/uninstall/entity/node');
-    // Only the 5 pages should be listed as the 5 articles are initially inaccessible.
+    // Only the 5 pages should be listed as the 5 articles are initially
+    // inaccessible.
     foreach ($this->nodes as $node) {
       if ($node->bundle() === 'page') {
         $this->assertSession()->pageTextContains($node->label());
@@ -174,7 +181,7 @@ class PrepareUninstallTest extends BrowserTestBase {
 
     // Ensure a 404 is returned when accessing a non-existent entity type.
     $this->drupalGet('admin/modules/uninstall/entity/node');
-    $this->assertSession()->statusCodeEquals(404);
+    $this->assertSession()->statusCodeEquals(403);
 
     // Test an entity type which does not have any existing entities.
     $this->drupalGet('admin/modules/uninstall/entity/entity_test_no_label');
@@ -186,14 +193,14 @@ class PrepareUninstallTest extends BrowserTestBase {
     $storage = $this->container->get('entity_type.manager')
       ->getStorage('entity_test_no_label');
     $storage->create([
-      'id' => mb_strtolower($this->randomMachineName()),
+      'id' => $this->randomMachineName(),
       'name' => $this->randomMachineName(),
     ])->save();
     $this->drupalGet('admin/modules/uninstall/entity/entity_test_no_label');
     $this->assertSession()->pageTextContains('This will delete 1 entity test without label.');
     $this->assertSession()->buttonExists("Delete all entity test without label entities");
     $storage->create([
-      'id' => mb_strtolower($this->randomMachineName()),
+      'id' => $this->randomMachineName(),
       'name' => $this->randomMachineName(),
     ])->save();
     $this->drupalGet('admin/modules/uninstall/entity/entity_test_no_label');

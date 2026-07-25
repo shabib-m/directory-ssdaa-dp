@@ -1,13 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Plugin\migrate\source\d7;
+
+use Drupal\taxonomy\Plugin\migrate\source\d7\Term;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the taxonomy term source with vocabulary filter.
- *
- * @covers \Drupal\taxonomy\Plugin\migrate\source\d7\Term
- * @group taxonomy
  */
+#[CoversClass(Term::class)]
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermSourceWithVocabularyFilterTest extends TermTest {
 
   /**
@@ -18,7 +25,7 @@ class TermSourceWithVocabularyFilterTest extends TermTest {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     // Get the source data from parent.
     $tests = parent::providerSource();
 

@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\File;
 
-use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\File\HtaccessWriter;
 use Drupal\Core\Site\Settings;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests .htaccess file saving.
- *
- * @coversDefaultClass \Drupal\Core\File\HtaccessWriter
- * @group File
  */
+#[CoversClass(HtaccessWriter::class)]
+#[Group('File')]
+#[RunTestsInSeparateProcesses]
 class HtaccessTest extends KernelTestBase {
 
   /**
@@ -31,11 +36,6 @@ class HtaccessTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['system'];
-
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->public = Settings::get('file_public_path') . '/test/public';
@@ -43,9 +43,11 @@ class HtaccessTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::write
+   * Tests htaccess save.
+   *
+   * @legacy-covers ::write
    */
-  public function testHtaccessSave() {
+  public function testHtaccessSave(): void {
     // Prepare test directories.
     $private = Settings::get('file_public_path') . '/test/private';
     $stream = 'public://test/stream';
@@ -91,6 +93,17 @@ class HtaccessTest extends KernelTestBase {
   }
 
   /**
+   * Tests htaccess save disabled.
+   *
+   * @legacy-covers ::write
+   */
+  public function testHtaccessSaveDisabled(): void {
+    $this->setSetting('auto_create_htaccess', FALSE);
+    $this->assertTrue($this->htaccessWriter->write($this->public, FALSE));
+    $this->assertFileDoesNotExist($this->public . '/.htaccess');
+  }
+
+  /**
    * Asserts expected file permissions for a given file.
    *
    * @param string $uri
@@ -102,11 +115,11 @@ class HtaccessTest extends KernelTestBase {
    */
   protected function assertFilePermissions(string $uri, int $expected): void {
     $actual = fileperms($uri) & 0777;
-    $this->assertSame($actual, $expected, new FormattableMarkup('@uri file permissions @actual are identical to @expected.', [
-      '@uri' => $uri,
-      '@actual' => 0 . decoct($actual),
-      '@expected' => 0 . decoct($expected),
-    ]));
+    $this->assertSame($actual, $expected, sprintf('%s file permissions %s are identical to %s.',
+      $uri,
+      0 . decoct($actual),
+      0 . decoct($expected),
+    ));
   }
 
 }

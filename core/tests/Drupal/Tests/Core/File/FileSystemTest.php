@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\File;
 
 use Drupal\Core\File\Exception\FileException;
@@ -8,12 +10,16 @@ use Drupal\Core\Site\Settings;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\Tests\UnitTestCase;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 
 /**
- * @coversDefaultClass \Drupal\Core\File\FileSystem
- *
- * @group File
+ * Tests Drupal\Core\File\FileSystem.
  */
+#[CoversClass(FileSystem::class)]
+#[Group('File')]
 class FileSystemTest extends UnitTestCase {
 
   /**
@@ -43,14 +49,13 @@ class FileSystemTest extends UnitTestCase {
 
     $settings = new Settings([]);
     $this->streamWrapperManager = $this->createMock(StreamWrapperManagerInterface::class);
-    $this->logger = $this->createMock('Psr\Log\LoggerInterface');
-    $this->fileSystem = new FileSystem($this->streamWrapperManager, $settings, $this->logger);
+    $this->fileSystem = new FileSystem($this->streamWrapperManager, $settings);
   }
 
   /**
-   * @covers ::chmod
+   * Tests chmod file.
    */
-  public function testChmodFile() {
+  public function testChmodFile(): void {
     vfsStream::setup('dir');
     vfsStream::create(['test.txt' => 'asdf']);
     $uri = 'vfs://dir/test.txt';
@@ -62,9 +67,9 @@ class FileSystemTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::chmod
+   * Tests chmod dir.
    */
-  public function testChmodDir() {
+  public function testChmodDir(): void {
     vfsStream::setup('dir');
     vfsStream::create(['nested_dir' => []]);
     $uri = 'vfs://dir/nested_dir';
@@ -76,19 +81,17 @@ class FileSystemTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::chmod
+   * Tests chmod unsuccessful.
    */
-  public function testChmodUnsuccessful() {
+  public function testChmodUnsuccessful(): void {
     vfsStream::setup('dir');
-    $this->logger->expects($this->once())
-      ->method('error');
     $this->assertFalse($this->fileSystem->chmod('vfs://dir/test.txt'));
   }
 
   /**
-   * @covers ::unlink
+   * Tests unlink.
    */
-  public function testUnlink() {
+  public function testUnlink(): void {
     vfsStream::setup('dir');
     vfsStream::create(['test.txt' => 'asdf']);
     $uri = 'vfs://dir/test.txt';
@@ -103,15 +106,16 @@ class FileSystemTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::basename
-   *
-   * @dataProvider providerTestBasename
+   * Tests basename.
    */
-  public function testBasename($uri, $expected, $suffix = NULL) {
+  #[IgnoreDeprecations]
+  #[DataProvider('providerTestBasename')]
+  public function testBasename($uri, $expected, $suffix = NULL): void {
+    $this->expectUserDeprecationMessage("Calling FileSystem::basename() is deprecated in drupal:11.3.0 and is removed from drupal:13.0.0. Use PHP native basename() instead. See https://www.drupal.org/node/3530869");
     $this->assertSame($expected, $this->fileSystem->basename($uri, $suffix));
   }
 
-  public function providerTestBasename() {
+  public static function providerTestBasename(): array {
     $data = [];
     $data[] = [
       'public://nested/dir',
@@ -150,9 +154,9 @@ class FileSystemTest extends UnitTestCase {
   /**
    * Tests that invalid UTF-8 results in an exception.
    *
-   * @covers ::createFilename
+   * @legacy-covers ::createFilename
    */
-  public function testInvalidUTF8() {
+  public function testInvalidUTF8(): void {
     vfsStream::setup('dir');
     // cspell:disable-next-line
     $filename = "a\xFFsdf\x80€" . '.txt';

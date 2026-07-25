@@ -1,22 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Extension;
 
 use Drupal\Component\Version\Constraint;
 use Drupal\Core\Extension\Dependency;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Extension\Dependency
- * @group Extension
+ * Tests Drupal\Core\Extension\Dependency.
  */
+#[CoversClass(Dependency::class)]
+#[Group('Extension')]
 class DependencyTest extends UnitTestCase {
 
   /**
-   * @covers ::createFromString
-   * @dataProvider providerCreateFromString
+   * Tests create from string.
    */
-  public function testCreateFromString($string, $expected_name, $expected_project, $expected_constraint) {
+  #[DataProvider('providerCreateFromString')]
+  public function testCreateFromString($string, $expected_name, $expected_project, $expected_constraint): void {
     $dependency = Dependency::createFromString($string);
     $this->assertSame($expected_name, $dependency->getName());
     $this->assertSame($expected_project, $dependency->getProject());
@@ -26,7 +32,7 @@ class DependencyTest extends UnitTestCase {
   /**
    * Data provider for testCreateFromString.
    */
-  public function providerCreateFromString() {
+  public static function providerCreateFromString(): array {
     $tests = [];
     $tests['module_name_only'] = ['views', 'views', '', ''];
     $tests['module_and_project_names'] = ['drupal:views', 'views', 'drupal', ''];
@@ -36,9 +42,9 @@ class DependencyTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::isCompatible
+   * Tests is compatible.
    */
-  public function testIsCompatible() {
+  public function testIsCompatible(): void {
     $dependency = new Dependency('paragraphs_demo', 'paragraphs', '>8.x-1.1');
     $this->assertFalse($dependency->isCompatible('1.1'));
     $this->assertTrue($dependency->isCompatible('1.2'));
@@ -47,9 +53,9 @@ class DependencyTest extends UnitTestCase {
   /**
    * Ensures that constraint objects are not serialized.
    *
-   * @covers ::__sleep
+   * @legacy-covers ::__sleep
    */
-  public function testSerialization() {
+  public function testSerialization(): void {
     $dependency = new Dependency('paragraphs_demo', 'paragraphs', '>8.x-1.1');
     $this->assertTrue($dependency->isCompatible('1.2'));
     $reflected_constraint = (new \ReflectionObject($dependency))->getProperty('constraint');

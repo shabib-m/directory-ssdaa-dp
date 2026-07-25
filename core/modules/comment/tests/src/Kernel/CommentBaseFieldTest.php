@@ -1,29 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel;
 
+use Drupal\comment\CommentingStatus;
 use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
-use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
 use Drupal\comment_base_field_test\Entity\CommentTestBaseField;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that comment as a base field.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentBaseFieldTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'system',
     'user',
     'comment',
     'comment_base_field_test',
+    'entity_test',
   ];
 
   /**
@@ -33,18 +37,17 @@ class CommentBaseFieldTest extends KernelTestBase {
     parent::setUp();
     $this->installEntitySchema('comment_test_base_field');
     $this->installEntitySchema('comment');
-    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
   }
 
   /**
    * Tests comment as a base field.
    */
-  public function testCommentBaseField() {
+  public function testCommentBaseField(): void {
     // Verify entity creation.
     $entity = CommentTestBaseField::create([
       'name' => $this->randomMachineName(),
-      'test_comment' => CommentItemInterface::OPEN,
+      'test_comment' => CommentingStatus::Open->value,
     ]);
     $entity->save();
 

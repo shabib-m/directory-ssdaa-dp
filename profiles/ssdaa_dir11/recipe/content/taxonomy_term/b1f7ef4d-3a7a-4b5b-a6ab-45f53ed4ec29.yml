@@ -1,0 +1,30 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: b1f7ef4d-3a7a-4b5b-a6ab-45f53ed4ec29
+  bundle: main
+  default_langcode: ar
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'مواقع إخباريه'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_ayqwnt_alqsm:
+    -
+      value: |
+        fa fa-newspaper-o
+  field_sndwq_alaqsam:
+    -
+      value: true

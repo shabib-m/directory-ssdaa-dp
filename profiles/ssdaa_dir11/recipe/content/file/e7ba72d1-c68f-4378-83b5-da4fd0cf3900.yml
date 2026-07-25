@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: e7ba72d1-c68f-4378-83b5-da4fd0cf3900
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: LB.png
+  uri:
+    -
+      value: 'public://term-country/2026-07/LB.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 4652
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

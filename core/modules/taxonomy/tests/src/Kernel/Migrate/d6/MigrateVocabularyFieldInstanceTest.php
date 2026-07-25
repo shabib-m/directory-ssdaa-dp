@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d6;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Vocabulary field instance migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateVocabularyFieldInstanceTest extends MigrateDrupal6TestBase {
 
   /**
@@ -36,7 +40,7 @@ class MigrateVocabularyFieldInstanceTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal 6 vocabulary-node type association to Drupal 8 migration.
    */
-  public function testVocabularyFieldInstance() {
+  public function testVocabularyFieldInstance(): void {
     $this->executeMigration('d6_vocabulary_field_instance');
 
     // Test that the field exists. Tags has a multilingual option of 'None'.
@@ -61,7 +65,10 @@ class MigrateVocabularyFieldInstanceTest extends MigrateDrupal6TestBase {
     $this->assertTargetBundles($field_id, ['tags' => 'tags']);
     $this->assertTrue($settings['handler_settings']['auto_create'], 'The "auto_create" setting is correct.');
 
-    $this->assertSame([['node', 'article', 'field_tags']], $this->getMigration('d6_vocabulary_field_instance')->getIdMap()->lookupDestinationIds([4, 'article']));
+    $this->assertSame(
+      [['node', 'article', 'field_tags']],
+      $this->getMigration('d6_vocabulary_field_instance')->getIdMap()->lookupDestinationIds([4, 'article'])
+    );
 
     // Test the field vocabulary_1_i_0_ with multilingual option,
     // 'per language terms'.
@@ -106,7 +113,7 @@ class MigrateVocabularyFieldInstanceTest extends MigrateDrupal6TestBase {
    * @param string[] $target_bundles
    *   An array of expected target bundles.
    */
-  protected function assertTargetBundles($id, array $target_bundles) {
+  protected function assertTargetBundles($id, array $target_bundles): void {
     $field = FieldConfig::load($id);
     $handler_settings = $field->getSetting('handler_settings');
     $this->assertArrayHasKey('target_bundles', $handler_settings);
@@ -119,7 +126,7 @@ class MigrateVocabularyFieldInstanceTest extends MigrateDrupal6TestBase {
    * Vocabulary field instances should be ignored when they belong to node
    * types which were not migrated.
    */
-  public function testSkipNonExistentNodeType() {
+  public function testSkipNonExistentNodeType(): void {
     // The "story" node type is migrated by d6_node_type but we need to pretend
     // that it didn't occur, so record that in the map table.
     $this->mockFailure('d6_node_type', ['type' => 'story']);

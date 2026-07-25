@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\serialization\Unit\EntityResolver;
 
 use Drupal\Core\Entity\EntityRepositoryInterface;
-use Drupal\Tests\UnitTestCase;
 use Drupal\serialization\EntityResolver\UuidResolver;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\serialization\EntityResolver\UuidResolver
- * @group serialization
+ * Tests Drupal\serialization\EntityResolver\UuidResolver.
  */
+#[CoversClass(UuidResolver::class)]
+#[Group('serialization')]
 class UuidResolverTest extends UnitTestCase {
 
   /**
@@ -40,7 +45,7 @@ class UuidResolverTest extends UnitTestCase {
   /**
    * Tests resolve() with a class using the incorrect interface.
    */
-  public function testResolveNotInInterface() {
+  public function testResolveNotInInterface(): void {
     $this->entityRepository->expects($this->never())
       ->method('loadEntityByUuid');
 
@@ -51,7 +56,7 @@ class UuidResolverTest extends UnitTestCase {
   /**
    * Tests resolve() with a class using the correct interface but no UUID.
    */
-  public function testResolveNoUuid() {
+  public function testResolveNoUuid(): void {
     $this->entityRepository->expects($this->never())
       ->method('loadEntityByUuid');
 
@@ -66,7 +71,7 @@ class UuidResolverTest extends UnitTestCase {
   /**
    * Tests resolve() with correct interface but no matching entity for the UUID.
    */
-  public function testResolveNoEntity() {
+  public function testResolveNoEntity(): void {
     $uuid = '392eab92-35c2-4625-872d-a9dab4da008e';
 
     $this->entityRepository->expects($this->once())
@@ -86,7 +91,7 @@ class UuidResolverTest extends UnitTestCase {
   /**
    * Tests resolve() when a UUID corresponds to an entity.
    */
-  public function testResolveWithEntity() {
+  public function testResolveWithEntity(): void {
     $uuid = '392eab92-35c2-4625-872d-a9dab4da008e';
 
     $entity = $this->createMock('Drupal\Core\Entity\EntityInterface');

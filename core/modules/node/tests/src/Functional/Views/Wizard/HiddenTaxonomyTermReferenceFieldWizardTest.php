@@ -1,18 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional\Views\Wizard;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\views\Functional\Wizard\WizardTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests node wizard and content type with hidden Taxonomy Term Reference field.
- *
- * @group Views
- * @group node
  */
+#[Group('Views')]
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class HiddenTaxonomyTermReferenceFieldWizardTest extends WizardTestBase {
 
   /**
@@ -21,23 +25,21 @@ class HiddenTaxonomyTermReferenceFieldWizardTest extends WizardTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['taxonomy'];
 
   /**
    * Tests content type with a hidden Taxonomy Term Reference field.
    */
-  public function testHiddenTaxonomyTermReferenceField() {
+  public function testHiddenTaxonomyTermReferenceField(): void {
     // Create Article node type.
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
 
     // Create a taxonomy_term_reference field on the article Content Type. By
     // not assigning a widget to that field we make sure it is hidden on the
     // Form Display.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'node',

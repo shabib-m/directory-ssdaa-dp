@@ -1,0 +1,56 @@
+_meta:
+  version: '1.0'
+  entity_type: node
+  uuid: 1de4f0f8-e41b-4812-b7c6-5e7629004030
+  bundle: directory
+  default_langcode: ar
+  depends:
+    2ad0bcbc-6fef-4fff-8846-7085d2db7e61: taxonomy_term
+    a5c5cd3c-ddf6-43f0-83dd-87ecd57e21d5: file
+default:
+  revision_uid:
+    -
+      target_id: 0
+  status:
+    -
+      value: true
+  uid:
+    -
+      target_id: 0
+  title:
+    -
+      value: 'موقع العلامة عبدالعزيز بن باز'
+  created:
+    -
+      value: 1784748879
+  promote:
+    -
+      value: true
+  sticky:
+    -
+      value: false
+  path:
+    -
+      alias: /website/binbaz
+      langcode: ar
+  body:
+    -
+      value: |
+        <p>موقع الامام الشيخ عبدالعزيز بن باز رحمة الله رحمة واسعة ورفع درجاته</p>
+      format: full_html
+      summary: ''
+  field_aldwlh:
+    -
+      entity: 2ad0bcbc-6fef-4fff-8846-7085d2db7e61
+  field_image:
+    -
+      entity: a5c5cd3c-ddf6-43f0-83dd-87ecd57e21d5
+      alt: ''
+      title: ''
+      width: 600
+      height: 338
+  field_url_website:
+    -
+      uri: 'https://binbaz.org.sa/'
+      title: ''
+      options: {  }

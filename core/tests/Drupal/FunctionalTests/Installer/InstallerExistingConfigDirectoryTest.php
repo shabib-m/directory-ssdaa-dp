@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests installation when a config_sync_directory exists and is set up.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerExistingConfigDirectoryTest extends InstallerTestBase {
 
   /**
@@ -24,7 +29,7 @@ class InstallerExistingConfigDirectoryTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function prepareEnvironment() {
+  protected function prepareEnvironment(): void {
     parent::prepareEnvironment();
     mkdir($this->root . DIRECTORY_SEPARATOR . $this->siteDirectory . '/config_read_only', 0444);
     $this->expectedFilePerms = fileperms($this->siteDirectory . '/config_read_only');
@@ -37,7 +42,7 @@ class InstallerExistingConfigDirectoryTest extends InstallerTestBase {
   /**
    * Verifies that installation succeeded.
    */
-  public function testInstaller() {
+  public function testInstaller(): void {
     $this->assertSession()->addressEquals('user/1');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertEquals($this->expectedFilePerms, fileperms($this->siteDirectory . '/config_read_only'));

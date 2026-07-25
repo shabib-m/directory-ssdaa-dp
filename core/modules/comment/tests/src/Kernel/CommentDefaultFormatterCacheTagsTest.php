@@ -1,29 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel;
 
+use Drupal\comment\CommentInterface;
+use Drupal\comment\Entity\Comment;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\Cache\Cache;
-use Drupal\comment\CommentInterface;
+use Drupal\entity_test\Entity\EntityTest;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
-use Drupal\comment\Entity\Comment;
-use Drupal\entity_test\Entity\EntityTest;
 
 /**
  * Tests comment cache tag bubbling up when using the Comment list formatter.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentDefaultFormatterCacheTagsTest extends EntityKernelTestBase {
 
   use CommentTestTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['entity_test', 'comment'];
 
@@ -69,7 +71,7 @@ class CommentDefaultFormatterCacheTagsTest extends EntityKernelTestBase {
   /**
    * Tests the bubbling of cache tags.
    */
-  public function testCacheTags() {
+  public function testCacheTags(): void {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $this->container->get('renderer');
 
@@ -84,6 +86,7 @@ class CommentDefaultFormatterCacheTagsTest extends EntityKernelTestBase {
     $renderer->renderRoot($build);
     $expected_cache_tags = [
       'entity_test_view',
+      'CACHE_MISS_IF_UNCACHEABLE_HTTP_METHOD:form',
       'entity_test:' . $commented_entity->id(),
       'config:core.entity_form_display.comment.comment.default',
       'config:field.field.comment.comment.comment_body',
@@ -131,6 +134,7 @@ class CommentDefaultFormatterCacheTagsTest extends EntityKernelTestBase {
       'comment:' . $comment->id(),
       'config:filter.format.plain_text',
       'user_view',
+      'CACHE_MISS_IF_UNCACHEABLE_HTTP_METHOD:form',
       'user:' . $user->id(),
       'config:core.entity_form_display.comment.comment.default',
       'config:field.field.comment.comment.comment_body',

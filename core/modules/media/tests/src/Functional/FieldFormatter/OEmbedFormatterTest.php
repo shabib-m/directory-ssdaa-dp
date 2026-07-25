@@ -1,19 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Functional\FieldFormatter;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\media\Entity\Media;
+use Drupal\media\Plugin\Field\FieldFormatter\OEmbedFormatter;
 use Drupal\media_test_oembed\Controller\ResourceController;
 use Drupal\media_test_oembed\UrlResolver;
 use Drupal\Tests\media\Functional\MediaFunctionalTestBase;
 use Drupal\Tests\media\Traits\OEmbedTestTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
+// cspell:ignore Schipulcon
 
 /**
- * @covers \Drupal\media\Plugin\Field\FieldFormatter\OEmbedFormatter
- *
- * @group media
+ * Tests OEmbed Formatter.
  */
+#[Group('media')]
+#[Group('#slow')]
+#[CoversClass(OEmbedFormatter::class)]
+#[RunTestsInSeparateProcesses]
 class OEmbedFormatterTest extends MediaFunctionalTestBase {
 
   use OEmbedTestTrait;
@@ -42,7 +53,7 @@ class OEmbedFormatterTest extends MediaFunctionalTestBase {
     \Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)
-      ->save(TRUE);
+      ->save();
 
     $this->container->get('router.builder')->rebuild();
   }
@@ -53,8 +64,9 @@ class OEmbedFormatterTest extends MediaFunctionalTestBase {
    * @see ::testRender()
    *
    * @return array
+   *   An array of test data.
    */
-  public function providerRender() {
+  public static function providerRender() {
     return [
       'Vimeo video' => [
         'https://vimeo.com/7073899',
@@ -67,19 +79,22 @@ class OEmbedFormatterTest extends MediaFunctionalTestBase {
             'height' => '360',
             'title' => 'Drupal Rap Video - Schipulcon09',
             'loading' => 'lazy',
+            // cSpell:disable-next-line
+            'allowtransparency' => NULL,
+            'frameborder' => NULL,
           ],
         ],
         'self_closing' => TRUE,
       ],
       'Vimeo video, resized' => [
         'https://vimeo.com/7073899',
-        'video_vimeo.json?maxwidth=100&maxheight=100',
+        'video_vimeo-resized.json',
         ['max_width' => '100', 'max_height' => '100'],
         [
           'iframe' => [
-            'src' => '/media/oembed?url=https%3A//vimeo.com/7073899',
+            'src' => '/media/oembed?url=https%3A//vimeo.com/7073899&max_width=100&max_height=100',
             'width' => '100',
-            'height' => '100',
+            'height' => '67',
             'title' => 'Drupal Rap Video - Schipulcon09',
             'loading' => 'lazy',
           ],
@@ -152,7 +167,7 @@ class OEmbedFormatterTest extends MediaFunctionalTestBase {
   /**
    * Tests that oEmbed media types' display can be configured correctly.
    */
-  public function testDisplayConfiguration() {
+  public function testDisplayConfiguration(): void {
     $account = $this->drupalCreateUser(['administer media display']);
     $this->drupalLogin($account);
 
@@ -181,10 +196,9 @@ class OEmbedFormatterTest extends MediaFunctionalTestBase {
    *   name, that the element is expected to have.
    * @param bool $self_closing
    *   Indicator if the HTML element is self closing i.e. <p/> vs <p></p>.
-   *
-   * @dataProvider providerRender
    */
-  public function testRender($url, $resource_url, array $formatter_settings, array $selectors, bool $self_closing) {
+  #[DataProvider('providerRender')]
+  public function testRender($url, $resource_url, array $formatter_settings, array $selectors, bool $self_closing): void {
     $account = $this->drupalCreateUser(['view media']);
     $this->drupalLogin($account);
 

@@ -3,6 +3,7 @@
 namespace Drupal\filter\Plugin\migrate\process\d6;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\MigrateLookupInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -13,11 +14,36 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Migrate filter format serial to string id in permission name.
  *
- * @MigrateProcessPlugin(
- *   id = "filter_format_permission",
- *   handle_multiples = TRUE
- * )
+ * The filter_format_permission plugin is used to get the filter formats for a
+ * role and convert it to a permission name.
+ *
+ *  Available configuration keys:
+ *  - migration: (optional) The filter migration. Defaults to
+ *  'd6_filter_format'.
+ *
+ *  Examples:
+ *
+ * @code
+ *  process:
+ *    result:
+ *      plugin: filter_format_permission
+ *      migration: d6_filter_format
+ * @endcode
+ *
+ *  This will use the 'd6_filter_format' migration to lookup the destination
+ *  filter formats for a role.
+ *
+ * @see \Drupal\migrate\Plugin\MigrateProcessInterface
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3533560
  */
+#[MigrateProcess(
+  id: "filter_format_permission",
+  handle_multiples: TRUE,
+)]
 class FilterFormatPermission extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -47,6 +73,7 @@ class FilterFormatPermission extends ProcessPluginBase implements ContainerFacto
    *   The migrate lookup service.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, MigrateLookupInterface $migrate_lookup) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560', E_USER_DEPRECATED);
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->migration = $migration;
     $this->migrateLookup = $migrate_lookup;
@@ -55,7 +82,7 @@ class FilterFormatPermission extends ProcessPluginBase implements ContainerFacto
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,

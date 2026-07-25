@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 18fa41b7-ec01-41c7-bb04-69e3140b6de9
+  bundle: country
+  default_langcode: ar
+  depends:
+    3dd2f99c-47ae-4c6f-8bcd-d3d2211b0e62: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: جيبوتي
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 3dd2f99c-47ae-4c6f-8bcd-d3d2211b0e62
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

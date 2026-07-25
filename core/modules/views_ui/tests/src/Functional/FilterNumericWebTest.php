@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\Tests\SchemaCheckTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the numeric filter UI.
  *
- * @group views_ui
  * @see \Drupal\views\Plugin\views\filter\NumericFilter
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class FilterNumericWebTest extends UITestBase {
   use SchemaCheckTestTrait;
 
@@ -28,7 +33,7 @@ class FilterNumericWebTest extends UITestBase {
   /**
    * Tests the filter numeric UI.
    */
-  public function testFilterNumericUI() {
+  public function testFilterNumericUI(): void {
     // Add a page display to the test_view to be able to test the filtering.
     $path = 'test_view-path';
     $this->drupalGet('admin/structure/views/view/test_view/edit');

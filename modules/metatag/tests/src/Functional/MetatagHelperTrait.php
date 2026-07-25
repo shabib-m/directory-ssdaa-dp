@@ -3,6 +3,7 @@
 namespace Drupal\Tests\metatag\Functional;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Utility\Random;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
@@ -113,7 +114,7 @@ trait MetatagHelperTrait {
    * @param array $values
    *   Items passed to the term. Requires the 'vid' element.
    *
-   * @return \Drupal\taxonomy\Term
+   * @return \Drupal\taxonomy\Entity\Term
    *   A fully formatted term object.
    */
   private function createTerm(array $values = []): TermInterface {
@@ -133,6 +134,28 @@ trait MetatagHelperTrait {
     $this->assertSame($status, SAVED_NEW, (new FormattableMarkup('Created term %name.', ['%name' => $term->label()]))->__toString());
 
     return $term;
+  }
+
+  /**
+   * Generate a random title containing a certain number of words.
+   *
+   * @param int $length
+   *   The number of words in the title.
+   *
+   * @return string
+   *   The random title.
+   *
+   * @see randomString()
+   */
+  public function randomTitle($length = 2) {
+    $random = new Random();
+
+    $words = [];
+    for ($x = 0; $x < $length; $x++) {
+      $words[] = $random->name();
+    }
+
+    return implode('', $words);
   }
 
 }

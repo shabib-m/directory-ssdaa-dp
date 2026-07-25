@@ -1,31 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Field;
 
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests field settings methods on field definition structures.
- *
- * @group Field
  */
+#[Group('Field')]
+#[RunTestsInSeparateProcesses]
 class FieldSettingsTest extends EntityKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['field', 'field_test'];
 
   /**
-   * @covers \Drupal\Core\Field\BaseFieldDefinition::getSettings
-   * @covers \Drupal\Core\Field\BaseFieldDefinition::setSettings
+   * Tests base field settings.
+   *
+   * @legacy-covers \Drupal\Core\Field\BaseFieldDefinition::getSettings
+   * @legacy-covers \Drupal\Core\Field\BaseFieldDefinition::setSettings
    */
-  public function testBaseFieldSettings() {
+  public function testBaseFieldSettings(): void {
     $base_field = BaseFieldDefinition::create('test_field');
 
     // Check that the default settings have been populated.
@@ -49,7 +53,7 @@ class FieldSettingsTest extends EntityKernelTestBase {
   /**
    * Tests the base field settings on a cloned base field definition object.
    */
-  public function testBaseFieldSettingsOnClone() {
+  public function testBaseFieldSettingsOnClone(): void {
     $base_field = BaseFieldDefinition::create('test_field');
 
     // Check that the default settings have been populated.
@@ -75,22 +79,25 @@ class FieldSettingsTest extends EntityKernelTestBase {
   }
 
   /**
-   * @covers \Drupal\field\Entity\FieldStorageConfig::getSettings
-   * @covers \Drupal\field\Entity\FieldStorageConfig::setSettings
+   * Tests configurable field storage settings.
+   *
+   * @legacy-covers \Drupal\field\Entity\FieldStorageConfig::getSettings
+   * @legacy-covers \Drupal\field\Entity\FieldStorageConfig::setSettings
    */
-  public function testConfigurableFieldStorageSettings() {
+  public function testConfigurableFieldStorageSettings(): void {
     $field_storage = FieldStorageConfig::create([
       'field_name' => 'test_field',
       'entity_type' => 'entity_test',
       'type' => 'test_field',
     ]);
-
+    $field_storage->save();
     // Check that the default settings have been populated.
     $expected_settings = [
       'test_field_storage_setting' => 'dummy test string',
       'changeable' => 'a changeable field storage setting',
       'unchangeable' => 'an unchangeable field storage setting',
       'translatable_storage_setting' => 'a translatable field storage setting',
+      'storage_setting_from_config_data' => 'TRUE',
     ];
     $this->assertEquals($expected_settings, $field_storage->getSettings());
 
@@ -102,23 +109,31 @@ class FieldSettingsTest extends EntityKernelTestBase {
   }
 
   /**
-   * @covers \Drupal\field\Entity\FieldStorageConfig::getSettings
-   * @covers \Drupal\field\Entity\FieldStorageConfig::setSettings
+   * Tests configurable field settings.
+   *
+   * @legacy-covers \Drupal\field\Entity\FieldStorageConfig::getSettings
+   * @legacy-covers \Drupal\field\Entity\FieldStorageConfig::setSettings
    */
-  public function testConfigurableFieldSettings() {
+  public function testConfigurableFieldSettings(): void {
     $field_storage = FieldStorageConfig::create([
       'field_name' => 'test_field',
       'entity_type' => 'entity_test',
       'type' => 'test_field',
     ]);
+    $field_storage->save();
+    $expected_settings = [
+      'test_field_storage_setting' => 'dummy test string',
+      'changeable' => 'a changeable field storage setting',
+      'unchangeable' => 'an unchangeable field storage setting',
+      'translatable_storage_setting' => 'a translatable field storage setting',
+      'storage_setting_from_config_data' => 'TRUE',
+    ];
+    $this->assertEquals($expected_settings, $field_storage->getSettings());
+
     $field = FieldConfig::create([
       'field_storage' => $field_storage,
       'bundle' => 'entity_test',
     ]);
-    // Note: FieldConfig does not populate default settings until the config
-    // is saved.
-    // @todo Remove once https://www.drupal.org/node/2327883 is fixed.
-    $field->save();
 
     // Check that the default settings have been populated. Note: getSettings()
     // returns both storage and field settings.
@@ -129,13 +144,27 @@ class FieldSettingsTest extends EntityKernelTestBase {
       'translatable_storage_setting' => 'a translatable field storage setting',
       'test_field_setting' => 'dummy test string',
       'translatable_field_setting' => 'a translatable field setting',
-      'field_setting_from_config_data' => 'TRUE',
+      'storage_setting_from_config_data' => 'TRUE',
     ];
     $this->assertEquals($expected_settings, $field->getSettings());
 
     // Change one single setting using setSettings(), and check that the other
     // expected settings are still present.
     $expected_settings['test_field_setting'] = 'another test string';
+    $field->setSettings(['test_field_setting' => $expected_settings['test_field_setting']]);
+    $this->assertEquals($expected_settings, $field->getSettings());
+
+    // Save the field and check the expected settings.
+    $field->save();
+
+    $expected_settings['field_setting_from_config_data'] = 'TRUE';
+    $this->assertEquals($expected_settings, $field->getSettings());
+
+    $field = FieldConfig::loadByName('entity_test', 'entity_test', 'test_field');
+
+    $this->assertEquals($expected_settings, $field->getSettings());
+
+    $expected_settings['test_field_setting'] = 'yet another test string';
     $field->setSettings(['test_field_setting' => $expected_settings['test_field_setting']]);
     $this->assertEquals($expected_settings, $field->getSettings());
   }

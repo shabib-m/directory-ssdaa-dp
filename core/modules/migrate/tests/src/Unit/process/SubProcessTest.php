@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit\process;
 
 use Drupal\migrate\MigrateException;
@@ -8,15 +10,15 @@ use Drupal\migrate\MigrateMessageInterface;
 use Drupal\migrate\Plugin\migrate\process\Get;
 use Drupal\migrate\Plugin\migrate\process\SubProcess;
 use Drupal\migrate\Row;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 // cspell:ignore baaa
-
 /**
  * Tests the sub_process process plugin.
- *
- * @group migrate
  */
+#[Group('migrate')]
 class SubProcessTest extends MigrateProcessTestCase {
 
   /**
@@ -27,6 +29,8 @@ class SubProcessTest extends MigrateProcessTestCase {
   protected $plugin;
 
   /**
+   * The default migration configuration.
+   *
    * @var array
    */
   protected $migrationConfiguration = [
@@ -35,10 +39,9 @@ class SubProcessTest extends MigrateProcessTestCase {
 
   /**
    * Tests the sub_process process plugin.
-   *
-   * @dataProvider providerTestSubProcess
    */
-  public function testSubProcess($process_configuration, $source_values = []) {
+  #[DataProvider('providerTestSubProcess')]
+  public function testSubProcess($process_configuration, $source_values = []): void {
     $migration = $this->getMigration();
     // Set up the properties for the sub_process.
     $plugin = new SubProcess($process_configuration, 'sub_process', []);
@@ -84,10 +87,10 @@ class SubProcessTest extends MigrateProcessTestCase {
   /**
    * Data provider for testSubProcess().
    */
-  public function providerTestSubProcess() {
+  public static function providerTestSubProcess() {
     return [
       'no source context' => [
-        'process configuration' => [
+        'process_configuration' => [
           'process' => [
             'foo' => 'source_foo',
             'id' => 'source_id',
@@ -96,7 +99,7 @@ class SubProcessTest extends MigrateProcessTestCase {
         ],
       ],
       'default source key' => [
-        'process configuration' => [
+        'process_configuration' => [
           'process' => [
             'foo' => 'source_foo',
             'id' => 'source_id',
@@ -105,12 +108,12 @@ class SubProcessTest extends MigrateProcessTestCase {
           'key' => '@id',
           'include_source' => TRUE,
         ],
-        'source values' => [
+        'source_values' => [
           'baf' => 'source_baz',
         ],
       ],
       'renamed source key' => [
-        'process configuration' => [
+        'process_configuration' => [
           'process' => [
             'foo' => 'source_foo',
             'id' => 'source_id',
@@ -120,7 +123,7 @@ class SubProcessTest extends MigrateProcessTestCase {
           'include_source' => TRUE,
           'source_key' => 'my_source',
         ],
-        'source values' => [
+        'source_values' => [
           'baf' => 'source_baz',
         ],
       ],
@@ -129,10 +132,9 @@ class SubProcessTest extends MigrateProcessTestCase {
 
   /**
    * Tests the sub_process process plugin.
-   *
-   * @dataProvider providerTestNotFoundSubProcess
    */
-  public function testNotFoundSubProcess($process_configuration, $source_values = []) {
+  #[DataProvider('providerTestNotFoundSubProcess')]
+  public function testNotFoundSubProcess($process_configuration, $source_values = []): void {
     $migration = $this->getMigration();
     // Set up the properties for the sub_process.
     $plugin = new SubProcess($process_configuration, 'sub_process', []);
@@ -171,10 +173,10 @@ class SubProcessTest extends MigrateProcessTestCase {
   /**
    * Data provider for testNotFoundSubProcess().
    */
-  public function providerTestNotFoundSubProcess() {
+  public static function providerTestNotFoundSubProcess() {
     return [
       'no key' => [
-        'process configuration' => [
+        'process_configuration' => [
           'process' => [
             'foo' => 'source_foo',
           ],
@@ -182,7 +184,7 @@ class SubProcessTest extends MigrateProcessTestCase {
         ],
       ],
       'lookup returns NULL' => [
-        'process configuration' => [
+        'process_configuration' => [
           'process' => [
             'foo' => 'source_foo',
             'id' => 'source_id',
@@ -195,10 +197,9 @@ class SubProcessTest extends MigrateProcessTestCase {
 
   /**
    * Tests behavior when source children are not arrays.
-   *
-   * @dataProvider providerTestSourceNotArray
    */
-  public function testSourceNotArray($source_values, $type) {
+  #[DataProvider('providerTestSourceNotArray')]
+  public function testSourceNotArray($source_values, $type): void {
     $process = new SubProcess(['process' => ['foo' => 'source_foo']], 'sub_process', []);
     $this->expectException(MigrateException::class);
     $this->expectExceptionMessage("Input array should hold elements of type array, instead element was of type '$type'");
@@ -208,7 +209,7 @@ class SubProcessTest extends MigrateProcessTestCase {
   /**
    * Data provider for testSourceNotArray().
    */
-  public function providerTestSourceNotArray() {
+  public static function providerTestSourceNotArray() {
     return [
       'strings cannot be subprocess items' => [
         ['strings', 'cannot', 'be', 'children'],

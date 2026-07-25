@@ -14,6 +14,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\BaseFormIdInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceSafeFormInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Url;
@@ -27,7 +28,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides a base class for creating media items from within the media library.
  */
-abstract class AddFormBase extends FormBase implements BaseFormIdInterface, TrustedCallbackInterface {
+abstract class AddFormBase extends FormBase implements BaseFormIdInterface, TrustedCallbackInterface, WorkspaceSafeFormInterface {
 
   /**
    * The entity type manager.
@@ -710,7 +711,7 @@ abstract class AddFormBase extends FormBase implements BaseFormIdInterface, Trus
     $response->addCommand(new InvokeCommand("#media-library-content [value=$media_id_to_focus]", 'focus'));
     $available_slots = $this->getMediaLibraryState($form_state)->getAvailableSlots();
     if ($available_slots > 0 && $selected_count > $available_slots) {
-      $warning = $this->formatPlural($selected_count - $available_slots, 'There are currently @total items selected. The maximum number of items for the field is @max. Please remove @count item from the selection.', 'There are currently @total items selected. The maximum number of items for the field is @max. Please remove @count items from the selection.', [
+      $warning = $this->formatPlural($selected_count - $available_slots, 'There are currently @total items selected. The maximum number of items for the field is @max. Remove @count item from the selection.', 'There are currently @total items selected. The maximum number of items for the field is @max. Remove @count items from the selection.', [
         '@total' => $selected_count,
         '@max' => $available_slots,
       ]);

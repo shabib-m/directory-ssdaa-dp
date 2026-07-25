@@ -1,19 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal_ui\Functional\d7;
 
 use Drupal\Tests\migrate_drupal_ui\Functional\MultilingualReviewPageTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
-// cspell:ignore Filefield Flexslider Multiupload Imagefield
-
+// cspell:ignore Filefield Flexslider Multiupload Imagefield rulesets
 /**
  * Tests migrate upgrade review page for Drupal 7.
  *
  * Tests with translation modules enabled.
- *
- * @group migrate_drupal_7
- * @group migrate_drupal_ui
  */
+#[Group('migrate_drupal_7')]
+#[Group('migrate_drupal_ui')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class MultilingualReviewPageTest extends MultilingualReviewPageTestBase {
 
   /**
@@ -24,8 +29,6 @@ class MultilingualReviewPageTest extends MultilingualReviewPageTestBase {
     'language',
     'content_translation',
     'telephone',
-    'book',
-    'statistics',
     'syslog',
     'update',
     // Test migrations states.
@@ -44,23 +47,21 @@ class MultilingualReviewPageTest extends MultilingualReviewPageTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getSourceBasePath() {
+  protected function getSourceBasePath(): string {
     return __DIR__ . '/files';
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getAvailablePaths() {
+  protected function getAvailablePaths(): array {
     return [
       'Block languages',
       'Blog',
-      'Book',
       'Bulk Export',
       'Chaos tools',
       'Chaos Tools (CTools) AJAX Example',
       'Comment',
-      'Contact',
       'Content translation',
       'Contextual links',
       'Custom content panes',
@@ -109,10 +110,8 @@ class MultilingualReviewPageTest extends MultilingualReviewPageTestBase {
       'Phone',
       'Poll',
       'Profile',
-      'Search',
       'Search embedded form',
       'Shortcut',
-      'Statistics',
       'String translation',
       'Stylizer',
       'Synchronize translations',
@@ -140,14 +139,16 @@ class MultilingualReviewPageTest extends MultilingualReviewPageTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getMissingPaths() {
+  protected function getMissingPaths(): array {
     return [
       // Action is set not_finished in migrate_state_not_finished_test.
       'Aggregator',
       // Block is set not_finished in migrate_state_not_finished_test.
       'Block',
+      'Book',
       'Breakpoints',
       'Color',
+      'Contact',
       'Contact translation',
       'Entity Translation Menu',
       'Entity Translation Upgrade',
@@ -165,8 +166,9 @@ class MultilingualReviewPageTest extends MultilingualReviewPageTestBase {
       'Picture',
       'RDF',
       'References',
+      'Search',
       'References UUID',
-      // @todo Remove tracker in https://www.drupal.org/project/drupal/issues/3261452
+      'Statistics',
       'Tracker',
       'Translation redirect',
       'Translation sets',

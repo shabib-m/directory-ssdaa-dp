@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal\Kernel\Plugin\migrate\source\d6;
 
+use Drupal\migrate_drupal\Plugin\migrate\source\d6\VariableTranslation;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
-
-// cspell:ignore whakamataku génial
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the variable source plugin.
- *
- * @covers \Drupal\migrate_drupal\Plugin\migrate\source\d6\VariableTranslation
- *
- * @group migrate_drupal
  */
+#[CoversClass(VariableTranslation::class)]
+#[Group('migrate_drupal')]
+#[RunTestsInSeparateProcesses]
 class VariableTranslationTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -23,7 +26,7 @@ class VariableTranslationTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.
@@ -31,22 +34,22 @@ class VariableTranslationTest extends MigrateSqlSourceTestBase {
       [
         'name' => 'site_slogan',
         'language' => 'fr',
-        'value' => 's:19:"Migrate est génial";',
+        'value' => 's:23:"fr - migrate is awesome";',
       ],
       [
         'name' => 'site_name',
         'language' => 'fr',
-        'value' => 's:11:"nom de site";',
+        'value' => 's:14:"fr - site name";',
       ],
       [
         'name' => 'site_slogan',
         'language' => 'mi',
-        'value' => 's:19:"Ko whakamataku heke";',
+        'value' => 's:23:"mi - migrate is awesome";',
       ],
       [
         'name' => 'site_name',
         'language' => 'mi',
-        'value' => 's:9:"ingoa_pae";',
+        'value' => 's:14:"mi - site name";',
       ],
     ];
 
@@ -54,13 +57,13 @@ class VariableTranslationTest extends MigrateSqlSourceTestBase {
     $tests[0]['expected_data'] = [
       [
         'language' => 'fr',
-        'site_slogan' => 'Migrate est génial',
-        'site_name' => 'nom de site',
+        'site_slogan' => 'fr - migrate is awesome',
+        'site_name' => 'fr - site name',
       ],
       [
         'language' => 'mi',
-        'site_slogan' => 'Ko whakamataku heke',
-        'site_name' => 'ingoa_pae',
+        'site_slogan' => 'mi - migrate is awesome',
+        'site_name' => 'mi - site name',
       ],
     ];
 

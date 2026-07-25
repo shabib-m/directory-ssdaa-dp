@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 3e3100b4-b38e-484c-96ad-fde2af4459d2
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: TN.png
+  uri:
+    -
+      value: 'public://term-country/2026-07/TN.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 4162
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests ContentEntityBase::hasTranslationChanges().
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class ContentEntityHasChangesTest extends KernelTestBase {
 
   /**
@@ -32,13 +36,12 @@ class ContentEntityHasChangesTest extends KernelTestBase {
 
     $this->installEntitySchema('user');
     $this->installEntitySchema('entity_test_mulrev_changed_rev');
-    $this->installSchema('system', 'sequences');
   }
 
   /**
    * Tests the correct functionality of the hasTranslationChanges() function.
    */
-  public function testHasTranslationChanges() {
+  public function testHasTranslationChanges(): void {
     $user1 = User::create([
       'name' => 'username1',
       'status' => 1,
@@ -51,7 +54,7 @@ class ContentEntityHasChangesTest extends KernelTestBase {
     ]);
     $user2->save();
 
-    /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->container->get('entity_type.manager')
       ->getStorage('entity_test_mulrev_changed_rev');
     /** @var \Drupal\entity_test\Entity\EntityTestMulRevChangedWithRevisionLog $entity */
@@ -94,8 +97,29 @@ class ContentEntityHasChangesTest extends KernelTestBase {
 
     // Check that the revision metadata fields and the changed field have been
     // skipped when comparing different revisions.
-    $entity = $storage->loadRevision($entity_previous_rev_id);
-    $this->assertFalse($entity->hasTranslationChanges(), 'ContentEntityBase::hasTranslationChanges() found no changes when comparing different revisions.');
+    $revision = $storage->loadRevision($entity_previous_rev_id);
+    $this->assertFalse($revision->hasTranslationChanges(), 'ContentEntityBase::hasTranslationChanges() found no changes when comparing different revisions.');
+
+    $entity->set('name', 'updated name');
+    $entity->setNewRevision(TRUE);
+    $this->assertTrue($entity->hasTranslationChanges());
+    $entity->save();
+
+    // The old revision should still not report changes.
+    $this->assertFalse($revision->hasTranslationChanges());
+
+    // Create a draft revision, should have changes before saving, but not
+    // after reloading.
+    $entity->set('name', 'draft name');
+    $entity->setNewRevision(TRUE);
+    $entity->isDefaultRevision(TRUE);
+    $this->assertTrue($entity->hasTranslationChanges());
+    $entity->save();
+
+    $draft = $storage->loadRevision($entity->getRevisionId());
+    $this->assertFalse($draft->hasTranslationChanges());
+    $draft->set('name', 'draft name update');
+    $this->assertTrue($draft->hasTranslationChanges());
   }
 
 }

@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 653ec967-9758-4c81-9b5e-088598c89f15
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: binothaimeen.png
+  uri:
+    -
+      value: 'public://website-images/2026-07/binothaimeen.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 272902
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

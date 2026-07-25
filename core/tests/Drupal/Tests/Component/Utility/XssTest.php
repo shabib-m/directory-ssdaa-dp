@@ -1,31 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Utility;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Component\Utility\Xss;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
 
-// cspell:ignore ascript barbaz ckers cript CVEs dynsrc fooÿñ metacharacters
-// cspell:ignore msgbox ncript nfocus nmedi nosuchscheme nosuchtag onmediaerror
-// cspell:ignore scrscriptipt tascript vbscript
-
+// cspell:ignore ascript barbaz ckers cript CVEs dynsrc fooÿñ msgbox ncript
+// cspell:ignore nfocus nmedi nosuchscheme nosuchtag onmediaerror scrscriptipt
+// cspell:ignore tascript vbscript
 /**
  * XSS Filtering tests.
- *
- * @group Utility
- *
- * @coversDefaultClass \Drupal\Component\Utility\Xss
  *
  * Script injection vectors mostly adopted from http://ha.ckers.org/xss.html.
  *
  * Relevant CVEs:
  * - CVE-2002-1806, ~CVE-2005-0682, ~CVE-2005-2106, CVE-2005-3973,
  *   CVE-2006-1226 (= rev. 1.112?), CVE-2008-0273, CVE-2008-3740.
- *
- * @runTestsInSeparateProcesses
  */
+#[CoversClass(Xss::class)]
+#[Group('Utility')]
+#[RunTestsInSeparateProcesses]
 class XssTest extends TestCase {
 
   /**
@@ -64,11 +66,11 @@ class XssTest extends TestCase {
    * @param string $message
    *   The assertion message to display upon failure.
    * @param array $allowed_tags
-   *   (optional) The allowed HTML tags to be passed to \Drupal\Component\Utility\Xss::filter().
-   *
-   * @dataProvider providerTestFilterXssNormalized
+   *   (optional) The allowed HTML tags to be passed to
+   *   \Drupal\Component\Utility\Xss::filter().
    */
-  public function testFilterXssNormalized($value, $expected, $message, array $allowed_tags = NULL) {
+  #[DataProvider('providerTestFilterXssNormalized')]
+  public function testFilterXssNormalized($value, $expected, $message, ?array $allowed_tags = NULL): void {
     if ($allowed_tags === NULL) {
       $value = Xss::filter($value);
     }
@@ -91,7 +93,7 @@ class XssTest extends TestCase {
    *     - (optional) The allowed HTML tags array that should be passed to
    *       \Drupal\Component\Utility\Xss::filter().
    */
-  public function providerTestFilterXssNormalized() {
+  public static function providerTestFilterXssNormalized(): array {
     return [
       [
         "Who&#039;s Online",
@@ -131,11 +133,11 @@ class XssTest extends TestCase {
    * @param string $message
    *   The assertion message to display upon failure.
    * @param array $allowed_tags
-   *   (optional) The allowed HTML tags to be passed to \Drupal\Component\Utility\Xss::filter().
-   *
-   * @dataProvider providerTestFilterXssNotNormalized
+   *   (optional) The allowed HTML tags to be passed to
+   *   \Drupal\Component\Utility\Xss::filter().
    */
-  public function testFilterXssNotNormalized($value, $expected, $message, array $allowed_tags = NULL) {
+  #[DataProvider('providerTestFilterXssNotNormalized')]
+  public function testFilterXssNotNormalized($value, $expected, $message, ?array $allowed_tags = NULL): void {
     if ($allowed_tags === NULL) {
       $value = Xss::filter($value);
     }
@@ -158,7 +160,7 @@ class XssTest extends TestCase {
    *     - (optional) The allowed HTML tags array that should be passed to
    *       \Drupal\Component\Utility\Xss::filter().
    */
-  public function providerTestFilterXssNotNormalized() {
+  public static function providerTestFilterXssNotNormalized(): array {
     $cases = [
       // Tag stripping, different ways to work around removal of HTML tags.
       [
@@ -212,8 +214,8 @@ class XssTest extends TestCase {
         'script',
         'HTML tag stripping evasion -- no closing tag.',
       ],
-      // DRUPAL-SA-2008-047: This doesn't seem exploitable, but the filter should
-      // work consistently.
+      // DRUPAL-SA-2008-047: This doesn't seem exploitable, but the filter
+      // should work consistently.
       [
         '<script>>',
         'script',
@@ -299,7 +301,7 @@ class XssTest extends TestCase {
         'HTML filter attributes removal evasion -- breaking with nulls.',
         ['img'],
       ],
-      // Only whitelisted scheme names allowed in attributes.
+      // Only allowed scheme names allowed in attributes.
       [
         '<img src="javascript:alert(0)">',
         'javascript',
@@ -424,13 +426,19 @@ class XssTest extends TestCase {
         'Netscape 4.x javascript entities.',
         ['br'],
       ],
-      // DRUPAL-SA-2008-006: Invalid UTF-8, these only work as reflected XSS with
-      // Internet Explorer 6.
+      // DRUPAL-SA-2008-006: Invalid UTF-8, these only work as reflected XSS
+      // with Internet Explorer 6.
       [
         "<p arg=\"\xe0\">\" style=\"background-image: url(javascript:alert(0));\"\xe0<p>",
         'style',
         'HTML filter -- invalid UTF-8.',
         ['p'],
+      ],
+      [
+        '<iframe srcdoc="&lt;script&gt;alert(document.cookie)&lt;/script&gt;"></iframe>',
+        'srcdoc',
+        'HTML filter attributes removal -- srcdoc attribute.',
+        ['iframe'],
       ],
     ];
     return $cases;
@@ -445,10 +453,9 @@ class XssTest extends TestCase {
    *   The expected result.
    * @param string $message
    *   The assertion message to display upon failure.
-   *
-   * @dataProvider providerTestInvalidMultiByte
    */
-  public function testInvalidMultiByte($value, $expected, $message) {
+  #[DataProvider('providerTestInvalidMultiByte')]
+  public function testInvalidMultiByte($value, $expected, $message): void {
     $this->assertEquals(Xss::filter($value), $expected, $message);
   }
 
@@ -463,7 +470,7 @@ class XssTest extends TestCase {
    *     - The value to expect after filtering.
    *     - The assertion message.
    */
-  public function providerTestInvalidMultiByte() {
+  public static function providerTestInvalidMultiByte(): array {
     return [
       ["Foo\xC0barbaz", '', 'Xss::filter() accepted invalid sequence "Foo\xC0barbaz"'],
       ["Fooÿñ", "Fooÿñ", 'Xss::filter() rejects valid sequence Fooÿñ"'],
@@ -474,7 +481,7 @@ class XssTest extends TestCase {
   /**
    * Checks that strings starting with a question sign are correctly processed.
    */
-  public function testQuestionSign() {
+  public function testQuestionSign(): void {
     $value = Xss::filter('<?xml:namespace ns="urn:schemas-microsoft-com:time">');
     $this->assertStringNotContainsStringIgnoringCase('<?xml', $value, 'HTML tag stripping evasion -- starting with a question sign (processing instructions).');
   }
@@ -482,20 +489,24 @@ class XssTest extends TestCase {
   /**
    * Check that strings in HTML attributes are correctly processed.
    *
-   * @covers ::attributes
-   * @dataProvider providerTestAttributes
+   * @legacy-covers ::attributes
    */
-  public function testAttribute($value, $expected, $message, $allowed_tags = NULL) {
+  #[DataProvider('providerTestAttributes')]
+  public function testAttribute(string $value, string $expected_non_normalized, string $expected_normalized, string $message, ?array $allowed_tags = NULL): void {
     $value = Xss::filter($value, $allowed_tags);
-    $this->assertEquals($expected, $value, $message);
+    $normalized_value = Html::normalize($value);
+
+    $this->assertSame($expected_normalized, $normalized_value);
+    $this->assertSame($expected_non_normalized, $value);
   }
 
   /**
-   * Data provider for testFilterXssAdminNotNormalized().
+   * Data provider for testAttribute().
    */
-  public function providerTestAttributes() {
-    return [
+  public static function providerTestAttributes(): array {
+    $scenarios = [
       [
+        '<img src="http://example.com/foo.jpg" title="Example: title" alt="Example: alt" class="md:block">',
         '<img src="http://example.com/foo.jpg" title="Example: title" alt="Example: alt" class="md:block">',
         '<img src="http://example.com/foo.jpg" title="Example: title" alt="Example: alt" class="md:block">',
         'Image tag with alt and title attribute',
@@ -504,10 +515,12 @@ class XssTest extends TestCase {
       [
         '<a href="https://www.drupal.org/" rel="dc:publisher">Drupal</a>',
         '<a href="https://www.drupal.org/" rel="dc:publisher">Drupal</a>',
+        '<a href="https://www.drupal.org/" rel="dc:publisher">Drupal</a>',
         'Link tag with rel attribute',
         ['a'],
       ],
       [
+        '<span property="dc:subject">Drupal 8: The best release ever.</span>',
         '<span property="dc:subject">Drupal 8: The best release ever.</span>',
         '<span property="dc:subject">Drupal 8: The best release ever.</span>',
         'Span tag with property attribute',
@@ -516,10 +529,12 @@ class XssTest extends TestCase {
       [
         '<img src="http://example.com/foo.jpg" data-caption="Drupal 8: The best release ever.">',
         '<img src="http://example.com/foo.jpg" data-caption="Drupal 8: The best release ever.">',
+        '<img src="http://example.com/foo.jpg" data-caption="Drupal 8: The best release ever.">',
         'Image tag with data attribute',
         ['img'],
       ],
       [
+        '<a data-a2a-url="foo"></a>',
         '<a data-a2a-url="foo"></a>',
         '<a data-a2a-url="foo"></a>',
         'Link tag with numeric data attribute',
@@ -528,22 +543,26 @@ class XssTest extends TestCase {
       [
         '<img src= onmouseover="script(\'alert\');">',
         '<img>',
+        '<img>',
         'Image tag with malformed SRC',
         ['img'],
       ],
       [
         'Body"></iframe><img/src="x"/onerror="alert(document.domain)"/><"',
         'Body"&gt;<img />&lt;"',
+        'Body"&gt;<img>&lt;"',
         'Image tag with malformed SRC',
         ['img'],
       ],
       [
         '<img/src="x"/onerror="alert(document.domain)"/>',
         '<img />',
+        '<img>',
         'Image tag with malformed SRC',
         ['img'],
       ],
       [
+        '<del datetime="1789-08-22T12:30:00.1-04:00">deleted text</del>',
         '<del datetime="1789-08-22T12:30:00.1-04:00">deleted text</del>',
         '<del datetime="1789-08-22T12:30:00.1-04:00">deleted text</del>',
         'Del with datetime attribute',
@@ -552,22 +571,204 @@ class XssTest extends TestCase {
       [
         '<ins datetime="1986-01-28 11:38:00.010">inserted text</ins>',
         '<ins datetime="1986-01-28 11:38:00.010">inserted text</ins>',
+        '<ins datetime="1986-01-28 11:38:00.010">inserted text</ins>',
         'Ins with datetime attribute',
         ['ins'],
       ],
       [
         '<time datetime="1978-11-19T05:00:00Z">#DBD</time>',
         '<time datetime="1978-11-19T05:00:00Z">#DBD</time>',
+        '<time datetime="1978-11-19T05:00:00Z">#DBD</time>',
         'Time with datetime attribute',
         ['time'],
       ],
+      [
+        '<a -dummy=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a>I\'m magic, click me!</a>',
+        '<a>I\'m magic, click me!</a>',
+        'Link tag with an attribute starting with -',
+        ['a'],
+      ],
+      [
+        '<a class="good" -dummy=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a class="good">I\'m magic, click me!</a>',
+        '<a class="good">I\'m magic, click me!</a>',
+        'Link tag with an attribute starting with - and a valid attribute before',
+        ['a'],
+      ],
+      [
+        '<a -dummy=\': href=javascript:alert("oh\x20no")//\' class="good">I\'m magic, click me!</a>',
+        '<a class="good">I\'m magic, click me!</a>',
+        '<a class="good">I\'m magic, click me!</a>',
+        'Link tag with an attribute starting with - and a valid attribute afterwards',
+        ['a'],
+      ],
+      [
+        '<a _dummy=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a dummy=\': href=javascript:alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a dummy=": href=javascript:alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with a bogus attribute starting with _',
+        ['a'],
+      ],
+      [
+        '<a _href=\'javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a href=\'alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a href="alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with an attribute starting with _',
+        ['a'],
+      ],
+      [
+        '<a class="good" _dummy=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a class="good" dummy=\': href=javascript:alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a class="good" dummy=": href=javascript:alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with an attribute starting with _ and a valid attribute before',
+        ['a'],
+      ],
+      [
+        '<a _dummy=\': href=javascript:alert("oh\x20no")//\' class="good">I\'m magic, click me!</a>',
+        '<a dummy=\': href=javascript:alert(&quot;oh\x20no&quot;)//\' class="good">I\'m magic, click me!</a>',
+        '<a dummy=": href=javascript:alert(&quot;oh\x20no&quot;)//" class="good">I\'m magic, click me!</a>',
+        'Link tag with an attribute starting with _ and a valid attribute afterwards',
+        ['a'],
+      ],
+      [
+        '<a :dummy=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a dummy=\': href=javascript:alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a dummy=": href=javascript:alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with an attribute starting with :',
+        ['a'],
+      ],
+      [
+        '<a class="good" :dummy=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a class="good" dummy=\': href=javascript:alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a class="good" dummy=": href=javascript:alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with an attribute starting with : and a valid attribute before',
+        ['a'],
+      ],
+      [
+        '<a :dummy=\': href=javascript:alert("oh\x20no")//\' class="good">I\'m magic, click me!</a>',
+        '<a dummy=\': href=javascript:alert(&quot;oh\x20no&quot;)//\' class="good">I\'m magic, click me!</a>',
+        '<a dummy=": href=javascript:alert(&quot;oh\x20no&quot;)//" class="good">I\'m magic, click me!</a>',
+        'Link tag with an attribute starting with : and a valid attribute afterwards',
+        ['a'],
+      ],
+      [
+        '<a .dummy=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a dummy=\': href=javascript:alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a dummy=": href=javascript:alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with an attribute starting with .',
+        ['a'],
+      ],
+      [
+        '<a class="good" .dummy=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a class="good" dummy=\': href=javascript:alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a class="good" dummy=": href=javascript:alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with an attribute starting with . and a valid attribute before',
+        ['a'],
+      ],
+      [
+        '<a .dummy=\': href=javascript:alert("oh\x20no")//\' class="good">I\'m magic, click me!</a>',
+        '<a dummy=\': href=javascript:alert(&quot;oh\x20no&quot;)//\' class="good">I\'m magic, click me!</a>',
+        '<a dummy=": href=javascript:alert(&quot;oh\x20no&quot;)//" class="good">I\'m magic, click me!</a>',
+        'Link tag with an attribute starting with . and a valid attribute afterwards',
+        ['a'],
+      ],
     ];
+    for ($attr_name_length = 96; $attr_name_length < 103; $attr_name_length++) {
+      $attr_name = str_repeat('z', $attr_name_length);
+
+      $scenarios[] = [
+        '<a ' . $attr_name . '-x=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a>I\'m magic, click me!</a>',
+        '<a>I\'m magic, click me!</a>',
+        'Link tag with a long attribute containing -',
+        ['a'],
+      ];
+      $scenarios[] = [
+        '<a class="good" ' . $attr_name . '-x=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a class="good">I\'m magic, click me!</a>',
+        '<a class="good">I\'m magic, click me!</a>',
+        'Link tag with a long attribute containing - and a valid attribute before',
+        ['a'],
+      ];
+      $scenarios[] = [
+        '<a ' . $attr_name . '-x=\': href=javascript:alert("oh\x20no")//\' class="good">I\'m magic, click me!</a>',
+        '<a class="good">I\'m magic, click me!</a>',
+        '<a class="good">I\'m magic, click me!</a>',
+        'Link tag with a long attribute containing - and a valid attribute afterwards',
+        ['a'],
+      ];
+      $scenarios[] = [
+        '<a ' . $attr_name . '_x=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a x=\': href=javascript:alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a x=": href=javascript:alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with a long attribute containing _',
+        ['a'],
+      ];
+      $scenarios[] = [
+        '<a class="good" ' . $attr_name . '_x=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a class="good" x=\': href=javascript:alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a class="good" x=": href=javascript:alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with a long attribute containing _ and a valid attribute before',
+        ['a'],
+      ];
+      $scenarios[] = [
+        '<a ' . $attr_name . '_x=\': href=javascript:alert("oh\x20no")//\' class="good">I\'m magic, click me!</a>',
+        '<a x=\': href=javascript:alert(&quot;oh\x20no&quot;)//\' class="good">I\'m magic, click me!</a>',
+        '<a x=": href=javascript:alert(&quot;oh\x20no&quot;)//" class="good">I\'m magic, click me!</a>',
+        'Link tag with a long attribute containing _ and a valid attribute afterwards',
+        ['a'],
+      ];
+      $scenarios[] = [
+        '<a ' . $attr_name . ':x=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a x=\': href=javascript:alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a x=": href=javascript:alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with a long attribute containing :',
+        ['a'],
+      ];
+      $scenarios[] = [
+        '<a class="good" ' . $attr_name . ':x=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a class="good" x=\': href=javascript:alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a class="good" x=": href=javascript:alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with a long attribute containing : and a valid attribute before',
+        ['a'],
+      ];
+      $scenarios[] = [
+        '<a ' . $attr_name . ':x=\': href=javascript:alert("oh\x20no")//\' class="good">I\'m magic, click me!</a>',
+        '<a x=\': href=javascript:alert(&quot;oh\x20no&quot;)//\' class="good">I\'m magic, click me!</a>',
+        '<a x=": href=javascript:alert(&quot;oh\x20no&quot;)//" class="good">I\'m magic, click me!</a>',
+        'Link tag with a long attribute containing : and a valid attribute afterwards',
+        ['a'],
+      ];
+      $scenarios[] = [
+        '<a ' . $attr_name . '.x=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a x=\': href=javascript:alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a x=": href=javascript:alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with a long attribute containing .',
+        ['a'],
+      ];
+      $scenarios[] = [
+        '<a class="good" ' . $attr_name . '.x=\': href=javascript:alert("oh\x20no")//\'>I\'m magic, click me!</a>',
+        '<a class="good" x=\': href=javascript:alert(&quot;oh\x20no&quot;)//\'>I\'m magic, click me!</a>',
+        '<a class="good" x=": href=javascript:alert(&quot;oh\x20no&quot;)//">I\'m magic, click me!</a>',
+        'Link tag with a long attribute containing . and a valid attribute before',
+        ['a'],
+      ];
+      $scenarios[] = [
+        '<a ' . $attr_name . '.x=\': href=javascript:alert("oh\x20no")//\' class="good">I\'m magic, click me!</a>',
+        '<a x=\': href=javascript:alert(&quot;oh\x20no&quot;)//\' class="good">I\'m magic, click me!</a>',
+        '<a x=": href=javascript:alert(&quot;oh\x20no&quot;)//" class="good">I\'m magic, click me!</a>',
+        'Link tag with a long attribute containing . and a valid attribute afterwards',
+        ['a'],
+      ];
+    }
+    return $scenarios;
   }
 
   /**
-   * Checks that \Drupal\Component\Utility\Xss::filterAdmin() correctly strips unallowed tags.
+   * Checks that \Drupal\Component\Utility\Xss::filterAdmin() correctly strips disallowed tags.
    */
-  public function testFilterXSSAdmin() {
+  public function testFilterXSSAdmin(): void {
     $value = Xss::filterAdmin('<style /><iframe /><frame /><frameset /><meta /><link /><embed /><applet /><param /><layer />');
     $this->assertEquals('', $value, 'Admin HTML filter -- should never allow some tags.');
   }
@@ -581,10 +782,9 @@ class XssTest extends TestCase {
    *   The expected result.
    * @param string $message
    *   The assertion message to display upon failure.
-   *
-   * @dataProvider providerTestFilterXssAdminNotNormalized
    */
-  public function testFilterXssAdminNotNormalized($value, $expected, $message) {
+  #[DataProvider('providerTestFilterXssAdminNotNormalized')]
+  public function testFilterXssAdminNotNormalized($value, $expected, $message): void {
     $this->assertNotNormalized(Xss::filterAdmin($value), $expected, $message);
   }
 
@@ -599,12 +799,22 @@ class XssTest extends TestCase {
    *     - The value to expect after filtering.
    *     - The assertion message.
    */
-  public function providerTestFilterXssAdminNotNormalized() {
+  public static function providerTestFilterXssAdminNotNormalized(): array {
     return [
-      // DRUPAL-SA-2008-044
+      // DRUPAL-SA-2008-044.
       ['<object />', 'object', 'Admin HTML filter -- should not allow object tag.'],
       ['<script />', 'script', 'Admin HTML filter -- should not allow script tag.'],
     ];
+  }
+
+  /**
+   * Checks that escaped HTML embedded in an attribute is not filtered.
+   *
+   * @see \Drupal\Component\Utility\HtmlSerializerRules
+   */
+  public function testFilterNormalizedHtml5(): void {
+    $input = '<span data-caption="foo &lt;em&gt;bar&lt;/em&gt;"></span>';
+    $this->assertEquals($input, Xss::filter(Html::normalize($input), ['span']));
   }
 
   /**

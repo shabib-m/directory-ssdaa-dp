@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\layout_builder_test\Plugin\SectionStorage;
 
 use Drupal\Core\Access\AccessResult;
@@ -11,26 +13,27 @@ use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Plugin\ContextAwarePluginTrait;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\layout_builder\Attribute\SectionStorage;
 use Drupal\layout_builder\Plugin\SectionStorage\SectionStorageLocalTaskProviderInterface;
 use Drupal\layout_builder\Routing\LayoutBuilderRoutesTrait;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionListTrait;
 use Drupal\layout_builder\SectionStorageInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\layout_builder\SupportAwareSectionStorageInterface;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
  * Provides section storage utilizing simple config.
- *
- * @SectionStorage(
- *   id = "test_simple_config",
- *   context_definitions = {
- *     "config_id" = @ContextDefinition("string"),
- *   }
- * )
  */
-class SimpleConfigSectionStorage extends PluginBase implements SectionStorageInterface, SectionStorageLocalTaskProviderInterface, ContainerFactoryPluginInterface {
+#[SectionStorage(id: "test_simple_config", context_definitions: [
+  "config_id" => new ContextDefinition(
+    data_type: "string",
+    label: new TranslatableMarkup("Configuration ID"),
+  ),
+])]
+class SimpleConfigSectionStorage extends PluginBase implements SectionStorageInterface, SectionStorageLocalTaskProviderInterface, ContainerFactoryPluginInterface, SupportAwareSectionStorageInterface {
 
   use ContextAwarePluginTrait;
   use LayoutBuilderRoutesTrait;
@@ -61,18 +64,6 @@ class SimpleConfigSectionStorage extends PluginBase implements SectionStorageInt
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('config.factory')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getStorageType() {
     return $this->getPluginId();
   }
@@ -94,7 +85,7 @@ class SimpleConfigSectionStorage extends PluginBase implements SectionStorageInt
   /**
    * Returns the name to be used to store in the config system.
    */
-  protected function getConfigName() {
+  protected function getConfigName(): string {
     return 'layout_builder_test.' . $this->getStorageType() . '.' . $this->getStorageId();
   }
 
@@ -188,7 +179,7 @@ class SimpleConfigSectionStorage extends PluginBase implements SectionStorageInt
   /**
    * {@inheritdoc}
    */
-  public function access($operation, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($operation, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $result = AccessResult::allowed();
     return $return_as_object ? $result : $result->isAllowed();
   }
@@ -205,6 +196,13 @@ class SimpleConfigSectionStorage extends PluginBase implements SectionStorageInt
    */
   public function isApplicable(RefinableCacheableDependencyInterface $cacheability) {
     return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isSupported(string $entity_type_id, string $bundle, string $view_mode): bool {
+    return FALSE;
   }
 
 }

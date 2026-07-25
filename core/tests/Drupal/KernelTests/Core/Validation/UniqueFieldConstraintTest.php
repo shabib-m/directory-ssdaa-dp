@@ -1,20 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Validation;
 
-use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Validation\Plugin\Validation\Constraint\UniqueFieldValueValidator;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\entity_test\Entity\EntityTestStringId;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\TestTools\Random;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the unique field value validation constraint.
- *
- * @coversDefaultClass \Drupal\Core\Validation\Plugin\Validation\Constraint\UniqueFieldValueValidator
- *
- * @group Validation
  */
+#[CoversClass(UniqueFieldValueValidator::class)]
+#[Group('Validation')]
+#[RunTestsInSeparateProcesses]
 class UniqueFieldConstraintTest extends KernelTestBase {
 
   /**
@@ -29,9 +35,9 @@ class UniqueFieldConstraintTest extends KernelTestBase {
   /**
    * Tests cases where the validation passes for entities with string IDs.
    *
-   * @covers ::validate
+   * @legacy-covers ::validate
    */
-  public function testEntityWithStringId() {
+  public function testEntityWithStringId(): void {
     $this->installEntitySchema('entity_test_string_id');
 
     EntityTestStringId::create([
@@ -63,11 +69,10 @@ class UniqueFieldConstraintTest extends KernelTestBase {
    * @param string|int|null $id
    *   The entity ID.
    *
-   * @covers ::validate
-   *
-   * @dataProvider providerTestEntityWithStringIdWithViolation
+   * @legacy-covers ::validate
    */
-  public function testEntityWithStringIdWithViolation($id) {
+  #[DataProvider('providerTestEntityWithStringIdWithViolation')]
+  public function testEntityWithStringIdWithViolation($id): void {
     $this->installEntitySchema('entity_test_string_id');
 
     $value = $this->randomString();
@@ -84,11 +89,7 @@ class UniqueFieldConstraintTest extends KernelTestBase {
     /** @var \Symfony\Component\Validator\ConstraintViolationList $violations */
     $violations = $entity->get('name')->validate();
 
-    $message = new FormattableMarkup('A @entity_type with @field_name %value already exists.', [
-      '%value' => $value,
-      '@entity_type' => $entity->getEntityType()->getSingularLabel(),
-      '@field_name' => 'Name',
-    ]);
+    $message = 'A ' . $entity->getEntityType()->getSingularLabel() . ' with Name ' . Html::escape($value) . ' already exists.';
 
     // Check that the validation has created the appropriate violation.
     $this->assertCount(1, $violations);
@@ -103,7 +104,7 @@ class UniqueFieldConstraintTest extends KernelTestBase {
    *
    * @see self::testEntityWithStringIdWithViolation()
    */
-  public static function providerTestEntityWithStringIdWithViolation() {
+  public static function providerTestEntityWithStringIdWithViolation(): array {
     return [
       'without an id' => [NULL],
       'zero as integer' => [0],
@@ -120,9 +121,9 @@ class UniqueFieldConstraintTest extends KernelTestBase {
    * The unique_field_constraint_test_entity_test_access() function
    * forbids 'view' access to entity_test entities.
    *
-   * @covers ::validate
+   * @legacy-covers ::validate
    */
-  public function testViolationDespiteNoAccess() {
+  public function testViolationDespiteNoAccess(): void {
     $this->installEntitySchema('entity_test');
 
     // Create and save an entity with a given field value in the field that has
@@ -138,11 +139,7 @@ class UniqueFieldConstraintTest extends KernelTestBase {
     /** @var \Symfony\Component\Validator\ConstraintViolationList $violations */
     $violations = $entity->get('name')->validate();
 
-    $message = new FormattableMarkup('A @entity_type with @field_name %value already exists.', [
-      '%value' => 'A totally unique entity name',
-      '@entity_type' => $entity->getEntityType()->getSingularLabel(),
-      '@field_name' => 'Name',
-    ]);
+    $message = 'A ' . $entity->getEntityType()->getSingularLabel() . ' with Name A totally unique entity name already exists.';
 
     // Check that the validation has created the appropriate violation.
     $this->assertCount(1, $violations);

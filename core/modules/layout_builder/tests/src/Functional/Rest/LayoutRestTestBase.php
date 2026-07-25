@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Functional\Rest;
 
 use Drupal\Component\Utility\NestedArray;
@@ -90,7 +92,7 @@ abstract class LayoutRestTestBase extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function request($method, Url $url, array $request_options = []) {
+  protected function request($method, Url $url, array $request_options = []): ResponseInterface {
     $request_options[RequestOptions::HEADERS] = [
       'Content-Type' => static::$mimeType,
     ];
@@ -112,7 +114,7 @@ abstract class LayoutRestTestBase extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function assertResponseWhenMissingAuthentication($method, ResponseInterface $response) {}
+  protected function assertResponseWhenMissingAuthentication($method, ResponseInterface $response): void {}
 
   /**
    * {@inheritdoc}
@@ -122,7 +124,7 @@ abstract class LayoutRestTestBase extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function assertAuthenticationEdgeCases($method, Url $url, array $request_options) {}
+  protected function assertAuthenticationEdgeCases($method, Url $url, array $request_options): void {}
 
   /**
    * {@inheritdoc}

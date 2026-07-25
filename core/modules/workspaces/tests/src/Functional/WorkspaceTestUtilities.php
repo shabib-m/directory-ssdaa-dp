@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workspaces\Functional;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Tests\block\Traits\BlockCreationTrait;
+use Drupal\workspaces\Entity\Handler\IgnoredWorkspaceHandler;
 use Drupal\workspaces\Entity\Workspace;
 use Drupal\workspaces\WorkspaceInterface;
 
@@ -15,6 +19,11 @@ trait WorkspaceTestUtilities {
 
   use BlockCreationTrait;
 
+  /**
+   * Signifies that the switcher block is configured.
+   *
+   * @var bool
+   */
   protected $switcherBlockConfigured = FALSE;
 
   /**
@@ -31,7 +40,7 @@ trait WorkspaceTestUtilities {
    * @return \Drupal\Core\Entity\EntityInterface
    *   The entity.
    */
-  protected function getOneEntityByLabel($type, $label) {
+  protected function getOneEntityByLabel($type, $label): EntityInterface {
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
     $entity_type_manager = \Drupal::service('entity_type.manager');
     $property = $entity_type_manager->getDefinition($type)->getKey('label');
@@ -45,11 +54,11 @@ trait WorkspaceTestUtilities {
   }
 
   /**
-   * Creates a new Workspace through the UI.
+   * Creates and activates a new Workspace through the UI.
    *
-   * @param string $label
+   * @param string|null $label
    *   The label of the workspace to create.
-   * @param string $id
+   * @param string|null $id
    *   The ID of the workspace to create.
    * @param string $parent
    *   (optional) The ID of the parent workspace. Defaults to '_none'.
@@ -57,7 +66,43 @@ trait WorkspaceTestUtilities {
    * @return \Drupal\workspaces\WorkspaceInterface
    *   The workspace that was just created.
    */
-  protected function createWorkspaceThroughUi($label, $id, $parent = '_none') {
+  protected function createAndActivateWorkspaceThroughUi(?string $label = NULL, ?string $id = NULL, string $parent = '_none'): WorkspaceInterface {
+    $id ??= $this->randomMachineName();
+    $label ??= $this->randomString();
+
+    $this->drupalGet('/admin/config/workflow/workspaces/add');
+    $this->submitForm([
+      'id' => $id,
+      'label' => $label,
+      'parent' => $parent,
+    ], 'Save and switch');
+
+    $this->getSession()->getPage()->hasContent("$label ($id)");
+
+    // Keep the test runner in sync with the system under test.
+    $workspace = Workspace::load($id);
+    \Drupal::service('workspaces.manager')->setActiveWorkspace($workspace);
+
+    return $workspace;
+  }
+
+  /**
+   * Creates a new Workspace through the UI.
+   *
+   * @param string|null $label
+   *   The label of the workspace to create.
+   * @param string|null $id
+   *   The ID of the workspace to create.
+   * @param string $parent
+   *   (optional) The ID of the parent workspace. Defaults to '_none'.
+   *
+   * @return \Drupal\workspaces\WorkspaceInterface
+   *   The workspace that was just created.
+   */
+  protected function createWorkspaceThroughUi(?string $label = NULL, ?string $id = NULL, string $parent = '_none') {
+    $id ??= $this->randomMachineName();
+    $label ??= $this->randomString();
+
     $this->drupalGet('/admin/config/workflow/workspaces/add');
     $this->submitForm([
       'id' => $id,
@@ -78,16 +123,12 @@ trait WorkspaceTestUtilities {
   protected function setupWorkspaceSwitcherBlock() {
     // Add the block to the sidebar.
     $this->placeBlock('workspace_switcher', [
-      'id' => 'workspaceswitcher',
+      'id' => 'workspace_switcher',
       'region' => 'sidebar_first',
       'label' => 'Workspace switcher',
     ]);
-
-    // Confirm the block shows on the front page.
     $this->drupalGet('<front>');
-    $page = $this->getSession()->getPage();
 
-    $this->assertTrue($page->hasContent('Workspace switcher'));
     $this->switcherBlockConfigured = TRUE;
   }
 
@@ -176,6 +217,19 @@ trait WorkspaceTestUtilities {
     $this->assertSession()->statusCodeEquals(200);
     $page = $session->getPage();
     return $page->hasContent($label);
+  }
+
+  /**
+   * Marks an entity type as ignored in a workspace.
+   *
+   * @param string $entity_type_id
+   *   The entity type ID.
+   */
+  protected function ignoreEntityType(string $entity_type_id): void {
+    $entity_type = clone \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+    $entity_type->setHandlerClass('workspace', IgnoredWorkspaceHandler::class);
+    \Drupal::state()->set("$entity_type_id.entity_type", $entity_type);
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
   }
 
 }

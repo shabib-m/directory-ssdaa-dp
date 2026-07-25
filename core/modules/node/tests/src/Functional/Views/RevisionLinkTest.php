@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional\Views;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the different revision link handlers.
- *
- * @group node
  *
  * @see \Drupal\node\Plugin\views\field\RevisionLink
  * @see \Drupal\node\Plugin\views\field\RevisionLinkDelete
  * @see \Drupal\node\Plugin\views\field\RevisionLinkRevert
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class RevisionLinkTest extends NodeTestBase {
 
   /**
@@ -28,7 +33,7 @@ class RevisionLinkTest extends NodeTestBase {
   /**
    * Tests revision links.
    */
-  public function testRevisionLinks() {
+  public function testRevisionLinks(): void {
     // Create one user which can view/revert and delete and one which can only
     // do one of them.
     $this->drupalCreateContentType(['name' => 'page', 'type' => 'page']);

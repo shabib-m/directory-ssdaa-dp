@@ -2,23 +2,30 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
  * Defines the 'float' field type.
- *
- * @FieldType(
- *   id = "float",
- *   label = @Translation("Number (float)"),
- *   description = @Translation("This field stores a number in the database in a floating point format."),
- *   category = @Translation("Number"),
- *   default_widget = "number",
- *   default_formatter = "number_decimal"
- * )
  */
+#[FieldType(
+  id: "float",
+  label: new TranslatableMarkup("Float"),
+  description: [
+    new TranslatableMarkup("Numbers with decimal parts and exponents"),
+    new TranslatableMarkup("Accuracy depends on limits from database and/or PHP"),
+    new TranslatableMarkup("Examples: 1.23, -1.23, 0.00e1, 1e100, 6.02214076e23"),
+  ],
+  category: "number",
+  weight: -10,
+  no_ui: TRUE,
+  default_widget: "number",
+  default_formatter: "number_decimal"
+)]
 class FloatItem extends NumericItemBase {
 
   /**

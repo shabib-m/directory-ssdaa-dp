@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\FunctionalJavascript;
 
+use Drupal\filter\FilterFormatRepositoryInterface;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Create a node with revisions and test contextual links.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class ContextualLinksTest extends WebDriverTestBase {
 
   use ContextualLinkClickTrait;
@@ -61,7 +66,7 @@ class ContextualLinksTest extends WebDriverTestBase {
       $node->title = $this->randomMachineName();
       $node->body = [
         'value' => $this->randomMachineName(32),
-        'format' => filter_default_format(),
+        'format' => \Drupal::service(FilterFormatRepositoryInterface::class)->getDefaultFormat()->id(),
       ];
       $node->setNewRevision();
 
@@ -90,7 +95,7 @@ class ContextualLinksTest extends WebDriverTestBase {
   /**
    * Tests the contextual links on revisions.
    */
-  public function testRevisionContextualLinks() {
+  public function testRevisionContextualLinks(): void {
     // Confirm that the "Edit" and "Delete" contextual links appear for the
     // default revision.
     $this->drupalGet('node/' . $this->nodes[0]->id());

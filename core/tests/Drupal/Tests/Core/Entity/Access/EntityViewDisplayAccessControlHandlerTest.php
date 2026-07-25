@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Entity\Access;
 
 use Drupal\Core\Entity\Entity\Access\EntityViewDisplayAccessControlHandler;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Session\AccountInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Entity\Entity\Access\EntityViewDisplayAccessControlHandler
- * @group Entity
+ * Tests Drupal\Core\Entity\Entity\Access\EntityViewDisplayAccessControlHandler.
  */
+#[CoversClass(EntityViewDisplayAccessControlHandler::class)]
+#[Group('Entity')]
 class EntityViewDisplayAccessControlHandlerTest extends EntityFormDisplayAccessControlHandlerTest {
 
   /**
@@ -24,6 +29,7 @@ class EntityViewDisplayAccessControlHandlerTest extends EntityFormDisplayAccessC
       ->method('hasPermission')
       ->willReturnMap([
         ['administer foobar display', TRUE],
+        ['Llama', FALSE],
       ]);
     $this->member
       ->expects($this->any())
@@ -32,9 +38,9 @@ class EntityViewDisplayAccessControlHandlerTest extends EntityFormDisplayAccessC
 
     $this->entity = new EntityViewDisplay([
       'targetEntityType' => 'foobar',
-      'bundle' => 'bazqux',
+      'bundle' => 'new_bundle',
       'mode' => 'default',
-      'id' => 'foobar.bazqux.default',
+      'id' => 'foobar.new_bundle.default',
       'uuid' => '6f2f259a-f3c7-42ea-bdd5-111ad1f85ed1',
     ], 'entity_display');
     $this->accessControlHandler = new EntityViewDisplayAccessControlHandler($this->entity->getEntityType());

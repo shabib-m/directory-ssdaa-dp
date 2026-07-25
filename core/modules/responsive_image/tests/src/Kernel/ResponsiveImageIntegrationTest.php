@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\responsive_image\Kernel;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
@@ -7,12 +9,14 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\responsive_image\Entity\ResponsiveImageStyle;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the integration of responsive image with other components.
- *
- * @group responsive_image
  */
+#[Group('responsive_image')]
+#[RunTestsInSeparateProcesses]
 class ResponsiveImageIntegrationTest extends KernelTestBase {
 
   /**
@@ -40,7 +44,7 @@ class ResponsiveImageIntegrationTest extends KernelTestBase {
   /**
    * Tests integration with entity view display.
    */
-  public function testEntityViewDisplayDependency() {
+  public function testEntityViewDisplayDependency(): void {
     // Create a responsive image style.
     ResponsiveImageStyle::create([
       'id' => 'foo',

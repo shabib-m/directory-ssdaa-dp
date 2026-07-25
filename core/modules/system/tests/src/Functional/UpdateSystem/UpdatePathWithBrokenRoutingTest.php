@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\UpdatePathTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the update path with a broken router.
- *
- * @group Update
  */
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
 class UpdatePathWithBrokenRoutingTest extends BrowserTestBase {
   use UpdatePathTestTrait;
 
@@ -30,7 +34,7 @@ class UpdatePathWithBrokenRoutingTest extends BrowserTestBase {
   /**
    * Tests running update.php with some form of broken routing.
    */
-  public function testWithBrokenRouting() {
+  public function testWithBrokenRouting(): void {
     // Simulate a broken router, and make sure the front page is
     // inaccessible.
     \Drupal::state()->set('update_script_test_broken_inbound', TRUE);

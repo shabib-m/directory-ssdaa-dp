@@ -3,6 +3,7 @@
 namespace Drupal\user\Plugin\migrate\process\d6;
 
 use Drupal\Core\Datetime\TimeZoneFormHelper;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
@@ -13,10 +14,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Converts user time zones from time zone offsets to time zone names.
  *
- * @MigrateProcessPlugin(
- *   id = "user_update_7002"
- * )
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3533560
  */
+#[MigrateProcess('user_update_7002')]
 class UserUpdate7002 extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -37,6 +40,7 @@ class UserUpdate7002 extends ProcessPluginBase implements ContainerFactoryPlugin
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition, Config $date_config) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560', E_USER_DEPRECATED);
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->dateConfig = $date_config;
     if (!isset(static::$timezones)) {
@@ -60,20 +64,9 @@ class UserUpdate7002 extends ProcessPluginBase implements ContainerFactoryPlugin
    * {@inheritdoc}
    */
   public function transform($value, MigrateExecutableInterface $migrate_executable, Row $row, $destination_property) {
-    $timezone = NULL;
+    $timezone = $row->getSourceProperty('timezone_name') ?? $row->getSourceProperty('event_timezone');
 
-    if ($row->hasSourceProperty('timezone_name')) {
-      if (isset(static::$timezones[$row->getSourceProperty('timezone_name')])) {
-        $timezone = $row->getSourceProperty('timezone_name');
-      }
-    }
-    if (!$timezone && $row->hasSourceProperty('event_timezone')) {
-      if (isset(static::$timezones[$row->getSourceProperty('event_timezone')])) {
-        $timezone = $row->getSourceProperty('event_timezone');
-      }
-    }
-
-    if ($timezone === NULL) {
+    if ($timezone === NULL || !isset(static::$timezones[$timezone])) {
       $timezone = $this->dateConfig->get('timezone.default');
     }
     return $timezone;

@@ -11,48 +11,14 @@
 
 namespace Symfony\Component\Serializer\Annotation;
 
-use Symfony\Component\Serializer\Exception\InvalidArgumentException;
+class_exists(\Symfony\Component\Serializer\Attribute\Groups::class);
 
-/**
- * Annotation class for @Groups().
- *
- * @Annotation
- * @NamedArgumentConstructor
- * @Target({"PROPERTY", "METHOD"})
- *
- * @author Kévin Dunglas <dunglas@gmail.com>
- */
-#[\Attribute(\Attribute::TARGET_METHOD | \Attribute::TARGET_PROPERTY)]
-class Groups
-{
+if (false) {
     /**
-     * @var string[]
+     * @deprecated since Symfony 7.4, use {@see \Symfony\Component\Serializer\Attribute\Groups} instead
      */
-    private readonly array $groups;
-
-    /**
-     * @param string|string[] $groups
-     */
-    public function __construct(string|array $groups)
+    #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::TARGET_PROPERTY | \Attribute::TARGET_CLASS)]
+    class Groups extends \Symfony\Component\Serializer\Attribute\Groups
     {
-        $this->groups = (array) $groups;
-
-        if (!$this->groups) {
-            throw new InvalidArgumentException(sprintf('Parameter of annotation "%s" cannot be empty.', static::class));
-        }
-
-        foreach ($this->groups as $group) {
-            if (!\is_string($group) || '' === $group) {
-                throw new InvalidArgumentException(sprintf('Parameter of annotation "%s" must be a string or an array of non-empty strings.', static::class));
-            }
-        }
-    }
-
-    /**
-     * @return string[]
-     */
-    public function getGroups(): array
-    {
-        return $this->groups;
     }
 }

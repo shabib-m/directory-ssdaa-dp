@@ -2,9 +2,11 @@
 
 namespace Drupal\datetime_range\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\datetime\DateTimeComputed;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItem;
@@ -12,16 +14,20 @@ use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 
 /**
  * Plugin implementation of the 'daterange' field type.
- *
- * @FieldType(
- *   id = "daterange",
- *   label = @Translation("Date range"),
- *   description = @Translation("Create and store date ranges."),
- *   default_widget = "daterange_default",
- *   default_formatter = "daterange_default",
- *   list_class = "\Drupal\datetime_range\Plugin\Field\FieldType\DateRangeFieldItemList"
- * )
  */
+#[FieldType(
+  id: "daterange",
+  label: new TranslatableMarkup("Datetime range"),
+  description: [
+    new TranslatableMarkup("A start and end, each using the Datetime format"),
+    new TranslatableMarkup("Choose either date and time, date only, or all day"),
+    new TranslatableMarkup("Example: 2001-01-15T07:28:08 to 2001-03-15T11:24:15"),
+  ],
+  category: "date_time",
+  default_widget: "daterange_default",
+  default_formatter: "daterange_default",
+  list_class: DateRangeFieldItemList::class,
+)]
 class DateRangeItem extends DateTimeItem {
 
   /**
@@ -94,7 +100,7 @@ class DateRangeItem extends DateTimeItem {
 
     // Just pick a date in the past year. No guidance is provided by this Field
     // type.
-    $start = REQUEST_TIME - mt_rand(0, 86400 * 365) - 86400;
+    $start = \Drupal::time()->getRequestTime() - mt_rand(0, 86400 * 365) - 86400;
     $end = $start + 86400;
     if ($type == static::DATETIME_TYPE_DATETIME) {
       $values['value'] = gmdate(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $start);
@@ -122,10 +128,10 @@ class DateRangeItem extends DateTimeItem {
   public function onChange($property_name, $notify = TRUE) {
     // Enforce that the computed date is recalculated.
     if ($property_name == 'value') {
-      $this->start_date = NULL;
+      $this->set('start_date', NULL);
     }
     elseif ($property_name == 'end_value') {
-      $this->end_date = NULL;
+      $this->set('end_date', NULL);
     }
     parent::onChange($property_name, $notify);
   }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Element;
 
 use Drupal\Core\Form\FormInterface;
@@ -10,12 +12,14 @@ use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests PathElement validation and conversion functionality.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class PathElementFormTest extends KernelTestBase implements FormInterface {
 
   /**
@@ -26,9 +30,7 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
   protected $testUser;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system', 'user'];
 
@@ -37,7 +39,6 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
     /** @var \Drupal\user\RoleInterface $role */
     $role = Role::create([
@@ -50,22 +51,21 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
       'name' => 'foobar',
       'mail' => 'foobar@example.com',
     ]);
-    $this->testUser->addRole($role->id());
-    $this->testUser->save();
+    $this->testUser->addRole($role->id())->save();
     \Drupal::service('current_user')->setAccount($this->testUser);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'test_path_element';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     // A required validated path.
     $form['required_validate'] = [
       '#type' => 'path',
@@ -116,7 +116,7 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
 
     $form['submit'] = [
       '#type' => 'submit',
-      '#value' => t('Submit'),
+      '#value' => 'Submit',
     ];
 
     return $form;
@@ -140,7 +140,7 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
   /**
    * Tests that default handlers are added even if custom are specified.
    */
-  public function testPathElement() {
+  public function testPathElement(): void {
     $form_state = (new FormState())
       ->setValues([
         'required_validate' => 'user/' . $this->testUser->id(),
@@ -155,7 +155,10 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
 
     // Valid form state.
     $this->assertCount(0, $form_state->getErrors());
-    $this->assertEquals(['route_name' => 'entity.user.canonical', 'route_parameters' => ['user' => $this->testUser->id()]], $form_state->getValue('required_validate_route'));
+    $this->assertEquals(
+      ['route_name' => 'entity.user.canonical', 'route_parameters' => ['user' => $this->testUser->id()]],
+      $form_state->getValue('required_validate_route'),
+    );
     /** @var \Drupal\Core\Url $url */
     $url = $form_state->getValue('required_validate_url');
     $this->assertInstanceOf(Url::class, $url);
@@ -179,7 +182,7 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
     $errors = $form_state->getErrors();
     // Should be missing 'required_validate' field.
     $this->assertCount(1, $errors);
-    $this->assertEquals(['required_validate' => t('@name field is required.', ['@name' => 'required_validate'])], $errors);
+    $this->assertEquals(['required_validate' => 'required_validate field is required.'], $errors);
 
     // Test invalid required parameters.
     $form_state = (new FormState())
@@ -195,10 +198,10 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
     $errors = $form_state->getErrors();
     $this->assertCount(4, $errors);
     $this->assertEquals([
-      'required_validate' => t('This path does not exist or you do not have permission to link to %path.', ['%path' => 'user/74']),
-      'required_validate_route' => t('This path does not exist or you do not have permission to link to %path.', ['%path' => 'user/74']),
-      'required_validate_url' => t('This path does not exist or you do not have permission to link to %path.', ['%path' => 'user/74']),
-      'required_non_validate' => t('@name field is required.', ['@name' => 'required_non_validate']),
+      'required_validate' => 'This path does not exist or you do not have permission to link to user/74.',
+      'required_validate_route' => 'This path does not exist or you do not have permission to link to user/74.',
+      'required_validate_url' => 'This path does not exist or you do not have permission to link to user/74.',
+      'required_non_validate' => 'required_non_validate field is required.',
     ], $errors);
 
     // Test invalid optional parameters.
@@ -217,8 +220,8 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
     $errors = $form_state->getErrors();
     $this->assertEquals(count($errors), 2);
     $this->assertEquals($errors, [
-      'optional_validate' => t('This path does not exist or you do not have permission to link to %path.', ['%path' => 'user/74']),
-      'optional_validate_route' => t('This path does not exist or you do not have permission to link to %path.', ['%path' => 'user/74']),
+      'optional_validate' => 'This path does not exist or you do not have permission to link to user/74.',
+      'optional_validate_route' => 'This path does not exist or you do not have permission to link to user/74.',
     ]);
   }
 

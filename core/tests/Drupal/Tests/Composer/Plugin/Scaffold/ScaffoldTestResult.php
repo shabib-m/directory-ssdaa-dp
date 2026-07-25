@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Composer\Plugin\Scaffold;
 
 /**
@@ -7,7 +9,18 @@ namespace Drupal\Tests\Composer\Plugin\Scaffold;
  */
 class ScaffoldTestResult {
 
+  /**
+   * The location of the scaffold fixture.
+   *
+   * @var string
+   */
   protected $docroot;
+
+  /**
+   * The stdout from the test.
+   *
+   * @var string
+   */
   protected $scaffoldOutput;
 
   /**
@@ -27,6 +40,7 @@ class ScaffoldTestResult {
    * Returns the location of the docroot from the scaffold test.
    *
    * @return string
+   *   The location of the scaffold fixture.
    */
   public function docroot() {
     return $this->docroot;
@@ -36,6 +50,7 @@ class ScaffoldTestResult {
    * Returns the standard output from the scaffold test.
    *
    * @return string
+   *   The standard output from the scaffold test.
    */
   public function scaffoldOutput() {
     return $this->scaffoldOutput;

@@ -1,0 +1,9 @@
+name: 'توزيعة دليل صدى 11'
+type: 'Content'
+
+content:
+  taxonomy_term: '*'
+  node: '*'
+  block_content: '*'
+  menu_link_content: '*'
+  file: '*'

@@ -2,7 +2,11 @@
 
 namespace Drupal\system\Entity;
 
+use Drupal\Core\Entity\Attribute\ConfigEntityType;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Component\Plugin\ConfigurableInterface;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
@@ -11,31 +15,30 @@ use Drupal\Core\Action\ActionPluginCollection;
 
 /**
  * Defines the configured action entity.
- *
- * @ConfigEntityType(
- *   id = "action",
- *   label = @Translation("Action"),
- *   label_collection = @Translation("Actions"),
- *   label_singular = @Translation("action"),
- *   label_plural = @Translation("actions"),
- *   label_count = @PluralTranslation(
- *     singular = "@count action",
- *     plural = "@count actions",
- *   ),
- *   admin_permission = "administer actions",
- *   entity_keys = {
- *     "id" = "id",
- *     "label" = "label"
- *   },
- *   config_export = {
- *     "id",
- *     "label",
- *     "type",
- *     "plugin",
- *     "configuration",
- *   }
- * )
  */
+#[ConfigEntityType(
+  id: 'action',
+  label: new TranslatableMarkup('Action'),
+  label_collection: new TranslatableMarkup('Actions'),
+  label_singular: new TranslatableMarkup('action'),
+  label_plural: new TranslatableMarkup('actions'),
+  entity_keys: [
+    'id' => 'id',
+    'label' => 'label',
+  ],
+  admin_permission: 'administer actions',
+  label_count: [
+    'singular' => '@count action',
+    'plural' => '@count actions',
+  ],
+  config_export: [
+    'id',
+    'label',
+    'type',
+    'plugin',
+    'configuration',
+  ],
+)]
 class Action extends ConfigEntityBase implements ActionConfigEntityInterface, EntityWithPluginCollectionInterface {
 
   /**
@@ -55,9 +58,9 @@ class Action extends ConfigEntityBase implements ActionConfigEntityInterface, En
   /**
    * The action type.
    *
-   * @var string
+   * @var string|null
    */
-  protected $type;
+  protected $type = NULL;
 
   /**
    * The configuration of the action.
@@ -79,6 +82,27 @@ class Action extends ConfigEntityBase implements ActionConfigEntityInterface, En
    * @var \Drupal\Core\Action\ActionPluginCollection
    */
   protected $pluginCollection;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(array $values = []) {
+    // When no label is specified for this action config entity, default to the
+    // label of the used action plugin.
+    if (!array_key_exists('label', $values) && array_key_exists('plugin', $values)) {
+      try {
+        $action_plugin_manager = \Drupal::service('plugin.manager.action');
+        assert($action_plugin_manager instanceof PluginManagerInterface);
+        $action_plugin_definition = $action_plugin_manager->getDefinition($values['plugin']);
+        // @see \Drupal\Core\Annotation\Action::$label
+        assert(array_key_exists('label', $action_plugin_definition));
+        $values['label'] = $action_plugin_definition['label'];
+      }
+      catch (PluginNotFoundException) {
+      }
+    }
+    return parent::create($values);
+  }
 
   /**
    * Encapsulates the creation of the action's LazyPluginCollection.

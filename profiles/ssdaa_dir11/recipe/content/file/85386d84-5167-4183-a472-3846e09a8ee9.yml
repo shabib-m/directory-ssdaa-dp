@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 85386d84-5167-4183-a472-3846e09a8ee9
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: alfawzan.png
+  uri:
+    -
+      value: 'public://website-images/2026-07/alfawzan.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 156353
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

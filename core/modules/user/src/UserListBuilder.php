@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Routing\RedirectDestinationInterface;
+use Drupal\user\Entity\Role;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -123,14 +124,10 @@ class UserListBuilder extends EntityListBuilder {
     ];
     $row['status'] = $entity->isActive() ? $this->t('active') : $this->t('blocked');
 
-    $roles = user_role_names(TRUE);
+    $roles = Role::loadMultiple($entity->getRoles());
+    unset($roles[RoleInterface::ANONYMOUS_ID]);
     unset($roles[RoleInterface::AUTHENTICATED_ID]);
-    $users_roles = [];
-    foreach ($entity->getRoles() as $role) {
-      if (isset($roles[$role])) {
-        $users_roles[] = $roles[$role];
-      }
-    }
+    $users_roles = array_map(fn(RoleInterface $role) => $role->label(), $roles);
     asort($users_roles);
     $row['roles']['data'] = [
       '#theme' => 'item_list',
@@ -147,7 +144,7 @@ class UserListBuilder extends EntityListBuilder {
       CacheableMetadata::createFromObject($last_access)->applyTo($row['access']['data']);
     }
     else {
-      $row['access']['data']['#markup'] = t('never');
+      $row['access']['data']['#markup'] = $this->t('never');
     }
     return $row + parent::buildRow($entity);
   }
@@ -155,8 +152,10 @@ class UserListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function getOperations(EntityInterface $entity) {
-    $operations = parent::getOperations($entity);
+  public function getOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $args = func_get_args();
+    $cacheability = $args[1] ?? new CacheableMetadata();
+    $operations = parent::getOperations($entity, $cacheability);
     if (isset($operations['edit'])) {
       $destination = $this->redirectDestination->getAsArray();
       $operations['edit']['query'] = $destination;

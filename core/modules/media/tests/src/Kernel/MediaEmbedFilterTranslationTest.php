@@ -1,15 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Kernel;
 
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\media\Plugin\Filter\MediaEmbed;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that media embeds are translated based on text (host entity) language.
- *
- * @coversDefaultClass \Drupal\media\Plugin\Filter\MediaEmbed
- * @group media
  */
+#[CoversClass(MediaEmbed::class)]
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaEmbedFilterTranslationTest extends MediaEmbedFilterTestBase {
 
   /**
@@ -25,6 +32,7 @@ class MediaEmbedFilterTranslationTest extends MediaEmbedFilterTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->installConfig('system');
     ConfigurableLanguage::createFromLangcode('pt-br')->save();
     // Reload the entity to ensure it is aware of the newly created language.
     $this->embeddedEntity = $this->container->get('entity_type.manager')
@@ -41,10 +49,9 @@ class MediaEmbedFilterTranslationTest extends MediaEmbedFilterTestBase {
 
   /**
    * Tests that the expected embedded media entity translation is selected.
-   *
-   * @dataProvider providerTranslationSituations
    */
-  public function testTranslationSelection($text_langcode, $expected_title_langcode) {
+  #[DataProvider('providerTranslationSituations')]
+  public function testTranslationSelection($text_langcode, $expected_title_langcode): void {
     $text = $this->createEmbedCode([
       'data-entity-type' => 'media',
       'data-entity-uuid' => static::EMBEDDED_ENTITY_UUID,
@@ -68,7 +75,7 @@ class MediaEmbedFilterTranslationTest extends MediaEmbedFilterTestBase {
   /**
    * Data provider for testTranslationSelection().
    */
-  public function providerTranslationSituations() {
+  public static function providerTranslationSituations() {
     $embedded_entity_translation_languages = ['en', 'pt-br'];
 
     foreach (['en', 'pt-br', 'nl'] as $text_langcode) {

@@ -4,14 +4,12 @@ description: 'Install an example site that shows off some of Drupal’s capabili
 # version: VERSION
 install:
   - node
-  - history
   - big_pipe
   - block
   - breakpoint
   - ckeditor5
   - config
   - contextual
-  - contact
   - layout_builder
   - layout_discovery
   - menu_link_content
@@ -29,15 +27,11 @@ install:
   - dynamic_page_cache
   - taxonomy
   - dblog
-  - sdc
-  - search
-  - shortcut
-  - toolbar
+  - navigation
   - field_ui
   - file
   - views
   - views_ui
-  - tour
   - automated_cron
   - responsive_image
   - content_moderation
@@ -46,12 +40,13 @@ install:
   - locale
   - config_translation
   - content_translation
+  - announcements_feed
 themes:
   - claro
   - umami
 keep_english: true
 
-# Information added by Drupal.org packaging script on 2023-11-01
-version: '10.1.6'
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
 project: 'drupal'
-datestamp: 1698841355
+datestamp: 1784141321

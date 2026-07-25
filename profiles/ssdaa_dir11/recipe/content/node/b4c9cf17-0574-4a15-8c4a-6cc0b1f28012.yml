@@ -1,0 +1,55 @@
+_meta:
+  version: '1.0'
+  entity_type: node
+  uuid: b4c9cf17-0574-4a15-8c4a-6cc0b1f28012
+  bundle: article
+  default_langcode: ar
+  depends:
+    aa4e9b75-4a12-41d5-ba4c-7a194654e9ff: file
+default:
+  revision_uid:
+    -
+      target_id: 0
+  status:
+    -
+      value: true
+  uid:
+    -
+      target_id: 0
+  title:
+    -
+      value: 'مشروع القدية'
+  created:
+    -
+      value: 1784748879
+  promote:
+    -
+      value: true
+  sticky:
+    -
+      value: false
+  path:
+    -
+      alias: ''
+      langcode: ar
+  body:
+    -
+      value: |
+        <p><span>القِدّيَّة مشروع ترفيهي رياضي ثقافي سعودي أعلن عنه ولي العهد السعودي رئيس مجلس إدارة صندوق الاستثمارات العامة في 7 أبريل 2017 كوجهة ترفيهية واجتماعية نوعية، ووضع حجر الأساس للمشروع خادم الحرمين الشريفين الملك سلمان بن عبد العزيز آل سعود في يوم 28 أبريل 2018 الموافق 12 شعبان 1439 هـ</span></p>>
+      format: full_html
+      summary: ''
+  comment:
+    -
+      status: 2
+      cid: 0
+      last_comment_timestamp: 1784748879
+      last_comment_name: ''
+      last_comment_uid: 0
+      comment_count: 0
+  field_image:
+    -
+      entity: aa4e9b75-4a12-41d5-ba4c-7a194654e9ff
+      alt: ''
+      title: ''
+      width: 1440
+      height: 598

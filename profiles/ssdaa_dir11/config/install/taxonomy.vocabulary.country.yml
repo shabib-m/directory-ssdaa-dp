@@ -1,0 +1,8 @@
+uuid: a01bde93-86d1-4300-b6c5-e09aaccb5c2e
+langcode: ar
+status: true
+dependencies: {  }
+name: الدوله
+vid: country
+description: null
+weight: 0

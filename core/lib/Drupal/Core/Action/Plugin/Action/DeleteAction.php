@@ -2,20 +2,21 @@
 
 namespace Drupal\Core\Action\Plugin\Action;
 
+use Drupal\Core\Action\Plugin\Action\Derivative\EntityDeleteActionDeriver;
+use Drupal\Core\Action\Attribute\Action;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Redirects to an entity deletion form.
- *
- * @Action(
- *   id = "entity:delete_action",
- *   action_label = @Translation("Delete"),
- *   deriver = "Drupal\Core\Action\Plugin\Action\Derivative\EntityDeleteActionDeriver",
- * )
  */
+#[Action(
+  id: 'entity:delete_action',
+  action_label: new TranslatableMarkup('Delete'),
+  deriver: EntityDeleteActionDeriver::class
+)]
 class DeleteAction extends EntityActionBase {
 
   /**
@@ -58,20 +59,6 @@ class DeleteAction extends EntityActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('tempstore.private'),
-      $container->get('current_user')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function executeMultiple(array $entities) {
     /** @var \Drupal\Core\Entity\EntityInterface[] $entities */
     $selection = [];
@@ -92,7 +79,7 @@ class DeleteAction extends EntityActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     return $object->access('delete', $account, $return_as_object);
   }
 

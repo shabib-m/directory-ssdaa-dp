@@ -1,17 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\ParamConverter;
 
-use Drupal\Tests\BrowserTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore deutscher titel
 /**
  * Tests upcasting of URL arguments to entities.
- *
- * @group ParamConverter
  */
+#[Group('ParamConverter')]
+#[RunTestsInSeparateProcesses]
 class UpcastingTest extends BrowserTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['paramconverter_test', 'node', 'language'];
 
   /**
@@ -29,24 +37,24 @@ class UpcastingTest extends BrowserTestBase {
    * The test shuffles the parameters around and checks if the right thing is
    * happening.
    */
-  public function testUpcasting() {
+  public function testUpcasting(): void {
     $node = $this->drupalCreateNode(['title' => $this->randomMachineName(8)]);
     $user = $this->drupalCreateUser(['access content']);
     $foo = 'bar';
 
-    // paramconverter_test/test_user_node_foo/{user}/{node}/{foo}
+    // Test "paramconverter_test/test_user_node_foo/{user}/{node}/{foo}".
     $this->drupalGet("paramconverter_test/test_user_node_foo/" . $user->id() . '/' . $node->id() . "/$foo");
     // Verify user and node upcast by entity name.
     $this->assertSession()->pageTextContains("user: {$user->label()}, node: {$node->label()}, foo: $foo");
 
-    // paramconverter_test/test_node_user_user/{node}/{foo}/{user}
-    // options.parameters.foo.type = entity:user
+    // Test "paramconverter_test/test_node_user_user/{node}/{foo}/{user}" with
+    // "options.parameters.foo.type = entity:user".
     $this->drupalGet("paramconverter_test/test_node_user_user/" . $node->id() . "/" . $user->id() . "/" . $user->id());
     // Verify foo converted to user as well.
     $this->assertSession()->pageTextContains("user: {$user->label()}, node: {$node->label()}, foo: {$user->label()}");
 
-    // paramconverter_test/test_node_node_foo/{user}/{node}/{foo}
-    // options.parameters.user.type = entity:node
+    // Test "paramconverter_test/test_node_node_foo/{user}/{node}/{foo}" with
+    // "options.parameters.user.type = entity:node".
     $this->drupalGet("paramconverter_test/test_node_node_foo/" . $node->id() . "/" . $node->id() . "/$foo");
     // Verify that user is upcast to node (rather than to user).
     $this->assertSession()->pageTextContains("user: {$node->label()}, node: {$node->label()}, foo: $foo");
@@ -55,11 +63,11 @@ class UpcastingTest extends BrowserTestBase {
   /**
    * Confirms we can upcast to controller arguments of the same type.
    */
-  public function testSameTypes() {
+  public function testSameTypes(): void {
     $node = $this->drupalCreateNode(['title' => $this->randomMachineName(8)]);
     $parent = $this->drupalCreateNode(['title' => $this->randomMachineName(8)]);
-    // paramconverter_test/node/{node}/set/parent/{parent}
-    // options.parameters.parent.type = entity:node
+    // Test "paramconverter_test/node/{node}/set/parent/{parent}" with
+    // "options.parameters.parent.type = entity:node".
     $this->drupalGet("paramconverter_test/node/" . $node->id() . "/set/parent/" . $parent->id());
     $this->assertSession()->pageTextContains("Setting '" . $parent->getTitle() . "' as parent of '" . $node->getTitle() . "'.");
   }
@@ -67,7 +75,7 @@ class UpcastingTest extends BrowserTestBase {
   /**
    * Confirms entity is shown in user's language by default.
    */
-  public function testEntityLanguage() {
+  public function testEntityLanguage(): void {
     $language = ConfigurableLanguage::createFromLangcode('de');
     $language->save();
     \Drupal::configFactory()->getEditable('language.negotiation')

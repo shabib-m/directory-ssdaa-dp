@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Migrate\d7;
 
 use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrate field widget settings.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class MigrateFieldInstanceWidgetSettingsTest extends MigrateDrupal7TestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'comment',
@@ -84,7 +86,7 @@ class MigrateFieldInstanceWidgetSettingsTest extends MigrateDrupal7TestBase {
   /**
    * Tests that migrated view modes can be loaded using D8 APIs.
    */
-  public function testWidgetSettings() {
+  public function testWidgetSettings(): void {
     $this->assertEntity('node.page.default', 'node', 'page');
     $this->assertComponent('node.page.default', 'body', 'text_textarea_with_summary', -4);
     $this->assertComponent('node.page.default', 'field_text_plain', 'string_textfield', -2);

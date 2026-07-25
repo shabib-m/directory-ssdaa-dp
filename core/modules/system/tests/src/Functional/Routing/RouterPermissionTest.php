@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Routing;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Function Tests for the routing permission system.
- *
- * @group Routing
  */
+#[Group('Routing')]
+#[RunTestsInSeparateProcesses]
 class RouterPermissionTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['router_test'];
 
@@ -26,7 +28,7 @@ class RouterPermissionTest extends BrowserTestBase {
   /**
    * Tests permission requirements on routes.
    */
-  public function testPermissionAccess() {
+  public function testPermissionAccess(): void {
     // Ensure 403 Access Denied for a route without permission.
     $this->drupalGet('router_test/test7');
     $this->assertSession()->statusCodeEquals(403);

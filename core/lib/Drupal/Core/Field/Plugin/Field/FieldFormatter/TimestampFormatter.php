@@ -2,30 +2,32 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldFormatter;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Datetime\TimeZoneFormHelper;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'timestamp' formatter.
- *
- * @FieldFormatter(
- *   id = "timestamp",
- *   label = @Translation("Default"),
- *   field_types = {
- *     "timestamp",
- *     "created",
- *     "changed",
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'timestamp',
+  label: new TranslatableMarkup('Default'),
+  field_types: [
+    'timestamp',
+    'created',
+    'changed',
+  ],
+)]
 class TimestampFormatter extends FormatterBase {
 
   /**
@@ -36,24 +38,10 @@ class TimestampFormatter extends FormatterBase {
   protected const CUSTOM_DATE_FORMAT = 'custom';
 
   /**
-   * The date formatter service.
-   *
-   * @var \Drupal\Core\Datetime\DateFormatterInterface
-   */
-  protected $dateFormatter;
-
-  /**
-   * The date format entity storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $dateFormatStorage;
-
-  /**
    * Constructs a new TimestampFormatter.
    *
    * @param string $plugin_id
-   *   The plugin_id for the formatter.
+   *   The plugin ID for the formatter.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
@@ -66,16 +54,26 @@ class TimestampFormatter extends FormatterBase {
    *   The view mode.
    * @param array $third_party_settings
    *   Third party settings.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
    *   The date formatter service.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $date_format_storage
+   * @param \Drupal\Core\Entity\EntityStorageInterface $dateFormatStorage
    *   The date format storage.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, DateFormatterInterface $date_formatter, EntityStorageInterface $date_format_storage) {
+  public function __construct(
+    $plugin_id,
+    $plugin_definition,
+    FieldDefinitionInterface $field_definition,
+    array $settings,
+    $label,
+    $view_mode,
+    array $third_party_settings,
+    protected DateFormatterInterface $dateFormatter,
+    protected EntityStorageInterface $dateFormatStorage,
+    protected TimeInterface $time,
+  ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
-
-    $this->dateFormatter = $date_formatter;
-    $this->dateFormatStorage = $date_format_storage;
   }
 
   /**
@@ -91,7 +89,8 @@ class TimestampFormatter extends FormatterBase {
       $configuration['view_mode'],
       $configuration['third_party_settings'],
       $container->get('date.formatter'),
-      $container->get('entity_type.manager')->getStorage('date_format')
+      $container->get('entity_type.manager')->getStorage('date_format'),
+      $container->get('datetime.time'),
     );
   }
 
@@ -124,8 +123,12 @@ class TimestampFormatter extends FormatterBase {
     $form = parent::settingsForm($form, $form_state);
 
     $date_formats = [];
+    $requestTime = $this->time->getRequestTime();
     foreach ($this->dateFormatStorage->loadMultiple() as $machine_name => $value) {
-      $date_formats[$machine_name] = $this->t('@name format: @date', ['@name' => $value->label(), '@date' => $this->dateFormatter->format(REQUEST_TIME, $machine_name)]);
+      $date_formats[$machine_name] = $this->t('@name format: @date', [
+        '@name' => $value->label(),
+        '@date' => $this->dateFormatter->format($requestTime, $machine_name),
+      ]);
     }
     $date_formats[static::CUSTOM_DATE_FORMAT] = $this->t('Custom');
 

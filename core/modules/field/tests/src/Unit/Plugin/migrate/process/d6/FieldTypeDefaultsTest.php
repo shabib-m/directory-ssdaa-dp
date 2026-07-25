@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Unit\Plugin\migrate\process\d6;
 
 use Drupal\field\Plugin\migrate\process\d6\FieldTypeDefaults;
 use Drupal\migrate\MigrateException;
 use Drupal\Tests\migrate\Unit\process\MigrateProcessTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 
 /**
  * Tests D6 fields defaults.
- *
- * @coversDefaultClass \Drupal\field\Plugin\migrate\process\d6\FieldTypeDefaults
- * @group field
  */
+#[CoversClass(FieldTypeDefaults::class)]
+#[Group('field')]
+#[IgnoreDeprecations]
 class FieldTypeDefaultsTest extends MigrateProcessTestCase {
 
   /**
@@ -25,9 +30,9 @@ class FieldTypeDefaultsTest extends MigrateProcessTestCase {
   /**
    * Tests various default cases.
    *
-   * @covers ::transform
+   * @legacy-covers ::transform
    */
-  public function testDefaults() {
+  public function testDefaults(): void {
     $this->row->expects($this->once())
       ->method('getSourceProperty')
       ->willReturn('date');
@@ -44,9 +49,9 @@ class FieldTypeDefaultsTest extends MigrateProcessTestCase {
   /**
    * Tests an exception is thrown when the input is not a date field.
    *
-   * @covers ::transform
+   * @legacy-covers ::transform
    */
-  public function testDefaultsException() {
+  public function testDefaultsException(): void {
     $this->expectException(MigrateException::class);
     $this->expectExceptionMessage(sprintf('Failed to lookup field type %s in the static map.', var_export([], TRUE)));
     $this->plugin->transform([], $this->migrateExecutable, $this->row, 'property');

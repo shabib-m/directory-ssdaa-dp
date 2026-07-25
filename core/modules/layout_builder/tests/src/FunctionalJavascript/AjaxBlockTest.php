@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\Tests\system\Traits\OffCanvasTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Ajax blocks tests.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class AjaxBlockTest extends WebDriverTestBase {
 
   use OffCanvasTestTrait;
@@ -56,9 +60,8 @@ class AjaxBlockTest extends WebDriverTestBase {
   /**
    * Tests configuring a field block for a user field.
    */
-  public function testAddAjaxBlock() {
+  public function testAddAjaxBlock(): void {
     $assert_session = $this->assertSession();
-    $page = $this->getSession()->getPage();
 
     // Start by creating a node.
     $this->createNode([
@@ -93,7 +96,7 @@ class AjaxBlockTest extends WebDriverTestBase {
     /** @var \Behat\Mink\Element\NodeElement[] $radios */
     $radios = $this->assertSession()->fieldExists($name);
     // Click them both a couple of times.
-    foreach ([1, 2] as $rounds) {
+    for ($i = 1; $i < 3; ++$i) {
       foreach ($radios as $radio) {
         $radio->click();
         $assert_session->assertWaitOnAjaxRequest();
@@ -102,8 +105,8 @@ class AjaxBlockTest extends WebDriverTestBase {
     // Then add the block.
     $assert_session->waitForElementVisible('named', ['button', 'Add block'])->press();
     $assert_session->assertWaitOnAjaxRequest();
-    $assert_session->waitForElementVisible('css', '.block-layout-builder-test-testajax');
-    $block_elements = $this->cssSelect('.block-layout-builder-test-testajax');
+    $assert_session->waitForElementVisible('css', '.block-layout-builder-test-ajax');
+    $block_elements = $this->cssSelect('.block-layout-builder-test-ajax');
     // Should be exactly one of these in there.
     $this->assertCount(1, $block_elements);
     $assert_session->pageTextContains('Every word is like an unnecessary stain on silence and nothingness.');

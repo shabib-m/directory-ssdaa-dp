@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Utility\Error;
+use Drupal\TestTools\Extension\HtmlLogging\HtmlOutputLogger;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -48,17 +51,6 @@ trait BrowserHtmlDebugTrait {
   protected $htmlOutputEnabled = FALSE;
 
   /**
-   * The file name to write the list of URLs to.
-   *
-   * This file is read by the PHPUnit result printer.
-   *
-   * @var string
-   *
-   * @see \Drupal\Tests\Listeners\HtmlOutputPrinter
-   */
-  protected $htmlOutputFile;
-
-  /**
    * HTML output test ID.
    *
    * @var int
@@ -81,7 +73,7 @@ trait BrowserHtmlDebugTrait {
    * @return string
    *   The formatted HTML string.
    */
-  protected function formatHtmlOutputHeaders(array $headers) {
+  protected function formatHtmlOutputHeaders(array $headers): string {
     $flattened_headers = array_map(function ($header) {
       if (is_array($header)) {
         return implode(';', array_map('trim', $header));
@@ -114,7 +106,7 @@ trait BrowserHtmlDebugTrait {
    *
    * @see \Drupal\Tests\Listeners\VerbosePrinter::printResult()
    */
-  protected function htmlOutput($message = NULL) {
+  protected function htmlOutput($message = NULL): void {
     if (!$this->htmlOutputEnabled) {
       return;
     }
@@ -126,21 +118,17 @@ trait BrowserHtmlDebugTrait {
     // Do not use the file_url_generator service as the module_handler service
     // might not be available.
     $uri = $this->htmlOutputBaseUrl . '/sites/simpletest/browser_output/' . $html_output_filename;
-    file_put_contents($this->htmlOutputFile, $uri . "\n", FILE_APPEND);
+    HtmlOutputLogger::log($uri);
   }
 
   /**
    * Creates the directory to store browser output.
-   *
-   * Creates the directory to store browser output in if a file to write
-   * URLs to has been created by \Drupal\Tests\Listeners\HtmlOutputPrinter.
    */
-  protected function initBrowserOutputFile() {
-    $browser_output_file = getenv('BROWSERTEST_OUTPUT_FILE');
-    $this->htmlOutputEnabled = is_file($browser_output_file);
+  protected function initBrowserOutputFile(): void {
+    $browserOutputFile = getenv('BROWSERTEST_OUTPUT_FILE');
+    $this->htmlOutputEnabled = $browserOutputFile !== FALSE;
     $this->htmlOutputBaseUrl = getenv('BROWSERTEST_OUTPUT_BASE_URL') ?: $GLOBALS['base_url'];
     if ($this->htmlOutputEnabled) {
-      $this->htmlOutputFile = $browser_output_file;
       $this->htmlOutputClassName = str_replace("\\", "_", static::class);
       $this->htmlOutputDirectory = DRUPAL_ROOT . '/sites/simpletest/browser_output';
       // Do not use the file_system service so this method can be called before
@@ -155,7 +143,7 @@ trait BrowserHtmlDebugTrait {
         file_put_contents($this->htmlOutputDirectory . '/.htaccess', "<IfModule mod_expires.c>\nExpiresActive Off\n</IfModule>\n");
       }
       $this->htmlOutputCounterStorage = $this->htmlOutputDirectory . '/' . $this->htmlOutputClassName . '.counter';
-      $this->htmlOutputTestId = str_replace('sites/simpletest/', '', $this->siteDirectory);
+      $this->htmlOutputTestId = str_replace(['sites/simpletest/', 'vfs://root/'], '', $this->siteDirectory);
       if (is_file($this->htmlOutputCounterStorage)) {
         $this->htmlOutputCounter = max(1, (int) file_get_contents($this->htmlOutputCounterStorage)) + 1;
       }

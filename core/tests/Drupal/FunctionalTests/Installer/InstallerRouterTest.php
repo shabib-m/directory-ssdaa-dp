@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Core\Routing\RoutingEvents;
 use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\Test\PerformanceTestRecorder;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests router rebuilding during installation.
- *
- * @group Installer
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerRouterTest extends InstallerTestBase {
 
   /**
@@ -26,7 +30,7 @@ class InstallerRouterTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function prepareEnvironment() {
+  protected function prepareEnvironment(): void {
     parent::prepareEnvironment();
     $info = [
       'type' => 'profile',
@@ -50,7 +54,7 @@ class InstallerRouterTest extends InstallerTestBase {
   /**
    * Confirms that the installation succeeded.
    */
-  public function testInstalled() {
+  public function testInstalled(): void {
     $this->assertSession()->statusCodeEquals(200);
     // Ensures that router is not rebuilt unnecessarily during the install. It
     // is rebuilt during:

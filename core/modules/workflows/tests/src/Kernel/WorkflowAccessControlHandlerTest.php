@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workflows\Kernel;
 
 use Drupal\Core\Access\AccessResult;
@@ -8,13 +10,20 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\workflows\Entity\Workflow;
+use Drupal\workflows\WorkflowAccessControlHandler;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Prophecy\Prophet;
 
 /**
- * @coversDefaultClass \Drupal\workflows\WorkflowAccessControlHandler
- * @group workflows
- * @group #slow
+ * Tests Drupal\workflows\WorkflowAccessControlHandler.
  */
+#[CoversClass(WorkflowAccessControlHandler::class)]
+#[Group('workflows')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class WorkflowAccessControlHandlerTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -57,7 +66,6 @@ class WorkflowAccessControlHandlerTest extends KernelTestBase {
     parent::setUp();
 
     $this->installEntitySchema('user');
-    $this->installSchema('system', ['sequences']);
 
     $this->accessControlHandler = $this->container->get('entity_type.manager')->getAccessControlHandler('workflow');
 
@@ -69,9 +77,9 @@ class WorkflowAccessControlHandlerTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::checkCreateAccess
+   * Tests check create access.
    */
-  public function testCheckCreateAccess() {
+  public function testCheckCreateAccess(): void {
     // A user must have the correct permission to create a workflow.
     $this->assertEquals(
       AccessResult::neutral()
@@ -87,7 +95,8 @@ class WorkflowAccessControlHandlerTest extends KernelTestBase {
 
     // Remove all plugin types and ensure not even the admin user is allowed to
     // create a workflow.
-    workflow_type_test_set_definitions([]);
+    $this->container->get('state')->set('workflow_type_test.plugin_definitions', []);
+    $this->container->get('plugin.manager.workflows.type')->clearCachedDefinitions();
     $this->accessControlHandler->resetCache();
     $this->assertEquals(
       AccessResult::neutral()
@@ -97,13 +106,14 @@ class WorkflowAccessControlHandlerTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::checkAccess
-   * @dataProvider checkAccessProvider
+   * Tests check access.
    */
-  public function testCheckAccess($user, $operation, $result, $states_to_create = []) {
+  #[DataProvider('checkAccessProvider')]
+  public function testCheckAccess($user, $operation, $result, $states_to_create = []): void {
     $workflow = Workflow::create([
       'type' => 'workflow_type_test',
       'id' => 'test_workflow',
+      'label' => 'Test workflow',
     ]);
     $workflow->save();
     $workflow_type = $workflow->getTypePlugin();
@@ -118,8 +128,11 @@ class WorkflowAccessControlHandlerTest extends KernelTestBase {
    * Data provider for ::testCheckAccess.
    *
    * @return array
+   *   An array of test data.
    */
-  public function checkAccessProvider() {
+  public static function checkAccessProvider() {
+    $originalContainer = \Drupal::hasContainer() ? \Drupal::getContainer() : NULL;
+
     $container = new ContainerBuilder();
     $cache_contexts_manager = (new Prophet())->prophesize(CacheContextsManager::class);
     $cache_contexts_manager->assertValidTokens()->willReturn(TRUE);
@@ -127,7 +140,7 @@ class WorkflowAccessControlHandlerTest extends KernelTestBase {
     $container->set('cache_contexts_manager', $cache_contexts_manager);
     \Drupal::setContainer($container);
 
-    return [
+    $data = [
       'Admin view' => [
         'adminUser',
         'view',
@@ -271,6 +284,13 @@ class WorkflowAccessControlHandlerTest extends KernelTestBase {
         AccessResult::allowed()->addCacheContexts(['user.permissions']),
       ],
     ];
+
+    // Restore the original container if needed.
+    if ($originalContainer) {
+      \Drupal::setContainer($originalContainer);
+    }
+
+    return $data;
   }
 
 }

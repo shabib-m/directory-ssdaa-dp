@@ -1,0 +1,12 @@
+name: 'Entity Test with storage config'
+type: module
+description: 'Extends entity_test module to provide a storage config.'
+package: Testing
+# version: VERSION
+dependencies:
+  - drupal:entity_test
+
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
+project: 'drupal'
+datestamp: 1784141321

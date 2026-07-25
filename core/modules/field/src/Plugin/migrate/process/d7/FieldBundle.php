@@ -3,12 +3,11 @@
 namespace Drupal\field\Plugin\migrate\process\d7;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\MigrateLookupInterface;
-use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Determines the bundle for a field.
@@ -51,10 +50,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @see core/modules/comment/migrations/d7_comment_type.yml
  * @see core/modules/field/migrations/d7_field_instance.yml
  *
- * * @MigrateProcessPlugin(
- *   id = "field_bundle"
- * )
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3533560
  */
+#[MigrateProcess('field_bundle')]
 class FieldBundle extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -77,20 +78,9 @@ class FieldBundle extends ProcessPluginBase implements ContainerFactoryPluginInt
    *   The migrate lookup service.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrateLookupInterface $migrate_lookup) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533560', E_USER_DEPRECATED);
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->migrateLookup = $migrate_lookup;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('migrate.lookup')
-    );
   }
 
   /**
@@ -102,12 +92,17 @@ class FieldBundle extends ProcessPluginBase implements ContainerFactoryPluginInt
     // For comment entity types get the destination bundle from the
     // d7_comment_type migration, if it exists.
     if ($entity_type === 'comment' && $bundle != 'comment_forum') {
-      $value = str_replace('comment_node_', '', $bundle);
-      $migration = 'd7_comment_type';
-      $lookup_result = $this->migrateLookup->lookup($migration, [$value]);
-      $lookup_result = empty($lookup_result) ? NULL : reset($lookup_result[0]);
+      $lookup_result = $row->get('@_comment_type');
+      // Legacy generated migrations will not have the destination property
+      // '_comment_type'.
+      if (!$row->hasDestinationProperty('_comment_type')) {
+        $value = str_replace('comment_node_', '', $bundle);
+        $migration = 'd7_comment_type';
+        $lookup_result = $this->migrateLookup->lookup($migration, [$value]);
+        $lookup_result = empty($lookup_result) ? NULL : reset($lookup_result[0]);
+      }
     }
-    return $lookup_result ? $lookup_result : $bundle;
+    return $lookup_result ?: $bundle;
   }
 
 }

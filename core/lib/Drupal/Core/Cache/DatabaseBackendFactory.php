@@ -2,9 +2,14 @@
 
 namespace Drupal\Core\Cache;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Component\Serialization\ObjectAwareSerializationInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Site\Settings;
 
+/**
+ * Defines a default cache backend factory.
+ */
 class DatabaseBackendFactory implements CacheFactoryInterface {
 
   /**
@@ -22,34 +27,36 @@ class DatabaseBackendFactory implements CacheFactoryInterface {
   protected $checksumProvider;
 
   /**
-   * The site settings.
-   *
-   * @var \Drupal\Core\Site\Settings
-   */
-  protected $settings;
-
-  /**
    * Constructs the DatabaseBackendFactory object.
    *
    * @param \Drupal\Core\Database\Connection $connection
-   *   Database connection
+   *   Database connection.
    * @param \Drupal\Core\Cache\CacheTagsChecksumInterface $checksum_provider
    *   The cache tags checksum provider.
    * @param \Drupal\Core\Site\Settings $settings
    *   (optional) The site settings.
+   * @param \Drupal\Component\Serialization\ObjectAwareSerializationInterface|null $serializer
+   *   (optional) The serializer to use.
+   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   *   The time service.
    *
    * @throws \BadMethodCallException
    */
-  public function __construct(Connection $connection, CacheTagsChecksumInterface $checksum_provider, Settings $settings = NULL) {
+  public function __construct(
+    Connection $connection,
+    CacheTagsChecksumInterface $checksum_provider,
+    protected Settings $settings,
+    protected ObjectAwareSerializationInterface $serializer,
+    protected TimeInterface $time,
+  ) {
     $this->connection = $connection;
     $this->checksumProvider = $checksum_provider;
-    $this->settings = $settings ?: Settings::getInstance();
   }
 
   /**
    * Gets DatabaseBackend for the specified cache bin.
    *
-   * @param $bin
+   * @param string $bin
    *   The cache bin for which the object is created.
    *
    * @return \Drupal\Core\Cache\DatabaseBackend
@@ -57,7 +64,7 @@ class DatabaseBackendFactory implements CacheFactoryInterface {
    */
   public function get($bin) {
     $max_rows = $this->getMaxRowsForBin($bin);
-    return new DatabaseBackend($this->connection, $this->checksumProvider, $bin, $max_rows);
+    return new DatabaseBackend($this->connection, $this->checksumProvider, $bin, $this->serializer, $this->time, $max_rows);
   }
 
   /**

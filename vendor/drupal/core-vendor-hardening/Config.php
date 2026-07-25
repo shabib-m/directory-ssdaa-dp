@@ -22,7 +22,6 @@ class Config {
   protected static $defaultConfig = [
     'behat/mink' => ['tests'],
     'behat/mink-browserkit-driver' => ['tests'],
-    'behat/mink-selenium2-driver' => ['tests'],
     'composer/composer' => ['bin'],
     'drupal/coder' => [
       'coder_sniffer/Drupal/Test',
@@ -32,8 +31,9 @@ class Config {
     'egulias/email-validator' => ['documentation', 'tests'],
     'guzzlehttp/promises' => ['tests'],
     'guzzlehttp/psr7' => ['tests'],
-    'instaclick/php-webdriver' => ['doc', 'test'],
     'justinrainbow/json-schema' => ['demo'],
+    'lullabot/mink-selenium2-driver' => ['tests'],
+    'lullabot/php-webdriver' => ['doc', 'test'],
     'masterminds/html5' => ['bin', 'test'],
     'mck89/peast' => ['doc'],
     'mikey179/vfsstream' => ['src/test'],
@@ -70,7 +70,6 @@ class Config {
     'symfony/event-dispatcher' => ['Tests'],
     'symfony/http-foundation' => ['Tests'],
     'symfony/http-kernel' => ['Tests'],
-    'symfony/phpunit-bridge' => ['Tests'],
     'symfony/process' => ['Tests'],
     'symfony/psr-http-message-bridge' => ['Tests'],
     'symfony/routing' => ['Tests'],
@@ -78,6 +77,7 @@ class Config {
     'symfony/var-dumper' => ['Tests'],
     'symfony/validator' => ['Tests', 'Resources'],
     'symfony/yaml' => ['Tests'],
+    'tbachert/spi' => ['tests'],
     'theseer/tokenizer' => ['tests'],
     'twig/twig' => ['doc', 'ext', 'test', 'tests'],
   ];
@@ -126,6 +126,11 @@ class Config {
       $this->configData = array_change_key_case($package_config['drupal-core-vendor-hardening'], CASE_LOWER);
     }
 
+    // Find the packages which should not be cleaned up.
+    $do_not_clean = array_filter($this->configData, function ($paths) {
+      return $paths === FALSE;
+    });
+
     // Ensure the values are arrays.
     $this->configData = array_map(function ($paths) {
       return (array) $paths;
@@ -137,6 +142,10 @@ class Config {
         $this->configData[$package] ?? [],
         $paths);
     }
+
+    // Remove packages that should not be cleaned up.
+    $this->configData = array_diff_key($this->configData, $do_not_clean);
+
     return $this->configData;
   }
 

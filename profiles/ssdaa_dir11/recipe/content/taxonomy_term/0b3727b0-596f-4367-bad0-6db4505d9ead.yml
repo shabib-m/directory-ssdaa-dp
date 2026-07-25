@@ -1,0 +1,28 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 0b3727b0-596f-4367-bad0-6db4505d9ead
+  bundle: main
+  default_langcode: ar
+  depends:
+    b522b62f-7021-4434-b625-d587b2d912f9: taxonomy_term
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'البرامج وانظمة التشغيل'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      entity: b522b62f-7021-4434-b625-d587b2d912f9
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

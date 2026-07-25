@@ -1,16 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Kernel;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\filter\Entity\FilterFormat;
+use Drupal\user\Entity\Role;
+use Drupal\media\Plugin\Filter\MediaEmbed;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\media\Plugin\Filter\MediaEmbed
- * @group media
+ * Tests Drupal\media\Plugin\Filter\MediaEmbed.
  */
+#[CoversClass(MediaEmbed::class)]
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
 
   /**
@@ -24,10 +36,9 @@ class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
 
   /**
    * Ensures media entities are rendered correctly.
-   *
-   * @dataProvider providerTestBasics
    */
-  public function testBasics(array $embed_attributes, $expected_view_mode, array $expected_attributes, CacheableMetadata $expected_cacheability) {
+  #[DataProvider('providerTestBasics')]
+  public function testBasics(array $embed_attributes, $expected_view_mode, array $expected_attributes, CacheableMetadata $expected_cacheability): void {
     $content = $this->createEmbedCode($embed_attributes);
 
     $result = $this->applyFilter($content);
@@ -44,7 +55,7 @@ class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
   /**
    * Data provider for testBasics().
    */
-  public function providerTestBasics() {
+  public static function providerTestBasics() {
     $default_cacheability = (new CacheableMetadata())
       ->setCacheTags([
         '_media_test_embed_filter_access:media:1',
@@ -126,16 +137,16 @@ class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
 
   /**
    * Tests that entity access is respected by embedding an unpublished entity.
-   *
-   * @dataProvider providerAccessUnpublished
    */
-  public function testAccessUnpublished($allowed_to_view_unpublished, $expected_rendered, CacheableMetadata $expected_cacheability, array $expected_attachments) {
+  #[DataProvider('providerAccessUnpublished')]
+  public function testAccessUnpublished($allowed_to_view_unpublished, $expected_rendered, CacheableMetadata $expected_cacheability, array $expected_attachments): void {
     // Unpublish the embedded entity so we can test variations in behavior.
     $this->embeddedEntity->setUnpublished()->save();
 
     // Are we testing as a user who is allowed to view the embedded entity?
     if ($allowed_to_view_unpublished) {
       $this->container->get('current_user')
+        ->getAccount()
         ->addRole($this->drupalCreateRole(['view own unpublished media']));
     }
 
@@ -161,7 +172,7 @@ class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
   /**
    * Data provider for testAccessUnpublished().
    */
-  public function providerAccessUnpublished() {
+  public static function providerAccessUnpublished() {
     return [
       'user cannot access embedded media' => [
         FALSE,
@@ -197,10 +208,12 @@ class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
   }
 
   /**
-   * @covers ::applyPerEmbedMediaOverrides
-   * @dataProvider providerOverridesAltAndTitle
+   * Tests overrides alt and title.
+   *
+   * @legacy-covers ::applyPerEmbedMediaOverrides
    */
-  public function testOverridesAltAndTitle($title_field_property_enabled, array $expected_title_attributes) {
+  #[DataProvider('providerOverridesAltAndTitle')]
+  public function testOverridesAltAndTitle($title_field_property_enabled, array $expected_title_attributes): void {
     // The `alt` field property is enabled by default, the `title` one is not.
     if ($title_field_property_enabled) {
       $source_field = FieldConfig::load('media.image.field_media_image');
@@ -259,7 +272,7 @@ class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
   /**
    * Data provider for testOverridesAltAndTitle().
    */
-  public function providerOverridesAltAndTitle() {
+  public static function providerOverridesAltAndTitle() {
     return [
       '`title` field property disabled ⇒ `title` is not overridable' => [
         FALSE,
@@ -274,10 +287,9 @@ class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
 
   /**
    * Tests the indicator for missing entities.
-   *
-   * @dataProvider providerMissingEntityIndicator
    */
-  public function testMissingEntityIndicator($uuid, array $filter_ids, array $additional_attributes) {
+  #[DataProvider('providerMissingEntityIndicator')]
+  public function testMissingEntityIndicator($uuid, array $filter_ids, array $additional_attributes): void {
     $content = $this->createEmbedCode([
       'data-entity-type' => 'media',
       'data-entity-uuid' => $uuid,
@@ -305,7 +317,7 @@ class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
   /**
    * Data provider for testMissingEntityIndicator().
    */
-  public function providerMissingEntityIndicator() {
+  public static function providerMissingEntityIndicator() {
     return [
       'invalid UUID' => [
         'uuid' => 'invalidUUID',
@@ -357,7 +369,7 @@ class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
   /**
    * Tests that only <drupal-media> tags are processed.
    */
-  public function testOnlyDrupalMediaTagProcessed() {
+  public function testOnlyDrupalMediaTagProcessed(): void {
     $content = $this->createEmbedCode([
       'data-entity-type' => 'media',
       'data-entity-uuid' => $this->embeddedEntity->uuid(),
@@ -372,30 +384,27 @@ class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
   /**
    * Tests recursive rendering protection.
    */
-  public function testRecursionProtection() {
+  public function testRecursionProtection(): void {
     $text = $this->createEmbedCode([
       'data-entity-type' => 'media',
       'data-entity-uuid' => static::EMBEDDED_ENTITY_UUID,
     ]);
 
-    // Render and verify the presence of the embedded entity 20 times.
-    for ($i = 0; $i < 20; $i++) {
+    // Render and verify the presence of the embedded entity 30 times.
+    for ($i = 0; $i < 30; $i++) {
       $this->applyFilter($text);
       $this->assertCount(1, $this->cssSelect('div[data-media-embed-test-view-mode="default"]'));
     }
-
-    // Render a 21st time, this is exceeding the recursion limit. The entity
-    // embed markup will be stripped.
-    $this->applyFilter($text);
-    $this->assertEmpty($this->getRawContent());
   }
 
   /**
-   * @covers \Drupal\filter\Plugin\Filter\FilterAlign
-   * @covers \Drupal\filter\Plugin\Filter\FilterCaption
-   * @dataProvider providerFilterIntegration
+   * Tests filter integration.
+   *
+   * @legacy-covers \Drupal\filter\Plugin\Filter\FilterAlign
+   * @legacy-covers \Drupal\filter\Plugin\Filter\FilterCaption
    */
-  public function testFilterIntegration(array $filter_ids, array $additional_attributes, $verification_selector, $expected_verification_success, array $expected_asset_libraries = [], $prefix = '', $suffix = '') {
+  #[DataProvider('providerFilterIntegration')]
+  public function testFilterIntegration(array $filter_ids, array $additional_attributes, $verification_selector, $expected_verification_success, array $expected_asset_libraries = [], $prefix = '', $suffix = ''): void {
     $content = $this->createEmbedCode([
       'data-entity-type' => 'media',
       'data-entity-uuid' => static::EMBEDDED_ENTITY_UUID,
@@ -424,7 +433,7 @@ class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
   /**
    * Data provider for testFilterIntegration().
    */
-  public function providerFilterIntegration() {
+  public static function providerFilterIntegration() {
     $default_asset_libraries = ['media/filter.caption'];
 
     $caption_additional_attributes = ['data-caption' => 'Yo.'];
@@ -503,6 +512,49 @@ class MediaEmbedFilterTest extends MediaEmbedFilterTestBase {
     ];
 
     return $caption_test_cases + $align_test_cases + $caption_and_align_test_cases;
+  }
+
+  /**
+   * Tests that the 'media_embed' filter handles dependency removal.
+   */
+  public function testDependencies(): void {
+    $role_id = $this->drupalCreateRole([], NULL, 'Test role');
+    $filter_format = FilterFormat::create([
+      'format' => 'media_embed_dependencies_test',
+      'name' => 'Media embed dependencies test',
+      'roles' => [$role_id],
+    ]);
+    $filter_format->setFilterConfig('media_embed', [
+      'settings' => [
+        'allowed_view_modes' => ['foobar' => 'foobar'],
+        'default_view_mode' => 'foobar',
+      ],
+    ]);
+    $filter_format->save();
+    $this->assertSame('foobar', $filter_format->get('filters')['media_embed']['settings']['default_view_mode']);
+    $this->assertSame(['foobar' => 'foobar'], $filter_format->get('filters')['media_embed']['settings']['allowed_view_modes']);
+    $this->assertTrue(in_array('core.entity_view_mode.media.foobar', $filter_format->getDependencies()['config']));
+
+    $role = Role::load($role_id);
+    $this->assertContains($filter_format->getPermissionName(), $role->getPermissions());
+
+    // Confirm that after the 'media.foobar' view mode has been deleted, the
+    // media embed filter handles the dependency removal correctly so that the
+    // filter format is not deleted as well.
+    $view_mode = EntityViewMode::load('media.foobar');
+    $view_mode->delete();
+
+    /** @var \Drupal\filter\FilterFormatInterface $filter_format */
+    $filter_format = FilterFormat::load('media_embed_dependencies_test');
+    $this->assertNotNull($filter_format);
+    $this->assertArrayNotHasKey('config', $filter_format->getDependencies());
+    $role = Role::load($role_id);
+    $this->assertContains($filter_format->getPermissionName(), $role->getPermissions());
+
+    // Since the foobar display mode has been removed, the media_embed filter
+    // settings should be updated to use the default view mode only.
+    $this->assertSame(EntityDisplayRepositoryInterface::DEFAULT_DISPLAY_MODE, $filter_format->get('filters')['media_embed']['settings']['default_view_mode']);
+    $this->assertSame([EntityDisplayRepositoryInterface::DEFAULT_DISPLAY_MODE => EntityDisplayRepositoryInterface::DEFAULT_DISPLAY_MODE], $filter_format->get('filters')['media_embed']['settings']['allowed_view_modes']);
   }
 
 }

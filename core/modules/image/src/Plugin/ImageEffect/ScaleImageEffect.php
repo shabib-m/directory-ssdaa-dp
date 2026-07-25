@@ -5,16 +5,17 @@ namespace Drupal\image\Plugin\ImageEffect;
 use Drupal\Component\Utility\Image;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 
 /**
  * Scales an image resource.
- *
- * @ImageEffect(
- *   id = "image_scale",
- *   label = @Translation("Scale"),
- *   description = @Translation("Scaling will maintain the aspect-ratio of the original image. If only a single dimension is specified, the other dimension will be calculated.")
- * )
  */
+#[ImageEffect(
+  id: "image_scale",
+  label: new TranslatableMarkup("Scale"),
+  description: new TranslatableMarkup("Scaling will maintain the aspect-ratio of the original image. If only a single dimension is specified, the other dimension will be calculated.")
+)]
 class ScaleImageEffect extends ResizeImageEffect {
 
   /**
@@ -22,7 +23,12 @@ class ScaleImageEffect extends ResizeImageEffect {
    */
   public function applyEffect(ImageInterface $image) {
     if (!$image->scale($this->configuration['width'], $this->configuration['height'], $this->configuration['upscale'])) {
-      $this->logger->error('Image scale failed using the %toolkit toolkit on %path (%mimetype, %dimensions)', ['%toolkit' => $image->getToolkitId(), '%path' => $image->getSource(), '%mimetype' => $image->getMimeType(), '%dimensions' => $image->getWidth() . 'x' . $image->getHeight()]);
+      $this->logger->error('Image scale failed using the %toolkit toolkit on %path (%mimetype, %dimensions)', [
+        '%toolkit' => $image->getToolkitId(),
+        '%path' => $image->getSource(),
+        '%mimetype' => $image->getMimeType(),
+        '%dimensions' => $image->getWidth() . 'x' . $image->getHeight(),
+      ]);
       return FALSE;
     }
     return TRUE;

@@ -1,25 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
-use Drupal\user\RoleInterface;
 use Drupal\file\Entity\File;
+use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 use Drupal\user\Entity\User;
+use Drupal\user\RoleInterface;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the file field widget with public and private files.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileFieldWidgetTest extends FileFieldTestBase {
 
   use CommentTestTrait;
@@ -54,7 +57,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
    * @return \Drupal\file\FileInterface
    *   A file object, or FALSE on error.
    */
-  protected function createTemporaryFile($data, UserInterface $user = NULL) {
+  protected function createTemporaryFile($data, ?UserInterface $user = NULL) {
     /** @var \Drupal\file\FileRepositoryInterface $file_repository */
     $file_repository = \Drupal::service('file.repository');
     $file = $file_repository->writeData($data, "public://");
@@ -78,10 +81,10 @@ class FileFieldWidgetTest extends FileFieldTestBase {
   /**
    * Tests upload and remove buttons for a single-valued File field.
    */
-  public function testSingleValuedWidget() {
+  public function testSingleValuedWidget(): void {
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
     $type_name = 'article';
-    $field_name = strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $this->createFileField($field_name, 'node', $type_name);
 
     $test_file = $this->getTestFile('text');
@@ -119,7 +122,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
   /**
    * Tests upload and remove buttons for multiple multi-valued File fields.
    */
-  public function testMultiValuedWidget() {
+  public function testMultiValuedWidget(): void {
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
     $type_name = 'article';
     // Use explicit names instead of random names for those fields, because of a
@@ -159,7 +162,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
       $remaining = 3;
       // Test clicking each "Remove" button. For extra robustness, test them out
       // of sequential order. They are 0-indexed, and get renumbered after each
-      // iteration, so array(1, 1, 0) means:
+      // iteration, so [1, 1, 0] means:
       // - First remove the 2nd file.
       // - Then remove what is then the 2nd file (was originally the 3rd file).
       // - Then remove the first file.
@@ -167,7 +170,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
         // Ensure we have the expected number of Remove buttons, and that they
         // are numbered sequentially.
         $buttons = $this->xpath('//input[@type="submit" and @value="Remove"]');
-        $this->assertCount($num_expected_remove_buttons, $buttons, new FormattableMarkup('There are %n "Remove" buttons displayed.', ['%n' => $num_expected_remove_buttons]));
+        $this->assertCount($num_expected_remove_buttons, $buttons, "There are $num_expected_remove_buttons \"Remove\" buttons displayed.");
         foreach ($buttons as $i => $button) {
           $key = $i >= $remaining ? $i - $remaining : $i;
           $check_field_name = $field_name2;
@@ -212,7 +215,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
       $edit['files[test_file_field_1_0][' . $i . ']'] = \Drupal::service('file_system')->realpath($test_file->getFileUri());
     }
 
-    // @todo: Replace after https://www.drupal.org/project/drupal/issues/2917885
+    // @todo Replace after https://www.drupal.org/project/drupal/issues/2917885
     $this->drupalGet('node/' . $node->id() . '/edit');
     $this->assertSession()->fieldExists('files[test_file_field_1_0][]');
     $submit_xpath = $this->assertSession()->buttonExists('Save')->getXpath();
@@ -244,13 +247,13 @@ class FileFieldWidgetTest extends FileFieldTestBase {
   /**
    * Tests a file field with a "Private files" upload destination setting.
    */
-  public function testPrivateFileSetting() {
+  public function testPrivateFileSetting(): void {
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
     // Grant the admin user required permissions.
     user_role_grant_permissions($this->adminUser->roles[0]->target_id, ['administer node fields']);
 
     $type_name = 'article';
-    $field_name = strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $this->createFileField($field_name, 'node', $type_name);
     $field = FieldConfig::loadByName('node', $type_name, $field_name);
     $field_id = $field->id();
@@ -258,9 +261,9 @@ class FileFieldWidgetTest extends FileFieldTestBase {
     $test_file = $this->getTestFile('text');
 
     // Change the field setting to make its files private, and upload a file.
-    $edit = ['settings[uri_scheme]' => 'private'];
-    $this->drupalGet("admin/structure/types/manage/{$type_name}/fields/{$field_id}/storage");
-    $this->submitForm($edit, 'Save field settings');
+    $edit = ['field_storage[subform][settings][uri_scheme]' => 'private'];
+    $this->drupalGet("admin/structure/types/manage/{$type_name}/fields/{$field_id}");
+    $this->submitForm($edit, 'Save');
     $nid = $this->uploadNodeFile($test_file, $field_name, $type_name);
     $node = $node_storage->loadUnchanged($nid);
     $node_file = File::load($node->{$field_name}->target_id);
@@ -272,19 +275,19 @@ class FileFieldWidgetTest extends FileFieldTestBase {
 
     // Ensure we can't change 'uri_scheme' field settings while there are some
     // entities with uploaded files.
-    $this->drupalGet("admin/structure/types/manage/$type_name/fields/$field_id/storage");
-    $this->assertSession()->fieldDisabled("edit-settings-uri-scheme-public");
+    $this->drupalGet("admin/structure/types/manage/$type_name/fields/$field_id");
+    $this->assertSession()->fieldDisabled("edit-field-storage-subform-settings-uri-scheme-public");
 
     // Delete node and confirm that setting could be changed.
     $node->delete();
-    $this->drupalGet("admin/structure/types/manage/$type_name/fields/$field_id/storage");
-    $this->assertSession()->fieldEnabled("edit-settings-uri-scheme-public");
+    $this->drupalGet("admin/structure/types/manage/$type_name/fields/$field_id");
+    $this->assertSession()->fieldEnabled("edit-field-storage-subform-settings-uri-scheme-public");
   }
 
   /**
    * Tests that download restrictions on private files work on comments.
    */
-  public function testPrivateFileComment() {
+  public function testPrivateFileComment(): void {
     $user = $this->drupalCreateUser(['access comments']);
 
     // Grant the admin user required comment permissions.
@@ -299,7 +302,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
     // Create a new field.
     $this->addDefaultCommentField('node', 'article');
 
-    $name = strtolower($this->randomMachineName());
+    $name = $this->randomMachineName();
     $label = $this->randomMachineName();
     $storage_edit = ['settings[uri_scheme]' => 'private'];
     $this->fieldUIAddNewField('admin/structure/comment/manage/comment', $name, $label, 'file', $storage_edit);
@@ -319,7 +322,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
     $text_file = $this->getTestFile('text');
     $edit = [
       'files[field_' . $name . '_' . 0 . ']' => \Drupal::service('file_system')->realpath($text_file->getFileUri()),
-      'comment_body[0][value]' => $comment_body = $this->randomMachineName(),
+      'comment_body[0][value]' => $this->randomMachineName(),
     ];
     $this->drupalGet('node/' . $node->id());
     $this->submitForm($edit, 'Save');
@@ -360,13 +363,12 @@ class FileFieldWidgetTest extends FileFieldTestBase {
   /**
    * Tests validation with the Upload button.
    */
-  public function testWidgetValidation() {
+  public function testWidgetValidation(): void {
     $type_name = 'article';
-    $field_name = strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $this->createFileField($field_name, 'node', $type_name);
     $this->updateFileField($field_name, $type_name, ['file_extensions' => 'txt']);
 
-    $type = 'nojs';
     // Create node and prepare files for upload.
     $node = $this->drupalCreateNode(['type' => 'article']);
     $nid = $node->id();
@@ -390,8 +392,8 @@ class FileFieldWidgetTest extends FileFieldTestBase {
   /**
    * Tests file widget element.
    */
-  public function testWidgetElement() {
-    $field_name = mb_strtolower($this->randomMachineName());
+  public function testWidgetElement(): void {
+    $field_name = $this->randomMachineName();
     $html_name = str_replace('_', '-', $field_name);
     $this->createFileField($field_name, 'node', 'article', ['cardinality' => FieldStorageConfig::CARDINALITY_UNLIMITED]);
     $file = $this->getTestFile('text');
@@ -427,7 +429,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
   /**
    * Tests exploiting the temporary file removal of another user using fid.
    */
-  public function testTemporaryFileRemovalExploit() {
+  public function testTemporaryFileRemovalExploit(): void {
     // Create a victim user.
     $victim_user = $this->drupalCreateUser();
 
@@ -448,7 +450,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
   /**
    * Tests exploiting the temporary file removal for anonymous users using fid.
    */
-  public function testTemporaryFileRemovalExploitAnonymous() {
+  public function testTemporaryFileRemovalExploitAnonymous(): void {
     // Set up an anonymous victim user.
     $victim_user = User::getAnonymousUser();
 
@@ -472,14 +474,14 @@ class FileFieldWidgetTest extends FileFieldTestBase {
   /**
    * Tests maximum upload file size validation.
    */
-  public function testMaximumUploadFileSizeValidation() {
+  public function testMaximumUploadFileSizeValidation(): void {
     // Grant the admin user required permissions.
     user_role_grant_permissions($this->adminUser->roles[0]->target_id, ['administer node fields']);
 
     $type_name = 'article';
-    $field_name = strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $this->createFileField($field_name, 'node', $type_name);
-    /** @var \Drupal\Field\FieldConfigInterface $field */
+    /** @var \Drupal\field\FieldConfigInterface $field */
     $field = FieldConfig::loadByName('node', $type_name, $field_name);
     $field_id = $field->id();
     $this->drupalGet("admin/structure/types/manage/$type_name/fields/$field_id");
@@ -490,7 +492,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
     $this->assertSession()->pageTextContains('Saved ' . $field_name . ' configuration.');
 
     // Reload the field config to check for the saved value.
-    /** @var \Drupal\Field\FieldConfigInterface $field */
+    /** @var \Drupal\field\FieldConfigInterface $field */
     $field = FieldConfig::loadByName('node', $type_name, $field_name);
     $settings = $field->getSettings();
     $this->assertEquals('5.1 megabytes', $settings['max_filesize'], 'The max filesize value had been trimmed on save.');
@@ -499,12 +501,12 @@ class FileFieldWidgetTest extends FileFieldTestBase {
   /**
    * Tests configuring file field's allowed file extensions setting.
    */
-  public function testFileExtensionsSetting() {
+  public function testFileExtensionsSetting(): void {
     // Grant the admin user required permissions.
     user_role_grant_permissions($this->adminUser->roles[0]->target_id, ['administer node fields']);
 
     $type_name = 'article';
-    $field_name = strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $this->createFileField($field_name, 'node', $type_name);
     $field = FieldConfig::loadByName('node', $type_name, $field_name);
     $field_id = $field->id();
@@ -558,7 +560,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
    * @param \Drupal\user\UserInterface $attacker_user
    *   The attacker user.
    */
-  protected function doTestTemporaryFileRemovalExploit(UserInterface $victim_user, UserInterface $attacker_user) {
+  protected function doTestTemporaryFileRemovalExploit(UserInterface $victim_user, UserInterface $attacker_user): void {
     $type_name = 'article';
     $field_name = 'test_file_field';
     $this->createFileField($field_name, 'node', $type_name);
@@ -582,7 +584,7 @@ class FileFieldWidgetTest extends FileFieldTestBase {
 
     // Attach a file to a node.
     $edit['files[' . $field_name . '_0]'] = $this->container->get('file_system')->realpath($test_file->getFileUri());
-    $this->drupalGet(Url::fromRoute('node.add', ['node_type' => $type_name]));
+    $this->drupalGet(Url::fromRoute('entity.node.add_form', ['node_type' => $type_name]));
     $this->submitForm($edit, 'Save');
     $node = $this->drupalGetNodeByTitle($edit['title[0][value]']);
 

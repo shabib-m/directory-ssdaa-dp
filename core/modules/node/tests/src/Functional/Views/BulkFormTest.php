@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional\Views;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests a node bulk form.
  *
- * @group node
  * @see \Drupal\node\Plugin\views\field\BulkForm
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class BulkFormTest extends NodeTestBase {
 
   /**
@@ -100,7 +105,7 @@ class BulkFormTest extends NodeTestBase {
   /**
    * Tests the node bulk form.
    */
-  public function testBulkForm() {
+  public function testBulkForm(): void {
     // Unpublish a node using the bulk form.
     $node = reset($this->nodes);
     $this->assertTrue($node->isPublished(), 'Node is initially published');
@@ -221,7 +226,7 @@ class BulkFormTest extends NodeTestBase {
   /**
    * Tests multiple deletion.
    */
-  public function testBulkDeletion() {
+  public function testBulkDeletion(): void {
     // Select a bunch of translated and untranslated nodes and check that
     // nodes and individual translations are properly deleted.
     $edit = [
@@ -293,7 +298,6 @@ class BulkFormTest extends NodeTestBase {
   protected function loadNode($id) {
     /** @var \Drupal\node\NodeStorage $storage */
     $storage = $this->container->get('entity_type.manager')->getStorage('node');
-    $storage->resetCache([$id]);
     return $storage->load($id);
   }
 

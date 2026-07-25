@@ -1,11 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\entity_test\Functional\Rest;
 
 use Drupal\entity_test\Entity\EntityTestLabel;
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 use Drupal\user\Entity\User;
 
+/**
+ * Resource test base for the EntityTestLabel entity.
+ */
 abstract class EntityTestLabelResourceTestBase extends ConfigEntityResourceTestBase {
 
   /**

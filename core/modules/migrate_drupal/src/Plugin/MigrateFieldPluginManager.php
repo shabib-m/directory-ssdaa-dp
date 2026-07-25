@@ -2,7 +2,10 @@
 
 namespace Drupal\migrate_drupal\Plugin;
 
+use Drupal\Component\Plugin\Attribute\PluginID;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\migrate\Plugin\Exception\BadPluginDefinitionException;
 use Drupal\migrate\Plugin\MigratePluginManager;
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -11,10 +14,15 @@ use Drupal\migrate\Plugin\MigrationInterface;
  * Plugin manager for migrate field plugins.
  *
  * @see \Drupal\migrate_drupal\Plugin\MigrateFieldInterface
- * @see \Drupal\migrate\Annotation\MigrateField
+ * @see \Drupal\migrate\Attribute\MigrateField
  * @see plugin_api
  *
  * @ingroup migration
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ * replacement.
+ *
+ * @see https://www.drupal.org/node/3533566
  */
 class MigrateFieldPluginManager extends MigratePluginManager implements MigrateFieldPluginManagerInterface {
 
@@ -26,6 +34,31 @@ class MigrateFieldPluginManager extends MigratePluginManager implements MigrateF
    * Drupal 6 where none exists.
    */
   const DEFAULT_CORE_VERSION = 6;
+
+  /**
+   * Constructs a MigratePluginManager object.
+   *
+   * @param string $type
+   *   The type of the plugin: row, source, process, destination, entity_field,
+   *   id_map.
+   * @param \Traversable $namespaces
+   *   An object that implements \Traversable which contains the root paths
+   *   keyed by the corresponding namespace to look for plugin implementations.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
+   *   Cache backend instance to use.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler to invoke the alter hook with.
+   * @param string $attribute
+   *   (optional) The attribute class name. Defaults to
+   *   'Drupal\Component\Plugin\Attribute\PluginID'.
+   * @param string $annotation
+   *   (optional) The annotation class name. Defaults to
+   *   'Drupal\Component\Annotation\PluginID'.
+   */
+  public function __construct($type, \Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, $attribute = PluginID::class, $annotation = 'Drupal\Component\Annotation\PluginID') {
+    parent::__construct($type, $namespaces, $cache_backend, $module_handler, $attribute, $annotation);
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533566', E_USER_DEPRECATED);
+  }
 
   /**
    * Get the plugin ID from the field type.
@@ -48,9 +81,9 @@ class MigrateFieldPluginManager extends MigratePluginManager implements MigrateF
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    *   If the plugin cannot be determined, such as if the field type is invalid.
    *
-   * @see \Drupal\migrate_drupal\Annotation\MigrateField
+   * @see \Drupal\migrate_drupal\Attribute\MigrateField
    */
-  public function getPluginIdFromFieldType($field_type, array $configuration = [], MigrationInterface $migration = NULL) {
+  public function getPluginIdFromFieldType($field_type, array $configuration = [], ?MigrationInterface $migration = NULL) {
     $core = static::DEFAULT_CORE_VERSION;
     if (!empty($configuration['core'])) {
       $core = $configuration['core'];

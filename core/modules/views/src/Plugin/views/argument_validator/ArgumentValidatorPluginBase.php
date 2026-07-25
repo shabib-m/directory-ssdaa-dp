@@ -43,6 +43,7 @@ abstract class ArgumentValidatorPluginBase extends PluginBase {
   /**
    * The option name.
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public string $option_name;
 
   /**
@@ -87,8 +88,8 @@ abstract class ArgumentValidatorPluginBase extends PluginBase {
   /**
    * Blocks user input when the form is shown but we don´t have access.
    *
-   * This is only called by child objects if specified in the buildOptionsForm(),
-   * so it will not always be used.
+   * This is only called by child objects if specified in the
+   * buildOptionsForm(), so it will not always be used.
    */
   protected function checkAccess(&$form, $option_name) {
     if (!$this->access()) {
@@ -122,7 +123,9 @@ abstract class ArgumentValidatorPluginBase extends PluginBase {
    *   A context definition that represents the argument or NULL if that is
    *   not possible.
    */
-  public function getContextDefinition() {}
+  public function getContextDefinition() {
+    return NULL;
+  }
 
 }
 

@@ -17,8 +17,8 @@ use Drupal\views\Plugin\views\PluginBase;
  *
  * Argument default plugins extend
  * \Drupal\views\Plugin\views\argument_default\ArgumentDefaultPluginBase. They
- * must be annotated with \Drupal\views\Annotation\ViewsArgumentDefault
- * annotation, and they must be in namespace directory
+ * must be attributed with \Drupal\views\Attribute\ViewsArgumentDefault
+ * attribute, and they must be in namespace directory
  * Plugin\views\argument_default.
  *
  * @ingroup views_plugins
@@ -40,12 +40,14 @@ abstract class ArgumentDefaultPluginBase extends PluginBase {
   /**
    * The option name.
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public string $option_name;
 
   /**
    * Return the default argument.
    *
-   * This needs to be overridden by every default argument handler to properly do what is needed.
+   * This needs to be overridden by every default argument handler to properly
+   * do what is needed.
    */
   public function getArgument() {}
 
@@ -94,8 +96,8 @@ abstract class ArgumentDefaultPluginBase extends PluginBase {
    * If we don't have access to the form but are showing it anyway, ensure that
    * the form is safe and cannot be changed from user input.
    *
-   * This is only called by child objects if specified in the buildOptionsForm(),
-   * so it will not always be used.
+   * This is only called by child objects if specified in the
+   * buildOptionsForm(), so it will not always be used.
    */
   protected function checkAccess(&$form, $option_name) {
     if (!$this->access()) {

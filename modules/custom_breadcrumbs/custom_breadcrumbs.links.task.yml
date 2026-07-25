@@ -1,4 +1,0 @@
-custom_breadcrumbs.settings:
-  title: 'Edit'
-  route_name: custom_breadcrumbs.config
-  base_route: custom_breadcrumbs.config

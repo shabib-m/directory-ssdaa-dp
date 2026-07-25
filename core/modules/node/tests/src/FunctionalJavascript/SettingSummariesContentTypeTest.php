@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the JavaScript updating of summaries on content type form.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class SettingSummariesContentTypeTest extends WebDriverTestBase {
 
   /**
@@ -35,7 +39,7 @@ class SettingSummariesContentTypeTest extends WebDriverTestBase {
   /**
    * Tests a vertical tab 'Workflow' summary.
    */
-  public function testWorkflowSummary() {
+  public function testWorkflowSummary(): void {
     $this->drupalGet('admin/structure/types/manage/test');
     $page = $this->getSession()->getPage();
     $page->find('css', 'a[href="#edit-workflow"]')->click();
@@ -44,13 +48,9 @@ class SettingSummariesContentTypeTest extends WebDriverTestBase {
     $page->findField('options[sticky]')->check();
     $page->findField('options[promote]')->check();
     $page->findField('options[revision]')->check();
-    $locator = '[href="#edit-workflow"] .vertical-tabs__menu-item-summary';
-    $this->assertTrue($page->waitFor(10, function () use ($page, $locator) {
-      $summary = $page->find('css', $locator)->getText();
-      return str_contains($summary, 'Not published');
-    }));
-    $summary = $page->find('css', $locator)->getText();
-    $this->assertEquals('Not published, Promoted to front page, Sticky at top of lists, Create new revision', $summary);
+    $summary = 'Not published, Promoted to front page, Sticky at top of lists, Create new revision';
+    $locator = '[href="#edit-workflow"] .vertical-tabs__menu-item-summary:contains("' . $summary . '")';
+    $this->assertNotEmpty($this->assertSession()->waitForElement('css', $locator));
   }
 
 }

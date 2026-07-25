@@ -1,13 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\CookieResourceTestTrait;
 use Drupal\Tests\rest\Functional\EntityResource\XmlEntityNormalizationQuirksTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Node Xml Cookie.
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class NodeXmlCookieTest extends NodeResourceTestBase {
 
   use CookieResourceTestTrait;
@@ -21,7 +27,7 @@ class NodeXmlCookieTest extends NodeResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $mimeType = 'text/xml; charset=UTF-8';
+  protected static $mimeType = 'text/xml; charset=utf-8';
 
   /**
    * {@inheritdoc}
@@ -32,13 +38,5 @@ class NodeXmlCookieTest extends NodeResourceTestBase {
    * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
-
-  /**
-   * {@inheritdoc}
-   */
-  public function testPatchPath() {
-    // Deserialization of the XML format is not supported.
-    $this->markTestSkipped();
-  }
 
 }

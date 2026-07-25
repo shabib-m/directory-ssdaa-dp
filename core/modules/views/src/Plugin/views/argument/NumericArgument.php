@@ -4,6 +4,7 @@ namespace Drupal\views\Plugin\views\argument;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\views\Attribute\ViewsArgument;
 
 /**
  * Basic argument handler for arguments that are numeric.
@@ -11,17 +12,22 @@ use Drupal\Core\Plugin\Context\ContextDefinition;
  * Incorporates break_phrase.
  *
  * @ingroup views_argument_handlers
- *
- * @ViewsArgument("numeric")
  */
+#[ViewsArgument(
+  id: 'numeric',
+)]
 class NumericArgument extends ArgumentPluginBase {
 
   /**
    * The actual value which is used for querying.
+   *
    * @var array
    */
   public $value;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
 
@@ -31,10 +37,13 @@ class NumericArgument extends ArgumentPluginBase {
     return $options;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    // allow + for or, , for and
+    // Allow '+' for "or". Allow ',' for "and".
     $form['break_phrase'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Allow multiple values'),
@@ -52,6 +61,9 @@ class NumericArgument extends ArgumentPluginBase {
     ];
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function title() {
     if (!$this->argument) {
       return !empty($this->definition['empty field name']) ? $this->definition['empty field name'] : $this->t('Uncategorized');
@@ -80,6 +92,7 @@ class NumericArgument extends ArgumentPluginBase {
 
   /**
    * Override for specific title lookups.
+   *
    * @return array
    *   Returns all titles, if it's just one title it's an array with one entry.
    */
@@ -87,6 +100,9 @@ class NumericArgument extends ArgumentPluginBase {
     return $this->value;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function query($group_by = FALSE) {
     $this->ensureMyTable();
 

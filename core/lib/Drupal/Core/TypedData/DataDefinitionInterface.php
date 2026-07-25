@@ -14,7 +14,7 @@ namespace Drupal\Core\TypedData;
  * properties can be retrieved from the definition.
  *
  * @see \Drupal\Core\TypedData\DataDefinition
- * @see \Drupal\Core\TypedData\ListDefinitionInterface
+ * @see \Drupal\Core\TypedData\ListDataDefinitionInterface
  * @see \Drupal\Core\TypedData\ComplexDataDefinitionInterface
  * @see \Drupal\Core\TypedData\DataReferenceDefinitionInterface
  * @see \Drupal\Core\TypedData\TypedDataInterface
@@ -81,7 +81,7 @@ interface DataDefinitionInterface {
    * Returns whether the data is multi-valued, i.e. a list of data items.
    *
    * This is equivalent to checking whether the data definition implements the
-   * \Drupal\Core\TypedData\ListDefinitionInterface interface.
+   * \Drupal\Core\TypedData\ListDataDefinitionInterface interface.
    *
    * @return bool
    *   Whether the data is multi-valued.
@@ -158,19 +158,19 @@ interface DataDefinitionInterface {
    * Constraints are defined via an array, having constraint plugin IDs as key
    * and constraint options as values, e.g.
    * @code
-   * $constraints = array(
-   *   'Range' => array('min' => 5, 'max' => 10),
-   *   'NotBlank' => array(),
-   * );
+   * $constraints = [
+   *   'Range' => ['min' => 5, 'max' => 10],
+   *   'NotBlank' => [],
+   * ];
    * @endcode
    * Options have to be specified using another array if the constraint has more
    * than one or zero options. If it has exactly one option, the value should be
    * specified without nesting it into another array:
    * @code
-   * $constraints = array(
+   * $constraints = [
    *   'EntityType' => 'node',
    *   'Bundle' => 'article',
-   * );
+   * ];
    * @endcode
    *
    * Note that the specified constraints must be compatible with the data type,
@@ -213,13 +213,17 @@ interface DataDefinitionInterface {
    *
    * @param string $constraint_name
    *   The name of the constraint to add, i.e. its plugin id.
+   * phpcs:disable Drupal.Commenting
+   * @todo Uncomment new method parameter signature before drupal:12.0.0.
+   * @see https://www.drupal.org/node/3554746
    * @param array|null $options
    *   The constraint options as required by the constraint plugin, or NULL.
+   * phpcs:enable
    *
    * @return static
    *   The object itself for chaining.
    */
-  public function addConstraint($constraint_name, $options = NULL);
+  public function addConstraint($constraint_name, /* ?array */$options = NULL);
 
   /**
    * Determines whether the data value is internal.
@@ -229,8 +233,8 @@ interface DataDefinitionInterface {
    *
    * The implications of this method are left to the discretion of the caller.
    * For example, a module providing an HTTP API may not expose entities of
-   * this type, or a custom entity reference field settings form may
-   * deprioritize entities of this type in a select list.
+   * this type or a custom entity reference field settings form may reduce the
+   * priority for entities of this type in a select list.
    *
    * @return bool
    *   Whether the data value is internal.

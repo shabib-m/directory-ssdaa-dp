@@ -6,17 +6,18 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsArgumentDefault;
 
 /**
  * A query parameter argument default handler.
  *
  * @ingroup views_argument_default_plugins
- *
- * @ViewsArgumentDefault(
- *   id = "query_parameter",
- *   title = @Translation("Query parameter")
- * )
  */
+#[ViewsArgumentDefault(
+  id: 'query_parameter',
+  title: new TranslatableMarkup('Query parameter'),
+)]
 class QueryParameter extends ArgumentDefaultPluginBase implements CacheableDependencyInterface {
 
   /**
@@ -68,9 +69,9 @@ class QueryParameter extends ArgumentDefaultPluginBase implements CacheableDepen
     // Convert a[b][c][d] into ['a', 'b', 'c', 'd'].
     $path = array_filter(preg_split('#(\[|\]\[|\])#', $this->options['query_param']));
 
-    if ($current_request->query->has($path[0])) {
-      $query = $current_request->query->all();
-      $param = NestedArray::getValue($query, $path);
+    $query = $current_request->query->all();
+    $param = NestedArray::getValue($query, $path, $key_exists);
+    if ($key_exists) {
       if (is_array($param)) {
         $conjunction = ($this->options['multiple'] == 'and') ? ',' : '+';
         $param = implode($conjunction, $param);
@@ -78,10 +79,9 @@ class QueryParameter extends ArgumentDefaultPluginBase implements CacheableDepen
 
       return $param;
     }
-    else {
-      // Otherwise, use the fixed fallback value.
-      return $this->options['fallback'];
-    }
+
+    // Otherwise, use the fixed fallback value.
+    return $this->options['fallback'];
   }
 
   /**

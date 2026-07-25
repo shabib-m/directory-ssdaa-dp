@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional;
 
 use Drupal\Component\Serialization\Json;
@@ -8,18 +10,18 @@ use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the autocomplete implementation of the taxonomy class.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermAutocompleteTest extends TaxonomyTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node'];
 
@@ -98,7 +100,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
 
     // Create a taxonomy_term_reference field on the article Content Type that
     // uses a taxonomy_autocomplete widget.
-    $this->fieldName = mb_strtolower($this->randomMachineName());
+    $this->fieldName = $this->randomMachineName();
     FieldStorageConfig::create([
       'field_name' => $this->fieldName,
       'entity_type' => 'node',
@@ -166,7 +168,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
    *
    * @see \Drupal\taxonomy\Controller\TermAutocompleteController::autocomplete()
    */
-  public function testAutocompleteCountResults() {
+  public function testAutocompleteCountResults(): void {
     // Test that no matching term found.
     $data = $this->drupalGetJson(
       $this->autocompleteUrl,
@@ -202,7 +204,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
    *
    * @see \Drupal\taxonomy\Controller\TermAutocompleteController::autocomplete()
    */
-  public function testAutocompleteOrderedResults() {
+  public function testAutocompleteOrderedResults(): void {
     $expectedResults = [
       'aaa 10 bbb',
       'aaa 11 bbb',

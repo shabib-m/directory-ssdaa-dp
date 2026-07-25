@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that outlines of node meta values are displayed in summaries and tabs.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class CollapsedSummariesTest extends WebDriverTestBase {
 
   /**
@@ -43,7 +47,7 @@ class CollapsedSummariesTest extends WebDriverTestBase {
   /**
    * Confirm that summaries are provided for node meta at all widths.
    */
-  public function testSummaries() {
+  public function testSummaries(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 

@@ -1,22 +1,23 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\Extension\ThemeHandlerTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Extension;
 
 use Composer\Autoload\ClassLoader;
-use Drupal\Core\Extension\Extension;
+use Drupal\Core\Extension\Theme;
 use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 
 /**
- * @coversDefaultClass \Drupal\Core\Extension\ThemeHandler
- * @group Extension
+ * Tests Drupal\Core\Extension\ThemeHandler.
  */
+#[CoversClass(ThemeHandler::class)]
+#[Group('Extension')]
 class ThemeHandlerTest extends UnitTestCase {
 
   /**
@@ -49,7 +50,7 @@ class ThemeHandlerTest extends UnitTestCase {
     $this->configFactory = $this->getConfigFactoryStub([
       'core.extension' => [
         'module' => [],
-        'theme' => [],
+        'theme' => ['stark' => 'stark'],
         'disabled' => [
           'theme' => [],
         ],
@@ -73,14 +74,16 @@ class ThemeHandlerTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Extension\ThemeHandler::rebuildThemeData()
    */
-  public function testRebuildThemeData() {
+  #[IgnoreDeprecations]
+  public function testRebuildThemeData(): void {
+    $this->expectUserDeprecationMessage("\Drupal\Core\Extension\ThemeHandlerInterface::rebuildThemeData() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal::service('extension.list.theme')->reset()->getList() instead. See https://www.drupal.org/node/3413196");
     $this->themeList->expects($this->once())
       ->method('reset')
       ->willReturnSelf();
     $this->themeList->expects($this->once())
       ->method('getList')
       ->willReturn([
-        'stark' => new Extension($this->root, 'theme', 'core/themes/stark/stark.info.yml', 'stark.theme'),
+        'stark' => new Theme($this->root, 'core/themes/stark/stark.info.yml', [], 'stark.theme'),
       ]);
 
     $theme_data = $this->themeHandler->rebuildThemeData();
@@ -98,15 +101,25 @@ class ThemeHandlerTest extends UnitTestCase {
   /**
    * Tests empty libraries in theme.info.yml file.
    */
-  public function testThemeLibrariesEmpty() {
-    $theme = new Extension($this->root, 'theme', 'core/modules/system/tests/themes/test_theme_libraries_empty', 'test_theme_libraries_empty.info.yml');
+  public function testThemeLibrariesEmpty(): void {
+    $theme = new Theme($this->root, 'core/modules/system/tests/themes/test_theme_libraries_empty', [], 'test_theme_libraries_empty.info.yml');
     try {
       $this->themeHandler->addTheme($theme);
       $this->assertTrue(TRUE, 'Empty libraries key in theme.info.yml does not cause PHP warning');
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       $this->fail('Empty libraries key in theme.info.yml causes PHP warning.');
     }
+  }
+
+  /**
+   * Test that a missing theme doesn't break ThemeHandler::listInfo().
+   *
+   * @legacy-covers ::listInfo
+   */
+  public function testMissingTheme(): void {
+    $themes = $this->themeHandler->listInfo();
+    $this->assertSame([], $themes);
   }
 
 }
@@ -133,14 +146,14 @@ class StubThemeHandler extends ThemeHandler {
   /**
    * {@inheritdoc}
    */
-  protected function clearCssCache() {
+  protected function clearCssCache(): void {
     $this->clearedCssCache = TRUE;
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function themeRegistryRebuild() {
+  protected function themeRegistryRebuild(): void {
     $this->registryRebuild = TRUE;
   }
 

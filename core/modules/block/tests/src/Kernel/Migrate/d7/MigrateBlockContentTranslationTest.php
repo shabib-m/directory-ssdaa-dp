@@ -1,36 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Kernel\Migrate\d7;
 
+use Drupal\block\Hook\BlockHooks;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests migration of i18n block translations.
- *
- * @group migrate_drupal_7
- * @group #slow
  */
+#[Group('migrate_drupal_7')]
+#[RunTestsInSeparateProcesses]
 class MigrateBlockContentTranslationTest extends MigrateDrupal7TestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'node',
     'text',
-    'book',
     'block',
-    'comment',
-    'filter',
-    'forum',
-    'views',
     'block_content',
-    'config_translation',
     'language',
-    'locale',
     'path_alias',
-    'statistics',
-    'taxonomy',
   ];
 
   /**
@@ -39,26 +33,30 @@ class MigrateBlockContentTranslationTest extends MigrateDrupal7TestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('block_content');
+    $this->installEntitySchema('path_alias');
     $this->installConfig(['block']);
     $this->installConfig(['block_content']);
+    $this->container->get('theme_installer')->install(['stark']);
 
     $this->executeMigrations([
       'language',
       'd7_filter_format',
       'block_content_type',
       'block_content_body_field',
+      'block_content_body_field_storage',
       'd7_custom_block',
       'd7_user_role',
       'd7_block',
       'd7_block_translation',
     ]);
-    block_rebuild();
+    $blockRebuild = \Drupal::service(BlockHooks::class);
+    $blockRebuild->rebuild();
   }
 
   /**
    * Tests the migration of block title translation.
    */
-  public function testBlockContentTranslation() {
+  public function testBlockContentTranslation(): void {
     // @todo Skipped due to frequent random test failures.
     // See https://www.drupal.org/project/drupal/issues/3389365
     $this->markTestSkipped();

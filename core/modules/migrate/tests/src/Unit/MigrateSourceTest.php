@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\migrate\Unit\MigrateSourceTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\migrate\Unit;
 
@@ -12,6 +9,7 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
+use Drupal\migrate\Event\MigrateRollbackEvent;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate\MigrateSkipRowException;
@@ -19,11 +17,14 @@ use Drupal\migrate\Plugin\migrate\source\SourcePluginBase;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
 use Drupal\migrate\Row;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\migrate\Plugin\migrate\source\SourcePluginBase
- * @group migrate
+ * Tests Drupal\migrate\Plugin\migrate\source\SourcePluginBase.
  */
+#[CoversClass(SourcePluginBase::class)]
+#[Group('migrate')]
 class MigrateSourceTest extends MigrateTestCase {
 
   /**
@@ -94,7 +95,7 @@ class MigrateSourceTest extends MigrateTestCase {
       ->willReturn($key_value);
     $container->set('keyvalue', $key_value_factory);
 
-    $container->set('cache.migrate', $this->createMock(CacheBackendInterface::class));
+    $container->set('cache.migrate', $this->createStub(CacheBackendInterface::class));
 
     $this->migrationConfiguration = $this->defaultMigrationConfiguration + $migrate_config;
     $this->migration = parent::getMigration();
@@ -155,9 +156,11 @@ class MigrateSourceTest extends MigrateTestCase {
   }
 
   /**
-   * @covers ::__construct
+   * Tests highwater track changes incompatible.
+   *
+   * @legacy-covers ::__construct
    */
-  public function testHighwaterTrackChangesIncompatible() {
+  public function testHighwaterTrackChangesIncompatible(): void {
     $source_config = ['track_changes' => TRUE, 'high_water_property' => ['name' => 'something']];
     $this->expectException(MigrateException::class);
     $this->getSource($source_config);
@@ -165,24 +168,22 @@ class MigrateSourceTest extends MigrateTestCase {
 
   /**
    * Tests that the source count is correct.
-   *
-   * @covers ::count
    */
-  public function testCount() {
-    // Mock the cache to validate set() receives appropriate arguments.
-    $container = new ContainerBuilder();
-    $cache = $this->createMock(CacheBackendInterface::class);
-    $cache->expects($this->any())->method('set')
-      ->with($this->isType('string'), $this->isType('int'), $this->isType('int'));
-    $container->set('cache.migrate', $cache);
-    \Drupal::setContainer($container);
-
+  public function testCount(): void {
     // Test that the basic count works.
     $source = $this->getSource();
     $this->assertEquals(1, $source->count());
 
     // Test caching the count works.
     $source = $this->getSource(['cache_counts' => TRUE]);
+    // Override the stubbed cache service to validate that set() receives
+    // appropriate arguments.
+    $cache = $this->createMock(CacheBackendInterface::class);
+    $cache->expects($this->once())
+      ->method('set')
+      ->with($this->isString(), $this->isInt(), $this->isInt());
+    \Drupal::getContainer()->set('cache.migrate', $cache);
+
     $this->assertEquals(1, $source->count());
 
     // Test the skip argument.
@@ -203,27 +204,24 @@ class MigrateSourceTest extends MigrateTestCase {
 
   /**
    * Tests that the key can be set for the count cache.
-   *
-   * @covers ::count
    */
-  public function testCountCacheKey() {
-    // Mock the cache to validate set() receives appropriate arguments.
-    $container = new ContainerBuilder();
-    $cache = $this->createMock(CacheBackendInterface::class);
-    $cache->expects($this->any())->method('set')
-      ->with('test_key', $this->isType('int'), $this->isType('int'));
-    $container->set('cache.migrate', $cache);
-    \Drupal::setContainer($container);
-
+  public function testCountCacheKey(): void {
     // Test caching the count with a configured key works.
     $source = $this->getSource(['cache_counts' => TRUE, 'cache_key' => 'test_key']);
+    // Override the stubbed cache service to validate that set() receives
+    // appropriate arguments.
+    $cache = $this->createMock(CacheBackendInterface::class);
+    $cache->expects($this->once())
+      ->method('set')
+      ->with('test_key', $this->isInt(), $this->isInt());
+    \Drupal::getContainer()->set('cache.migrate', $cache);
     $this->assertEquals(1, $source->count());
   }
 
   /**
    * Tests that we don't get a row if prepareRow() is false.
    */
-  public function testPrepareRowFalse() {
+  public function testPrepareRowFalse(): void {
     $source = $this->getSource([], ['prepare_row_false' => TRUE]);
 
     $source->rewind();
@@ -233,7 +231,7 @@ class MigrateSourceTest extends MigrateTestCase {
   /**
    * Tests that $row->needsUpdate() works as expected.
    */
-  public function testNextNeedsUpdate() {
+  public function testNextNeedsUpdate(): void {
     $source = $this->getSource();
 
     // $row->needsUpdate() === TRUE so we get a row.
@@ -249,7 +247,7 @@ class MigrateSourceTest extends MigrateTestCase {
   /**
    * Tests that an outdated highwater mark does not cause a row to be imported.
    */
-  public function testOutdatedHighwater() {
+  public function testOutdatedHighwater(): void {
     $configuration = [
       'high_water_property' => [
         'name' => 'timestamp',
@@ -268,7 +266,7 @@ class MigrateSourceTest extends MigrateTestCase {
    *
    * @throws \Exception
    */
-  public function testNewHighwater() {
+  public function testNewHighwater(): void {
     $configuration = [
       'high_water_property' => [
         'name' => 'timestamp',
@@ -284,10 +282,8 @@ class MigrateSourceTest extends MigrateTestCase {
 
   /**
    * Tests basic row preparation.
-   *
-   * @covers ::prepareRow
    */
-  public function testPrepareRow() {
+  public function testPrepareRow(): void {
     $this->migrationConfiguration['id'] = 'test_migration';
 
     // Get a new migration with an id.
@@ -327,10 +323,8 @@ class MigrateSourceTest extends MigrateTestCase {
 
   /**
    * Tests that global prepare hooks can skip rows.
-   *
-   * @covers ::prepareRow
    */
-  public function testPrepareRowGlobalPrepareSkip() {
+  public function testPrepareRowGlobalPrepareSkip(): void {
     $this->migrationConfiguration['id'] = 'test_migration';
 
     $migration = $this->getMigration();
@@ -356,10 +350,8 @@ class MigrateSourceTest extends MigrateTestCase {
 
   /**
    * Tests that migrate specific prepare hooks can skip rows.
-   *
-   * @covers ::prepareRow
    */
-  public function testPrepareRowMigratePrepareSkip() {
+  public function testPrepareRowMigratePrepareSkip(): void {
     $this->migrationConfiguration['id'] = 'test_migration';
 
     $migration = $this->getMigration();
@@ -385,10 +377,8 @@ class MigrateSourceTest extends MigrateTestCase {
 
   /**
    * Tests that a skip exception during prepare hooks correctly skips.
-   *
-   * @covers ::prepareRow
    */
-  public function testPrepareRowPrepareException() {
+  public function testPrepareRowPrepareException(): void {
     $this->migrationConfiguration['id'] = 'test_migration';
 
     $migration = $this->getMigration();
@@ -423,12 +413,12 @@ class MigrateSourceTest extends MigrateTestCase {
   /**
    * Tests that default values are preserved for several source methods.
    */
-  public function testDefaultPropertiesValues() {
+  public function testDefaultPropertiesValues(): void {
     $this->migrationConfiguration['id'] = 'test_migration';
     $migration = $this->getMigration();
     $source = new StubSourceGeneratorPlugin([], '', [], $migration);
 
-    // Test the default value of the skipCount Value;
+    // Test the default value of the skipCount Value.
     $this->assertTrue($source->getSkipCount());
     $this->assertTrue($source->getCacheCounts());
     $this->assertTrue($source->getTrackChanges());
@@ -451,49 +441,30 @@ class MigrateSourceTest extends MigrateTestCase {
     return new MigrateExecutable($migration, $message, $event_dispatcher);
   }
 
-}
-
-/**
- * Stubbed source plugin for testing base class implementations.
- */
-class StubSourcePlugin extends SourcePluginBase {
-
   /**
-   * Helper for setting internal module handler implementation.
-   *
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
+   * Tests pre rollback.
    */
-  public function setModuleHandler(ModuleHandlerInterface $module_handler) {
-    $this->moduleHandler = $module_handler;
-  }
+  public function testPreRollback(): void {
+    $this->migrationConfiguration['id'] = 'test_migration';
+    $plugin_id = 'test_migration';
+    $migration = $this->getMigration();
 
-  /**
-   * {@inheritdoc}
-   */
-  public function fields() {
-    return [];
-  }
+    // Verify that preRollback() sets the high water mark to NULL.
+    $key_value = $this->createMock(KeyValueStoreInterface::class);
+    $key_value->expects($this->once())
+      ->method('set')
+      ->with($plugin_id, NULL);
+    $key_value_factory = $this->createMock(KeyValueFactoryInterface::class);
+    $key_value_factory->expects($this->once())
+      ->method('get')
+      ->with('migrate:high_water')
+      ->willReturn($key_value);
+    $container = new ContainerBuilder();
+    $container->set('keyvalue', $key_value_factory);
+    \Drupal::setContainer($container);
 
-  /**
-   * {@inheritdoc}
-   */
-  public function __toString() {
-    return '';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getIds() {
-    return [];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function initializeIterator() {
-    return [];
+    $source = new StubSourceGeneratorPlugin([], $plugin_id, [], $migration);
+    $source->preRollback(new MigrateRollbackEvent($migration));
   }
 
 }
@@ -545,15 +516,10 @@ class StubSourceGeneratorPlugin extends StubSourcePlugin {
   /**
    * {@inheritdoc}
    */
-  protected function initializeIterator() {
-    $data = [
-      ['title' => 'foo'],
-      ['title' => 'bar'],
-      ['title' => 'iggy'],
-    ];
-    foreach ($data as $row) {
-      yield $row;
-    }
+  protected function initializeIterator(): \Generator {
+    yield 'foo';
+    yield 'bar';
+    yield 'iggy';
   }
 
 }

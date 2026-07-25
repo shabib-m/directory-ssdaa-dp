@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests user edited own account can still log in.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserEditedOwnAccountTest extends BrowserTestBase {
 
   /**
@@ -17,7 +21,10 @@ class UserEditedOwnAccountTest extends BrowserTestBase {
    */
   protected $defaultTheme = 'stark';
 
-  public function testUserEditedOwnAccount() {
+  /**
+   * Tests that a user who edits their own account can still log in.
+   */
+  public function testUserEditedOwnAccount(): void {
     // Change account setting 'Who can register accounts?' to Administrators
     // only.
     $this->config('user.settings')->set('register', UserInterface::REGISTER_ADMINISTRATORS_ONLY)->save();

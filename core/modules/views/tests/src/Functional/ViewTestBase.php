@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional;
 
 use Behat\Mink\Exception\ElementNotFoundException;
@@ -23,9 +25,7 @@ abstract class ViewTestBase extends BrowserTestBase {
   use ViewResultAssertionTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['views', 'views_test_config'];
 
@@ -53,7 +53,8 @@ abstract class ViewTestBase extends BrowserTestBase {
    * using it, it cannot be enabled normally.
    */
   protected function enableViewsTestModule() {
-    // Define the schema and views data variable before enabling the test module.
+    // Define the schema and views data variable before enabling the test
+    // module.
     \Drupal::state()->set('views_test_data_schema', $this->schemaDefinition());
     \Drupal::state()->set('views_test_data_views_data', $this->viewsData());
 
@@ -99,7 +100,7 @@ abstract class ViewTestBase extends BrowserTestBase {
    * Asserts the existence of a button with a certain ID and label.
    *
    * @param string $id
-   *   The HTML ID of the button
+   *   The HTML ID of the button.
    * @param string $expected_label
    *   The expected label for the button.
    * @param string $message

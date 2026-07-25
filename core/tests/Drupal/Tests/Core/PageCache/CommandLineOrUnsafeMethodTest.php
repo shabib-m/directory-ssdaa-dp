@@ -1,15 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\PageCache;
 
+use Drupal\Core\PageCache\RequestPolicy\CommandLineOrUnsafeMethod;
 use Drupal\Core\PageCache\RequestPolicyInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @coversDefaultClass \Drupal\Core\PageCache\RequestPolicy\CommandLineOrUnsafeMethod
- * @group PageCache
+ * Tests Drupal\Core\PageCache\RequestPolicy\CommandLineOrUnsafeMethod.
  */
+#[CoversClass(CommandLineOrUnsafeMethod::class)]
+#[Group('PageCache')]
 class CommandLineOrUnsafeMethodTest extends UnitTestCase {
 
   /**
@@ -35,10 +42,10 @@ class CommandLineOrUnsafeMethodTest extends UnitTestCase {
   /**
    * Asserts that check() returns DENY for unsafe HTTP methods.
    *
-   * @dataProvider providerTestHttpMethod
-   * @covers ::check
+   * @legacy-covers ::check
    */
-  public function testHttpMethod($expected_result, $method) {
+  #[DataProvider('providerTestHttpMethod')]
+  public function testHttpMethod($expected_result, $method): void {
     $this->policy->expects($this->once())
       ->method('isCli')
       ->willReturn(FALSE);
@@ -54,7 +61,7 @@ class CommandLineOrUnsafeMethodTest extends UnitTestCase {
    * @return array
    *   Test data and expected results.
    */
-  public function providerTestHttpMethod() {
+  public static function providerTestHttpMethod(): array {
     return [
       [NULL, 'GET'],
       [NULL, 'HEAD'],
@@ -70,9 +77,9 @@ class CommandLineOrUnsafeMethodTest extends UnitTestCase {
   /**
    * Asserts that check() returns DENY if running from the command line.
    *
-   * @covers ::check
+   * @legacy-covers ::check
    */
-  public function testIsCli() {
+  public function testIsCli(): void {
     $this->policy->expects($this->once())
       ->method('isCli')
       ->willReturn(TRUE);

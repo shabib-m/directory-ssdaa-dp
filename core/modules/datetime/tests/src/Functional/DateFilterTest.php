@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\datetime\Functional;
 
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItem;
@@ -7,13 +9,16 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Functional\ViewTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test exposed datetime filters functionality.
  *
- * @group views
  * @see \Drupal\datetime\Plugin\views\filter\Date
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class DateFilterTest extends ViewTestBase {
 
   /**
@@ -80,10 +85,19 @@ class DateFilterTest extends ViewTestBase {
   /**
    * Tests the limit of the expose operator functionality.
    */
-  public function testLimitExposedOperators() {
+  public function testLimitExposedOperators(): void {
 
+    $edit = [];
     $this->drupalGet('test_exposed_filter_datetime');
     $this->assertSession()->statusCodeEquals(200);
+
+    // Ensure that invalid date format entries in the exposed filter are
+    // validated.
+    $edit = ['edit-field-date-value-value' => 'lun 2018-04-27'];
+    $this->submitForm($edit, 'Apply');
+    $this->assertSession()->pageTextContains('Invalid date format.');
+    $this->assertSession()->pageTextNotContains('Exception: DateTime object not set.');
+
     $this->assertSession()->optionExists('edit-field-date-value-op', '=');
     $this->assertSession()->optionNotExists('edit-field-date-value-op', '>');
     $this->assertSession()->optionNotExists('edit-field-date-value-op', '>=');

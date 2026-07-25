@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\Core\Url;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests enabling, disabling, and reverting default views via the listing page.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class DefaultViewsTest extends UITestBase {
 
   /**
@@ -37,7 +41,7 @@ class DefaultViewsTest extends UITestBase {
   /**
    * Tests default views.
    */
-  public function testDefaultViews() {
+  public function testDefaultViews(): void {
     // Make sure the view starts off as disabled (does not appear on the listing
     // page).
     $edit_href = 'admin/structure/views/view/glossary';
@@ -90,11 +94,12 @@ class DefaultViewsTest extends UITestBase {
     // $this->assertSession()->linkExists('Revert');
     // $this->assertSession()->linkByHrefExists($revert_href);
     // $this->drupalGet($revert_href);
-    // $this->submitForm(array(), 'Revert');
+    // $this->submitForm([], 'Revert');
     // $this->drupalGet('glossary');
     // $this->assertSession()->pageTextNotContains($new_title);
 
-    // Duplicate the view and check that the normal schema of duplicated views is used.
+    // Duplicate the view and check that the normal schema of duplicated views
+    // is used.
     $this->drupalGet('admin/structure/views');
     $this->clickViewsOperationLink('Duplicate', '/glossary');
     $edit = [
@@ -107,7 +112,7 @@ class DefaultViewsTest extends UITestBase {
     // Duplicate a view and set a custom name.
     $this->drupalGet('admin/structure/views');
     $this->clickViewsOperationLink('Duplicate', '/glossary');
-    $random_name = strtolower($this->randomMachineName());
+    $random_name = $this->randomMachineName();
     $this->submitForm(['id' => $random_name], 'Duplicate');
     $this->assertSession()->addressEquals("admin/structure/views/view/$random_name");
 
@@ -171,7 +176,7 @@ class DefaultViewsTest extends UITestBase {
   /**
    * Tests that enabling views moves them to the correct table.
    */
-  public function testSplitListing() {
+  public function testSplitListing(): void {
     $this->drupalGet('admin/structure/views');
     $this->assertSession()->elementNotExists('xpath', '//div[@id="views-entity-list"]/div[@class = "views-list-section enabled"]/table//td/text()[contains(., "test_view_status")]');
     $this->assertSession()->elementsCount('xpath', '//div[@id="views-entity-list"]/div[@class = "views-list-section disabled"]/table//td/text()[contains(., "test_view_status")]', 1);
@@ -189,7 +194,7 @@ class DefaultViewsTest extends UITestBase {
   /**
    * Tests that page displays show the correct path.
    */
-  public function testPathDestination() {
+  public function testPathDestination(): void {
     $this->drupalGet('admin/structure/views');
 
     // Check that links to views on default tabs are rendered correctly.
@@ -209,15 +214,15 @@ class DefaultViewsTest extends UITestBase {
    * various views listing pages, and they might have tokens in them. So we
    * need special code to find the correct one to click.
    *
-   * @param $label
+   * @param string $label
    *   Text between the anchor tags of the desired link.
-   * @param $unique_href_part
+   * @param string $unique_href_part
    *   A unique string that is expected to occur within the href of the desired
    *   link. For example, if the link URL is expected to look like
    *   "admin/structure/views/view/glossary/*", then "/glossary/" could be
    *   passed as the expected unique string.
    */
-  public function clickViewsOperationLink($label, $unique_href_part) {
+  public function clickViewsOperationLink($label, $unique_href_part): void {
     $this->assertSession()->elementExists('xpath', "//a[normalize-space(text())='$label' and contains(@href, '$unique_href_part')]")->click();
   }
 

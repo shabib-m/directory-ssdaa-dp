@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests configuration schema against new views.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class NewViewConfigSchemaTest extends UITestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'views_ui',
@@ -31,7 +34,7 @@ class NewViewConfigSchemaTest extends UITestBase {
   /**
    * Tests creating brand new views.
    */
-  public function testNewViews() {
+  public function testNewViews(): void {
     $this->drupalLogin($this->drupalCreateUser(['administer views']));
 
     // Create views with all core Views wizards.
@@ -48,7 +51,7 @@ class NewViewConfigSchemaTest extends UITestBase {
     foreach ($wizards as $wizard_key) {
       $edit = [];
       $edit['label'] = $this->randomString();
-      $edit['id'] = strtolower($this->randomMachineName());
+      $edit['id'] = $this->randomMachineName();
       $edit['show[wizard_key]'] = $wizard_key;
       $edit['description'] = $this->randomString();
       $this->drupalGet('admin/structure/views/add');

@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\views\Entity\View;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the token display for the TokenizeAreaPluginBase UI.
  *
  * @see \Drupal\views\Plugin\views\area\Entity
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class TokenizeAreaUITest extends UITestBase {
 
   /**
@@ -26,7 +31,7 @@ class TokenizeAreaUITest extends UITestBase {
   /**
    * Tests that the right tokens are shown as available for replacement.
    */
-  public function testTokenUI() {
+  public function testTokenUI(): void {
     $entity_test = EntityTest::create(['bundle' => 'entity_test']);
     $entity_test->save();
 

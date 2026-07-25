@@ -1,18 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\File;
 
 use Drupal\Core\File\Exception\DirectoryNotReadyException;
 use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\File\Exception\FileExistsException;
 use Drupal\Core\File\Exception\FileNotExistsException;
-use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\FileExists;
+use Drupal\Core\File\FileSystem;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\Core\File\FileSystem
- * @group File
+ * Tests Drupal\Core\File\FileSystem.
  */
+#[CoversClass(FileSystem::class)]
+#[Group('File')]
+#[RunTestsInSeparateProcesses]
 class FileSystemTest extends KernelTestBase {
 
   /**
@@ -25,20 +33,17 @@ class FileSystemTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['system'];
-
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp(): void {
     parent::setUp();
     $this->fileSystem = $this->container->get('file_system');
   }
 
   /**
-   * @covers ::copy
+   * Tests ensure file exists before copy.
+   *
+   * @legacy-covers ::copy
    */
-  public function testEnsureFileExistsBeforeCopy() {
+  public function testEnsureFileExistsBeforeCopy(): void {
     // We need to compute the exception message here because it will include
     // the 'real' path to the file, which varies with $this->siteDirectory.
     $this->expectException(FileNotExistsException::class);
@@ -48,43 +53,46 @@ class FileSystemTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::copy
+   * Tests destination directory failure on copy.
+   *
+   * @legacy-covers ::copy
    */
-  public function testDestinationDirectoryFailureOnCopy() {
+  public function testDestinationDirectoryFailureOnCopy(): void {
     $this->expectException(DirectoryNotReadyException::class);
     $this->expectExceptionMessage("The specified file 'public://test.txt' could not be copied because the destination directory 'public://subdirectory' is not properly configured. This may be caused by a problem with file or directory permissions.");
     touch('public://test.txt');
-    // public://subdirectory has not been created, so \Drupal::service('file_system')->prepareDirectory()
-    // will fail, causing copy() to throw DirectoryNotReadyException.
+    // public://subdirectory has not been created, so
+    // \Drupal::service('file_system')->prepareDirectory() will fail, causing
+    // copy() to throw DirectoryNotReadyException.
     $this->fileSystem->copy('public://test.txt', 'public://subdirectory/test.txt');
   }
 
   /**
-   * @covers ::copy
+   * Tests copy failure if file already exists.
    */
-  public function testCopyFailureIfFileAlreadyExists() {
+  public function testCopyFailureIfFileAlreadyExists(): void {
     $this->expectException(FileExistsException::class);
     $this->expectExceptionMessage("File 'public://test.txt' could not be copied because a file by that name already exists in the destination directory ('')");
     $uri = 'public://test.txt';
     touch($uri);
-    $this->fileSystem->copy($uri, $uri, FileSystemInterface::EXISTS_ERROR);
+    $this->fileSystem->copy($uri, $uri, FileExists::Error);
   }
 
   /**
-   * @covers ::copy
+   * Tests copy failure if self overwrite.
    */
-  public function testCopyFailureIfSelfOverwrite() {
+  public function testCopyFailureIfSelfOverwrite(): void {
     $this->expectException(FileException::class);
     $this->expectExceptionMessage("'public://test.txt' could not be copied because it would overwrite itself");
     $uri = 'public://test.txt';
     touch($uri);
-    $this->fileSystem->copy($uri, $uri, FileSystemInterface::EXISTS_REPLACE);
+    $this->fileSystem->copy($uri, $uri, FileExists::Replace);
   }
 
   /**
-   * @covers ::copy
+   * Tests copy self rename.
    */
-  public function testCopySelfRename() {
+  public function testCopySelfRename(): void {
     $uri = 'public://test.txt';
     touch($uri);
     $this->fileSystem->copy($uri, $uri);
@@ -92,9 +100,11 @@ class FileSystemTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::copy
+   * Tests successful copy.
+   *
+   * @legacy-covers ::copy
    */
-  public function testSuccessfulCopy() {
+  public function testSuccessfulCopy(): void {
     touch('public://test.txt');
     $this->fileSystem->copy('public://test.txt', 'public://test-copy.txt');
     $this->assertFileExists('public://test-copy.txt');

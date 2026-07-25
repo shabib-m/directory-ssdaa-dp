@@ -1,0 +1,56 @@
+_meta:
+  version: '1.0'
+  entity_type: node
+  uuid: 33f7370d-90c6-40c6-8b77-1f6be52608a3
+  bundle: directory
+  default_langcode: ar
+  depends:
+    2ad0bcbc-6fef-4fff-8846-7085d2db7e61: taxonomy_term
+    1fb6c8f8-de5f-45d4-8864-fa2f78f6bdcf: file
+default:
+  revision_uid:
+    -
+      target_id: 0
+  status:
+    -
+      value: true
+  uid:
+    -
+      target_id: 0
+  title:
+    -
+      value: 'ﻣﻮﻗﻊ ﺍﻟﺸﻴﺦ ﻣﻘﺒﻞ ﺑﻦ ﻫﺎﺩﻱ ﺍﻟﻮﺍﺩﻋﻲ'
+  created:
+    -
+      value: 1784748879
+  promote:
+    -
+      value: true
+  sticky:
+    -
+      value: false
+  path:
+    -
+      alias: /website/muqbel
+      langcode: ar
+  body:
+    -
+      value: |
+        <p>موقع الشيخ مقبل بن هادي الوادعي رحمة الله رحمة واسعه ورفع درجاته ونفع بعلمه</p>
+      format: full_html
+      summary: ''
+  field_aldwlh:
+    -
+      entity: 2ad0bcbc-6fef-4fff-8846-7085d2db7e61
+  field_image:
+    -
+      entity: 1fb6c8f8-de5f-45d4-8864-fa2f78f6bdcf
+      alt: ''
+      title: ''
+      width: 600
+      height: 330
+  field_url_website:
+    -
+      uri: 'https://muqbel.net'
+      title: ''
+      options: {  }

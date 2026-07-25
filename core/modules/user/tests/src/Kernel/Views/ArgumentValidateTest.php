@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Views;
 
 use Drupal\Core\Form\FormState;
@@ -8,12 +10,14 @@ use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests user argument validators for ID and name.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class ArgumentValidateTest extends ViewsKernelTestBase {
 
   use UserCreationTrait;
@@ -53,14 +57,14 @@ class ArgumentValidateTest extends ViewsKernelTestBase {
   /**
    * Tests the User (ID) argument validator.
    */
-  public function testArgumentValidateUserUid() {
+  public function testArgumentValidateUserUid(): void {
     $view = Views::getView('test_view_argument_validate_user');
     $this->executeView($view);
 
     $this->assertTrue($view->argument['null']->validateArgument($this->account->id()));
     // Reset argument validation.
     $view->argument['null']->argument_validated = NULL;
-    // Fail for a valid numeric, but for a user that doesn't exist
+    // Fail for a valid numeric, but for a user that doesn't exist.
     $this->assertFalse($view->argument['null']->validateArgument(32));
 
     $form = [];
@@ -73,14 +77,14 @@ class ArgumentValidateTest extends ViewsKernelTestBase {
   /**
    * Tests the UserName argument validator.
    */
-  public function testArgumentValidateUserName() {
+  public function testArgumentValidateUserName(): void {
     $view = Views::getView('test_view_argument_validate_username');
     $this->executeView($view);
 
     $this->assertTrue($view->argument['null']->validateArgument($this->account->getAccountName()));
     // Reset argument validation.
     $view->argument['null']->argument_validated = NULL;
-    // Fail for a valid string, but for a user that doesn't exist
+    // Fail for a valid string, but for a user that doesn't exist.
     $this->assertFalse($view->argument['null']->validateArgument($this->randomMachineName()));
   }
 

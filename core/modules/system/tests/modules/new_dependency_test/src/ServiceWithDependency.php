@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\new_dependency_test;
 
 /**
@@ -22,7 +24,7 @@ class ServiceWithDependency {
    * @param \Drupal\new_dependency_test\InjectedService|null $service
    *   The service of the same module which has the new dependency.
    */
-  public function __construct(InjectedService $service = NULL) {
+  public function __construct(?InjectedService $service = NULL) {
     $this->service = $service;
   }
 
@@ -36,7 +38,7 @@ class ServiceWithDependency {
     if (isset($this->service)) {
       return $this->service->greet() . ' World';
     }
-    return 'Sorry, no service.';
+    return 'No service.';
   }
 
 }

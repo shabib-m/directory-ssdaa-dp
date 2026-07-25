@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Cache;
 
 use Drupal\Component\DependencyInjection\ContainerInterface;
@@ -8,17 +10,20 @@ use Drupal\Core\Cache\CacheFactoryInterface;
 use Drupal\Core\Cache\ChainedFastBackend;
 use Drupal\Core\Cache\ChainedFastBackendFactory;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Cache\ChainedFastBackendFactory
- * @group Cache
+ * Tests Drupal\Core\Cache\ChainedFastBackendFactory.
  */
+#[CoversClass(ChainedFastBackendFactory::class)]
+#[Group('Cache')]
 class ChainedFastBackendFactoryTest extends UnitTestCase {
 
   /**
    * Test if the same name is provided for consistent and fast services.
    */
-  public function testIdenticalService() {
+  public function testIdenticalService(): void {
     $container = $this->createMock(ContainerInterface::class);
     $testCacheFactory = $this->createMock(CacheFactoryInterface::class);
     $testCacheBackend = $this->createMock(CacheBackendInterface::class);
@@ -45,7 +50,7 @@ class ChainedFastBackendFactoryTest extends UnitTestCase {
   /**
    * Test if different names are provided for consistent and fast services.
    */
-  public function testDifferentServices() {
+  public function testDifferentServices(): void {
     $container = $this->createMock(ContainerInterface::class);
     $testConsistentCacheFactory = $this->createMock(CacheFactoryInterface::class);
     $testFastCacheFactory = $this->createMock(CacheFactoryInterface::class);
@@ -54,13 +59,13 @@ class ChainedFastBackendFactoryTest extends UnitTestCase {
 
     $container->expects($this->exactly(2))
       ->method('get')
-      ->will(
-        $this->returnCallback(function ($service) use ($testFastCacheFactory, $testConsistentCacheFactory) {
+      ->willReturnCallback(
+        function ($service) use ($testFastCacheFactory, $testConsistentCacheFactory) {
           return match ($service) {
             'cache.backend.test_consistent' => $testConsistentCacheFactory,
             'cache.backend.test_fast' => $testFastCacheFactory,
           };
-        })
+        }
       );
 
     // The same bin should be retrieved from both backends.

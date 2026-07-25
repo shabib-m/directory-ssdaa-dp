@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\settings_tray\Unit\Access;
 
 use Drupal\block\BlockInterface;
@@ -11,20 +13,26 @@ use Drupal\Core\Plugin\PluginWithFormsInterface;
 use Drupal\settings_tray\Access\BlockPluginHasSettingsTrayFormAccessCheck;
 use Drupal\Tests\UnitTestCase;
 use Drupal\TestTools\Random;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\settings_tray\Access\BlockPluginHasSettingsTrayFormAccessCheck
- * @group settings_tray
+ * Tests Drupal\settings_tray\Access\BlockPluginHasSettingsTrayFormAccessCheck.
  */
+#[CoversClass(BlockPluginHasSettingsTrayFormAccessCheck::class)]
+#[Group('settings_tray')]
 class BlockPluginHasSettingsTrayFormAccessCheckTest extends UnitTestCase {
 
   /**
-   * @covers ::access
-   * @covers ::accessBlockPlugin
-   * @dataProvider providerTestAccess
+   * Tests access.
+   *
+   * @legacy-covers ::access
+   * @legacy-covers ::accessBlockPlugin
    */
-  public function testAccess($with_forms, array $plugin_definition, AccessResultInterface $expected_access_result) {
+  #[DataProvider('providerTestAccess')]
+  public function testAccess($with_forms, array $plugin_definition, AccessResultInterface $expected_access_result): void {
     $block_plugin = $this->prophesize()->willImplement(BlockPluginInterface::class);
 
     if ($with_forms) {

@@ -21,6 +21,8 @@ class EntityAliasTypeDeriver extends DeriverBase implements ContainerDeriverInte
   use StringTranslationTrait;
 
   /**
+   * The entity type manager.
+   *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
@@ -33,6 +35,8 @@ class EntityAliasTypeDeriver extends DeriverBase implements ContainerDeriverInte
   protected $entityFieldManager;
 
   /**
+   * The token entity mapper.
+   *
    * @var \Drupal\token\TokenEntityMapperInterface
    */
   protected $tokenEntityMapper;
@@ -86,7 +90,7 @@ class EntityAliasTypeDeriver extends DeriverBase implements ContainerDeriverInte
         $this->derivatives[$entity_type_id]['types'] = [$this->tokenEntityMapper->getTokenTypeForEntityType($entity_type_id)];
         $this->derivatives[$entity_type_id]['provider'] = $entity_type->getProvider();
         $this->derivatives[$entity_type_id]['context_definitions'] = [
-          $entity_type_id => new EntityContextDefinition("entity:$entity_type_id", $this->t('@label being aliased', ['@label' => $entity_type->getLabel()]))
+          $entity_type_id => new EntityContextDefinition("entity:$entity_type_id", $this->t('@label being aliased', ['@label' => $entity_type->getLabel()])),
         ];
       }
     }

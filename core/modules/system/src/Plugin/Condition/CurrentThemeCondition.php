@@ -2,21 +2,21 @@
 
 namespace Drupal\system\Plugin\Condition;
 
+use Drupal\Core\Condition\Attribute\Condition;
 use Drupal\Core\Condition\ConditionPluginBase;
 use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Theme\ThemeManagerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'Current Theme' condition.
- *
- * @Condition(
- *   id = "current_theme",
- *   label = @Translation("Current Theme"),
- * )
  */
+#[Condition(
+  id: "current_theme",
+  label: new TranslatableMarkup("Current Theme"),
+)]
 class CurrentThemeCondition extends ConditionPluginBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -39,7 +39,7 @@ class CurrentThemeCondition extends ConditionPluginBase implements ContainerFact
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Theme\ThemeManagerInterface $theme_manager
@@ -51,19 +51,6 @@ class CurrentThemeCondition extends ConditionPluginBase implements ContainerFact
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->themeManager = $theme_manager;
     $this->themeHandler = $theme_handler;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('theme.manager'),
-      $container->get('theme_handler')
-    );
   }
 
   /**

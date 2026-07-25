@@ -2,6 +2,7 @@
 
 namespace Drupal\filter;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\DraggableListBuilder;
 use Drupal\Core\Entity\EntityInterface;
@@ -38,22 +39,20 @@ class FilterFormatListBuilder extends DraggableListBuilder {
   protected $messenger;
 
   /**
-   * Constructs a new FilterFormatListBuilder.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type definition.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
-   *   The entity storage class.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory.
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The messenger.
+   * The filter format repository service.
    */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, ConfigFactoryInterface $config_factory, MessengerInterface $messenger) {
+  protected FilterFormatRepositoryInterface $formatRepository;
+
+  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, ConfigFactoryInterface $config_factory, MessengerInterface $messenger, ?FilterFormatRepositoryInterface $format_repository = NULL) {
     parent::__construct($entity_type, $storage);
 
     $this->configFactory = $config_factory;
     $this->messenger = $messenger;
+    if (!$format_repository) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $format_repository argument is deprecated in drupal:11.4.0 and the $format_repository argument will be required in drupal:12.0.0. See https://www.drupal.org/node/3035368', E_USER_DEPRECATED);
+      $format_repository = \Drupal::service(FilterFormatRepositoryInterface::class);
+    }
+    $this->formatRepository = $format_repository;
   }
 
   /**
@@ -64,7 +63,8 @@ class FilterFormatListBuilder extends DraggableListBuilder {
       $entity_type,
       $container->get('entity_type.manager')->getStorage($entity_type->id()),
       $container->get('config.factory'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get(FilterFormatRepositoryInterface::class)
     );
   }
 
@@ -78,19 +78,10 @@ class FilterFormatListBuilder extends DraggableListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function load() {
-    // Only list enabled filters.
-    return array_filter(parent::load(), function ($entity) {
-      return $entity->status();
-    });
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function buildHeader() {
     $header['label'] = $this->t('Name');
     $header['roles'] = $this->t('Roles');
+    $header['status'] = $this->t('Status');
     return $header + parent::buildHeader();
   }
 
@@ -119,20 +110,28 @@ class FilterFormatListBuilder extends DraggableListBuilder {
     else {
       $row['roles'] = [
         '#theme' => 'item_list',
-        '#items' => filter_get_roles_by_format($entity),
+        '#items' => $entity->getRoles(),
         '#empty' => $this->t('No roles may use this format'),
         '#context' => ['list_style' => 'comma-list'],
       ];
     }
-
+    if ($entity->status()) {
+      $status = $this->t('Enabled');
+    }
+    else {
+      $status = $this->t('Disabled');
+    }
+    $row['status']['#markup'] = $status;
     return $row + parent::buildRow($entity);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOperations(EntityInterface $entity) {
-    $operations = parent::getDefaultOperations($entity);
+  protected function getDefaultOperations(EntityInterface $entity/* , ?CacheableMetadata $cacheability = NULL */) {
+    $args = func_get_args();
+    $cacheability = $args[1] ?? new CacheableMetadata();
+    $operations = parent::getDefaultOperations($entity, $cacheability);
 
     if (isset($operations['edit'])) {
       $operations['edit']['title'] = $this->t('Configure');
@@ -141,6 +140,16 @@ class FilterFormatListBuilder extends DraggableListBuilder {
     // The fallback format may not be disabled.
     if ($entity->isFallbackFormat()) {
       unset($operations['disable']);
+    }
+
+    // Remove disable and edit operations for disabled formats.
+    if (!$entity->status()) {
+      if (isset($operations['disable'])) {
+        unset($operations['disable']);
+      }
+      if (isset($operations['edit'])) {
+        unset($operations['edit']);
+      }
     }
 
     return $operations;
@@ -160,8 +169,6 @@ class FilterFormatListBuilder extends DraggableListBuilder {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
-
-    filter_formats_reset();
     $this->messenger->addStatus($this->t('The text format ordering has been saved.'));
   }
 

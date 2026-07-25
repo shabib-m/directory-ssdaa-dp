@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests unblocking the anonymous user account.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserAnonymousActivateTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['user'];
 
@@ -31,7 +33,7 @@ class UserAnonymousActivateTest extends KernelTestBase {
   /**
    * Tests that the anonymous user cannot be activated.
    */
-  public function testAnonymousActivate() {
+  public function testAnonymousActivate(): void {
     $accountAnon = \Drupal::entityTypeManager()->getStorage('user')->load(0);
 
     // Test that the anonymous user is blocked.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Traits;
 
 use Drupal\Component\Serialization\Json;
@@ -15,8 +17,9 @@ trait OEmbedTestTrait {
    * Returns the relative path to the oEmbed fixtures directory.
    *
    * @return string
+   *   The relative path to the oEmbed fixtures directory.
    */
-  protected function getFixturesDirectory() {
+  protected function getFixturesDirectory(): string {
     return \Drupal::service('extension.list.module')->getPath('media') . '/tests/fixtures/oembed';
   }
 
@@ -24,8 +27,9 @@ trait OEmbedTestTrait {
    * Returns the absolute URL of the oEmbed fixtures directory.
    *
    * @return string
+   *   The absolute URL of the oEmbed fixtures directory.
    */
-  protected function getFixturesUrl() {
+  protected function getFixturesUrl(): string {
     return $this->baseUrl . '/' . $this->getFixturesDirectory();
   }
 

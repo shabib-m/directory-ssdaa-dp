@@ -4,17 +4,18 @@ namespace Drupal\image\Plugin\ImageEffect;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
  * Converts an image resource.
- *
- * @ImageEffect(
- *   id = "image_convert",
- *   label = @Translation("Convert"),
- *   description = @Translation("Converts an image to a format (such as JPEG).")
- * )
  */
+#[ImageEffect(
+  id: "image_convert",
+  label: new TranslatableMarkup("Convert"),
+  description: new TranslatableMarkup("Converts an image to a format (such as JPEG)."),
+)]
 class ConvertImageEffect extends ConfigurableImageEffectBase {
 
   /**
@@ -22,7 +23,11 @@ class ConvertImageEffect extends ConfigurableImageEffectBase {
    */
   public function applyEffect(ImageInterface $image) {
     if (!$image->convert($this->configuration['extension'])) {
-      $this->logger->error('Image convert failed using the %toolkit toolkit on %path (%mimetype)', ['%toolkit' => $image->getToolkitId(), '%path' => $image->getSource(), '%mimetype' => $image->getMimeType()]);
+      $this->logger->error('Image convert failed using the %toolkit toolkit on %path (%mimetype)', [
+        '%toolkit' => $image->getToolkitId(),
+        '%path' => $image->getSource(),
+        '%mimetype' => $image->getMimeType(),
+      ]);
       return FALSE;
     }
     return TRUE;

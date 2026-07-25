@@ -1,15 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Cache;
+
+use Drupal\Core\Cache\Cache;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests our clearing is done the proper way.
- *
- * @group Cache
  */
-use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Core\Cache\Cache;
-
+#[Group('Cache')]
+#[RunTestsInSeparateProcesses]
 class ClearTest extends CacheTestBase {
 
   /**
@@ -30,7 +33,7 @@ class ClearTest extends CacheTestBase {
   /**
    * Tests drupal_flush_all_caches().
    */
-  public function testFlushAllCaches() {
+  public function testFlushAllCaches(): void {
     // Create cache entries for each flushed cache bin.
     $bins = Cache::getBins();
     $this->assertNotEmpty($bins, 'Cache::getBins() returned bins to flush.');
@@ -44,7 +47,7 @@ class ClearTest extends CacheTestBase {
 
     foreach ($bins as $bin => $cache_backend) {
       $cid = 'test_cid_clear' . $bin;
-      $this->assertFalse($this->checkCacheExists($cid, $this->defaultValue, $bin), new FormattableMarkup('All cache entries removed from @bin.', ['@bin' => $bin]));
+      $this->assertFalse($this->checkCacheExists($cid, $this->defaultValue, $bin), "All cache entries removed from $bin.");
     }
   }
 

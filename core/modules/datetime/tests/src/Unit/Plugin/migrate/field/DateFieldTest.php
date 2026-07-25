@@ -1,30 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\datetime\Unit\Plugin\migrate\field;
 
 use Drupal\datetime\Plugin\migrate\field\DateField;
 use Drupal\migrate\MigrateException;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 // cspell:ignore todate
-
 /**
  * Provides unit tests for the DateField Plugin.
- *
- * @coversDefaultClass \Drupal\datetime\Plugin\migrate\field\DateField
- *
- * @group migrate
  */
+#[CoversClass(DateField::class)]
+#[Group('migrate')]
 class DateFieldTest extends UnitTestCase {
 
   /**
    * Tests defineValueProcessPipeline.
-   *
-   * @covers ::defineValueProcessPipeline
-   *
-   * @dataProvider providerTestDefineValueProcessPipeline
    */
-  public function testDefineValueProcessPipeline($data, $from_format, $to_format) {
+  #[DataProvider('providerTestDefineValueProcessPipeline')]
+  public function testDefineValueProcessPipeline($data, $from_format, $to_format): void {
     $migration = $this->createMock('Drupal\migrate\Plugin\MigrationInterface');
     $pipeline = [
       'plugin' => 'sub_process',
@@ -64,7 +63,7 @@ class DateFieldTest extends UnitTestCase {
   /**
    * Provides data for testDefineValueProcessPipeline().
    */
-  public function providerTestDefineValueProcessPipeline() {
+  public static function providerTestDefineValueProcessPipeline() {
     return [
       [['type' => 'date'], 'Y-m-d\TH:i:s', 'Y-m-d\TH:i:s'],
       [['type' => 'datestamp'], 'U', 'U'],
@@ -129,10 +128,8 @@ class DateFieldTest extends UnitTestCase {
 
   /**
    * Tests invalid date types throw an exception.
-   *
-   * @covers ::defineValueProcessPipeline
    */
-  public function testDefineValueProcessPipelineException() {
+  public function testDefineValueProcessPipelineException(): void {
     $migration = $this->createMock('Drupal\migrate\Plugin\MigrationInterface');
 
     $plugin = new DateField([], '', []);

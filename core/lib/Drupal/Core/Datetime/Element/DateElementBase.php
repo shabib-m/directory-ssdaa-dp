@@ -4,12 +4,12 @@ namespace Drupal\Core\Datetime\Element;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
  * Provides a base class for date elements.
  */
-abstract class DateElementBase extends FormElement {
+abstract class DateElementBase extends FormElementBase {
 
   /**
    * Specifies the start and end year to use as a date range.
@@ -17,9 +17,9 @@ abstract class DateElementBase extends FormElement {
    * Handles a string like -3:+3 or 2001:2010 to describe a dynamic range of
    * minimum and maximum years to use in a date selector.
    *
-   * Centers the range around the current year, if any, but expands it far enough
-   * so it will pick up the year value in the field in case the value in the field
-   * is outside the initial range.
+   * Centers the range around the current year, if any, but expands it far
+   * enough so it will pick up the year value in the field in case the value in
+   * the field is outside the initial range.
    *
    * @param string $string
    *   A min and max year string like '-3:+1' or '2000:2010' or '2000:+3'.
@@ -35,9 +35,11 @@ abstract class DateElementBase extends FormElement {
     $this_year = $datetime->format('Y');
     [$min_year, $max_year] = explode(':', $string);
 
-    // Valid patterns would be -5:+5, 0:+1, 2008:2010.
+    // Valid patterns would be -5:+5, +0:+1, 2008:2010, 1:9999.
+    // Note that year 0 is 0 while current year is: +0.
+    // Due to the +/- logic we can't support years BC (<0).
     $plus_pattern = '@[\+|\-][0-9]{1,4}@';
-    $year_pattern = '@^[0-9]{4}@';
+    $year_pattern = '@^[0-9]{1,4}@';
     if (!preg_match($year_pattern, $min_year, $matches)) {
       if (preg_match($plus_pattern, $min_year, $matches)) {
         $min_year = $this_year + $matches[0];

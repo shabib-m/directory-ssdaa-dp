@@ -1,17 +1,14 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\Plugin\ContextHandlerTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Plugin;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
-use Drupal\Component\Plugin\DependentPluginInterface;
 use Drupal\Component\Plugin\Definition\ContextAwarePluginDefinitionInterface;
 use Drupal\Component\Plugin\Definition\ContextAwarePluginDefinitionTrait;
 use Drupal\Component\Plugin\Definition\PluginDefinition;
+use Drupal\Component\Plugin\DependentPluginInterface;
 use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Component\Plugin\Exception\MissingValueContextException;
 use Drupal\Core\Cache\NullBackend;
@@ -24,12 +21,16 @@ use Drupal\Core\Test\TestKernel;
 use Drupal\Core\TypedData\TypedDataManager;
 use Drupal\Core\Validation\ConstraintManager;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\Core\Plugin\Context\ContextHandler
- * @group Plugin
+ * Tests Drupal\Core\Plugin\Context\ContextHandler.
  */
+#[CoversClass(ContextHandler::class)]
+#[Group('Plugin')]
 class ContextHandlerTest extends UnitTestCase {
 
   /**
@@ -69,47 +70,41 @@ class ContextHandlerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::checkRequirements
-   *
-   * @dataProvider providerTestCheckRequirements
+   * Tests check requirements.
    */
-  public function testCheckRequirements($contexts, $requirements, $expected) {
+  #[DataProvider('providerTestCheckRequirements')]
+  public function testCheckRequirements($contexts, $requirements, $expected): void {
+    $contexts = array_map(function ($context) {
+      $mock = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
+      $mock->expects($this->atLeastOnce())
+        ->method('getContextDefinition')
+        ->willReturn($context);
+      return $mock;
+    }, $contexts);
+
     $this->assertSame($expected, $this->contextHandler->checkRequirements($contexts, $requirements));
   }
 
   /**
    * Provides data for testCheckRequirements().
    */
-  public function providerTestCheckRequirements() {
+  public static function providerTestCheckRequirements(): array {
     $requirement_optional = new ContextDefinition();
     $requirement_optional->setRequired(FALSE);
 
     $requirement_any = new ContextDefinition();
     $requirement_any->setRequired(TRUE);
 
-    $context_any = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
-    $context_any->expects($this->atLeastOnce())
-      ->method('getContextDefinition')
-      ->willReturn(new ContextDefinition('any'));
+    $context_any = new ContextDefinition('any');
 
     $requirement_specific = new ContextDefinition('string');
     $requirement_specific->setConstraints(['Blank' => []]);
 
-    $context_constraint_mismatch = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
-    $context_constraint_mismatch->expects($this->atLeastOnce())
-      ->method('getContextDefinition')
-      ->willReturn(new ContextDefinition('foo'));
-    $context_datatype_mismatch = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
-    $context_datatype_mismatch->expects($this->atLeastOnce())
-      ->method('getContextDefinition')
-      ->willReturn(new ContextDefinition('fuzzy'));
+    $context_constraint_mismatch = new ContextDefinition('foo');
+    $context_datatype_mismatch = new ContextDefinition('fuzzy');
 
-    $context_definition_specific = new ContextDefinition('string');
-    $context_definition_specific->setConstraints(['Blank' => []]);
-    $context_specific = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
-    $context_specific->expects($this->atLeastOnce())
-      ->method('getContextDefinition')
-      ->willReturn($context_definition_specific);
+    $context_specific = new ContextDefinition('string');
+    $context_specific->setConstraints(['Blank' => []]);
 
     $data = [];
     $data[] = [[], [], TRUE];
@@ -125,11 +120,18 @@ class ContextHandlerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getMatchingContexts
-   *
-   * @dataProvider providerTestGetMatchingContexts
+   * Tests get matching contexts.
    */
-  public function testGetMatchingContexts($contexts, $requirement, $expected = NULL) {
+  #[DataProvider('providerTestGetMatchingContexts')]
+  public function testGetMatchingContexts($contexts, $requirement, $expected = NULL): void {
+    $contexts = array_map(function ($context) {
+      $mock = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
+      $mock->expects($this->atLeastOnce())
+        ->method('getContextDefinition')
+        ->willReturn($context);
+      return $mock;
+    }, $contexts);
+
     if (is_null($expected)) {
       $expected = $contexts;
     }
@@ -139,30 +141,17 @@ class ContextHandlerTest extends UnitTestCase {
   /**
    * Provides data for testGetMatchingContexts().
    */
-  public function providerTestGetMatchingContexts() {
+  public static function providerTestGetMatchingContexts(): array {
     $requirement_any = new ContextDefinition();
 
     $requirement_specific = new ContextDefinition('string');
     $requirement_specific->setConstraints(['Blank' => []]);
 
-    $context_any = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
-    $context_any->expects($this->atLeastOnce())
-      ->method('getContextDefinition')
-      ->willReturn(new ContextDefinition('any'));
-    $context_constraint_mismatch = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
-    $context_constraint_mismatch->expects($this->atLeastOnce())
-      ->method('getContextDefinition')
-      ->willReturn(new ContextDefinition('foo'));
-    $context_datatype_mismatch = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
-    $context_datatype_mismatch->expects($this->atLeastOnce())
-      ->method('getContextDefinition')
-      ->willReturn(new ContextDefinition('fuzzy'));
-    $context_definition_specific = new ContextDefinition('string');
-    $context_definition_specific->setConstraints(['Blank' => []]);
-    $context_specific = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
-    $context_specific->expects($this->atLeastOnce())
-      ->method('getContextDefinition')
-      ->willReturn($context_definition_specific);
+    $context_any = new ContextDefinition('any');
+    $context_constraint_mismatch = new ContextDefinition('foo');
+    $context_datatype_mismatch = new ContextDefinition('fuzzy');
+    $context_specific = new ContextDefinition('string');
+    $context_specific->setConstraints(['Blank' => []]);
 
     $data = [];
     // No context will return no valid contexts.
@@ -181,11 +170,10 @@ class ContextHandlerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::filterPluginDefinitionsByContexts
-   *
-   * @dataProvider providerTestFilterPluginDefinitionsByContexts
+   * Tests filter plugin definitions by contexts.
    */
-  public function testFilterPluginDefinitionsByContexts($has_context, $definitions, $expected) {
+  #[DataProvider('providerTestFilterPluginDefinitionsByContexts')]
+  public function testFilterPluginDefinitionsByContexts($has_context, $definitions, $expected): void {
     if ($has_context) {
       $context = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
       $expected_context_definition = (new ContextDefinition('string'))->setConstraints(['Blank' => []]);
@@ -204,7 +192,7 @@ class ContextHandlerTest extends UnitTestCase {
   /**
    * Provides data for testFilterPluginDefinitionsByContexts().
    */
-  public function providerTestFilterPluginDefinitionsByContexts() {
+  public static function providerTestFilterPluginDefinitionsByContexts(): array {
     $data = [];
 
     $plugins = [];
@@ -310,9 +298,9 @@ class ContextHandlerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applyContextMapping
+   * Tests apply context mapping.
    */
-  public function testApplyContextMapping() {
+  public function testApplyContextMapping(): void {
     $context_hit = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
     $context_hit->expects($this->atLeastOnce())
       ->method('hasContextValue')
@@ -351,9 +339,9 @@ class ContextHandlerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applyContextMapping
+   * Tests apply context mapping missing required.
    */
-  public function testApplyContextMappingMissingRequired() {
+  public function testApplyContextMappingMissingRequired(): void {
     $context = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
     $context->expects($this->never())
       ->method('getContextValue');
@@ -388,9 +376,9 @@ class ContextHandlerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applyContextMapping
+   * Tests apply context mapping missing not required.
    */
-  public function testApplyContextMappingMissingNotRequired() {
+  public function testApplyContextMappingMissingNotRequired(): void {
     $context = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
     $context->expects($this->never())
       ->method('getContextValue');
@@ -423,9 +411,9 @@ class ContextHandlerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applyContextMapping
+   * Tests apply context mapping no value required.
    */
-  public function testApplyContextMappingNoValueRequired() {
+  public function testApplyContextMappingNoValueRequired(): void {
     $context = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
     $context->expects($this->never())
       ->method('getContextValue');
@@ -458,9 +446,9 @@ class ContextHandlerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applyContextMapping
+   * Tests apply context mapping no value non required.
    */
-  public function testApplyContextMappingNoValueNonRequired() {
+  public function testApplyContextMappingNoValueNonRequired(): void {
     $context = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
     $context->expects($this->never())
       ->method('getContextValue');
@@ -491,9 +479,9 @@ class ContextHandlerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applyContextMapping
+   * Tests apply context mapping configurable assigned.
    */
-  public function testApplyContextMappingConfigurableAssigned() {
+  public function testApplyContextMappingConfigurableAssigned(): void {
     $context = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
     $context->expects($this->atLeastOnce())
       ->method('hasContextValue')
@@ -530,9 +518,9 @@ class ContextHandlerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applyContextMapping
+   * Tests apply context mapping configurable assigned miss.
    */
-  public function testApplyContextMappingConfigurableAssignedMiss() {
+  public function testApplyContextMappingConfigurableAssignedMiss(): void {
     $context = $this->createMock('Drupal\Core\Plugin\Context\ContextInterface');
     $context->expects($this->never())
       ->method('getContextValue');
@@ -560,10 +548,16 @@ class ContextHandlerTest extends UnitTestCase {
 
 }
 
+/**
+ * Test interface used for creating mock classes in tests.
+ */
 interface TestConfigurableContextAwarePluginInterface extends ContextAwarePluginInterface, ConfigurableInterface, DependentPluginInterface {
 
 }
 
+/**
+ * Test class of context aware plugin definition.
+ */
 class ContextAwarePluginDefinition extends PluginDefinition implements ContextAwarePluginDefinitionInterface {
   use ContextAwarePluginDefinitionTrait;
 

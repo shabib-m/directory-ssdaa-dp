@@ -13,28 +13,10 @@ const userOrientationBtn = `${itemUserTray} .toolbar-toggle-orientation button`;
 module.exports = {
   '@tags': ['core'],
   before(browser) {
-    browser
-      .drupalInstall()
-      .drupalInstallModule('breakpoint')
-      .drupalInstallModule('toolbar')
-      .drupalCreateUser({
-        name: 'user',
-        password: '123',
-        permissions: [
-          'access site reports',
-          'access toolbar',
-          'access administration pages',
-          'administer menu',
-          'administer modules',
-          'administer site configuration',
-          'administer account settings',
-          'administer software updates',
-          'access content',
-          'administer permissions',
-          'administer users',
-        ],
-      })
-      .drupalLogin({ name: 'user', password: '123' });
+    browser.drupalInstall({
+      setupFile:
+        'core/modules/toolbar/tests/src/Nightwatch/ToolbarTestSetup.php',
+    });
   },
   beforeEach(browser) {
     // Set the resolution to the default desktop resolution. Ensure the default
@@ -99,23 +81,23 @@ module.exports = {
       'is-active toolbar-tray-vertical',
     );
     browser.waitForElementPresent(
-      '#toolbar-item-administration-tray li:nth-child(4) button',
+      '#toolbar-item-administration-tray li:nth-child(2) button',
     );
     browser.assert.not.hasClass(
-      '#toolbar-item-administration-tray li:nth-child(4)',
+      '#toolbar-item-administration-tray li:nth-child(2)',
       'open',
     );
     browser.assert.not.hasClass(
-      '#toolbar-item-administration-tray li:nth-child(4) button',
+      '#toolbar-item-administration-tray li:nth-child(2) button',
       'open',
     );
-    browser.click('#toolbar-item-administration-tray li:nth-child(4) button');
+    browser.click('#toolbar-item-administration-tray li:nth-child(2) button');
     browser.assert.hasClass(
-      '#toolbar-item-administration-tray li:nth-child(4)',
+      '#toolbar-item-administration-tray li:nth-child(2)',
       'open',
     );
     browser.assert.hasClass(
-      '#toolbar-item-administration-tray li:nth-child(4) button',
+      '#toolbar-item-administration-tray li:nth-child(2) button',
       'open',
     );
     browser.expect
@@ -158,7 +140,7 @@ module.exports = {
       'is-active toolbar-tray-horizontal',
     );
     browser.assert.hasClass('#toolbar-administration', 'toolbar-oriented');
-    browser.setWindowSize(263, 900);
+    browser.window.setSize(263, 900);
     browser.assert.hasClass(
       itemAdministrationTray,
       'is-active toolbar-tray-vertical',
@@ -166,10 +148,10 @@ module.exports = {
     browser.assert.not.hasClass(itemAdministration, 'toolbar-oriented');
   },
   'Standard width toolbar breakpoint': (browser) => {
-    browser.setWindowSize(1000, 900);
+    browser.window.setSize(1000, 900);
     browser.waitForElementPresent(adminOrientationButton);
     browser.assert.hasClass('body', 'toolbar-fixed');
-    browser.setWindowSize(609, 900);
+    browser.window.setSize(609, 900);
     browser.assert.hasClass(
       itemAdministrationTray,
       'is-active toolbar-tray-vertical',
@@ -178,7 +160,7 @@ module.exports = {
   },
   'Wide toolbar breakpoint': (browser) => {
     browser.waitForElementPresent(adminOrientationButton);
-    browser.setWindowSize(975, 900);
+    browser.window.setSize(975, 900);
     browser.assert.hasClass(
       itemAdministrationTray,
       'is-active toolbar-tray-vertical',
@@ -190,7 +172,7 @@ module.exports = {
     browser.drupalRelativeURL('/admin');
     // Don't check the visibility as stark doesn't add the .path-admin class
     // to the <body> required to display the button.
-    browser.assert.attributeContains(escapeSelector, 'href', '/user/2');
+    browser.assert.attributeContains(escapeSelector, 'href', '/user/login');
   },
   'Aural view test: tray orientation': (browser) => {
     browser.waitForElementPresent(
@@ -313,11 +295,11 @@ module.exports = {
     );
   },
   'Locked toolbar vertical wide viewport': (browser) => {
-    browser.setWindowSize(1000, 900);
+    browser.window.setSize(1000, 900);
     browser.waitForElementPresent(adminOrientationButton);
     // eslint-disable-next-line no-unused-expressions
     browser.expect.element(adminOrientationButton).to.be.visible;
-    browser.setWindowSize(975, 900);
+    browser.window.setSize(975, 900);
     browser.assert.hasClass(
       itemAdministrationTray,
       'is-active toolbar-tray-vertical',

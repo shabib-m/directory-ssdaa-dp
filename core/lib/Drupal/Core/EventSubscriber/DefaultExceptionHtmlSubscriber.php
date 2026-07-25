@@ -87,7 +87,10 @@ class DefaultExceptionHtmlSubscriber extends HttpExceptionSubscriberBase {
    *   The event to process.
    */
   public function on4xx(ExceptionEvent $event) {
-    if (($exception = $event->getThrowable()) && $exception instanceof HttpExceptionInterface) {
+    // Avoid making a subrequest for 400 errors because the same conditions that
+    // caused the 400 error could also happen in the subrequest. This allows 400
+    // exceptions to fall through to FinalExceptionSubscriber::on4xx.
+    if (($exception = $event->getThrowable()) && $exception instanceof HttpExceptionInterface && $exception->getStatusCode() > 400) {
       $this->makeSubrequest($event, '/system/4xx', $exception->getStatusCode());
     }
   }
@@ -164,8 +167,8 @@ class DefaultExceptionHtmlSubscriber extends HttpExceptionSubscriberBase {
       $parameters->add($this->redirectDestination->getAsArray() + ['_exception_statuscode' => $status_code]);
 
       $response = $this->httpKernel->handle($sub_request, HttpKernelInterface::SUB_REQUEST);
-      // Only 2xx responses should have their status code overridden; any
-      // other status code should be passed on: redirects (3xx), error (5xx)…
+      // Only 2xx responses should have their status code overridden; any other
+      // status code should be passed on: redirects (3xx), error (5xx) etc.
       // @see https://www.drupal.org/node/2603788#comment-10504916
       if ($response->isSuccessful()) {
         $response->setStatusCode($status_code);

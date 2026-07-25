@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config\Functional;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\Role;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests draggable list builder.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class ConfigDraggableListBuilderTest extends BrowserTestBase {
 
   /**
@@ -26,7 +30,7 @@ class ConfigDraggableListBuilderTest extends BrowserTestBase {
   /**
    * Tests draggable lists.
    */
-  public function testDraggableList() {
+  public function testDraggableList(): void {
     $this->drupalLogin($this->drupalCreateUser(['administer permissions']));
 
     // Create more than 50 roles.
@@ -38,7 +42,7 @@ class ConfigDraggableListBuilderTest extends BrowserTestBase {
       $role->save();
     }
 
-    // Navigate to Roles page
+    // Navigate to Roles page.
     $this->drupalGet('admin/people/roles');
 
     // Test for the page title.

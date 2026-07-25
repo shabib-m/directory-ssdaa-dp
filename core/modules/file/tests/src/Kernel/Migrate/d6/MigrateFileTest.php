@@ -1,19 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel\Migrate\d6;
 
+use Drupal\Core\Database\Database;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\Core\Database\Database;
 use Drupal\Tests\migrate\Kernel\MigrateDumpAlterInterface;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test file migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateFileTest extends MigrateDrupal6TestBase implements MigrateDumpAlterInterface {
 
   use FileMigrationTestTrait;
@@ -73,7 +77,7 @@ class MigrateFileTest extends MigrateDrupal6TestBase implements MigrateDumpAlter
   /**
    * Tests the Drupal 6 files to Drupal 8 migration.
    */
-  public function testFiles() {
+  public function testFiles(): void {
     $this->assertEntity(1, 'Image1.png', 39325, 'public://image-1.png', 'image/png', 1);
     $this->assertEntity(2, 'Image2.jpg', 1831, 'public://image-2.jpg', 'image/jpeg', 1);
     $this->assertEntity(3, 'image-3.jpg', 1831, 'public://image-3.jpg', 'image/jpeg', 1);

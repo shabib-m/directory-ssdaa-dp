@@ -2,22 +2,26 @@
 
 namespace Drupal\comment\Plugin\views\filter;
 
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\views\filter\Date;
 
 /**
  * Filter handler for the newer of last comment / node updated.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("comment_ces_last_updated")
  */
+#[ViewsFilter("comment_ces_last_updated")]
 class StatisticsLastUpdated extends Date {
 
   /**
    * The node table.
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected ?string $node_table;
 
+  /**
+   * {@inheritdoc}
+   */
   public function query() {
     $this->ensureMyTable();
     $this->node_table = $this->query->ensureTable('node', $this->relationship);

@@ -1,13 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\CookieResourceTestTrait;
 use Drupal\Tests\rest\Functional\EntityResource\XmlEntityNormalizationQuirksTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Comment Xml Cookie.
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class CommentXmlCookieTest extends CommentResourceTestBase {
 
   use CookieResourceTestTrait;
@@ -21,7 +27,7 @@ class CommentXmlCookieTest extends CommentResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $mimeType = 'text/xml; charset=UTF-8';
+  protected static $mimeType = 'text/xml; charset=utf-8';
 
   /**
    * {@inheritdoc}
@@ -32,21 +38,5 @@ class CommentXmlCookieTest extends CommentResourceTestBase {
    * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
-
-  /**
-   * {@inheritdoc}
-   */
-  public function testPostDxWithoutCriticalBaseFields() {
-    // Deserialization of the XML format is not supported.
-    $this->markTestSkipped();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function testPostSkipCommentApproval() {
-    // Deserialization of the XML format is not supported.
-    $this->markTestSkipped();
-  }
 
 }

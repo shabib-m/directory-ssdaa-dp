@@ -1,17 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Unit\Plugin\views\field;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityRepositoryInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Routing\ResettableStackedRouteMatchInterface;
 use Drupal\node\Plugin\views\field\NodeBulkForm;
+use Drupal\system\ActionConfigEntityInterface;
 use Drupal\Tests\UnitTestCase;
+use Drupal\views\Plugin\views\display\DisplayPluginBase;
+use Drupal\views\ViewExecutable;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\node\Plugin\views\field\NodeBulkForm
- * @group node
+ * Tests Drupal\node\Plugin\views\field\NodeBulkForm.
  */
+#[CoversClass(NodeBulkForm::class)]
+#[Group('node')]
 class NodeBulkFormTest extends UnitTestCase {
 
   /**
@@ -26,25 +38,25 @@ class NodeBulkFormTest extends UnitTestCase {
   /**
    * Tests the constructor assignment of actions.
    */
-  public function testConstructor() {
+  public function testConstructor(): void {
     $actions = [];
 
     for ($i = 1; $i <= 2; $i++) {
-      $action = $this->createMock('\Drupal\system\ActionConfigEntityInterface');
-      $action->expects($this->any())
+      $action = $this->createStub(ActionConfigEntityInterface::class);
+      $action
         ->method('getType')
         ->willReturn('node');
       $actions[$i] = $action;
     }
 
-    $action = $this->createMock('\Drupal\system\ActionConfigEntityInterface');
-    $action->expects($this->any())
+    $action = $this->createStub(ActionConfigEntityInterface::class);
+    $action
       ->method('getType')
       ->willReturn('user');
     $actions[] = $action;
 
-    $entity_storage = $this->createMock('Drupal\Core\Entity\EntityStorageInterface');
-    $entity_storage->expects($this->any())
+    $entity_storage = $this->createStub(EntityStorageInterface::class);
+    $entity_storage
       ->method('loadMultiple')
       ->willReturn($actions);
 
@@ -54,16 +66,18 @@ class NodeBulkFormTest extends UnitTestCase {
       ->with('action')
       ->willReturn($entity_storage);
 
-    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+    $entity_repository = $this->createStub(EntityRepositoryInterface::class);
 
-    $language_manager = $this->createMock('Drupal\Core\Language\LanguageManagerInterface');
+    $language_manager = $this->createStub(LanguageManagerInterface::class);
 
-    $messenger = $this->createMock('Drupal\Core\Messenger\MessengerInterface');
+    $messenger = $this->createStub(MessengerInterface::class);
+
+    $route_match = $this->createStub(ResettableStackedRouteMatchInterface::class);
 
     $views_data = $this->getMockBuilder('Drupal\views\ViewsData')
       ->disableOriginalConstructor()
       ->getMock();
-    $views_data->expects($this->any())
+    $views_data->expects($this->once())
       ->method('get')
       ->with('node')
       ->willReturn(['table' => ['entity type' => 'node']]);
@@ -73,24 +87,20 @@ class NodeBulkFormTest extends UnitTestCase {
     \Drupal::setContainer($container);
 
     $storage = $this->createMock('Drupal\views\ViewEntityInterface');
-    $storage->expects($this->any())
+    $storage->expects($this->once())
       ->method('get')
       ->with('base_table')
       ->willReturn('node');
 
-    $executable = $this->getMockBuilder('Drupal\views\ViewExecutable')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $executable = $this->createStub(ViewExecutable::class);
     $executable->storage = $storage;
 
-    $display = $this->getMockBuilder('Drupal\views\Plugin\views\display\DisplayPluginBase')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $display = $this->createStub(DisplayPluginBase::class);
 
     $definition['title'] = '';
     $options = [];
 
-    $node_bulk_form = new NodeBulkForm([], 'node_bulk_form', $definition, $entity_type_manager, $language_manager, $messenger, $entity_repository);
+    $node_bulk_form = new NodeBulkForm([], 'node_bulk_form', $definition, $entity_type_manager, $language_manager, $messenger, $entity_repository, $route_match);
     $node_bulk_form->init($executable, $display, $options);
 
     $reflected_actions = (new \ReflectionObject($node_bulk_form))->getProperty('actions');

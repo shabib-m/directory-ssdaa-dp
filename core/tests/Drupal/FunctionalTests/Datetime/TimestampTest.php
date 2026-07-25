@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Datetime;
 
 use Drupal\Core\Datetime\DrupalDateTime;
@@ -9,16 +11,21 @@ use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the functionality of Timestamp core field UI.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class TimestampTest extends BrowserTestBase {
 
   /**
-   * An array of display options to pass to EntityDisplayRepositoryInterface::getViewDisplay().
+   * An array of display options.
+   *
+   * These options are passed to
+   * EntityDisplayRepositoryInterface::getViewDisplay().
    *
    * @var array
    */
@@ -104,7 +111,7 @@ class TimestampTest extends BrowserTestBase {
   /**
    * Tests the "datetime_timestamp" widget.
    */
-  public function testWidget() {
+  public function testWidget(): void {
     // Build up a date in the UTC timezone.
     $value = '2012-12-31 00:00:00';
     $date = new DrupalDateTime($value, 'UTC');
@@ -152,6 +159,26 @@ class TimestampTest extends BrowserTestBase {
     $medium = DateFormat::load('medium')->getPattern();
     $this->drupalGet('entity_test/' . $id);
     $this->assertSession()->pageTextContains($date->format($medium));
+
+    // Build up a date in the UTC timezone.
+    $value = '2024-01-16 00:00:00';
+    $date = new DrupalDateTime($value, 'UTC');
+
+    // Set a default value for the field.
+    $this->field->setDefaultValue($date->getTimestamp())->save();
+
+    // Update the timezone to the system default.
+    $date->setTimezone(timezone_open(date_default_timezone_get()));
+
+    $this->drupalGet('entity_test/add');
+    $date_format = DateFormat::load('html_date')->getPattern();
+    $time_format = DateFormat::load('html_time')->getPattern();
+    // Make sure the default field value is set as the default value in the
+    // widget.
+    $this->assertSession()->fieldExists('field_timestamp[0][value][date]');
+    $this->assertSession()->fieldValueEquals('field_timestamp[0][value][date]', $date->format($date_format));
+    $this->assertSession()->fieldExists('field_timestamp[0][value][time]');
+    $this->assertSession()->fieldValueEquals('field_timestamp[0][value][time]', $date->format($time_format));
   }
 
 }

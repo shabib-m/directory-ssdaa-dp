@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Migrate\d7;
 
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrate field instance option translations.
- *
- * @group migrate_drupal_7
  */
+#[Group('migrate_drupal_7')]
+#[RunTestsInSeparateProcesses]
 class MigrateFieldInstanceOptionTranslationTest extends MigrateDrupal7TestBase {
 
   /**
@@ -19,14 +23,11 @@ class MigrateFieldInstanceOptionTranslationTest extends MigrateDrupal7TestBase {
     'config_translation',
     'datetime',
     'datetime_range',
-    'file',
     'image',
     'language',
     'link',
-    'locale',
     'menu_ui',
     'node',
-    'system',
     'taxonomy',
     'telephone',
     'text',
@@ -49,7 +50,7 @@ class MigrateFieldInstanceOptionTranslationTest extends MigrateDrupal7TestBase {
   /**
    * Migrate field instance option translations.
    */
-  public function testFieldInstanceOptionTranslation() {
+  public function testFieldInstanceOptionTranslation(): void {
     $language_manager = $this->container->get('language_manager');
 
     /** @var \Drupal\language\Config\LanguageConfigOverride $config_translation */

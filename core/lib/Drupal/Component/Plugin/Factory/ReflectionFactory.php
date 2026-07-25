@@ -32,7 +32,7 @@ class ReflectionFactory extends DefaultFactory {
   }
 
   /**
-   * Inspects the plugin class and build a list of arguments for the constructor.
+   * Inspects the plugin class and builds a list of constructor arguments.
    *
    * This is provided as a helper method so factories extending this class can
    * replace this and insert their own reflection logic.
@@ -42,7 +42,7 @@ class ReflectionFactory extends DefaultFactory {
    * @param string $plugin_id
    *   The identifier of the plugin implementation.
    * @param mixed $plugin_definition
-   *   The definition associated with the plugin_id.
+   *   The definition associated with the plugin ID.
    * @param array $configuration
    *   An array of configuration that may be passed to the instance.
    *

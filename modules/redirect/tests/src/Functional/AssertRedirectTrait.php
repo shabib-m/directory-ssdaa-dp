@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect\Functional;
 
 use Drupal\Core\Url;
@@ -15,7 +17,7 @@ trait AssertRedirectTrait {
    *
    * @param string $path
    *   The request path.
-   * @param $expected_ending_url
+   * @param string|null $expected_ending_url
    *   The path where we expect it to redirect. If NULL value provided, no
    *   redirect is expected.
    * @param int $expected_ending_status
@@ -28,11 +30,11 @@ trait AssertRedirectTrait {
    */
   public function assertRedirect($path, $expected_ending_url, $expected_ending_status = 301, $method = 'GET') {
     $client = $this->getHttpClient();
-    /** @var \Psr\Http\Message\ResponseInterface $response */
     $url = $this->getAbsoluteUrl($path);
     try {
-      $response = $client->request($method, $url, ['allow_redirects' => false]);
-    } catch (ClientException $e) {
+      $response = $client->request($method, $url, ['allow_redirects' => FALSE]);
+    }
+    catch (ClientException $e) {
       $this->assertEquals($expected_ending_status, $e->getResponse()->getStatusCode());
       return $e->getResponse();
     }
@@ -44,12 +46,12 @@ trait AssertRedirectTrait {
     $message = "Testing redirect from $path to $expected_ending_url. Ending url: $ending_url";
 
     if ($expected_ending_url == '<front>') {
-      $expected_ending_url = Url::fromUri('base:')->setAbsolute()->toString();
+      $expected_ending_url = Url::fromUri('base:')->toString();
     }
     elseif (!empty($expected_ending_url)) {
-      // Check for absolute/external urls.
+      // Correctly process internal URLs.
       if (!parse_url($expected_ending_url, PHP_URL_SCHEME)) {
-        $expected_ending_url = Url::fromUri('base:' . $expected_ending_url)->setAbsolute()->toString();
+        $expected_ending_url = Url::fromUri('base:' . $expected_ending_url)->toString();
       }
     }
     else {

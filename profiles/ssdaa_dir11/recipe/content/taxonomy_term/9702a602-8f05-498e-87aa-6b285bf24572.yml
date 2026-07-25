@@ -1,0 +1,28 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 9702a602-8f05-498e-87aa-6b285bf24572
+  bundle: main
+  default_langcode: ar
+  depends:
+    0f280d4e-497e-4364-9860-ede472ea7fa3: taxonomy_term
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'منتديات البرمجه'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      entity: 0f280d4e-497e-4364-9860-ede472ea7fa3
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

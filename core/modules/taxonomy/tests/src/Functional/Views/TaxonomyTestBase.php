@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional\Views;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\filter\FilterFormatRepositoryInterface;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\taxonomy\Entity\Term;
@@ -15,12 +18,10 @@ use Drupal\views\Tests\ViewTestData;
  */
 abstract class TaxonomyTestBase extends ViewTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['taxonomy', 'taxonomy_test_views'];
 
@@ -146,7 +147,7 @@ abstract class TaxonomyTestBase extends ViewTestBase {
    *   The created taxonomy term.
    */
   protected function createTerm(array $settings = []) {
-    $filter_formats = filter_formats();
+    $filter_formats = \Drupal::service(FilterFormatRepositoryInterface::class)->getAllFormats();
     $format = array_pop($filter_formats);
     $settings += [
       'name' => $this->randomMachineName(),

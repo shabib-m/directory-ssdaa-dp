@@ -6,6 +6,7 @@ use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Extension\ThemeHandlerInterface;
+use Drupal\Core\Theme\Registry;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -14,30 +15,13 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class ConfigCacheTag implements EventSubscriberInterface {
 
   /**
-   * The theme handler.
-   *
-   * @var \Drupal\Core\Extension\ThemeHandlerInterface
-   */
-  protected $themeHandler;
-
-  /**
-   * The cache tags invalidator.
-   *
-   * @var \Drupal\Core\Cache\CacheTagsInvalidatorInterface
-   */
-  protected $cacheTagsInvalidator;
-
-  /**
    * Constructs a ConfigCacheTag object.
-   *
-   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
-   *   The theme handler.
-   * @param \Drupal\Core\Cache\CacheTagsInvalidatorInterface $cache_tags_invalidator
-   *   The cache tags invalidator.
    */
-  public function __construct(ThemeHandlerInterface $theme_handler, CacheTagsInvalidatorInterface $cache_tags_invalidator) {
-    $this->themeHandler = $theme_handler;
-    $this->cacheTagsInvalidator = $cache_tags_invalidator;
+  public function __construct(
+    protected ThemeHandlerInterface $themeHandler,
+    protected CacheTagsInvalidatorInterface $cacheTagsInvalidator,
+    protected Registry $themeRegistry,
+  ) {
   }
 
   /**
@@ -63,7 +47,8 @@ class ConfigCacheTag implements EventSubscriberInterface {
     // Library and template overrides potentially change for the default theme
     // when the admin theme is changed.
     if ($config_name === 'system.theme' && $event->isChanged('admin')) {
-      $this->cacheTagsInvalidator->invalidateTags(['library_info', 'theme_registry']);
+      $this->themeRegistry->reset();
+      $this->cacheTagsInvalidator->invalidateTags(['library_info']);
     }
 
     // Theme-specific settings, check if this matches a theme settings

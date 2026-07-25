@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Traits;
 
 use Drupal\media\Entity\MediaType;
@@ -52,7 +54,9 @@ trait MediaTypeCreationTrait {
     // The media type form creates a source field if it does not exist yet. The
     // same must be done in a kernel test, since it does not use that form.
     // @see \Drupal\media\MediaTypeForm::save()
-    $source_field->getFieldStorageDefinition()->save();
+    /** @var \Drupal\field\FieldStorageConfigInterface $storage */
+    $storage = $source_field->getFieldStorageDefinition();
+    $storage->save();
     // The source field storage has been created, now the field can be saved.
     $source_field->save();
 

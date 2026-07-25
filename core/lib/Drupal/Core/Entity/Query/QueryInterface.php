@@ -4,6 +4,8 @@ namespace Drupal\Core\Entity\Query;
 
 use Drupal\Core\Database\Query\AlterableInterface;
 
+// cspell:ignore merhaba siema
+
 /**
  * Interface for entity queries.
  *
@@ -202,9 +204,9 @@ interface QueryInterface extends AlterableInterface {
    *
    * @param array $headers
    *   An array of headers of the same structure as described in
-   *   template_preprocess_table(). Use a 'specifier' in place of a 'field' to
-   *   specify what to sort on. This can be an entity or a field as described
-   *   in condition().
+   *   \Drupal\Core\Theme\ThemePreprocess::preprocessTable(). Use a 'specifier'
+   *   in place of a 'field' to specify what to sort on. This can be an entity
+   *   or a field as described in condition().
    *
    * @return $this
    */
@@ -259,14 +261,14 @@ interface QueryInterface extends AlterableInterface {
    *
    * For example, consider a map entity with an 'attributes' field
    * containing 'building_type' and 'color' columns. To find all green and
-   * red bikesheds:
+   * red sheds:
    * @code
    *   $query = \Drupal::entityQuery('map')->accessCheck(FALSE);
    *   $group = $query->orConditionGroup()
    *     ->condition('attributes.color', 'red')
    *     ->condition('attributes.color', 'green');
    *   $entity_ids = $query
-   *     ->condition('attributes.building_type', 'bikeshed')
+   *     ->condition('attributes.building_type', 'shed')
    *     ->condition($group)
    *     ->execute();
    * @endcode
@@ -274,7 +276,7 @@ interface QueryInterface extends AlterableInterface {
    * @code
    *   $entity_ids = $query
    *     ->condition('attributes.color', ['red', 'green'])
-   *     ->condition('attributes.building_type', 'bikeshed')
+   *     ->condition('attributes.building_type', 'shed')
    *     ->execute();
    * @endcode
    *

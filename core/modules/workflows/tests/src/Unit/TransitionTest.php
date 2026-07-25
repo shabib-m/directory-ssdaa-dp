@@ -1,25 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workflows\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\workflow_type_test\Plugin\WorkflowType\TestType;
 use Drupal\workflows\Transition;
 use Drupal\workflows\WorkflowTypeInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\workflows\Transition
- *
- * @group workflows
+ * Tests Drupal\workflows\Transition.
  */
+#[CoversClass(Transition::class)]
+#[Group('workflows')]
 class TransitionTest extends UnitTestCase {
 
   /**
-   * @covers ::__construct
-   * @covers ::id
-   * @covers ::label
+   * Tests getters.
+   *
+   * @legacy-covers ::__construct
+   * @legacy-covers ::id
+   * @legacy-covers ::label
    */
-  public function testGetters() {
+  public function testGetters(): void {
     $state = new Transition(
       $this->prophesize(WorkflowTypeInterface::class)->reveal(),
       'draft_published',
@@ -32,10 +38,12 @@ class TransitionTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::from
-   * @covers ::to
+   * Tests from and to.
+   *
+   * @legacy-covers ::from
+   * @legacy-covers ::to
    */
-  public function testFromAndTo() {
+  public function testFromAndTo(): void {
     $workflow = new TestType([], '', []);
     $workflow
       ->addState('draft', 'Draft')

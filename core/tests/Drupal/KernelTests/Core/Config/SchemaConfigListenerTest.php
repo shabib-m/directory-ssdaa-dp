@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\Traits\Core\Config\SchemaConfigListenerTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the functionality of ConfigSchemaChecker in KernelTestBase tests.
- *
- * @group config
  */
+#[Group('config')]
+#[RunTestsInSeparateProcesses]
 class SchemaConfigListenerTest extends KernelTestBase {
 
   use SchemaConfigListenerTestTrait;

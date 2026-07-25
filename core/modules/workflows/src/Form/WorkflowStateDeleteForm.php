@@ -39,7 +39,12 @@ class WorkflowStateDeleteForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to delete %state from %workflow?', ['%state' => $this->workflow->getTypePlugin()->getState($this->stateId)->label(), '%workflow' => $this->workflow->label()]);
+    return $this->t('Are you sure you want to delete %state from %workflow?', [
+      '%state' => $this->workflow->getTypePlugin()
+        ->getState($this->stateId)
+        ->label(),
+      '%workflow' => $this->workflow->label(),
+    ]);
   }
 
   /**
@@ -71,7 +76,7 @@ class WorkflowStateDeleteForm extends ConfirmFormBase {
    * @return array
    *   The form structure.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WorkflowInterface $workflow = NULL, $workflow_state = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WorkflowInterface $workflow = NULL, $workflow_state = NULL) {
     if (!$workflow->getTypePlugin()->hasState($workflow_state)) {
       throw new NotFoundHttpException();
     }

@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 use Drupal\block_content\Entity\BlockContentType;
 
+/**
+ * Resource test base for the BlockContentType entity.
+ */
 abstract class BlockContentTypeResourceTestBase extends ConfigEntityResourceTestBase {
 
   /**
@@ -55,7 +60,7 @@ abstract class BlockContentTypeResourceTestBase extends ConfigEntityResourceTest
       'id' => 'pascal',
       'label' => 'Pascal',
       'langcode' => 'en',
-      'revision' => 0,
+      'revision' => FALSE,
       'status' => TRUE,
       'uuid' => $this->entity->uuid(),
     ];

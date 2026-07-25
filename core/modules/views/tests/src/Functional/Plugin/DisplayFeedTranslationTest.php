@@ -1,21 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Plugin;
 
+use Drupal\filter\FilterFormatRepositoryInterface;
+use Drupal\node\Entity\Node;
+use Drupal\Tests\content_translation\Traits\ContentTranslationTestTrait;
 use Drupal\Tests\Traits\Core\PathAliasTestTrait;
 use Drupal\Tests\views\Functional\ViewTestBase;
-use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\node\Entity\Node;
+use Drupal\Tests\WaitTerminateTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore português
 /**
  * Tests the feed display plugin with translated content.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\display\Feed
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class DisplayFeedTranslationTest extends ViewTestBase {
 
+  use ContentTranslationTestTrait;
   use PathAliasTestTrait;
+  use WaitTerminateTestTrait;
 
   /**
    * Views used by this test.
@@ -25,9 +35,7 @@ class DisplayFeedTranslationTest extends ViewTestBase {
   public static $testViews = ['test_display_feed'];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'node',
@@ -58,7 +66,7 @@ class DisplayFeedTranslationTest extends ViewTestBase {
 
     $this->langcodes = ['es', 'pt-br'];
     foreach ($this->langcodes as $langcode) {
-      ConfigurableLanguage::createFromLangcode($langcode)->save();
+      static::createLanguageFromLangcode($langcode);
     }
 
     $admin_user = $this->drupalCreateUser([
@@ -74,30 +82,29 @@ class DisplayFeedTranslationTest extends ViewTestBase {
     $this->drupalCreateContentType(['type' => 'page']);
 
     // Enable translation for page.
-    $edit = [
-      'entity_types[node]' => TRUE,
-      'settings[node][page][translatable]' => TRUE,
-      'settings[node][page][settings][language][language_alterable]' => TRUE,
-    ];
-    $this->drupalGet('admin/config/regional/content-language');
-    $this->submitForm($edit, 'Save configuration');
+    static::enableContentTranslation('node', 'page');
 
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
+
+    // The \Drupal\path_alias\AliasPrefixList service performs cache clears
+    // after Drupal has flushed the response to the client. We use
+    // WaitTerminateTestTrait to wait for Drupal to do this before continuing.
+    $this->setWaitForTerminate();
   }
 
   /**
    * Tests the rendered output for fields display with multiple translations.
    */
-  public function testFeedFieldOutput() {
+  public function testFeedFieldOutput(): void {
     $node = $this->drupalCreateNode([
       'type' => 'page',
       'title' => 'en',
       'body' => [
         0 => [
           'value' => 'Something in English.',
-          'format' => filter_default_format(),
+          'format' => \Drupal::service(FilterFormatRepositoryInterface::class)->getDefaultFormat()->id(),
         ],
       ],
       'langcode' => 'en',
@@ -136,7 +143,7 @@ class DisplayFeedTranslationTest extends ViewTestBase {
    * @param \Drupal\node\Entity\Node $node
    *   The node entity that's been created.
    */
-  protected function checkFeedResults($link_style, Node $node) {
+  protected function checkFeedResults($link_style, Node $node): void {
     /** @var \Drupal\Core\Language\LanguageManagerInterface $languageManager */
     $language_manager = \Drupal::languageManager()->reset();
 

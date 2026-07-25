@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel;
 
 use Drupal\Core\Form\FormState;
 use Drupal\entity_test\Entity\EntityTest;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests other Field API functions.
  *
- * @group field
  * @todo move this to the Entity module
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class FieldAttachOtherTest extends FieldKernelTestBase {
 
   /**
@@ -25,7 +30,7 @@ class FieldAttachOtherTest extends FieldKernelTestBase {
   /**
    * Tests rendering fields with EntityDisplay build().
    */
-  public function testEntityDisplayBuild() {
+  public function testEntityDisplayBuild(): void {
     $this->createFieldWithStorage('_2');
 
     $entity_type = 'entity_test';
@@ -129,14 +134,13 @@ class FieldAttachOtherTest extends FieldKernelTestBase {
       $this->assertRaw($expected, "Value $delta is displayed, formatter settings are applied.");
     }
 
-    // TODO:
-    // - check display order with several fields
+    // @todo Check display order with several fields.
   }
 
   /**
    * Tests rendering fields with EntityDisplay::buildMultiple().
    */
-  public function testEntityDisplayViewMultiple() {
+  public function testEntityDisplayViewMultiple(): void {
     // Use a formatter that has a prepareView() step.
     $display = \Drupal::service('entity_display.repository')
       ->getViewDisplay('entity_test', 'entity_test', 'full')
@@ -164,7 +168,7 @@ class FieldAttachOtherTest extends FieldKernelTestBase {
    * Complements unit test coverage in
    * \Drupal\Tests\Core\Entity\Sql\SqlContentEntityStorageTest.
    */
-  public function testEntityCache() {
+  public function testEntityCache(): void {
     // Initialize random values and a test entity.
     $entity_init = EntityTest::create(['type' => $this->fieldTestData->field->getTargetBundle()]);
     $values = $this->_generateTestFieldValues($this->fieldTestData->field_storage->getCardinality());
@@ -247,7 +251,7 @@ class FieldAttachOtherTest extends FieldKernelTestBase {
    * This could be much more thorough, but it does verify that the correct
    * widgets show up.
    */
-  public function testEntityFormDisplayBuildForm() {
+  public function testEntityFormDisplayBuildForm(): void {
     $this->createFieldWithStorage('_2');
 
     $entity_type = 'entity_test';
@@ -269,11 +273,11 @@ class FieldAttachOtherTest extends FieldKernelTestBase {
     $this->assertEquals($this->fieldTestData->field->getLabel(), $form[$this->fieldTestData->field_name]['widget']['#title'], "First field's form title is {$this->fieldTestData->field->getLabel()}");
     $this->assertEquals($this->fieldTestData->field_2->getLabel(), $form[$this->fieldTestData->field_name_2]['widget']['#title'], "Second field's form title is {$this->fieldTestData->field_2->getLabel()}");
     for ($delta = 0; $delta < $this->fieldTestData->field_storage->getCardinality(); $delta++) {
-      // field_test_widget uses 'textfield'
+      // field_test_widget uses 'textfield'.
       $this->assertEquals('textfield', $form[$this->fieldTestData->field_name]['widget'][$delta]['value']['#type'], "First field's form delta {$delta} widget is textfield");
     }
     for ($delta = 0; $delta < $this->fieldTestData->field_storage_2->getCardinality(); $delta++) {
-      // field_test_widget uses 'textfield'
+      // field_test_widget uses 'textfield'.
       $this->assertEquals('textfield', $form[$this->fieldTestData->field_name_2]['widget'][$delta]['value']['#type'], "Second field's form delta {$delta} widget is textfield");
     }
 
@@ -291,7 +295,7 @@ class FieldAttachOtherTest extends FieldKernelTestBase {
     $this->assertFalse(isset($form[$this->fieldTestData->field_name]), 'The first field does not exist in the form');
     $this->assertEquals($this->fieldTestData->field_2->getLabel(), $form[$this->fieldTestData->field_name_2]['widget']['#title'], "Second field's form title is {$this->fieldTestData->field_2->getLabel()}");
     for ($delta = 0; $delta < $this->fieldTestData->field_storage_2->getCardinality(); $delta++) {
-      // field_test_widget uses 'textfield'
+      // field_test_widget uses 'textfield'.
       $this->assertEquals('textfield', $form[$this->fieldTestData->field_name_2]['widget'][$delta]['value']['#type'], "Second field's form delta {$delta} widget is textfield");
     }
   }
@@ -299,7 +303,7 @@ class FieldAttachOtherTest extends FieldKernelTestBase {
   /**
    * Tests \Drupal\Core\Entity\Display\EntityFormDisplayInterface::extractFormValues().
    */
-  public function testEntityFormDisplayExtractFormValues() {
+  public function testEntityFormDisplayExtractFormValues(): void {
     $this->createFieldWithStorage('_2');
 
     $entity_type = 'entity_test';
@@ -372,7 +376,8 @@ class FieldAttachOtherTest extends FieldKernelTestBase {
     }
     $this->assertSame($expected_values_2, $entity->{$this->fieldTestData->field_name_2}->getValue(), 'Submit filters empty values');
 
-    // Call EntityFormDisplayInterface::extractFormValues() for a single field (the second field).
+    // Call EntityFormDisplayInterface::extractFormValues() for a single field
+    // (the second field).
     foreach ($display->getComponents() as $name => $options) {
       if ($name != $this->fieldTestData->field_name_2) {
         $display->removeComponent($name);

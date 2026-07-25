@@ -11,7 +11,7 @@ use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\image\ImageStyleInterface;
 use Drupal\system\FileDownloadController;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -64,24 +64,18 @@ class ImageStyleDownloadController extends FileDownloadController {
    * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   The system service.
    */
-  public function __construct(LockBackendInterface $lock, ImageFactory $image_factory, StreamWrapperManagerInterface $stream_wrapper_manager, FileSystemInterface $file_system) {
+  public function __construct(
+    #[Autowire(service: 'lock')]
+    LockBackendInterface $lock,
+    ImageFactory $image_factory,
+    StreamWrapperManagerInterface $stream_wrapper_manager,
+    FileSystemInterface $file_system,
+  ) {
     parent::__construct($stream_wrapper_manager);
     $this->lock = $lock;
     $this->imageFactory = $image_factory;
     $this->logger = $this->getLogger('image');
     $this->fileSystem = $file_system;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('lock'),
-      $container->get('image.factory'),
-      $container->get('stream_wrapper_manager'),
-      $container->get('file_system')
-    );
   }
 
   /**
@@ -95,6 +89,8 @@ class ImageStyleDownloadController extends FileDownloadController {
    *   The file scheme, defaults to 'private'.
    * @param \Drupal\image\ImageStyleInterface $image_style
    *   The image style to deliver.
+   * @param string $required_derivative_scheme
+   *   The required scheme for the derivative image.
    *
    * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Symfony\Component\HttpFoundation\Response
    *   The transferred file as response or some error response.
@@ -106,10 +102,11 @@ class ImageStyleDownloadController extends FileDownloadController {
    * @throws \Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException
    *   Thrown when the file is still being generated.
    */
-  public function deliver(Request $request, $scheme, ImageStyleInterface $image_style) {
+  public function deliver(Request $request, $scheme, ImageStyleInterface $image_style, string $required_derivative_scheme) {
     $target = $request->query->get('file');
     $image_uri = $scheme . '://' . $target;
     $image_uri = $this->streamWrapperManager->normalizeUri($image_uri);
+    $sample_image_uri = $scheme . '://' . $this->config('image.settings')->get('preview_image');
 
     if ($this->streamWrapperManager->isValidScheme($scheme)) {
       $normalized_target = $this->streamWrapperManager->getTarget($image_uri);
@@ -136,7 +133,7 @@ class ImageStyleDownloadController extends FileDownloadController {
     // The $target variable for a derivative of a style has
     // styles/<style_name>/... as structure, so we check if the $target variable
     // starts with styles/.
-    $token = $request->query->get(IMAGE_DERIVATIVE_TOKEN, '');
+    $token = $request->query->get(ImageStyleInterface::TOKEN, '');
     $token_is_valid = hash_equals($image_style->getPathToken($image_uri), $token)
       || hash_equals($image_style->getPathToken($scheme . '://' . $target), $token);
     if (!$this->config('image.settings')->get('allow_insecure_derivatives') || str_starts_with(ltrim($target, '\/'), 'styles/')) {
@@ -154,17 +151,42 @@ class ImageStyleDownloadController extends FileDownloadController {
     $derivative_uri = $image_style->buildUri($image_uri);
     $derivative_scheme = $this->streamWrapperManager->getScheme($derivative_uri);
 
-    if ($token_is_valid) {
-      $is_public = ($scheme !== 'private');
-    }
-    else {
-      $core_schemes = ['public', 'private', 'temporary'];
-      $additional_public_schemes = array_diff(Settings::get('file_additional_public_schemes', []), $core_schemes);
-      $public_schemes = array_merge(['public'], $additional_public_schemes);
-      $is_public = in_array($derivative_scheme, $public_schemes, TRUE);
+    if ($required_derivative_scheme !== $derivative_scheme) {
+      throw new AccessDeniedHttpException("The scheme for this image doesn't match the scheme for the original image");
     }
 
+    $additional_public_schemes = array_diff(
+      Settings::get('file_additional_public_schemes', []),
+      ['public', 'private', 'temporary'],
+    );
+    $is_public = in_array(
+      $derivative_scheme,
+      array_merge(['public'], $additional_public_schemes),
+      TRUE,
+    );
+
     $headers = [];
+
+    // Don't try to generate file if source is missing.
+    if ($image_uri !== $sample_image_uri && !$this->sourceImageExists($image_uri, $token_is_valid)) {
+      // If the image style converted the extension, it has been added to the
+      // original file, resulting in filenames like image.png.jpeg. So to find
+      // the actual source image, we remove the extension and check if that
+      // image exists.
+      $converted_image_uri = static::getUriWithoutConvertedExtension($image_uri);
+      if ($converted_image_uri !== $image_uri &&
+          $this->sourceImageExists($converted_image_uri, $token_is_valid)) {
+        // The converted file does exist, use it as the source.
+        $image_uri = $converted_image_uri;
+      }
+      else {
+        $this->logger->notice('Source image at %source_image_path not found while trying to generate derivative image at %derivative_path.', [
+          '%source_image_path' => $image_uri,
+          '%derivative_path' => $derivative_uri,
+        ]);
+        return new Response($this->t('Error generating image, missing source file.'), 404);
+      }
+    }
 
     // If not using a public scheme, let other modules provide headers and
     // control access to the file.
@@ -175,22 +197,11 @@ class ImageStyleDownloadController extends FileDownloadController {
       }
     }
 
-    // Don't try to generate file if source is missing.
-    if (!$this->sourceImageExists($image_uri, $token_is_valid)) {
-      // If the image style converted the extension, it has been added to the
-      // original file, resulting in filenames like image.png.jpeg. So to find
-      // the actual source image, we remove the extension and check if that
-      // image exists.
-      $path_info = pathinfo(StreamWrapperManager::getTarget($image_uri));
-      $converted_image_uri = sprintf('%s://%s%s%s', $this->streamWrapperManager->getScheme($derivative_uri), $path_info['dirname'], DIRECTORY_SEPARATOR, $path_info['filename']);
-      if (!$this->sourceImageExists($converted_image_uri, $token_is_valid)) {
-        $this->logger->notice('Source image at %source_image_path not found while trying to generate derivative image at %derivative_path.', ['%source_image_path' => $image_uri, '%derivative_path' => $derivative_uri]);
-        return new Response($this->t('Error generating image, missing source file.'), 404);
-      }
-      else {
-        // The converted file does exist, use it as the source.
-        $image_uri = $converted_image_uri;
-      }
+    // If it is default sample.png, ignore scheme.
+    // This value swap must be done after hook_file_download is called since
+    // the hooks are expecting a URI, not a file path.
+    if ($image_uri === $sample_image_uri) {
+      $image_uri = $target;
     }
 
     // Don't start generating the image if the derivative already exists or if
@@ -269,6 +280,33 @@ class ImageStyleDownloadController extends FileDownloadController {
     }
 
     return TRUE;
+  }
+
+  /**
+   * Get the file URI without the extension from any conversion image style.
+   *
+   * If the image style converted the image, then an extension has been added
+   * to the original file, resulting in filenames like image.png.jpeg.
+   *
+   * @param string $uri
+   *   The file URI.
+   *
+   * @return string
+   *   The file URI without the extension from any conversion image style.
+   */
+  public static function getUriWithoutConvertedExtension(string $uri): string {
+    $original_uri = $uri;
+    $path_info = pathinfo(StreamWrapperManager::getTarget($uri));
+    // Only convert the URI when the filename still has an extension.
+    if (!empty($path_info['filename']) && pathinfo($path_info['filename'], PATHINFO_EXTENSION)) {
+      $original_uri = StreamWrapperManager::getScheme($uri) . '://';
+      if (!empty($path_info['dirname']) && $path_info['dirname'] !== '.') {
+        $original_uri .= $path_info['dirname'] . DIRECTORY_SEPARATOR;
+      }
+      $original_uri .= $path_info['filename'];
+    }
+
+    return $original_uri;
   }
 
 }

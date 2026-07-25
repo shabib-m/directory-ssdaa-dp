@@ -6,17 +6,16 @@ use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsArea;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ViewExecutable;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an area handler which renders an entity in a certain view mode.
  *
  * @ingroup views_area_handlers
- *
- * @ViewsArea("entity")
  */
+#[ViewsArea("entity")]
 class Entity extends TokenizeAreaPluginBase {
 
   /**
@@ -53,7 +52,7 @@ class Entity extends TokenizeAreaPluginBase {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -74,21 +73,7 @@ class Entity extends TokenizeAreaPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('entity.repository'),
-      $container->get('entity_display.repository')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
     $this->entityType = $this->definition['entity_type'];
   }

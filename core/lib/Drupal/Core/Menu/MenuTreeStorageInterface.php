@@ -124,10 +124,9 @@ interface MenuTreeStorageInterface {
    * MenuLinkTree::checkAccess() needs to be invoked afterwards.
    *
    * The tree order is maintained using an optimized algorithm, for example by
-   * storing each parent in an individual field, see
-   * https://www.drupal.org/node/141866 for more details. However, any details
-   * of the storage should not be relied upon since it may be swapped with a
-   * different implementation.
+   * storing each parent in an individual field. However, any details of the
+   * storage should not be relied upon since it may be swapped with a different
+   * implementation.
    *
    * @param string $menu_name
    *   The name of the menu.
@@ -202,7 +201,7 @@ interface MenuTreeStorageInterface {
    *   two parents (1, 6) looks like the following:
    *
    * @code
-   *   array(
+   *   [
    *     'p1' => 1,
    *     'p2' => 6,
    *     'p3' => 8,
@@ -212,7 +211,7 @@ interface MenuTreeStorageInterface {
    *     'p7' => 0,
    *     'p8' => 0,
    *     'p9' => 0
-   *   )
+   *   ]
    * @endcode
    */
   public function getRootPathIds($id);

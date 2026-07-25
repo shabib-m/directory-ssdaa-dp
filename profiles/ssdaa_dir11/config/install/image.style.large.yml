@@ -1,0 +1,28 @@
+uuid: 804f2861-d88c-4fb3-9ce2-e92008ce667e
+langcode: ar
+status: true
+dependencies: {  }
+name: large
+label: 'كبير (480×480)'
+effects:
+  ddd73aa7-4bd6-4c85-b600-bdf2b1628d1d:
+    uuid: ddd73aa7-4bd6-4c85-b600-bdf2b1628d1d
+    id: image_scale
+    weight: -9
+    data:
+      width: 480
+      height: 480
+      upscale: false
+  6e8fe467-84c1-4ef0-a73b-7eccf1cc20e8:
+    uuid: 6e8fe467-84c1-4ef0-a73b-7eccf1cc20e8
+    id: image_convert_avif
+    weight: -8
+    data:
+      extension: webp
+  3d9196b9-028f-4a2e-af70-fa3d67b6ae35:
+    uuid: 3d9196b9-028f-4a2e-af70-fa3d67b6ae35
+    id: image_resize
+    weight: -10
+    data:
+      width: 480
+      height: 480

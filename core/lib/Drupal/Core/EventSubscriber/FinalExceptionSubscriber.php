@@ -65,6 +65,7 @@ class FinalExceptionSubscriber implements EventSubscriberInterface {
    * Gets the configured error level.
    *
    * @return string
+   *   The error level. Defaults to the configure site error level.
    */
   protected function getErrorLevel() {
     if (!isset($this->errorLevel)) {
@@ -126,7 +127,7 @@ class FinalExceptionSubscriber implements EventSubscriberInterface {
     }
 
     $content_type = $event->getRequest()->getRequestFormat() == 'html' ? 'text/html' : 'text/plain';
-    $content = $this->t('The website encountered an unexpected error. Please try again later.');
+    $content = $this->t('The website encountered an unexpected error. Try again later.');
     $content .= $message ? '<br><br>' . $message : '';
     $response = new Response($content, 500, ['Content-Type' => $content_type]);
 
@@ -152,7 +153,7 @@ class FinalExceptionSubscriber implements EventSubscriberInterface {
    */
   public function on4xx(ExceptionEvent $event) {
     $exception = $event->getThrowable();
-    if ($exception && $exception instanceof HttpExceptionInterface && str_starts_with($exception->getStatusCode(), '4')) {
+    if ($exception && $exception instanceof HttpExceptionInterface && str_starts_with((string) $exception->getStatusCode(), '4')) {
       $message = PlainTextOutput::renderFromHtml($exception->getMessage());
       // If the exception is cacheable, generate a cacheable response.
       if ($exception instanceof CacheableDependencyInterface) {
@@ -183,6 +184,7 @@ class FinalExceptionSubscriber implements EventSubscriberInterface {
    * Checks whether the error level is verbose or not.
    *
    * @return bool
+   *   TRUE when verbose reporting is enabled, FALSE otherwise.
    */
   protected function isErrorLevelVerbose() {
     return $this->getErrorLevel() === ERROR_REPORTING_DISPLAY_VERBOSE;
@@ -191,10 +193,11 @@ class FinalExceptionSubscriber implements EventSubscriberInterface {
   /**
    * Wrapper for error_displayable().
    *
-   * @param $error
+   * @param array $error
    *   Optional error to examine for ERROR_REPORTING_DISPLAY_SOME.
    *
    * @return bool
+   *   TRUE if an error should be displayed, FALSE otherwise.
    *
    * @see \error_displayable
    */
@@ -208,7 +211,7 @@ class FinalExceptionSubscriber implements EventSubscriberInterface {
    * Attempts to reduce verbosity by removing DRUPAL_ROOT from the file path in
    * the message. This does not happen for (false) security.
    *
-   * @param $error
+   * @param array $error
    *   Optional error to examine for ERROR_REPORTING_DISPLAY_SOME.
    *
    * @return array

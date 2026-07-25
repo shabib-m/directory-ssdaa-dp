@@ -1,18 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel;
 
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\TypedData\DataDefinitionInterface;
-use Drupal\file\FileInterface;
 use Drupal\file\ComputedFileUrl;
+use Drupal\file\FileInterface;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\file\ComputedFileUrl
- *
- * @group file
+ * Tests Drupal\file\ComputedFileUrl.
  */
+#[CoversClass(ComputedFileUrl::class)]
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class ComputedFileUrlTest extends KernelTestBase {
 
   /**
@@ -23,9 +29,9 @@ class ComputedFileUrlTest extends KernelTestBase {
   protected $testUrl = 'public://druplicon.txt';
 
   /**
-   * @covers ::getValue
+   * Tests get value.
    */
-  public function testGetValue() {
+  public function testGetValue(): void {
     $entity = $this->prophesize(FileInterface::class);
     $entity->getFileUri()
       ->willReturn($this->testUrl);
@@ -48,9 +54,9 @@ class ComputedFileUrlTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::setValue
+   * Tests set value.
    */
-  public function testSetValue() {
+  public function testSetValue(): void {
     $name = $this->randomMachineName();
     $parent = $this->prophesize(FieldItemInterface::class);
     $parent->onChange($name)
@@ -70,9 +76,9 @@ class ComputedFileUrlTest extends KernelTestBase {
   }
 
   /**
-   * @covers ::setValue
+   * Tests set value no notify.
    */
-  public function testSetValueNoNotify() {
+  public function testSetValueNoNotify(): void {
     $name = $this->randomMachineName();
     $parent = $this->prophesize(FieldItemInterface::class);
     $parent->onChange($name)

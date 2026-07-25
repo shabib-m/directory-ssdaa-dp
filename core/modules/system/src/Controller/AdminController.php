@@ -4,7 +4,10 @@ namespace Drupal\system\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Extension\ModuleExtensionList;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\system\ModuleAdminLinksHelper;
+use Drupal\user\ModulePermissionsLinkHelper;
+use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * Controller for admin section.
@@ -12,29 +15,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class AdminController extends ControllerBase {
 
   /**
-   * The module extension list.
-   *
-   * @var \Drupal\Core\Extension\ModuleExtensionList
-   */
-  protected $moduleExtensionList;
-
-  /**
    * AdminController constructor.
-   *
-   * @param \Drupal\Core\Extension\ModuleExtensionList $extension_list_module
-   *   The module extension list.
    */
-  public function __construct(ModuleExtensionList $extension_list_module) {
-    $this->moduleExtensionList = $extension_list_module;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('extension.list.module')
-    );
+  public function __construct(
+    protected ModuleExtensionList $moduleExtensionList,
+    protected ModuleAdminLinksHelper $moduleAdminLinks,
+    protected ModulePermissionsLinkHelper $modulePermissionsLinks,
+  ) {
   }
 
   /**
@@ -43,6 +30,12 @@ class AdminController extends ControllerBase {
    * @return array
    *   A render array containing the listing.
    */
+  #[Route(
+    path: '/admin/index',
+    name: 'system.admin_index',
+    requirements: ['_permission' => 'access administration pages'],
+    defaults: ['_title' => new TranslatableMarkup('Administration')],
+  )]
   public function index() {
     $extensions = array_intersect_key($this->moduleExtensionList->getList(), $this->moduleHandler()->getModuleList());
 
@@ -51,7 +44,11 @@ class AdminController extends ControllerBase {
 
     foreach ($extensions as $module => $extension) {
       // Only display a section if there are any available tasks.
-      if ($admin_tasks = system_get_module_admin_tasks($module, $extension->info)) {
+      $admin_tasks = $this->moduleAdminLinks->getModuleAdminLinks($module);
+      if ($module_permissions_link = $this->modulePermissionsLinks->getModulePermissionsLink($module, $extension->info['name'])) {
+        $admin_tasks["user.admin_permissions.{$module}"] = $module_permissions_link;
+      }
+      if (!empty($admin_tasks)) {
         // Sort links by title.
         uasort($admin_tasks, ['\Drupal\Component\Utility\SortArray', 'sortByTitleElement']);
         // Move 'Configure permissions' links to the bottom of each section.

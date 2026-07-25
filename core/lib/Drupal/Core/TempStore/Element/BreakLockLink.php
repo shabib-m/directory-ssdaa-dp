@@ -5,9 +5,9 @@ namespace Drupal\Core\TempStore\Element;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Attribute\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Render\RendererInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a link to break a tempstore lock.
@@ -26,10 +26,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   '#url' => \Drupal\Core\Url::fromRoute('examples.break_lock_form'),
  * ];
  * @endcode
- *
- * @RenderElement("break_lock_link")
  */
-class BreakLockLink extends RenderElement implements ContainerFactoryPluginInterface {
+#[RenderElement('break_lock_link')]
+class BreakLockLink extends RenderElementBase implements ContainerFactoryPluginInterface {
 
   /**
    * The date formatter.
@@ -74,20 +73,6 @@ class BreakLockLink extends RenderElement implements ContainerFactoryPluginInter
     $this->dateFormatter = $date_formatter;
     $this->entityTypeManager = $entity_type_manager;
     $this->renderer = $renderer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('date.formatter'),
-      $container->get('entity_type.manager'),
-      $container->get('renderer')
-    );
   }
 
   /**

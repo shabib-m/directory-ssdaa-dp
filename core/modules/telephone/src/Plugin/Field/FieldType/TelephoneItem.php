@@ -2,24 +2,23 @@
 
 namespace Drupal\telephone\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\TypedData\DataDefinition;
 
 /**
  * Plugin implementation of the 'telephone' field type.
- *
- * @FieldType(
- *   id = "telephone",
- *   label = @Translation("Telephone number"),
- *   description = @Translation("This field stores a telephone number in the database."),
- *   category = @Translation("Number"),
- *   default_widget = "telephone_default",
- *   default_formatter = "basic_string"
- * )
  */
+#[FieldType(
+  id: "telephone",
+  label: new TranslatableMarkup("Telephone number"),
+  description: new TranslatableMarkup("A telephone number, optionally displayed as a telephone link"),
+  default_widget: "telephone_default",
+  default_formatter: "basic_string"
+)]
 class TelephoneItem extends FieldItemBase {
 
   /**
@@ -68,10 +67,16 @@ class TelephoneItem extends FieldItemBase {
     $constraints = parent::getConstraints();
 
     $constraints[] = $constraint_manager->create('ComplexData', [
-      'value' => [
-        'Length' => [
-          'max' => self::MAX_LENGTH,
-          'maxMessage' => $this->t('%name: the telephone number may not be longer than @max characters.', ['%name' => $this->getFieldDefinition()->getLabel(), '@max' => self::MAX_LENGTH]),
+      'properties' => [
+        'value' => [
+          'Length' => [
+            'max' => self::MAX_LENGTH,
+            'maxMessage' => $this->t('%name: the telephone number may not be longer than @max characters.', [
+              '%name' => $this->getFieldDefinition()
+                ->getLabel(),
+              '@max' => self::MAX_LENGTH,
+            ]),
+          ],
         ],
       ],
     ]);

@@ -2,6 +2,7 @@
 
 namespace Drupal\migrate\Plugin\migrate\id_map;
 
+use Drupal\Component\Plugin\Attribute\PluginID;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\migrate\MigrateMessageInterface;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
@@ -12,9 +13,8 @@ use Drupal\migrate\Row;
  * Defines the null ID map implementation.
  *
  * This serves as a dummy in order to not store anything.
- *
- * @PluginID("null")
  */
+#[PluginID('null')]
 class NullIdMap extends PluginBase implements MigrateIdMapInterface {
 
   /**
@@ -181,40 +181,33 @@ class NullIdMap extends PluginBase implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function rewind() {
+  public function rewind(): void {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function current(): mixed {
     return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function current() {
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  #[\ReturnTypeWillChange]
-  public function key() {
+  public function key(): mixed {
     return '';
   }
 
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function next() {
-    return NULL;
+  public function next(): void {
   }
 
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function valid() {
+  public function valid(): bool {
     return FALSE;
   }
 

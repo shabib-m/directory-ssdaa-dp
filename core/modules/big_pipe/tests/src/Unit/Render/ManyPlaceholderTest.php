@@ -1,28 +1,38 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\big_pipe\Unit\Render;
 
 use Drupal\big_pipe\Render\BigPipe;
 use Drupal\big_pipe\Render\BigPipeResponse;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\HtmlResponse;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Routing\RequestContext;
 use Drupal\Tests\UnitTestCase;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @coversDefaultClass \Drupal\big_pipe\Render\BigPipe
- * @group big_pipe
+ * Tests Drupal\big_pipe\Render\BigPipe.
  */
+#[CoversClass(BigPipe::class)]
+#[Group('big_pipe')]
 class ManyPlaceholderTest extends UnitTestCase {
 
   /**
-   * @covers \Drupal\big_pipe\Render\BigPipe::sendNoJsPlaceholders
+   * Tests many no js place holders.
+   *
+   * @legacy-covers \Drupal\big_pipe\Render\BigPipe::sendNoJsPlaceholders
    */
-  public function testManyNoJsPlaceHolders() {
+  public function testManyNoJsPlaceHolders(): void {
     $session = $this->prophesize(SessionInterface::class);
     $session->start()->willReturn(TRUE);
     $session->save()->shouldBeCalled();
@@ -32,7 +42,10 @@ class ManyPlaceholderTest extends UnitTestCase {
       $this->prophesize(RequestStack::class)->reveal(),
       $this->prophesize(HttpKernelInterface::class)->reveal(),
       $this->prophesize(EventDispatcherInterface::class)->reveal(),
-      $this->prophesize(ConfigFactoryInterface::class)->reveal()
+      $this->prophesize(ConfigFactoryInterface::class)->reveal(),
+      $this->prophesize(MessengerInterface::class)->reveal(),
+      $this->prophesize(RequestContext::class)->reveal(),
+      $this->prophesize(LoggerInterface::class)->reveal(),
     );
     $response = new BigPipeResponse(new HtmlResponse());
 

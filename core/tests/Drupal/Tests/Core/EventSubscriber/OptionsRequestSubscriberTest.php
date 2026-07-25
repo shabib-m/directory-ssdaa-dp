@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\EventSubscriber;
 
 use Drupal\Core\EventSubscriber\OptionsRequestSubscriber;
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Routing\RouteProviderInterface;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
@@ -12,15 +17,18 @@ use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
- * @coversDefaultClass \Drupal\Core\EventSubscriber\OptionsRequestSubscriber
- * @group EventSubscriber
+ * Tests Drupal\Core\EventSubscriber\OptionsRequestSubscriber.
  */
+#[CoversClass(OptionsRequestSubscriber::class)]
+#[Group('EventSubscriber')]
 class OptionsRequestSubscriberTest extends UnitTestCase {
 
   /**
-   * @covers ::onRequest
+   * Tests with non option request.
+   *
+   * @legacy-covers ::onRequest
    */
-  public function testWithNonOptionRequest() {
+  public function testWithNonOptionRequest(): void {
     $kernel = $this->prophesize(HttpKernelInterface::class);
     $request = Request::create('/example', 'GET');
 
@@ -35,9 +43,11 @@ class OptionsRequestSubscriberTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::onRequest
+   * Tests without matching routes.
+   *
+   * @legacy-covers ::onRequest
    */
-  public function testWithoutMatchingRoutes() {
+  public function testWithoutMatchingRoutes(): void {
     $kernel = $this->prophesize(HttpKernelInterface::class);
     $request = Request::create('/example', 'OPTIONS');
 
@@ -52,10 +62,12 @@ class OptionsRequestSubscriberTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::onRequest
-   * @dataProvider providerTestOnRequestWithOptionsRequest
+   * Tests with options request.
+   *
+   * @legacy-covers ::onRequest
    */
-  public function testWithOptionsRequest(RouteCollection $collection, $expected_header) {
+  #[DataProvider('providerTestOnRequestWithOptionsRequest')]
+  public function testWithOptionsRequest(RouteCollection $collection, $expected_header): void {
     $kernel = $this->prophesize(HttpKernelInterface::class);
     $request = Request::create('/example', 'OPTIONS');
 
@@ -72,7 +84,7 @@ class OptionsRequestSubscriberTest extends UnitTestCase {
     $this->assertEquals($expected_header, $response->headers->get('Allow'));
   }
 
-  public function providerTestOnRequestWithOptionsRequest() {
+  public static function providerTestOnRequestWithOptionsRequest() {
     $data = [];
 
     foreach (['GET', 'POST', 'PATCH', 'PUT', 'DELETE'] as $method) {
@@ -99,7 +111,10 @@ class OptionsRequestSubscriberTest extends UnitTestCase {
           $collection->add('example.2', new Route('/example', [], [], [], '', [], [$method_a, $method_b]));
           $collection->add('example.3', new Route('/example', [], [], [], '', [], [$method_b, $method_c]));
           $methods = array_unique([$method_a, $method_b, $method_c]);
-          $data['multiple_routes_' . $method_a . '_' . $method_b . '_' . $method_c] = [$collection, implode(', ', $methods)];
+          $data['multiple_routes_' . $method_a . '_' . $method_b . '_' . $method_c] = [
+            $collection,
+            implode(', ', $methods),
+          ];
         }
       }
     }

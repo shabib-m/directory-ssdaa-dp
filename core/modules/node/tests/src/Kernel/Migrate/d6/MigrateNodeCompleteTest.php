@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Migrate\d6;
 
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\node\NodeInterface;
 use Drupal\Tests\file\Kernel\Migrate\d6\FileMigrationTestTrait;
 use Drupal\Tests\migrate_drupal\Traits\CreateTestContentEntitiesTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test class for a complete node migration for Drupal 6.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateNodeCompleteTest extends MigrateNodeTestBase {
 
   use FileMigrationTestTrait;
@@ -28,7 +33,7 @@ class MigrateNodeCompleteTest extends MigrateNodeTestBase {
   /**
    * The entity storage for node.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Entity\RevisionableStorageInterface
    */
   protected $nodeStorage;
 
@@ -56,21 +61,21 @@ class MigrateNodeCompleteTest extends MigrateNodeTestBase {
   /**
    * Tests the complete node migration.
    */
-  public function testNodeCompleteMigration() {
+  public function testNodeCompleteMigration(): void {
     $db = \Drupal::database();
     $this->assertEquals($this->expectedNodeFieldRevisionTable(), $db->select('node_field_revision', 'nr')
       ->fields('nr')
       ->orderBy('vid')
       ->orderBy('langcode')
       ->execute()
-      ->fetchAll(\PDO::FETCH_ASSOC));
+      ->fetchAll(FetchAs::Associative));
     $this->assertEquals($this->expectedNodeFieldDataTable(), $db->select('node_field_data', 'nr')
       ->fields('nr')
       ->orderBy('nid')
       ->orderBy('vid')
       ->orderBy('langcode')
       ->execute()
-      ->fetchAll(\PDO::FETCH_ASSOC));
+      ->fetchAll(FetchAs::Associative));
 
     // Now load and test each revision, including the field 'field_text_plain'
     // which has text reflecting the revision.
@@ -116,7 +121,7 @@ class MigrateNodeCompleteTest extends MigrateNodeTestBase {
    * @return array
    *   The expected table rows.
    */
-  protected function expectedNodeFieldDataTable() {
+  protected function expectedNodeFieldDataTable(): array {
     return [
       0 =>
         [
@@ -523,7 +528,7 @@ class MigrateNodeCompleteTest extends MigrateNodeTestBase {
    * @return array
    *   The table.
    */
-  protected function expectedNodeFieldRevisionTable() {
+  protected function expectedNodeFieldRevisionTable(): array {
     return [
       0 =>
         [
@@ -1044,9 +1049,9 @@ class MigrateNodeCompleteTest extends MigrateNodeTestBase {
    * @return array
    *   Selected properties and fields on the revision.
    */
-  protected function expectedRevisionEntityData() {
+  protected function expectedRevisionEntityData(): array {
     return [
-      $revision_data = [
+      [
         // Node 1, revision 1, und.
         0 =>
           [

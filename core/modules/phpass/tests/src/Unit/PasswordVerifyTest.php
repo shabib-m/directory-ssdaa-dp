@@ -1,26 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\phpass\Unit;
 
-use Drupal\phpass\Password\PhpassHashedPassword;
 use Drupal\Core\Password\PasswordInterface;
 use Drupal\Core\Password\PhpPassword;
+use Drupal\phpass\Password\PhpassHashedPassword;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Unit tests for password hashing API.
- *
- * @coversDefaultClass \Drupal\phpass\Password\PhpassHashedPassword
- * @group phpass
  */
+#[CoversClass(PhpassHashedPassword::class)]
+#[Group('phpass')]
+#[Group('#slow')]
 class PasswordVerifyTest extends UnitTestCase {
 
   /**
    * Tests that hash() is forwarded to corePassword instance.
    *
-   * @covers ::hash
+   * @legacy-covers ::hash
    */
-  public function testPasswordHash() {
+  public function testPasswordHash(): void {
     $samplePassword = $this->randomMachineName();
     $sampleHash = $this->randomMachineName();
 
@@ -36,9 +41,9 @@ class PasswordVerifyTest extends UnitTestCase {
   /**
    * Tests that needsRehash() is forwarded to corePassword instance.
    *
-   * @covers ::needsRehash
+   * @legacy-covers ::needsRehash
    */
-  public function testPasswordNeedsRehash() {
+  public function testPasswordNeedsRehash(): void {
     $sampleHash = $this->randomMachineName();
 
     $corePassword = $this->prophesize(PasswordInterface::class);
@@ -52,9 +57,9 @@ class PasswordVerifyTest extends UnitTestCase {
   /**
    * Tests that check() is forwarded to corePassword instance if hash settings are not recognized.
    *
-   * @covers ::check
+   * @legacy-covers ::check
    */
-  public function testPasswordCheckUnknownHash() {
+  public function testPasswordCheckUnknownHash(): void {
     $samplePassword = $this->randomMachineName();
     $sampleHash = $this->randomMachineName();
 
@@ -69,13 +74,13 @@ class PasswordVerifyTest extends UnitTestCase {
   /**
    * Tests that check() verifies passwords if hash settings are supported.
    *
-   * @covers ::check
-   * @covers ::crypt
-   * @covers ::getCountLog2
-   * @covers ::enforceLog2Boundaries
-   * @covers ::base64Encode
+   * @legacy-covers ::check
+   * @legacy-covers ::crypt
+   * @legacy-covers ::getCountLog2
+   * @legacy-covers ::enforceLog2Boundaries
+   * @legacy-covers ::base64Encode
    */
-  public function testPasswordCheckSupported() {
+  public function testPasswordCheckSupported(): void {
     $validPassword = 'valid password';
 
     // cspell:disable
@@ -104,9 +109,9 @@ class PasswordVerifyTest extends UnitTestCase {
   /**
    * Tests the hash count boundaries are enforced.
    *
-   * @covers ::enforceLog2Boundaries
+   * @legacy-covers ::enforceLog2Boundaries
    */
-  public function testWithinBounds() {
+  public function testWithinBounds(): void {
     $hasher = new PhpassHashedPasswordLog2BoundariesDouble();
     $this->assertEquals(PhpassHashedPassword::MIN_HASH_COUNT, $hasher->enforceLog2Boundaries(1), "Min hash count enforced");
     $this->assertEquals(PhpassHashedPassword::MAX_HASH_COUNT, $hasher->enforceLog2Boundaries(100), "Max hash count enforced");
@@ -115,11 +120,10 @@ class PasswordVerifyTest extends UnitTestCase {
   /**
    * Verifies that passwords longer than 512 bytes are not hashed.
    *
-   * @covers ::crypt
-   *
-   * @dataProvider providerLongPasswords
+   * @legacy-covers ::crypt
    */
-  public function testLongPassword($password, $allowed) {
+  #[DataProvider('providerLongPasswords')]
+  public function testLongPassword($password, $allowed): void {
     // cspell:disable
     $bogusHash = '$S$5TOxWPdvJRs0P/xZBdrrPlGgzViOS0drHu3jaIjitesfttrp18bk';
     // cspell:enable
@@ -141,7 +145,7 @@ class PasswordVerifyTest extends UnitTestCase {
   /**
    * Provides the test matrix for testLongPassword().
    */
-  public function providerLongPasswords() {
+  public static function providerLongPasswords() {
     // '512 byte long password is allowed.'
     $passwords['allowed'] = [str_repeat('x', PasswordInterface::PASSWORD_MAX_LENGTH), TRUE];
     // 513 byte long password is not allowed.
@@ -149,7 +153,7 @@ class PasswordVerifyTest extends UnitTestCase {
 
     // Check a string of 3-byte UTF-8 characters, 510 byte long password is
     // allowed.
-    $len = floor(PasswordInterface::PASSWORD_MAX_LENGTH / 3);
+    $len = (int) floor(PasswordInterface::PASSWORD_MAX_LENGTH / 3);
     $diff = PasswordInterface::PASSWORD_MAX_LENGTH % 3;
     $passwords['utf8'] = [str_repeat('€', $len), TRUE];
     // 512 byte long password is allowed.

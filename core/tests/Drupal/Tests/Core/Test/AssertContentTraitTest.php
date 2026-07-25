@@ -1,21 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Test;
 
 use Drupal\KernelTests\AssertContentTrait;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\KernelTests\AssertContentTrait
- * @group Test
+ * Tests Drupal\KernelTests\AssertContentTrait.
  */
+#[CoversClass(AssertContentTrait::class)]
+#[Group('Test')]
 class AssertContentTraitTest extends UnitTestCase {
 
+  use AssertContentTrait;
+
   /**
-   * @covers ::getTextContent
+   * Tests get text content.
    */
-  public function testGetTextContent() {
-    $test = new TestClass();
+  public function testGetTextContent(): void {
+
     $raw_content = <<<EOT
 
 <Head>
@@ -27,23 +34,10 @@ class AssertContentTraitTest extends UnitTestCase {
 bar
 </body>
 EOT;
-    $test->_setRawContent($raw_content);
-    $this->assertStringNotContainsString('foo', $test->_getTextContent());
-    $this->assertStringNotContainsString('<body>', $test->_getTextContent());
-    $this->assertStringContainsString('bar', $test->_getTextContent());
-  }
-
-}
-
-class TestClass extends UnitTestCase {
-  use AssertContentTrait;
-
-  public function _setRawContent($content) {
-    $this->setRawContent($content);
-  }
-
-  public function _getTextContent() {
-    return $this->getTextContent();
+    $this->setRawContent($raw_content);
+    $this->assertStringNotContainsString('foo', $this->getTextContent());
+    $this->assertStringNotContainsString('<body>', $this->getTextContent());
+    $this->assertStringContainsString('bar', $this->getTextContent());
   }
 
 }

@@ -1,9 +1,0 @@
-name: Yaml Content
-type: module
-description: Content management and migration using Yaml.
-core_version_requirement: '^9 || ^10'
-
-# Information added by Drupal.org packaging script on 2023-07-26
-version: '8.x-1.0-alpha9'
-project: 'yaml_content'
-datestamp: 1690397388

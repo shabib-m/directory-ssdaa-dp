@@ -2,10 +2,13 @@
 
 namespace Drupal\migrate\Plugin\migrate\destination;
 
+use Drupal\migrate\Attribute\MigrateDestination;
+
 /**
  * Provides entity view mode destination plugin.
  *
  * See EntityConfigBase for the available configuration options.
+ *
  * @see \Drupal\migrate\Plugin\migrate\destination\EntityConfigBase
  *
  * Example:
@@ -23,11 +26,8 @@ namespace Drupal\migrate\Plugin\migrate\destination;
  *
  * This will add the results of the process ("mode", "label" and
  * "targetEntityType") to an "entity_view_mode" entity.
- *
- * @MigrateDestination(
- *   id = "entity:entity_view_mode"
- * )
  */
+#[MigrateDestination('entity:entity_view_mode')]
 class EntityViewMode extends EntityConfigBase {
 
   /**

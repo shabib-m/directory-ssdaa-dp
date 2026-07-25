@@ -16,7 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @see https://guzzle.readthedocs.org/en/latest/handlers-and-middleware.html
  *
- * @see \Drupal\Core\Http\Client
+ * @see \GuzzleHttp\Client
  * @see \Drupal\Core\Test\HttpClientMiddleware\TestHttpClientMiddleware
  */
 class HandlerStackConfigurator {
@@ -77,7 +77,7 @@ class HandlerStackConfigurator {
    * Configures the stack using services tagged as http_client_middleware.
    *
    * @param \GuzzleHttp\HandlerStack $handler_stack
-   *   The handler stack
+   *   The handler stack.
    */
   public function configure(HandlerStack $handler_stack) {
     $this->initializeMiddlewares();

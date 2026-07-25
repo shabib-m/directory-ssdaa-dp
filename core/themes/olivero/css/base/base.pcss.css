@@ -21,6 +21,8 @@ html {
 
 body {
   margin: 0;
+  word-wrap: break-word;
+  hyphens: auto;
   color: var(--color-text-neutral-medium);
   background-color: var(--color--gray-100);
   background-image: url("../../images/background.svg");
@@ -135,6 +137,5 @@ ul {
   margin-inline-start: 1.5em;
   margin-inline-end: 0;
   padding-inline-start: 0;
-  list-style-type: disc;
   list-style-image: none;
 }

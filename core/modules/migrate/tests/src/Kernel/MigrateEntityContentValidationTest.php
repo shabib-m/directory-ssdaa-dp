@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
 
+use Drupal\Component\Utility\Html;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\filter\Entity\FilterFormat;
@@ -14,12 +17,14 @@ use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\user\Plugin\Validation\Constraint\UserNameConstraint;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests validation of an entity during migration.
- *
- * @group migrate
  */
+#[Group('migrate')]
+#[RunTestsInSeparateProcesses]
 class MigrateEntityContentValidationTest extends KernelTestBase {
 
   /**
@@ -52,7 +57,6 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('user_role');
     $this->installEntitySchema('entity_test');
-    $this->installSchema('system', ['sequences']);
     $this->installConfig(['field', 'filter_test', 'system', 'user']);
 
     $this->container
@@ -63,7 +67,7 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
   /**
    * Tests an import with invalid data and checks error messages.
    */
-  public function test1() {
+  public function test1(): void {
     // Make sure that a user with uid 2 exists.
     $this->container
       ->get('entity_type.manager')
@@ -118,7 +122,7 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
   /**
    * Tests an import with invalid data and checks error messages.
    */
-  public function test2() {
+  public function test2(): void {
     $long_username = $this->randomString(61);
     $username_constraint = new UserNameConstraint();
 
@@ -152,16 +156,20 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
       ],
     ]);
 
-    $this->assertSame(sprintf('1: [user]: name=%s||name=%s||mail=Email field is required.', $username_constraint->illegalMessage, t($username_constraint->tooLongMessage, ['%name' => $long_username, '%max' => 60])), $this->messages[0], 'First message should have 3 validation errors.');
-    $this->assertSame(sprintf('2: [user]: name=%s||mail=Email field is required.', $username_constraint->illegalMessage), $this->messages[1], 'Second message should have 2 validation errors.');
-    $this->assertSame(sprintf('3: [user]: name=%s||mail=Email field is required.', $username_constraint->illegalMessage), $this->messages[2], 'Third message should have 2 validation errors.');
+    $message = strtr($username_constraint->tooLongMessage, [
+      '%name' => '<em class="placeholder">' . Html::escape($long_username) . '</em>',
+      '%max' => '<em class="placeholder">' . 60 . '</em>',
+    ]);
+    $this->assertSame(sprintf('1: [user]: name=%s||name=%s||mail=Email field is required.', $username_constraint->invalidMessage, $message), $this->messages[0], 'First message should have 3 validation errors.');
+    $this->assertSame(sprintf('2: [user]: name=%s||mail=Email field is required.', $username_constraint->invalidMessage), $this->messages[1], 'Second message should have 2 validation errors.');
+    $this->assertSame(sprintf('3: [user]: name=%s||mail=Email field is required.', $username_constraint->invalidMessage), $this->messages[2], 'Third message should have 2 validation errors.');
     $this->assertArrayNotHasKey(3, $this->messages, 'Fourth message should not exist.');
   }
 
   /**
    * Tests validation for entities that are instances of EntityOwnerInterface.
    */
-  public function testEntityOwnerValidation() {
+  public function testEntityOwnerValidation(): void {
     // Text format access is impacted by user permissions.
     $filter_test_format = FilterFormat::load('filter_test');
     assert($filter_test_format instanceof FilterFormatInterface);
@@ -180,8 +188,7 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
       'name' => 'foobar',
       'mail' => 'foobar@example.com',
     ]);
-    $admin_user->addRole($role->id());
-    $admin_user->save();
+    $admin_user->addRole($role->id())->save();
     $normal_user = User::create([
       'name' => 'normal user',
       'mail' => 'normal@example.com',
@@ -189,7 +196,7 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
     $normal_user->save();
 
     // Add a "body" field with the text format.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $field_storage = FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'entity_test',
@@ -253,7 +260,7 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
    * @param \Drupal\migrate\Event\MigrateIdMapMessageEvent $event
    *   The migration event.
    */
-  public function mapMessageRecorder(MigrateIdMapMessageEvent $event) {
+  public function mapMessageRecorder(MigrateIdMapMessageEvent $event): void {
     $this->messages[] = implode(',', $event->getSourceIdValues()) . ': ' . $event->getMessage();
   }
 
@@ -266,7 +273,7 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
    * @throws \Exception
    * @throws \Drupal\migrate\MigrateException
    */
-  protected function runImport(array $definition) {
+  protected function runImport(array $definition): void {
     // Reset the list of messages from a previous migration.
     $this->messages = [];
 

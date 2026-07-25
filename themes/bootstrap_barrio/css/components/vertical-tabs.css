@@ -45,6 +45,9 @@
   display: none;
 }
 
+.vertical-tabs__pane label {
+  font-weight: bold;
+}
 
 /* Layout of each tab. */
 

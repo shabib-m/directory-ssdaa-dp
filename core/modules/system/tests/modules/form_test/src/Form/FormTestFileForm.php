@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\form_test\Form;
 
 use Drupal\Core\Form\FormBase;
@@ -27,7 +29,7 @@ class FormTestFileForm extends FormBase {
       '#type' => 'file',
       '#multiple' => TRUE,
       '#attributes' => [
-        'class' => ['cagatio'],
+        'class' => ['some-class'],
       ],
     ];
     return $form;

@@ -3,10 +3,10 @@
 namespace Drupal\comment;
 
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\language\Element\LanguageConfiguration;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -74,11 +74,16 @@ class CommentTypeForm extends EntityForm {
 
     $comment_type = $this->entity;
 
+    if ($this->operation === 'edit') {
+      $form['#title'] = $this->t('Edit %label comment type', ['%label' => $comment_type->label()]);
+    }
+
     $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
       '#maxlength' => 255,
       '#default_value' => $comment_type->label(),
+      '#description' => $this->t('The human-readable name for this comment type, displayed on the <em>Comment types</em> page.'),
       '#required' => TRUE,
     ];
     $form['id'] = [
@@ -87,6 +92,7 @@ class CommentTypeForm extends EntityForm {
       '#machine_name' => [
         'exists' => '\Drupal\comment\Entity\CommentType::load',
       ],
+      '#description' => $this->t('Unique machine-readable name: lowercase letters, numbers, and underscores only.'),
       '#maxlength' => EntityTypeInterface::BUNDLE_MAX_LENGTH,
       '#disabled' => !$comment_type->isNew(),
     ];
@@ -94,7 +100,7 @@ class CommentTypeForm extends EntityForm {
     $form['description'] = [
       '#type' => 'textarea',
       '#default_value' => $comment_type->getDescription(),
-      '#description' => $this->t('Describe this comment type. The text will be displayed on the <em>Comment types</em> administration overview page.'),
+      '#description' => $this->t('Displays on the <em>Comment types</em> page.'),
       '#title' => $this->t('Description'),
     ];
 
@@ -104,7 +110,7 @@ class CommentTypeForm extends EntityForm {
       // get comment fields added in the UI. Also, ensure to include only
       // entities that have integer id.
       foreach ($this->entityTypeManager->getDefinitions() as $entity_type) {
-        if ($this->entityTypeSupportsComments($entity_type)) {
+        if ($entity_type->hasIntegerId()) {
           if ($entity_type->get('field_ui_base_route')) {
             $options[$entity_type->id()] = $entity_type->getLabel();
           }
@@ -114,6 +120,8 @@ class CommentTypeForm extends EntityForm {
         '#type' => 'select',
         '#default_value' => $comment_type->getTargetEntityTypeId(),
         '#title' => $this->t('Target entity type'),
+        '#required' => TRUE,
+        '#empty_value' => '_none',
         '#options' => $options,
         '#description' => $this->t('The target entity type can not be changed after the comment type has been created.'),
       ];
@@ -143,7 +151,7 @@ class CommentTypeForm extends EntityForm {
         '#default_value' => $language_configuration,
       ];
 
-      $form['#submit'][] = 'language_configuration_element_submit';
+      $form['#submit'][] = LanguageConfiguration::class . '::submit';
     }
 
     $form['actions'] = ['#type' => 'actions'];
@@ -163,9 +171,15 @@ class CommentTypeForm extends EntityForm {
    *
    * @return bool
    *   TRUE if entity-type uses integer IDs.
+   *
+   * @deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use
+   *   \Drupal\Core\Entity\EntityTypeInterface::hasIntegerId() instead.
+   *
+   * @see https://www.drupal.org/node/3566814
    */
   protected function entityTypeSupportsComments(EntityTypeInterface $entity_type) {
-    return $entity_type->entityClassImplements(FieldableEntityInterface::class) && _comment_entity_uses_integer_id($entity_type->id());
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.4.0 and is removed from drupal:13.0.0. Use \Drupal\Core\Entity\EntityTypeInterface::hasIntegerId() instead. See https://www.drupal.org/node/3566814', E_USER_DEPRECATED);
+    return $entity_type->hasIntegerId();
   }
 
   /**
@@ -178,12 +192,18 @@ class CommentTypeForm extends EntityForm {
     $edit_link = $this->entity->toLink($this->t('Edit'), 'edit-form')->toString();
     if ($status == SAVED_UPDATED) {
       $this->messenger()->addStatus($this->t('Comment type %label has been updated.', ['%label' => $comment_type->label()]));
-      $this->logger->notice('Comment type %label has been updated.', ['%label' => $comment_type->label(), 'link' => $edit_link]);
+      $this->logger->notice('Comment type %label has been updated.', [
+        '%label' => $comment_type->label(),
+        'link' => $edit_link,
+      ]);
     }
     else {
       $this->commentManager->addBodyField($comment_type->id());
       $this->messenger()->addStatus($this->t('Comment type %label has been added.', ['%label' => $comment_type->label()]));
-      $this->logger->notice('Comment type %label has been added.', ['%label' => $comment_type->label(), 'link' => $edit_link]);
+      $this->logger->notice('Comment type %label has been added.', [
+        '%label' => $comment_type->label(),
+        'link' => $edit_link,
+      ]);
     }
 
     $form_state->setRedirectUrl($comment_type->toUrl('collection'));

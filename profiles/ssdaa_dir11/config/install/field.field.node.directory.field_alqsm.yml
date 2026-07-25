@@ -1,0 +1,29 @@
+uuid: 678d67a9-51a1-456c-bd75-4be20a75262a
+langcode: ar
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_alqsm
+    - node.type.directory
+    - taxonomy.vocabulary.main
+id: node.directory.field_alqsm
+field_name: field_alqsm
+entity_type: node
+bundle: directory
+label: القسم
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      main: main
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

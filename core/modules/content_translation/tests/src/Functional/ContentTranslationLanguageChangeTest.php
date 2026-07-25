@@ -1,30 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Functional;
 
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\Tests\content_translation\Traits\ContentTranslationTestTrait;
 use Drupal\Tests\image\Kernel\ImageFieldCreationTrait;
 use Drupal\Tests\node\Functional\NodeTestBase;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the content translation language that is set.
- *
- * @group content_translation
  */
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class ContentTranslationLanguageChangeTest extends NodeTestBase {
 
+  use ContentTranslationTestTrait;
   use ImageFieldCreationTrait;
   use TestFileCreationTrait {
     getTestFiles as drupalGetTestFiles;
   }
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'language',
@@ -48,9 +50,17 @@ class ContentTranslationLanguageChangeTest extends NodeTestBase {
     parent::setUp();
     $langcodes = ['de', 'fr'];
     foreach ($langcodes as $langcode) {
-      ConfigurableLanguage::createFromLangcode($langcode)->save();
+      static::createLanguageFromLangcode($langcode);
     }
     $this->drupalPlaceBlock('local_tasks_block');
+
+    // Enable translations for article.
+    $this->enableContentTranslation('node', 'article');
+
+    $this->rebuildContainer();
+
+    $this->createImageField('field_image_field', 'node', 'article');
+
     $user = $this->drupalCreateUser([
       'administer site configuration',
       'administer nodes',
@@ -58,35 +68,19 @@ class ContentTranslationLanguageChangeTest extends NodeTestBase {
       'edit any article content',
       'delete any article content',
       'administer content translation',
-      'translate any entity',
+      'translate article node',
       'create content translations',
       'administer languages',
       'administer content types',
       'administer node fields',
     ]);
     $this->drupalLogin($user);
-
-    // Enable translation for article.
-    $config = ContentLanguageSettings::loadByEntityTypeBundle('node', 'article');
-    $config->setDefaultLangcode(LanguageInterface::LANGCODE_SITE_DEFAULT);
-    $config->setLanguageAlterable(TRUE);
-    $config->save();
-
-    $content_translation_manager = $this->container->get('content_translation.manager');
-    $content_translation_manager->setEnabled('node', 'article', TRUE);
-    $content_translation_manager->setBundleTranslationSettings('node', 'article', [
-      'untranslatable_fields_hide' => FALSE,
-    ]);
-
-    $this->rebuildContainer();
-
-    $this->createImageField('field_image_field', 'article');
   }
 
   /**
    * Tests that the source language is properly set when changing.
    */
-  public function testLanguageChange() {
+  public function testLanguageChange(): void {
     // Create a node in English.
     $this->drupalGet('node/add/article');
     $edit = [
@@ -121,7 +115,7 @@ class ContentTranslationLanguageChangeTest extends NodeTestBase {
   /**
    * Tests that title does not change on ajax call with new language value.
    */
-  public function testTitleDoesNotChangesOnChangingLanguageWidgetAndTriggeringAjaxCall() {
+  public function testTitleDoesNotChangesOnChangingLanguageWidgetAndTriggeringAjaxCall(): void {
     // Create a node in English.
     $this->drupalGet('node/add/article', ['query' => ['test_field_only_en_fr' => 1]]);
     $edit = [
@@ -163,6 +157,29 @@ class ContentTranslationLanguageChangeTest extends NodeTestBase {
     $translation_languages = $node->getTranslationLanguages();
     $this->assertArrayHasKey('fr', $translation_languages);
     $this->assertArrayNotHasKey('de', $translation_languages);
+  }
+
+  /**
+   * Tests language switch links while translating content.
+   */
+  public function testLanguageSwitchLinks(): void {
+    $this->drupalPlaceBlock('language_block:' . LanguageInterface::TYPE_INTERFACE, [
+      'id' => 'test_language_block',
+    ]);
+
+    $this->drupalGet('node/add/article');
+    $edit = [
+      'title[0][value]' => 'english_title',
+    ];
+    $this->submitForm($edit, 'Save');
+
+    // Create a translation in French.
+    $this->clickLink('Translate');
+    $language_switch_links = $this->xpath('//div[@id=:id]/ul/li', [':id' => 'block-test-language-block']);
+    $this->assertCount(3, $language_switch_links);
+    $this->clickLink('Add');
+    $language_switch_links = $this->xpath('//div[@id=:id]/ul/li', [':id' => 'block-test-language-block']);
+    $this->assertCount(3, $language_switch_links);
   }
 
 }

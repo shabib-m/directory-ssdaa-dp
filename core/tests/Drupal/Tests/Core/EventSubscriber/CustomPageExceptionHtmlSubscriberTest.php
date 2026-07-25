@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\EventSubscriber;
 
 use Drupal\Component\Utility\UrlHelper;
@@ -10,6 +12,8 @@ use Drupal\Core\Render\HtmlResponse;
 use Drupal\Core\Routing\AccessAwareRouterInterface;
 use Drupal\Core\Url;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
@@ -18,9 +22,10 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\Routing\RequestContext;
 
 /**
- * @coversDefaultClass \Drupal\Core\EventSubscriber\CustomPageExceptionHtmlSubscriber
- * @group EventSubscriber
+ * Tests Drupal\Core\EventSubscriber\CustomPageExceptionHtmlSubscriber.
  */
+#[CoversClass(CustomPageExceptionHtmlSubscriber::class)]
+#[Group('EventSubscriber')]
 class CustomPageExceptionHtmlSubscriberTest extends UnitTestCase {
 
   /**
@@ -67,6 +72,7 @@ class CustomPageExceptionHtmlSubscriberTest extends UnitTestCase {
 
   /**
    * The mocked access unaware router.
+   *
    * @var \Symfony\Component\Routing\Matcher\UrlMatcherInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $accessUnawareRouter;
@@ -84,7 +90,12 @@ class CustomPageExceptionHtmlSubscriberTest extends UnitTestCase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->configFactory = $this->getConfigFactoryStub(['system.site' => ['page.403' => '/access-denied-page', 'page.404' => '/not-found-page']]);
+    $this->configFactory = $this->getConfigFactoryStub([
+      'system.site' => [
+        'page.403' => '/access-denied-page',
+        'page.404' => '/not-found-page',
+      ],
+    ]);
 
     $this->kernel = $this->createMock('Symfony\Component\HttpKernel\HttpKernelInterface');
     $this->logger = $this->createMock('Psr\Log\LoggerInterface');
@@ -123,12 +134,13 @@ class CustomPageExceptionHtmlSubscriberTest extends UnitTestCase {
    */
   protected function tearDown(): void {
     ini_set('error_log', $this->errorLog);
+    parent::tearDown();
   }
 
   /**
    * Tests onHandleException with a POST request.
    */
-  public function testHandleWithPostRequest() {
+  public function testHandleWithPostRequest(): void {
     $request = Request::create('/test', 'POST', ['name' => 'druplicon', 'pass' => '12345']);
 
     $request_context = new RequestContext();
@@ -154,7 +166,7 @@ class CustomPageExceptionHtmlSubscriberTest extends UnitTestCase {
   /**
    * Tests onHandleException with a GET request.
    */
-  public function testHandleWithGetRequest() {
+  public function testHandleWithGetRequest(): void {
     $request = Request::create('/test', 'GET', ['name' => 'druplicon', 'pass' => '12345']);
     $request->attributes->set(AccessAwareRouterInterface::ACCESS_RESULT, AccessResult::forbidden()->addCacheTags(['druplicon']));
 

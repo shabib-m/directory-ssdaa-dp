@@ -4,6 +4,7 @@ namespace Drupal\Core\Render\Element;
 
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Html as HtmlUtility;
+use Drupal\Core\Render\Attribute\RenderElement;
 use Drupal\Core\Render\Markup;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Template\Attribute;
@@ -15,8 +16,8 @@ use Drupal\Core\Template\Attribute;
  * - #tag: The tag name to output.
  * - #attributes: (array, optional) HTML attributes to apply to the tag. The
  *   attributes are escaped, see \Drupal\Core\Template\Attribute.
- * - #value: (string, optional) A string containing the textual contents of
- *   the tag.
+ * - #value: (string|MarkupInterface, optional) The textual contents of the tag.
+ *   Strings will be XSS admin filtered.
  * - #noscript: (bool, optional) When set to TRUE, the markup
  *   (including any prefix or suffix) will be wrapped in a <noscript> element.
  *
@@ -29,14 +30,18 @@ use Drupal\Core\Template\Attribute;
  * ];
  * @endcode
  *
- * @RenderElement("html_tag")
+ * @see \Drupal\Component\Utility\Xss::filterAdmin().
  */
-class HtmlTag extends RenderElement {
+#[RenderElement('html_tag')]
+class HtmlTag extends RenderElementBase {
 
   /**
    * Void elements do not contain values or closing tags.
-   * @see http://www.w3.org/TR/html5/syntax.html#syntax-start-tag
-   * @see http://www.w3.org/TR/html5/syntax.html#void-elements
+   *
+   * @var string[]
+   *
+   * @see https://www.w3.org/TR/html5/syntax.html#syntax-start-tag
+   * @see https://www.w3.org/TR/html5/syntax.html#void-elements
    */
   protected static $voidElements = [
     'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
@@ -48,10 +53,9 @@ class HtmlTag extends RenderElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#pre_render' => [
-        [$class, 'preRenderHtmlTag'],
+        [static::class, 'preRenderHtmlTag'],
       ],
       '#attributes' => [],
       '#value' => NULL,
@@ -77,6 +81,7 @@ class HtmlTag extends RenderElement {
    *     any non-empty value here will add the <noscript> tag.)
    *
    * @return array
+   *   The element, after the pre-rendering processing run.
    */
   public static function preRenderHtmlTag($element) {
     $attributes = isset($element['#attributes']) ? new Attribute($element['#attributes']) : '';

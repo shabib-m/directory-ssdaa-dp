@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Migrate\d7;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\FieldConfigInterface;
+use Drupal\link\LinkTitleVisibility;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrates Drupal 7 field instances.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class MigrateFieldInstanceTest extends MigrateDrupal7TestBase {
 
   /**
@@ -74,14 +79,14 @@ class MigrateFieldInstanceTest extends MigrateDrupal7TestBase {
    *
    * @param string $id
    *   The entity ID in the form ENTITY_TYPE.BUNDLE.FIELD_NAME.
-   * @param int $title_setting
+   * @param \Drupal\link\LinkTitleVisibility $title_setting
    *   The expected title setting.
    *
    * @internal
    */
-  protected function assertLinkFields(string $id, int $title_setting): void {
+  protected function assertLinkFields(string $id, LinkTitleVisibility $title_setting): void {
     $field = FieldConfig::load($id);
-    $this->assertSame($title_setting, $field->getSetting('title'));
+    $this->assertSame($title_setting->value, $field->getSetting('title'));
   }
 
   /**
@@ -106,7 +111,7 @@ class MigrateFieldInstanceTest extends MigrateDrupal7TestBase {
   /**
    * Tests migrating D7 field instances to field_config entities.
    */
-  public function testFieldInstances() {
+  public function testFieldInstances(): void {
     $this->assertEntity('comment.comment_node_page.comment_body', 'Comment', 'text_long', TRUE, FALSE);
     $this->assertEntity('node.page.body', 'Body', 'text_with_summary', FALSE, FALSE);
     $this->assertEntity('comment.comment_node_article.comment_body', 'Comment', 'text_long', TRUE, FALSE);
@@ -145,12 +150,12 @@ class MigrateFieldInstanceTest extends MigrateDrupal7TestBase {
     $this->assertEntity('comment.comment_node_a_thirty_two_char.comment_body', 'Comment', 'text_long', TRUE, FALSE);
     $this->assertEntity('user.user.field_file', 'File', 'file', FALSE, FALSE);
 
-    $this->assertLinkFields('node.test_content_type.field_link', DRUPAL_OPTIONAL);
-    $this->assertLinkFields('node.article.field_link', DRUPAL_DISABLED);
-    $this->assertLinkFields('node.blog.field_link', DRUPAL_REQUIRED);
+    $this->assertLinkFields('node.test_content_type.field_link', LinkTitleVisibility::Optional);
+    $this->assertLinkFields('node.article.field_link', LinkTitleVisibility::Disabled);
+    $this->assertLinkFields('node.blog.field_link', LinkTitleVisibility::Required);
 
     $this->assertEntityReferenceFields('node.article.field_tags', ['tags']);
-    $this->assertEntityReferenceFields('node.forum.taxonomy_forums', ['forums']);
+    $this->assertEntityReferenceFields('node.forum.taxonomy_forums', ['sujet_de_discussion']);
     $this->assertEntityReferenceFields('node.test_content_type.field_term_reference', ['tags', 'test_vocabulary']);
 
     // Tests that fields created by the Title module are not migrated.

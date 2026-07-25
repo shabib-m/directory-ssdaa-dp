@@ -1,20 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
 use Drupal\jsonapi\Query\OffsetPage;
 use Drupal\node\Entity\Node;
+use Drupal\Tests\WaitTerminateTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * General functional test class.
  *
- * @group jsonapi
- *
  * @internal
  */
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
+
+  use WaitTerminateTestTrait;
 
   /**
    * {@inheritdoc}
@@ -31,7 +38,7 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
   /**
    * Tests the GET method.
    */
-  public function testRead() {
+  public function testRead(): void {
     $this->createDefaultContent(61, 5, TRUE, TRUE, static::IS_NOT_MULTILINGUAL, FALSE);
     // Unpublish the last entity, so we can check access.
     $this->nodes[60]->setUnpublished()->save();
@@ -113,7 +120,7 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
     $this->assertArrayNotHasKey('attributes', $single_output['data'][0]);
     $this->assertArrayHasKey('related', $single_output['links']);
     // 8b. Single related item, empty.
-    $single_output = Json::decode($this->drupalGet('/jsonapi/node/article/' . $uuid . '/field_heroless'));
+    $single_output = Json::decode($this->drupalGet('/jsonapi/node/article/' . $uuid . '/field_no_hero'));
     $this->assertSession()->statusCodeEquals(200);
     $this->assertNull($single_output['data']);
     // 9. Related tags with includes.
@@ -280,7 +287,7 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
         $this->userCanViewProfiles->pass_raw,
       ],
     ]);
-    $single_output = Json::decode($response->getBody()->__toString());
+    $single_output = $this->getDocumentFromResponse($response);
     $this->assertEquals(200, $response->getStatusCode());
     $this->assertEquals('user--user', $single_output['data']['type']);
     $this->assertEquals($this->user->get('name')->value, $single_output['data']['attributes']['name']);
@@ -515,6 +522,7 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
     $this->assertCount(0, $collection_output['data']);
 
     // Request in maintenance mode returns valid JSON.
+    $this->setWaitForTerminate();
     $this->container->get('state')->set('system.maintenance_mode', TRUE);
     $response = $this->drupalGet('/jsonapi/taxonomy_term/tags');
     $this->assertSession()->statusCodeEquals(503);
@@ -535,7 +543,10 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
     // Test that user gets logged out when hitting non-jsonapi route.
     $this->drupalGet('/some/normal/route');
     $this->assertFalse($this->drupalUserIsLoggedIn($this->userCanViewProfiles));
+    $this->assertSession()->statusCodeEquals(503);
+    $this->assertSession()->responseContains('Site under maintenance');
     $this->container->get('state')->set('system.maintenance_mode', FALSE);
+    $this->drupalResetSession();
 
     // Test that admin user can bypass maintenance mode.
     $admin_user = $this->drupalCreateUser([], NULL, TRUE);
@@ -549,9 +560,168 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
   }
 
   /**
+   * Tests adding metadata to a resource.
+   */
+  public function testMetaEvent(): void {
+    $this->createDefaultContent(3, 5, FALSE, FALSE, static::IS_NOT_MULTILINGUAL);
+
+    // Tests resource meta is added.
+    $this->container->get('module_installer')->install(['jsonapi_test_meta_events']);
+    $node = $this->nodes[0];
+    \Drupal::state()->set('jsonapi_test_meta_events.object_meta', [
+      'enabled_type' => 'node--article',
+      'enabled_id' => $node->uuid(),
+      'fields' => ['title'],
+      'user_is_admin_context' => TRUE,
+    ]);
+
+    $this->drupalLogin($this->user);
+
+    // Tests if the relationship has correct metadata when loading a single
+    // resource.
+    $result = Json::decode($this->drupalGet('jsonapi/node/article/' . $node->uuid()));
+    $expectedMeta = [
+      'resource_meta_user_has_admin_role' => 'no',
+      'resource_meta_user_id' => $this->user->id(),
+      'resource_meta_title' => $node->getTitle(),
+    ];
+    $this->assertEquals($expectedMeta, $result['data']['meta']);
+    // Test if the cache tags bubbled up.
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'jsonapi_test_meta_events.object_meta');
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Contexts', 'user.roles');
+
+    // Test if the relationship has the correct metadata when loading a
+    // resource collection.
+    $result = Json::decode($this->drupalGet('jsonapi/node/article'));
+    foreach ($result['data'] as $resource) {
+      if ($resource['id'] === $node->uuid()) {
+        $this->assertEquals($expectedMeta, $resource['meta']);
+      }
+
+      else {
+        $this->assertArrayNotHasKey('meta', $resource);
+      }
+
+    }
+
+    // Test if the cache tags bubbled up.
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'jsonapi_test_meta_events.object_meta');
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Contexts', 'user.roles');
+
+    // Now try the same requests with a superuser, see if we get other caches.
+    $this->mink->resetSessions();
+    $this->drupalResetSession();
+    $this->drupalLogin($this->adminUser);
+
+    // Tests if the relationship has correct metadata when loading a single
+    // resource.
+    $result = Json::decode($this->drupalGet('jsonapi/node/article/' . $node->uuid()));
+    $expectedMeta = [
+      'resource_meta_user_has_admin_role' => 'yes',
+      'resource_meta_user_id' => $this->adminUser->id(),
+      'resource_meta_title' => $node->getTitle(),
+    ];
+    $this->assertEquals($expectedMeta, $result['data']['meta']);
+    // Test if the cache tags bubbled up.
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'jsonapi_test_meta_events.object_meta');
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Contexts', 'user.roles');
+    $this->assertSession()->responseHeaderEquals('X-Drupal-Dynamic-Cache', 'MISS');
+
+    // Tests if the relationship has correct metadata when loading a single
+    // resource.
+    $result = Json::decode($this->drupalGet('jsonapi/node/article/' . $node->uuid()));
+    $this->assertEquals($expectedMeta, $result['data']['meta']);
+    // Test if the cache tags bubbled up.
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'jsonapi_test_meta_events.object_meta');
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Contexts', 'user.roles');
+    $this->assertSession()->responseHeaderEquals('X-Drupal-Dynamic-Cache', 'HIT');
+  }
+
+  /**
+   * Tests adding metadata to the relationship.
+   */
+  public function testMetaRelationEvent(): void {
+    $this->createDefaultContent(3, 5, FALSE, FALSE, static::IS_NOT_MULTILINGUAL);
+
+    $this->container->get('module_installer')->install(['jsonapi_test_meta_events']);
+    $node = $this->nodes[0];
+    \Drupal::state()->set('jsonapi_test_meta_events.relationship_meta', [
+      'enabled_type' => 'node--article',
+      'enabled_relation' => 'field_tags',
+      'enabled_id' => $node->uuid(),
+      'fields' => ['name'],
+    ]);
+
+    // Test if the relationship has the correct metadata when loading a
+    // resource collection.
+    $result = Json::decode($this->drupalGet('jsonapi/node/article'));
+    foreach ($result['data'] as $resource) {
+      if ($resource['id'] === $node->uuid()) {
+        $tagNames = $resource['relationships']['field_tags']['meta']['relationship_meta_name'];
+        $tags = $node->field_tags->referencedEntities();
+
+        $this->assertCount(count($tags), $tagNames);
+        foreach ($tags as $tag) {
+          $this->assertContains($tag->label(), $tagNames);
+        }
+
+      }
+
+      else {
+        $this->assertArrayNotHasKey('meta', $resource['relationships']['field_tags']);
+      }
+
+    }
+
+    // Test if the cache tags bubbled up.
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'jsonapi_test_meta_events.relationship_meta');
+
+    // Test if relationship has correct metadata when loading a single resource.
+    $resource = Json::decode($this->drupalGet('jsonapi/node/article/' . $node->uuid()));
+    if ($resource['data']['id'] === $node->uuid()) {
+      $tagNames = $resource['data']['relationships']['field_tags']['meta']['relationship_meta_name'];
+      $tags = $node->field_tags->referencedEntities();
+
+      $this->assertCount(count($tags), $tagNames);
+      foreach ($tags as $tag) {
+        $this->assertContains($tag->label(), $tagNames);
+      }
+
+    }
+
+    // Test if the cache tags bubbled up.
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'jsonapi_test_meta_events.relationship_meta');
+  }
+
+  /**
+   * Tests adding metadata to the relationship endpoint.
+   */
+  public function testMetaRelationEventOnRelationshipEndpoint(): void {
+    $this->createDefaultContent(1, 1, FALSE, FALSE, static::IS_NOT_MULTILINGUAL);
+
+    $this->container->get('module_installer')->install(['jsonapi_test_meta_events']);
+    $node = $this->nodes[0];
+    \Drupal::state()->set('jsonapi_test_meta_events.relationship_meta', [
+      'enabled_type' => 'node--article',
+      'enabled_relation' => 'field_tags',
+      'enabled_id' => $node->uuid(),
+      'fields' => ['name'],
+    ]);
+
+    // Test if relationship has correct metadata when loading a single resource.
+    $str = $this->drupalGet('jsonapi/node/article/' . $node->uuid() . '/relationships/field_tags');
+    $resource = Json::decode($str);
+
+    $this->assertArrayHasKey('meta', $resource);
+    $this->assertArrayHasKey('relationship_meta_name', $resource['meta']);
+    // Test that the tag is added to the meta of the document.
+    $this->assertEquals([$node->get('field_tags')->entity->getName()], $resource['meta']['relationship_meta_name']);
+  }
+
+  /**
    * Tests the GET method on articles referencing the same tag twice.
    */
-  public function testReferencingTwiceRead() {
+  public function testReferencingTwiceRead(): void {
     $this->createDefaultContent(1, 1, FALSE, FALSE, static::IS_NOT_MULTILINGUAL, TRUE);
 
     // 1. Load all articles (1st page).
@@ -565,8 +735,8 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
   /**
    * Tests POST, PATCH and DELETE.
    */
-  public function testWrite() {
-    $this->config('jsonapi.settings')->set('read_only', FALSE)->save(TRUE);
+  public function testWrite(): void {
+    $this->config('jsonapi.settings')->set('read_only', FALSE)->save();
 
     $this->createDefaultContent(0, 3, FALSE, FALSE, static::IS_NOT_MULTILINGUAL, FALSE);
     // 1. Successful post.
@@ -581,7 +751,6 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
           'body' => [
             'value' => 'Custom value',
             'format' => 'plain_text',
-            'summary' => 'Custom summary',
           ],
         ],
         'relationships' => [
@@ -605,22 +774,22 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
       'auth' => [$this->user->getAccountName(), $this->user->pass_raw],
       'headers' => ['Content-Type' => 'application/vnd.api+json'],
     ]);
-    $created_response = Json::decode($response->getBody()->__toString());
+    $document = $this->getDocumentFromResponse($response);
     $this->assertEquals(201, $response->getStatusCode());
-    $this->assertArrayNotHasKey('uuid', $created_response['data']['attributes']);
-    $uuid = $created_response['data']['id'];
-    $this->assertCount(2, $created_response['data']['relationships']['field_tags']['data']);
-    $this->assertEquals($created_response['data']['links']['self']['href'], $response->getHeader('Location')[0]);
+    $this->assertArrayNotHasKey('uuid', $document['data']['attributes']);
+    $uuid = $document['data']['id'];
+    $this->assertCount(2, $document['data']['relationships']['field_tags']['data']);
+    $this->assertEquals($document['data']['links']['self']['href'], $response->getHeader('Location')[0]);
 
     // 2. Authorization error.
     $response = $this->request('POST', $collection_url, [
       'body' => Json::encode($body),
       'headers' => ['Content-Type' => 'application/vnd.api+json'],
     ]);
-    $created_response = Json::decode($response->getBody()->__toString());
+    $document = $this->getDocumentFromResponse($response, FALSE);
     $this->assertEquals(401, $response->getStatusCode());
-    $this->assertNotEmpty($created_response['errors']);
-    $this->assertEquals('Unauthorized', $created_response['errors'][0]['title']);
+    $this->assertNotEmpty($document['errors']);
+    $this->assertEquals('Unauthorized', $document['errors'][0]['title']);
 
     // 2.1 Authorization error with a user without create permissions.
     $response = $this->request('POST', $collection_url, [
@@ -628,10 +797,10 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
       'auth' => [$this->userCanViewProfiles->getAccountName(), $this->userCanViewProfiles->pass_raw],
       'headers' => ['Content-Type' => 'application/vnd.api+json'],
     ]);
-    $created_response = Json::decode($response->getBody()->__toString());
+    $document = $this->getDocumentFromResponse($response, FALSE);
     $this->assertEquals(403, $response->getStatusCode());
-    $this->assertNotEmpty($created_response['errors']);
-    $this->assertEquals('Forbidden', $created_response['errors'][0]['title']);
+    $this->assertNotEmpty($document['errors']);
+    $this->assertEquals('Forbidden', $document['errors'][0]['title']);
 
     // 3. Missing Content-Type error.
     $response = $this->request('POST', $collection_url, [
@@ -652,10 +821,10 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
         'Content-Type' => 'application/vnd.api+json',
       ],
     ]);
-    $created_response = Json::decode($response->getBody()->__toString());
+    $document = $this->getDocumentFromResponse($response, FALSE);
     $this->assertEquals(409, $response->getStatusCode());
-    $this->assertNotEmpty($created_response['errors']);
-    $this->assertEquals('Conflict', $created_response['errors'][0]['title']);
+    $this->assertNotEmpty($document['errors']);
+    $this->assertEquals('Conflict', $document['errors'][0]['title']);
     // 5. Article with wrong reference UUIDs for tags.
     $body_invalid_tags = $body;
     $body_invalid_tags['data']['relationships']['field_tags']['data'][0]['id'] = 'lorem';
@@ -675,10 +844,10 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
         'Accept' => 'application/vnd.api+json',
       ],
     ]);
-    $created_response = Json::decode($response->getBody()->__toString());
+    $document = $this->getDocumentFromResponse($response, FALSE);
     $this->assertEquals(400, $response->getStatusCode());
-    $this->assertNotEmpty($created_response['errors']);
-    $this->assertEquals('Bad Request', $created_response['errors'][0]['title']);
+    $this->assertNotEmpty($document['errors']);
+    $this->assertEquals('Bad Request', $document['errors'][0]['title']);
     // 6.1 Denormalizing error.
     $response = $this->request('POST', $collection_url, [
       'body' => '{"data":{"type":"something"},"valid yet nonsensical json":[]}',
@@ -688,10 +857,10 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
         'Accept' => 'application/vnd.api+json',
       ],
     ]);
-    $created_response = Json::decode($response->getBody()->__toString());
+    $document = $this->getDocumentFromResponse($response, FALSE);
     $this->assertEquals(422, $response->getStatusCode());
-    $this->assertNotEmpty($created_response['errors']);
-    $this->assertStringStartsWith('Unprocessable', $created_response['errors'][0]['title']);
+    $this->assertNotEmpty($document['errors']);
+    $this->assertStringStartsWith('Unprocessable', $document['errors'][0]['title']);
     // 6.2 Relationships are not included in "data".
     $malformed_body = $body;
     unset($malformed_body['data']['relationships']);
@@ -704,11 +873,11 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
         'Content-Type' => 'application/vnd.api+json',
       ],
     ]);
-    $created_response = Json::decode((string) $response->getBody());
+    $document = $this->getDocumentFromResponse($response, FALSE);
     $this->assertSame(400, $response->getStatusCode());
-    $this->assertNotEmpty($created_response['errors']);
-    $this->assertSame("Bad Request", $created_response['errors'][0]['title']);
-    $this->assertSame("Found \"relationships\" within the document's top level. The \"relationships\" key must be within resource object.", $created_response['errors'][0]['detail']);
+    $this->assertNotEmpty($document['errors']);
+    $this->assertSame("Bad Request", $document['errors'][0]['title']);
+    $this->assertSame("Found \"relationships\" within the document's top level. The \"relationships\" key must be within resource object.", $document['errors'][0]['detail']);
     // 6.2 "type" not included in "data".
     $missing_type = $body;
     unset($missing_type['data']['type']);
@@ -720,11 +889,11 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
         'Content-Type' => 'application/vnd.api+json',
       ],
     ]);
-    $created_response = Json::decode((string) $response->getBody());
+    $document = $this->getDocumentFromResponse($response, FALSE);
     $this->assertSame(400, $response->getStatusCode());
-    $this->assertNotEmpty($created_response['errors']);
-    $this->assertSame("Bad Request", $created_response['errors'][0]['title']);
-    $this->assertSame("Resource object must include a \"type\".", $created_response['errors'][0]['detail']);
+    $this->assertNotEmpty($document['errors']);
+    $this->assertSame("Bad Request", $document['errors'][0]['title']);
+    $this->assertSame("Resource object must include a \"type\".", $document['errors'][0]['detail']);
     // 7. Successful PATCH.
     $body = [
       'data' => [
@@ -741,7 +910,7 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
       'auth' => [$this->user->getAccountName(), $this->user->pass_raw],
       'headers' => ['Content-Type' => 'application/vnd.api+json'],
     ]);
-    $updated_response = Json::decode($response->getBody()->__toString());
+    $updated_response = $this->getDocumentFromResponse($response);
     $this->assertEquals(200, $response->getStatusCode());
     $this->assertEquals('My updated title', $updated_response['data']['attributes']['title']);
 
@@ -779,9 +948,9 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
       'auth' => [$this->user->getAccountName(), $this->user->pass_raw],
       'headers' => ['Content-Type' => 'application/vnd.api+json'],
     ]);
-    $updated_response = Json::decode($response->getBody()->__toString());
+    $updated_response = $this->getDocumentFromResponse($response, FALSE);
     $this->assertEquals(403, $response->getStatusCode());
-    $this->assertEquals("The current user is not allowed to PATCH the selected field (status). The 'administer nodes' permission is required.",
+    $this->assertEquals("The current user is not allowed to PATCH the selected field (status). The following permissions are required: 'administer node published status' OR 'administer nodes'.",
       $updated_response['errors'][0]['detail']);
 
     $node = \Drupal::service('entity.repository')->loadEntityByUuid('node', $uuid);
@@ -803,7 +972,7 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
       'auth' => [$this->user->getAccountName(), $this->user->pass_raw],
       'headers' => ['Content-Type' => 'application/vnd.api+json'],
     ]);
-    $updated_response = Json::decode($response->getBody()->__toString());
+    $updated_response = $this->getDocumentFromResponse($response);
     $this->assertEquals(200, $response->getStatusCode());
     $this->assertCount(3, $updated_response['data']);
     $this->assertEquals('taxonomy_term--tags', $updated_response['data'][2]['type']);
@@ -833,7 +1002,7 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
         'Accept' => 'application/vnd.api+json',
       ],
     ]);
-    $updated_response = Json::decode($response->getBody()->__toString());
+    $updated_response = $this->getDocumentFromResponse($response, FALSE);
     $this->assertEquals(
       'You need to provide a body for DELETE operations on a relationship (field_tags).',
       $updated_response['errors'][0]['detail']
@@ -863,7 +1032,6 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
           'body' => [
             'value' => 'Custom value',
             'format' => 'invalid_format',
-            'summary' => 'Custom summary',
           ],
         ],
       ],
@@ -876,7 +1044,7 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
         'Accept' => 'application/vnd.api+json',
       ],
     ]);
-    $updated_response = Json::decode($response->getBody()->__toString());
+    $updated_response = $this->getDocumentFromResponse($response, FALSE);
     $this->assertEquals(422, $response->getStatusCode());
     $this->assertCount(2, $updated_response['errors']);
     for ($i = 0; $i < 2; $i++) {
@@ -905,7 +1073,7 @@ class JsonApiFunctionalTest extends JsonApiFunctionalTestBase {
         'Accept' => 'application/vnd.api+json',
       ],
     ]);
-    $updated_response = Json::decode($response->getBody()->__toString());
+    $updated_response = $this->getDocumentFromResponse($response, FALSE);
     $this->assertEquals(422, $response->getStatusCode());
     $this->assertEquals("The attribute field_that_does_not_exist does not exist on the node--article resource type.",
       $updated_response['errors']['0']['detail']);

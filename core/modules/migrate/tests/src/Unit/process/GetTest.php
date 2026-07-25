@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit\process;
 
 use Drupal\migrate\Plugin\migrate\process\Get;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the get process plugin.
- *
- * @group migrate
  */
+#[Group('migrate')]
 class GetTest extends MigrateProcessTestCase {
 
   /**
    * Tests the Get plugin when source is a string.
    */
-  public function testTransformSourceString() {
+  public function testTransformSourceString(): void {
     $this->row->expects($this->once())
       ->method('get')
       ->with('test')
@@ -27,7 +30,7 @@ class GetTest extends MigrateProcessTestCase {
   /**
    * Tests the Get plugin when source is an array.
    */
-  public function testTransformSourceArray() {
+  public function testTransformSourceArray(): void {
     $map = [
       'test1' => 'source_value1',
       'test2' => 'source_value2',
@@ -45,7 +48,7 @@ class GetTest extends MigrateProcessTestCase {
   /**
    * Tests the Get plugin when source is a string pointing to destination.
    */
-  public function testTransformSourceStringAt() {
+  public function testTransformSourceStringAt(): void {
     $this->row->expects($this->once())
       ->method('get')
       ->with('@@test')
@@ -58,7 +61,7 @@ class GetTest extends MigrateProcessTestCase {
   /**
    * Tests the Get plugin when source is an array pointing to destination.
    */
-  public function testTransformSourceArrayAt() {
+  public function testTransformSourceArrayAt(): void {
     $map = [
       'test1' => 'source_value1',
       '@@test2' => 'source_value2',
@@ -77,10 +80,9 @@ class GetTest extends MigrateProcessTestCase {
 
   /**
    * Tests the Get plugin when source has integer values.
-   *
-   * @dataProvider integerValuesDataProvider
    */
-  public function testIntegerValues($source, $expected_value) {
+  #[DataProvider('integerValuesDataProvider')]
+  public function testIntegerValues($source, $expected_value): void {
     $this->row->expects($this->atMost(2))
       ->method('get')
       ->willReturnOnConsecutiveCalls('val1', 'val2');
@@ -94,8 +96,9 @@ class GetTest extends MigrateProcessTestCase {
    * Provides data for the successful lookup test.
    *
    * @return array
+   *   An array of data for the test.
    */
-  public function integerValuesDataProvider() {
+  public static function integerValuesDataProvider() {
     return [
       [
         'source' => [0 => 0, 1 => 'test'],
@@ -117,7 +120,7 @@ class GetTest extends MigrateProcessTestCase {
    *
    * An example of a syntax error is "Invalid tag_line detected".
    */
-  public function testPluginSyntax() {
+  public function testPluginSyntax(): void {
     $this->assertNotNull($this->prophesize(Get::class));
   }
 

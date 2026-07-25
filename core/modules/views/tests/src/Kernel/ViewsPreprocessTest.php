@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel;
 
 use Drupal\entity_test\Entity\EntityTest;
+use Drupal\views\Hook\ViewsThemeHooks;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * Tests the preprocessing functionality in views.theme.inc.
- *
- * @group views
+ * Tests the preprocessing functionality in views theme hooks.
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ViewsPreprocessTest extends ViewsKernelTestBase {
 
   /**
@@ -34,7 +39,7 @@ class ViewsPreprocessTest extends ViewsKernelTestBase {
   /**
    * Tests css classes on displays are cleaned correctly.
    */
-  public function testCssClassCleaning() {
+  public function testCssClassCleaning(): void {
     \Drupal::service('theme_installer')->install(['test_theme']);
     $this->config('system.theme')->set('default', 'test_theme')->save();
 
@@ -43,18 +48,71 @@ class ViewsPreprocessTest extends ViewsKernelTestBase {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = \Drupal::service('renderer');
 
-    $view = Views::getview('test_preprocess');
+    $view = Views::getView('test_preprocess');
     $build = $view->buildRenderable();
     $renderer->renderRoot($build);
-    $this->assertStringContainsString('class="entity-test--default entity-test__default', (string) $build['#markup']);
+    $this->assertStringContainsString('class="entity-test__default', (string) $build['#markup']);
     $view->destroy();
 
     $view->setDisplay('display_2');
     $build = $view->buildRenderable();
     $renderer->renderRoot($build);
     $markup = (string) $build['#markup'];
-    $this->assertStringContainsString('css_class: entity-test--default and-another-class entity-test__default', $markup);
-    $this->assertStringContainsString('attributes: class="entity-test--default and-another-class entity-test__default', $markup);
+    $this->assertStringContainsString('css_class: entity-test__default and-another-class', $markup);
+    $this->assertStringContainsString('attributes: class="entity-test__default and-another-class', $markup);
+  }
+
+  /**
+   * Tests template_preprocess_views_mini_pager() when an empty pagination_heading_level value is passed.
+   *
+   * @legacy-covers ::template_preprocess_views_mini_pager
+   */
+  public function testEmptyPaginationHeadingLevelSet(): void {
+    $variables = [
+      'tags' => [],
+      'quantity' => 9,
+      'element' => 0,
+      'pagination_heading_level' => '',
+      'parameters' => [],
+    ];
+    \Drupal::service(ViewsThemeHooks::class)->preprocessViewsMiniPager($variables);
+
+    $this->assertEquals('h4', $variables['pagination_heading_level']);
+  }
+
+  /**
+   * Tests template_preprocess_views_mini_pager() when no pagination_heading_level is passed.
+   *
+   * @legacy-covers ::template_preprocess_views_mini_pager
+   */
+  public function testPaginationHeadingLevelNotSet(): void {
+    $variables = [
+      'tags' => [],
+      'quantity' => 9,
+      'element' => 0,
+      'parameters' => [],
+    ];
+    \Drupal::service(ViewsThemeHooks::class)->preprocessViewsMiniPager($variables);
+
+    $this->assertEquals('h4', $variables['pagination_heading_level']);
+  }
+
+  /**
+   * Tests template_preprocess_views_mini_pager() when a pagination_heading_level value is passed.
+   *
+   * @legacy-covers ::template_preprocess_views_mini_pager
+   */
+  public function testPaginationHeadingLevelSet(): void {
+    $variables = [
+      'tags' => [],
+      'quantity' => 9,
+      'element' => 0,
+      'pagination_heading_level' => 'h5',
+      'parameters' => [],
+    ];
+    \Drupal::service(ViewsThemeHooks::class)->preprocessViewsMiniPager($variables);
+
+    $this->assertEquals('h5', $variables['pagination_heading_level']);
   }
 
 }

@@ -1,0 +1,11 @@
+name: 'Test theme for the test theme engine'
+type: theme
+description: 'Theme for testing theme engines'
+# version: VERSION
+engine: test_theme_engine
+base theme: false
+
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
+project: 'drupal'
+datestamp: 1784141321

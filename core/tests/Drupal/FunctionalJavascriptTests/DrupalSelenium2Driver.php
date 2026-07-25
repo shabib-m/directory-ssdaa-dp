@@ -1,48 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests;
 
 use Behat\Mink\Driver\Selenium2Driver;
 use Behat\Mink\Exception\DriverException;
+use WebDriver\Element;
 use WebDriver\Exception;
 use WebDriver\Exception\UnknownError;
-use WebDriver\ServiceFactory;
 
 /**
  * Provides a driver for Selenium testing.
  */
 class DrupalSelenium2Driver extends Selenium2Driver {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct($browserName = 'firefox', $desiredCapabilities = NULL, $wdHost = 'http://localhost:4444/wd/hub') {
-    parent::__construct($browserName, $desiredCapabilities, $wdHost);
-    ServiceFactory::getInstance()->setServiceClass('service.curl', WebDriverCurlService::class);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setCookie($name, $value = NULL) {
-    if ($value === NULL) {
-      $this->getWebDriverSession()->deleteCookie($name);
-      return;
-    }
-
-    $cookieArray = [
-      'name' => $name,
-      'value' => urlencode($value),
-      'secure' => FALSE,
-      // Unlike \Behat\Mink\Driver\Selenium2Driver::setCookie we set a domain
-      // and an expire date, as otherwise cookies leak from one test site into
-      // another.
-      'domain' => parse_url($this->getWebDriverSession()->url(), PHP_URL_HOST),
-      'expires' => time() + 80000,
-    ];
-
-    $this->getWebDriverSession()->setCookie($cookieArray);
-  }
 
   /**
    * Uploads a file to the Selenium instance and returns the remote path.
@@ -112,7 +83,7 @@ class DrupalSelenium2Driver extends Selenium2Driver {
   /**
    * {@inheritdoc}
    */
-  public function click($xpath) {
+  public function click($xpath): void {
     /** @var \Exception $not_clickable_exception */
     $not_clickable_exception = NULL;
     $result = $this->waitFor(10, function () use (&$not_clickable_exception, $xpath) {
@@ -137,17 +108,18 @@ class DrupalSelenium2Driver extends Selenium2Driver {
   /**
    * {@inheritdoc}
    */
-  public function setValue($xpath, $value) {
+  public function setValue($xpath, $value): void {
     /** @var \Exception $not_clickable_exception */
     $not_clickable_exception = NULL;
     $result = $this->waitFor(10, function () use (&$not_clickable_exception, $xpath, $value) {
       try {
+        $element = $this->getWebDriverSession()->element('xpath', $xpath);
         // \Behat\Mink\Driver\Selenium2Driver::setValue() will call .blur() on
         // the element, modify that to trigger the "input" and "change" events
         // instead. They indicate the value has changed, rather than implying
         // user focus changes. This script only runs when Drupal javascript has
         // been loaded.
-        $this->executeJsOnXpath($xpath, <<<JS
+        $this->executeJsOnElement($element, <<<JS
 if (typeof Drupal !== 'undefined') {
   var node = {{ELEMENT}};
   var original = node.blur;
@@ -163,6 +135,13 @@ if (typeof Drupal !== 'undefined') {
   };
 }
 JS);
+        if (!is_string($value) && strtolower($element->name()) === 'input' &&
+          in_array(strtolower($element->attribute('type')), ['text', 'number', 'radio'], TRUE)) {
+          // @todo Trigger deprecation in
+          //   https://www.drupal.org/project/drupal/issues/3421105.
+          $value = (string) $value;
+        }
+
         parent::setValue($xpath, $value);
         return TRUE;
       }
@@ -212,7 +191,7 @@ JS);
   /**
    * {@inheritdoc}
    */
-  public function dragTo($sourceXpath, $destinationXpath) {
+  public function dragTo($sourceXpath, $destinationXpath): void {
     // Ensure both the source and destination exist at this point.
     $this->getWebDriverSession()->element('xpath', $sourceXpath);
     $this->getWebDriverSession()->element('xpath', $destinationXpath);
@@ -220,12 +199,55 @@ JS);
     try {
       parent::dragTo($sourceXpath, $destinationXpath);
     }
-    catch (Exception $e) {
+    catch (Exception) {
       // Do not care if this fails for any reason. It is a source of random
       // fails. The calling code should be doing assertions on the results of
       // dragging anyway. See upstream issues:
       // - https://github.com/minkphp/MinkSelenium2Driver/issues/97
       // - https://github.com/minkphp/MinkSelenium2Driver/issues/51
+    }
+  }
+
+  /**
+   * Executes JS on a given element.
+   *
+   * @param \WebDriver\Element $element
+   *   The webdriver element.
+   * @param string $script
+   *   The script to execute.
+   *
+   * @return mixed
+   *   The result of executing the script.
+   */
+  private function executeJsOnElement(Element $element, string $script) {
+    $script = str_replace('{{ELEMENT}}', 'arguments[0]', $script);
+
+    $options = [
+      'script' => $script,
+      'args' => [$element],
+    ];
+
+    return $this->getWebDriverSession()->execute($options);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function executeScript(string $script): void {
+    parent::executeScript($script);
+    $this->processJavascriptDeprecations();
+  }
+
+  /**
+   * Re-triggers within PHPUnit Javascript deprecations from the front-end.
+   */
+  public function processJavascriptDeprecations(): void {
+    $warnings = $this->evaluateScript("JSON.parse(sessionStorage.getItem('js_testing_log_test.warnings') || JSON.stringify([]))");
+    foreach ($warnings as $warning) {
+      if (str_contains($warning, '[Deprecation]')) {
+        // phpcs:ignore Drupal.Semantics.FunctionTriggerError
+        @trigger_error('Javascript Deprecation:' . preg_replace('/.*\[Deprecation\]/', '', $warning), E_USER_DEPRECATED);
+      }
     }
   }
 

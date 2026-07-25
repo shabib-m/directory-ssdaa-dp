@@ -1,16 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Functional;
 
 use Drupal\block_content\Entity\BlockContent;
-use Drupal\block_content\Entity\BlockContentType;
+use Drupal\Tests\block_content\Traits\BlockContentCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests general content moderation workflow for blocks.
- *
- * @group content_moderation
  */
+#[Group('content_moderation')]
+#[RunTestsInSeparateProcesses]
 class ModerationStateBlockTest extends ModerationStateTestBase {
+
+  use BlockContentCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -20,19 +26,25 @@ class ModerationStateBlockTest extends ModerationStateTestBase {
   /**
    * {@inheritdoc}
    */
+  protected function getAdministratorPermissions(): array {
+    return array_merge($this->permissions, [
+      'administer blocks',
+      'administer block content',
+    ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp(): void {
     parent::setUp();
 
     // Create the "basic" block type.
-    $bundle = BlockContentType::create([
+    $this->createBlockContentType([
       'id' => 'basic',
       'label' => 'basic',
       'revision' => FALSE,
-    ]);
-    $bundle->save();
-
-    // Add the body field to it.
-    block_content_add_body_field($bundle->id());
+    ], TRUE);
   }
 
   /**
@@ -53,8 +65,9 @@ class ModerationStateBlockTest extends ModerationStateTestBase {
    * @see \Drupal\content_moderation\EntityOperations::entityPresave
    * @see \Drupal\content_moderation\Tests\ModerationFormTest::testModerationForm
    */
-  public function testCustomBlockModeration() {
-    $this->drupalLogin($this->rootUser);
+  public function testCustomBlockModeration(): void {
+    $this->adminUser = $this->drupalCreateUser($this->getAdministratorPermissions());
+    $this->drupalLogin($this->adminUser);
 
     // Enable moderation for content blocks.
     $edit['bundles[basic]'] = TRUE;

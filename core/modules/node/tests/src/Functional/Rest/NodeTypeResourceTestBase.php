@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional\Rest;
 
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 
 /**
- * ResourceTestBase for NodeType entity.
+ * Resource test base for NodeType entity.
  */
 abstract class NodeTypeResourceTestBase extends ConfigEntityResourceTestBase {
 

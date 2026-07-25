@@ -88,8 +88,10 @@ class BlockForm extends EntityForm {
    *   The theme handler.
    * @param \Drupal\Core\Plugin\PluginFormFactoryInterface $plugin_form_manager
    *   The plugin form manager.
+   * @param \Drupal\block\BlockRepositoryInterface $blockRepository
+   *   The block repository service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ExecutableManagerInterface $manager, ContextRepositoryInterface $context_repository, LanguageManagerInterface $language, ThemeHandlerInterface $theme_handler, PluginFormFactoryInterface $plugin_form_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ExecutableManagerInterface $manager, ContextRepositoryInterface $context_repository, LanguageManagerInterface $language, ThemeHandlerInterface $theme_handler, PluginFormFactoryInterface $plugin_form_manager, protected BlockRepositoryInterface $blockRepository) {
     $this->storage = $entity_type_manager->getStorage('block');
     $this->manager = $manager;
     $this->contextRepository = $context_repository;
@@ -108,7 +110,8 @@ class BlockForm extends EntityForm {
       $container->get('context.repository'),
       $container->get('language_manager'),
       $container->get('theme_handler'),
-      $container->get('plugin_form.factory')
+      $container->get('plugin_form.factory'),
+      $container->get('block.repository')
     );
   }
 
@@ -136,8 +139,9 @@ class BlockForm extends EntityForm {
       '#default_value' => !$entity->isNew() ? $entity->id() : $this->getUniqueMachineName($entity),
       '#machine_name' => [
         'exists' => '\Drupal\block\Entity\Block::load',
-        'replace_pattern' => '[^a-z0-9_.]+',
+        'replace_pattern' => '[^a-z0-9_.]|(^\.)',
         'source' => ['settings', 'label'],
+        'error' => $this->t('The machine-readable name must contain only lowercase letters, numbers, underscores and periods, and must not begin with a period.'),
       ],
       '#required' => TRUE,
       '#disabled' => !$entity->isNew(),
@@ -171,7 +175,7 @@ class BlockForm extends EntityForm {
     }
 
     // Hidden weight setting.
-    $weight = $entity->isNew() ? $this->getRequest()->query->get('weight', 0) : $entity->getWeight();
+    $weight = $entity->isNew() ? $this->getRequest()->query->getInt('weight') : $entity->getWeight();
     $form['weight'] = [
       '#type' => 'hidden',
       '#default_value' => $weight,
@@ -186,7 +190,7 @@ class BlockForm extends EntityForm {
       '#description' => $this->t('Select the region where this block should be displayed.'),
       '#default_value' => $region,
       '#required' => TRUE,
-      '#options' => system_region_list($form_state->getValue('theme', $theme), REGIONS_VISIBLE),
+      '#options' => $this->themeHandler->getTheme($form_state->getValue('theme', $theme))->listVisibleRegions(),
       '#prefix' => '<div id="edit-block-region-wrapper">',
       '#suffix' => '</div>',
     ];
@@ -247,16 +251,23 @@ class BlockForm extends EntityForm {
       $form[$condition_id] = $condition_form;
     }
 
-    if (isset($form['entity_bundle:node'])) {
-      $form['entity_bundle:node']['negate']['#type'] = 'value';
-      $form['entity_bundle:node']['negate']['#title_display'] = 'invisible';
-      $form['entity_bundle:node']['negate']['#value'] = $form['entity_bundle:node']['negate']['#default_value'];
+    // Disable negation for specific conditions.
+    $disable_negation = [
+      'entity_bundle:node',
+      'language',
+      'response_status',
+      'user_role',
+    ];
+    foreach ($disable_negation as $condition) {
+      if (isset($form[$condition])) {
+        $form[$condition]['negate']['#type'] = 'value';
+        $form[$condition]['negate']['#value'] = $form[$condition]['negate']['#default_value'];
+      }
     }
+
     if (isset($form['user_role'])) {
       $form['user_role']['#title'] = $this->t('Roles');
       unset($form['user_role']['roles']['#description']);
-      $form['user_role']['negate']['#type'] = 'value';
-      $form['user_role']['negate']['#value'] = $form['user_role']['negate']['#default_value'];
     }
     if (isset($form['request_path'])) {
       $form['request_path']['#title'] = $this->t('Pages');
@@ -267,10 +278,6 @@ class BlockForm extends EntityForm {
         $this->t('Show for the listed pages'),
         $this->t('Hide for the listed pages'),
       ];
-    }
-    if (isset($form['language'])) {
-      $form['language']['negate']['#type'] = 'value';
-      $form['language']['negate']['#value'] = $form['language']['negate']['#default_value'];
     }
     return $form;
   }
@@ -376,7 +383,7 @@ class BlockForm extends EntityForm {
   }
 
   /**
-   * Generates a unique machine name for a block.
+   * Generates a unique machine name for a block based on a suggested string.
    *
    * @param \Drupal\block\BlockInterface $block
    *   The block entity.
@@ -386,28 +393,7 @@ class BlockForm extends EntityForm {
    */
   public function getUniqueMachineName(BlockInterface $block) {
     $suggestion = $block->getPlugin()->getMachineNameSuggestion();
-    if ($block->getTheme()) {
-      $suggestion = $block->getTheme() . '_' . $suggestion;
-    }
-
-    // Get all the blocks which starts with the suggested machine name.
-    $query = $this->storage->getQuery();
-    $query->condition('id', $suggestion, 'CONTAINS');
-    $block_ids = $query->execute();
-
-    $block_ids = array_map(function ($block_id) {
-      $parts = explode('.', $block_id);
-      return end($parts);
-    }, $block_ids);
-
-    // Iterate through potential IDs until we get a new one. E.g.
-    // 'plugin', 'plugin_2', 'plugin_3', etc.
-    $count = 1;
-    $machine_default = $suggestion;
-    while (in_array($machine_default, $block_ids)) {
-      $machine_default = $suggestion . '_' . ++$count;
-    }
-    return $machine_default;
+    return $this->blockRepository->getUniqueMachineName($suggestion, $block->getTheme());
   }
 
   /**

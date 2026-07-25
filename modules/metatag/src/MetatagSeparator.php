@@ -24,13 +24,13 @@ trait MetatagSeparator {
    *   The correct separator.
    */
   public function getSeparator(): string {
-    $separator = '';
-
     // Load the separator saved in configuration.
-    $config = $this->configFactory->get('metatag.settings');
+    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
+    $config_factory = \Drupal::configFactory();
+    $config = $config_factory->get('metatag.settings');
 
     // @todo This extra check shouldn't be needed.
-    if (!empty($config)) {
+    if ($config) {
       $separator = $config->get('separator');
     }
 

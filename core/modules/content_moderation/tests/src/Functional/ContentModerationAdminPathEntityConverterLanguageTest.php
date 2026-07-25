@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Functional;
 
 use Drupal\Tests\language\Functional\AdminPathEntityConverterLanguageTest;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test administration path based entity conversion when moderation enabled.
- *
- * @group content_moderation
  */
+#[Group('content_moderation')]
+#[RunTestsInSeparateProcesses]
 class ContentModerationAdminPathEntityConverterLanguageTest extends AdminPathEntityConverterLanguageTest {
 
   /**

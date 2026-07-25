@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Migrate\d6;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Migrate field widget settings.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateFieldWidgetSettingsTest extends MigrateDrupal6TestBase {
 
   /**
@@ -30,7 +34,7 @@ class MigrateFieldWidgetSettingsTest extends MigrateDrupal6TestBase {
   /**
    * Tests that migrated view modes can be loaded using D8 API's.
    */
-  public function testWidgetSettings() {
+  public function testWidgetSettings(): void {
     // Test the config can be loaded.
     $form_display = EntityFormDisplay::load('node.story.default');
     $this->assertNotNull($form_display);

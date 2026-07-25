@@ -44,7 +44,7 @@ class EntityResourcePostRouteSubscriber implements EventSubscriberInterface {
       // We only care about REST resource config entities for the
       // \Drupal\rest\Plugin\rest\resource\EntityResource plugin.
       $plugin_id = $resource_config->toArray()['plugin_id'];
-      if (substr($plugin_id, 0, 6) !== 'entity') {
+      if (!str_starts_with($plugin_id, 'entity')) {
         continue;
       }
 
@@ -54,7 +54,7 @@ class EntityResourcePostRouteSubscriber implements EventSubscriberInterface {
         // Create a route for the 'create' link relation type for this entity
         // type that uses the same route definition as the REST 'POST' route
         // which use that entity type.
-        // @see \Drupal\Core\Entity\Entity::toUrl()
+        // @see \Drupal\Core\Entity\EntityBase::toUrl()
         $entity_create_route_name = "entity.$entity_type_id.create";
         $route_collection->add($entity_create_route_name, $rest_post_route);
       }

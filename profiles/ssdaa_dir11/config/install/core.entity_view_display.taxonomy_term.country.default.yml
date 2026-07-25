@@ -1,0 +1,39 @@
+uuid: 2d2c00cb-5a38-43e7-b3ae-16eb56e28fee
+langcode: ar
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.country.field__lm_aldwlt
+    - field.field.taxonomy_term.country.field_sndwq_aldwl
+    - image.style.medium
+    - taxonomy.vocabulary.country
+  module:
+    - image
+    - text
+id: taxonomy_term.country.default
+targetEntityType: taxonomy_term
+bundle: country
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field__lm_aldwlt:
+    type: image
+    label: hidden
+    settings:
+      image_link: content
+      image_style: medium
+      image_loading:
+        attribute: lazy
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  breadcrumbs: true
+  field_sndwq_aldwl: true
+  langcode: true

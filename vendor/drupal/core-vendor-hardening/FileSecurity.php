@@ -43,7 +43,7 @@ class FileSecurity {
    * @return string
    *   The desired contents of the .htaccess file.
    *
-   * @see file_save_htaccess()
+   * @see \Drupal\Component\FileSecurity\FileSecurity::writeHtaccess()
    */
   public static function htaccessLines($deny_public_access = TRUE) {
     $lines = static::htaccessPreventExecution();
@@ -98,39 +98,6 @@ EOF;
   Deny from all
 </IfModule>
 EOF;
-  }
-
-  /**
-   * Writes a web.config file in the given directory, if it doesn't exist.
-   *
-   * @param string $directory
-   *   The directory.
-   * @param bool $force
-   *   (optional) Set to TRUE to force overwrite an existing file.
-   *
-   * @return bool
-   *   TRUE if the file already exists or was created. FALSE otherwise.
-   */
-  public static function writeWebConfig($directory, $force = FALSE) {
-    return self::writeFile($directory, 'web.config', self::webConfigLines(), $force);
-  }
-
-  /**
-   * Returns the standard web.config lines for security.
-   *
-   * @return string
-   *   The contents of the web.config file.
-   */
-  public static function webConfigLines() {
-    return <<<EOT
-<configuration>
-  <system.webServer>
-    <authorization>
-      <deny users="*">
-    </authorization>
-  </system.webServer>
-</configuration>
-EOT;
   }
 
   /**

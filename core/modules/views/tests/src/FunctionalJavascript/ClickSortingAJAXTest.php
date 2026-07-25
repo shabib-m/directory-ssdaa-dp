@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the click sorting AJAX functionality of Views exposed forms.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ClickSortingAJAXTest extends WebDriverTestBase {
 
   use ContentTypeCreationTrait;
@@ -27,6 +31,11 @@ class ClickSortingAJAXTest extends WebDriverTestBase {
    */
   protected $defaultTheme = 'stark';
 
+  /**
+   * The views to use for testing.
+   *
+   * @var string[]
+   */
   public static $testViews = ['test_content_ajax'];
 
   /**
@@ -39,8 +48,8 @@ class ClickSortingAJAXTest extends WebDriverTestBase {
 
     // Create a Content type and two test nodes.
     $this->createContentType(['type' => 'page']);
-    $this->createNode(['title' => 'Page A', 'changed' => REQUEST_TIME]);
-    $this->createNode(['title' => 'Page B', 'changed' => REQUEST_TIME + 1000]);
+    $this->createNode(['title' => 'Page A', 'changed' => \Drupal::time()->getRequestTime()]);
+    $this->createNode(['title' => 'Page B', 'changed' => \Drupal::time()->getRequestTime() + 1000]);
 
     // Create a user privileged enough to view content.
     $user = $this->drupalCreateUser([
@@ -54,7 +63,7 @@ class ClickSortingAJAXTest extends WebDriverTestBase {
   /**
    * Tests if sorting via AJAX works for the "Content" View.
    */
-  public function testClickSorting() {
+  public function testClickSorting(): void {
     // Visit the content page.
     $this->drupalGet('test-content-ajax');
 

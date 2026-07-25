@@ -1,0 +1,15 @@
+name: 'Node storage body field'
+type: module
+description: 'When enabled, this module adds a default node body field.'
+package: Core
+# version: VERSION
+dependencies:
+  - drupal:node
+lifecycle: deprecated
+lifecycle_link: "https://www.drupal.org/node/3223395#s-node-storage-body-field"
+hidden: true
+
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
+project: 'drupal'
+datestamp: 1784141321

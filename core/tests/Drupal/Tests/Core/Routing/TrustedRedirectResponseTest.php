@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Routing;
 
 use Drupal\Core\Cache\CacheableMetadata;
@@ -8,19 +10,23 @@ use Drupal\Core\Cache\CacheableResponseInterface;
 use Drupal\Core\Routing\RequestContext;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
- * @coversDefaultClass \Drupal\Core\Routing\TrustedRedirectResponse
- * @group Routing
+ * Tests Drupal\Core\Routing\TrustedRedirectResponse.
  */
+#[CoversClass(TrustedRedirectResponse::class)]
+#[Group('Routing')]
 class TrustedRedirectResponseTest extends UnitTestCase {
 
   /**
-   * @covers ::setTargetUrl
+   * Tests set target url with internal url.
    */
-  public function testSetTargetUrlWithInternalUrl() {
+  public function testSetTargetUrlWithInternalUrl(): void {
     $redirect_response = new TrustedRedirectResponse('/example');
     $redirect_response->setTargetUrl('/example2');
 
@@ -28,9 +34,9 @@ class TrustedRedirectResponseTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setTargetUrl
+   * Tests set target url with untrusted url.
    */
-  public function testSetTargetUrlWithUntrustedUrl() {
+  public function testSetTargetUrlWithUntrustedUrl(): void {
     $request_context = new RequestContext();
     $request_context->setCompleteBaseUrl('https://www.drupal.org');
     $container = new ContainerBuilder();
@@ -44,9 +50,9 @@ class TrustedRedirectResponseTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::setTargetUrl
+   * Tests set target url with trusted url.
    */
-  public function testSetTargetUrlWithTrustedUrl() {
+  public function testSetTargetUrlWithTrustedUrl(): void {
     $redirect_response = new TrustedRedirectResponse('/example');
 
     $redirect_response->setTrustedTargetUrl('http://good-external-url.com/example');
@@ -54,13 +60,14 @@ class TrustedRedirectResponseTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::createFromRedirectResponse
-   * @dataProvider providerCreateFromRedirectResponse
+   * Tests create from redirect response.
    */
-  public function testCreateFromRedirectResponse($redirect_response) {
+  #[DataProvider('providerCreateFromRedirectResponse')]
+  public function testCreateFromRedirectResponse($redirect_response): void {
     $trusted_redirect_response = TrustedRedirectResponse::createFromRedirectResponse($redirect_response);
 
-    // The trusted redirect response is always a CacheableResponseInterface instance.
+    // The trusted redirect response is always a CacheableResponseInterface
+    // instance.
     $this->assertInstanceOf(CacheableResponseInterface::class, $trusted_redirect_response);
 
     // But it is only actually cacheable (non-zero max-age) if the redirect
@@ -72,8 +79,9 @@ class TrustedRedirectResponseTest extends UnitTestCase {
 
   /**
    * @return array
+   *   An array of test cases, each containing a redirect response instance.
    */
-  public function providerCreateFromRedirectResponse() {
+  public static function providerCreateFromRedirectResponse(): array {
     return [
       'cacheable-with-tags' => [(new CacheableRedirectResponse('/example'))->addCacheableDependency((new CacheableMetadata())->addCacheTags(['foo']))],
       'cacheable-with-max-age-0' => [(new CacheableRedirectResponse('/example'))->addCacheableDependency((new CacheableMetadata())->setCacheMaxAge(0))],

@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Form;
 
 use Drupal\form_test\Form\FormTestLabelForm;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests form element labels, required markers and associated output.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class ElementsLabelsTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['form_test'];
 
@@ -23,6 +25,16 @@ class ElementsLabelsTest extends BrowserTestBase {
    * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
+
+  /**
+   * Tests form elements.
+   */
+  public function testFormElements(): void {
+    $this->testFormLabels();
+    $this->testTitleEscaping();
+    $this->testFormDescriptions();
+    $this->testFormsInThemeLessEnvironments();
+  }
 
   /**
    * Tests form element rendering.
@@ -33,7 +45,7 @@ class ElementsLabelsTest extends BrowserTestBase {
    * - Prefix and suffix render element placement.
    * - Form element title attributes.
    */
-  public function testFormLabels() {
+  protected function testFormLabels(): void {
     $this->drupalGet('form_test/form-labels');
 
     // Check that the checkbox/radio processing is not interfering with
@@ -51,9 +63,8 @@ class ElementsLabelsTest extends BrowserTestBase {
     // appropriate override and correct behavior.
     $this->assertSession()->elementExists('xpath', '//input[@id="edit-form-checkbox-test"]/following-sibling::label[@for="edit-form-checkbox-test" and @class="option"]');
 
-    // Exercise various defaults for textboxes and modifications to ensure
-    // appropriate override and correct behavior.
-
+    // Exercise various textbox defaults and modifications to ensure appropriate
+    // override and correct behavior.
     // Verify that label precedes textfield, with required marker inside label.
     $this->assertSession()->elementExists('xpath', '//label[@for="edit-form-textfield-test-title-and-required" and @class="js-form-required form-required"]/following-sibling::input[@id="edit-form-textfield-test-title-and-required"]');
 
@@ -102,7 +113,7 @@ class ElementsLabelsTest extends BrowserTestBase {
   /**
    * Tests XSS-protection of element labels.
    */
-  public function testTitleEscaping() {
+  protected function testTitleEscaping(): void {
     $this->drupalGet('form_test/form-labels');
     foreach (FormTestLabelForm::$typesWithTitle as $type) {
       $this->assertSession()->responseContains("$type alert('XSS') is XSS filtered!");
@@ -113,20 +124,22 @@ class ElementsLabelsTest extends BrowserTestBase {
   /**
    * Tests different display options for form element descriptions.
    */
-  public function testFormDescriptions() {
+  protected function testFormDescriptions(): void {
     $this->drupalGet('form_test/form-descriptions');
-
-    // Check #description placement with #description_display='after'.
-    $field_id = 'edit-form-textfield-test-description-after';
-    $description_id = $field_id . '--description';
-    // Verify the #description element is placed after the form item.
-    $this->assertSession()->elementExists('xpath', '//input[@id="' . $field_id . '" and @aria-describedby="' . $description_id . '"]/following-sibling::div[@id="' . $description_id . '"]');
 
     // Check #description placement with #description_display='before'.
     $field_id = 'edit-form-textfield-test-description-before';
     $description_id = $field_id . '--description';
-    // Verify the #description element is placed before the form item.
-    $this->assertSession()->elementExists('xpath', '//input[@id="' . $field_id . '" and @aria-describedby="' . $description_id . '"]/preceding-sibling::div[@id="' . $description_id . '"]');
+    // Verify the #description element is placed before the field prefix and
+    // form item.
+    $this->assertSession()->elementExists('xpath', '//input[@id="' . $field_id . '" and @aria-describedby="' . $description_id . '"]/preceding-sibling::span[@class="field-prefix"]/preceding-sibling::div[@id="' . $description_id . '"]');
+
+    // Check #description placement with #description_display='after'.
+    $field_id = 'edit-form-textfield-test-description-after';
+    $description_id = $field_id . '--description';
+    // Verify the #description element is placed after the form item and field
+    // suffix.
+    $this->assertSession()->elementExists('xpath', '//input[@id="' . $field_id . '" and @aria-describedby="' . $description_id . '"]/following-sibling::span[@class="field-suffix"]/following-sibling::div[@id="' . $description_id . '"]');
 
     // Check if the class is 'visually-hidden' on the form element description
     // for the option with #description_display='invisible' and also check that
@@ -134,23 +147,23 @@ class ElementsLabelsTest extends BrowserTestBase {
     $field_id = 'edit-form-textfield-test-description-invisible';
     $description_id = $field_id . '--description';
     // Verify that the #description element is visually-hidden.
-    $this->assertSession()->elementExists('xpath', '//input[@id="' . $field_id . '" and @aria-describedby="' . $description_id . '"]/following-sibling::div[contains(@class, "visually-hidden")]');
+    $this->assertSession()->elementExists('xpath', '//input[@id="' . $field_id . '" and @aria-describedby="' . $description_id . '"]/following-sibling::span[@class="field-suffix"]/following-sibling::div[contains(@class, "visually-hidden")]');
   }
 
   /**
    * Tests forms in theme-less environments.
    */
-  public function testFormsInThemeLessEnvironments() {
+  protected function testFormsInThemeLessEnvironments(): void {
     $form = $this->getFormWithLimitedProperties();
     $render_service = $this->container->get('renderer');
     // This should not throw any notices.
-    $render_service->renderPlain($form);
+    $render_service->renderInIsolation($form);
   }
 
   /**
    * Return a form with element with not all properties defined.
    */
-  protected function getFormWithLimitedProperties() {
+  protected function getFormWithLimitedProperties(): array {
     $form = [];
 
     $form['fieldset'] = [

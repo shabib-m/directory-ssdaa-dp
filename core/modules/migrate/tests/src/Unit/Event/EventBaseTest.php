@@ -1,23 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit\Event;
 
 use Drupal\migrate\Event\EventBase;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\migrate\Event\EventBase
- * @group migrate
+ * Tests Drupal\migrate\Event\EventBase.
  */
+#[CoversClass(EventBase::class)]
+#[Group('migrate')]
 class EventBaseTest extends UnitTestCase {
 
   /**
    * Tests getMigration method.
    *
-   * @covers ::__construct
-   * @covers ::getMigration
+   * @legacy-covers ::__construct
+   * @legacy-covers ::getMigration
    */
-  public function testGetMigration() {
+  public function testGetMigration(): void {
     $migration = $this->prophesize('\Drupal\migrate\Plugin\MigrationInterface')->reveal();
     $message_service = $this->prophesize('\Drupal\migrate\MigrateMessageInterface')->reveal();
     $event = new EventBase($migration, $message_service);
@@ -27,10 +32,10 @@ class EventBaseTest extends UnitTestCase {
   /**
    * Tests logging a message.
    *
-   * @covers ::__construct
-   * @covers ::logMessage
+   * @legacy-covers ::__construct
+   * @legacy-covers ::logMessage
    */
-  public function testLogMessage() {
+  public function testLogMessage(): void {
     $migration = $this->prophesize('\Drupal\migrate\Plugin\MigrationInterface')->reveal();
     $message_service = $this->prophesize('\Drupal\migrate\MigrateMessageInterface');
     $event = new EventBase($migration, $message_service->reveal());

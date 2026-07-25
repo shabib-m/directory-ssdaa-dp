@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional\Rest;
 
 use Drupal\comment\Entity\CommentType;
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 
 /**
- * ResourceTestBase for CommentType entity.
+ * Resource test base for CommentType entity.
  */
 abstract class CommentTypeResourceTestBase extends ConfigEntityResourceTestBase {
 

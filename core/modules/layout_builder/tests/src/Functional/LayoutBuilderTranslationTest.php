@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Functional;
 
-use Drupal\Tests\content_translation\Functional\ContentTranslationTestBase;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Url;
+use Drupal\Tests\content_translation\Functional\ContentTranslationTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that the Layout Builder works with translated content.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
 
   /**
@@ -41,6 +45,7 @@ class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->doSetup();
     $this->setUpViewDisplay();
     $this->setUpEntities();
   }
@@ -48,7 +53,7 @@ class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
   /**
    * Tests that layout overrides work when created after a translation.
    */
-  public function testTranslationBeforeLayoutOverride() {
+  public function testTranslationBeforeLayoutOverride(): void {
     $assert_session = $this->assertSession();
 
     $this->addEntityTranslation();
@@ -88,7 +93,7 @@ class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
   /**
    * Tests that layout overrides work when created before a translation.
    */
-  public function testLayoutOverrideBeforeTranslation() {
+  public function testLayoutOverrideBeforeTranslation(): void {
     $assert_session = $this->assertSession();
 
     $entity_url = $this->entity->toUrl()->toString();
@@ -136,7 +141,7 @@ class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
   /**
    * Setup translated entity with layouts.
    */
-  protected function setUpEntities() {
+  protected function setUpEntities(): void {
     $this->drupalLogin($this->administrator);
 
     // @todo The Layout Builder UI relies on local tasks; fix in
@@ -150,14 +155,13 @@ class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
     ], $this->langcodes[0]);
     $storage = $this->container->get('entity_type.manager')
       ->getStorage($this->entityTypeId);
-    $storage->resetCache([$id]);
     $this->entity = $storage->load($id);
   }
 
   /**
    * Set up the View Display.
    */
-  protected function setUpViewDisplay() {
+  protected function setUpViewDisplay(): void {
     EntityViewDisplay::create([
       'targetEntityType' => $this->entityTypeId,
       'bundle' => $this->bundle,
@@ -173,7 +177,7 @@ class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
   /**
    * Adds an entity translation.
    */
-  protected function addEntityTranslation() {
+  protected function addEntityTranslation(): void {
     $user = $this->loggedInUser;
     $this->drupalLogin($this->translator);
     $add_translation_url = Url::fromRoute("entity.$this->entityTypeId.content_translation_add", [
@@ -189,7 +193,7 @@ class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
   /**
    * Adds a layout override.
    */
-  protected function addLayoutOverride() {
+  protected function addLayoutOverride(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
     $entity_url = $this->entity->toUrl()->toString();

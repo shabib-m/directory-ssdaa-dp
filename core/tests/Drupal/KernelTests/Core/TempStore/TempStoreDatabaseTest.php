@@ -1,26 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\TempStore;
 
-use Drupal\Core\KeyValueStore\KeyValueExpirableFactory;
-use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\KernelTests\KernelTestBase;
-use Drupal\Core\TempStore\SharedTempStoreFactory;
-use Drupal\Core\Lock\DatabaseLockBackend;
 use Drupal\Core\Database\Database;
+use Drupal\Core\KeyValueStore\KeyValueExpirableFactory;
+use Drupal\Core\Lock\DatabaseLockBackend;
+use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\TempStore\SharedTempStoreFactory;
+use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the temporary object storage system.
  *
- * @group TempStore
  * @see \Drupal\Core\TempStore\SharedTempStore
  */
+#[Group('TempStore')]
+#[RunTestsInSeparateProcesses]
 class TempStoreDatabaseTest extends KernelTestBase {
 
   /**
    * Tests the SharedTempStore API.
    */
-  public function testSharedTempStore() {
+  public function testSharedTempStore(): void {
     // Create testing objects.
     $objects = [];
     for ($i = 0; $i <= 3; $i++) {
@@ -39,7 +44,8 @@ class TempStoreDatabaseTest extends KernelTestBase {
     );
     $collection = $this->randomMachineName();
 
-    // Create two mock users.
+    // Create two mock user IDs. Note that the user IDs are intentionally
+    // random, which is not what we normally do in tests.
     for ($i = 0; $i <= 1; $i++) {
       $users[$i] = mt_rand(500, 5000000);
 
@@ -102,7 +108,7 @@ class TempStoreDatabaseTest extends KernelTestBase {
     // Now manually expire the item (this is not exposed by the API) and then
     // assert it is no longer accessible.
     $database->update('key_value_expire')
-      ->fields(['expire' => REQUEST_TIME - 1])
+      ->fields(['expire' => \Drupal::time()->getRequestTime() - 1])
       ->condition('collection', "tempstore.shared.$collection")
       ->condition('name', $key)
       ->execute();

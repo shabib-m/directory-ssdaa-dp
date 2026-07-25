@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Plugin\Discovery;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -37,7 +39,7 @@ abstract class DiscoveryTestBase extends KernelTestBase {
   /**
    * Tests getDefinitions() and getDefinition().
    */
-  public function testDiscoveryInterface() {
+  public function testDiscoveryInterface(): void {
     // Ensure that getDefinitions() returns the expected definitions.
     // For the arrays to be identical (instead of only equal), they must be
     // sorted equally, which seems unnecessary here.
@@ -50,8 +52,9 @@ abstract class DiscoveryTestBase extends KernelTestBase {
       $this->assertDefinitionIdentical($this->discovery->getDefinition($id), $definition);
     }
 
-    // Ensure that an empty array is returned if no plugin definitions are found.
-    $this->assertSame([], $this->emptyDiscovery->getDefinitions(), 'array() returned if no plugin definitions are found.');
+    // Ensure that an empty array is returned if no plugin definitions are
+    // found.
+    $this->assertSame([], $this->emptyDiscovery->getDefinitions(), 'Empty array returned if no plugin definitions are found.');
 
     // Ensure that NULL is returned as the definition of a non-existing plugin.
     $this->assertNull($this->emptyDiscovery->getDefinition('non_existing', FALSE), 'NULL returned as the definition of a non-existing plugin.');
@@ -68,7 +71,7 @@ abstract class DiscoveryTestBase extends KernelTestBase {
    *   The expected definition to test against.
    */
   protected function assertDefinitionIdentical(array $definition, array $expected_definition) {
-    $func = function (&$item) {
+    $func = function (&$item): void {
       if ($item instanceof TranslatableMarkup) {
         $item = (string) $item;
       }

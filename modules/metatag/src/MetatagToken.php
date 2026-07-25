@@ -2,10 +2,10 @@
 
 namespace Drupal\metatag;
 
-use Drupal\Core\Utility\Token;
 use Drupal\Core\Render\BubbleableMetadata;
-use Drupal\token\TokenEntityMapperInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Utility\Token;
+use Drupal\token\TokenEntityMapperInterface;
 
 /**
  * Token handling service. Uses core token service or contributed Token.
@@ -57,7 +57,7 @@ class MetatagToken {
    * @return string
    *   The processed string.
    */
-  public function replace($string, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL): string {
+  public function replace($string, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL): string {
     // Set default requirements for metatag unless options specify otherwise.
     $options = $options + [
       'clear' => TRUE,

@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Entity;
 
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests entity list builder functionality.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityListBuilderTest extends BrowserTestBase {
 
   /**
@@ -38,7 +42,7 @@ class EntityListBuilderTest extends BrowserTestBase {
   /**
    * Tests paging.
    */
-  public function testPager() {
+  public function testPager(): void {
     // Create 51 test entities.
     for ($i = 1; $i < 52; $i++) {
       EntityTest::create(['name' => 'Test entity ' . $i])->save();
@@ -60,20 +64,26 @@ class EntityListBuilderTest extends BrowserTestBase {
   /**
    * Tests that the correct cache contexts are set.
    */
-  public function testCacheContexts() {
+  public function testCacheContexts(): void {
     /** @var \Drupal\Core\Entity\EntityListBuilderInterface $list_builder */
     $list_builder = $this->container->get('entity_type.manager')->getListBuilder('entity_test');
 
     $build = $list_builder->render();
     $this->container->get('renderer')->renderRoot($build);
 
-    $this->assertEqualsCanonicalizing(['entity_test_view_grants', 'languages:' . LanguageInterface::TYPE_INTERFACE, 'theme', 'url.query_args.pagers:0', 'user.permissions'], $build['#cache']['contexts']);
+    $this->assertEqualsCanonicalizing([
+      'entity_test_view_grants',
+      'languages:' . LanguageInterface::TYPE_INTERFACE,
+      'theme',
+      'url.query_args.pagers:0',
+      'user.permissions',
+    ], $build['#cache']['contexts']);
   }
 
   /**
    * Tests if the list cache tags are set.
    */
-  public function testCacheTags() {
+  public function testCacheTags(): void {
     $this->drupalGet('entity_test/list');
     $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'entity_test_list');
   }

@@ -3,19 +3,20 @@
 namespace Drupal\views\Plugin\views\row;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\views\Attribute\ViewsRow;
 
 /**
  * Renders an RSS item based on fields.
- *
- * @ViewsRow(
- *   id = "rss_fields",
- *   title = @Translation("Fields"),
- *   help = @Translation("Display fields as RSS items."),
- *   theme = "views_view_row_rss",
- *   display_types = {"feed"}
- * )
  */
+#[ViewsRow(
+  id: "rss_fields",
+  title: new TranslatableMarkup("Fields"),
+  help: new TranslatableMarkup("Display fields as RSS items."),
+  theme: "views_view_row_rss",
+  display_types: ["feed"]
+)]
 class RssFields extends RowPluginBase {
 
   /**
@@ -25,6 +26,9 @@ class RssFields extends RowPluginBase {
    */
   protected $usesFields = TRUE;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
     $options['title_field'] = ['default' => ''];
@@ -37,6 +41,9 @@ class RssFields extends RowPluginBase {
     return $options;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
@@ -105,6 +112,9 @@ class RssFields extends RowPluginBase {
     ];
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function validate() {
     $errors = parent::validate();
     $required_options = ['title_field', 'link_field', 'description_field', 'creator_field', 'date_field'];
@@ -121,6 +131,9 @@ class RssFields extends RowPluginBase {
     return $errors;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function render($row) {
     static $row_index;
     if (!isset($row_index)) {
@@ -136,7 +149,9 @@ class RssFields extends RowPluginBase {
     $item->description = is_array($field) ? $field : ['#markup' => $field];
 
     $item->elements = [
-      ['key' => 'pubDate', 'value' => $this->getField($row_index, $this->options['date_field'])],
+      // Default rendering of date fields adds a <time> tag and whitespace, we
+      // want to remove these because this breaks RSS feeds.
+      ['key' => 'pubDate', 'value' => trim(strip_tags($this->getField($row_index, $this->options['date_field'])))],
       [
         'key' => 'dc:creator',
         'value' => $this->getField($row_index, $this->options['creator_field']),
@@ -177,9 +192,9 @@ class RssFields extends RowPluginBase {
   /**
    * Retrieves a views field value from the style plugin.
    *
-   * @param $index
+   * @param int $index
    *   The index count of the row as expected by views_plugin_style::getField().
-   * @param $field_id
+   * @param string $field_id
    *   The ID assigned to the required field in the display.
    *
    * @return string|null|\Drupal\Component\Render\MarkupInterface

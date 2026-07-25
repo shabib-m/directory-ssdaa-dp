@@ -34,7 +34,6 @@ use Drupal\Core\Form\FormStateInterface;
  * convert smileys into images, etc.
  *
  * @see \Drupal\filter\Plugin\FilterInterface::process()
- * @see check_markup()
  *
  * Typically, only text processing is applied, but in more advanced use cases,
  * filters may also:
@@ -114,6 +113,7 @@ interface FilterInterface extends ConfigurableInterface, DependentPluginInterfac
    * Returns the administrative label for this filter plugin.
    *
    * @return string
+   *   The administrative label of the filter plugin.
    */
   public function getLabel();
 
@@ -121,6 +121,7 @@ interface FilterInterface extends ConfigurableInterface, DependentPluginInterfac
    * Returns the administrative description for this filter plugin.
    *
    * @return string
+   *   The administrative description of the filter plugin.
    */
   public function getDescription();
 
@@ -206,8 +207,8 @@ interface FilterInterface extends ConfigurableInterface, DependentPluginInterfac
    *
    *   Here is a concrete example, for a very granular filter:
    *     @code
-   *     array(
-   *       'allowed' => array(
+   *     [
+   *       'allowed' => [
    *         // Allows any attribute with any value on the <div> tag.
    *         'div' => TRUE,
    *         // Allows no attributes on the <p> tag.
@@ -215,31 +216,31 @@ interface FilterInterface extends ConfigurableInterface, DependentPluginInterfac
    *         // Allows the following attributes on the <a> tag:
    *         //  - 'href', with any value;
    *         //  - 'rel', with the value 'nofollow' value.
-   *         'a' => array(
+   *         'a' => [
    *           'href' => TRUE,
-   *           'rel' => array('nofollow' => TRUE),
-   *         ),
+   *           'rel' => ['nofollow' => TRUE],
+   *         ],
    *         // Only allows the 'src' and 'alt' attributes on the <alt> tag,
    *         // with any value.
-   *         'img' => array(
+   *         'img' => [
    *           'src' => TRUE,
    *           'alt' => TRUE,
-   *         ),
+   *         ],
    *         // Forbid the 'style' and 'on*' ('onClick' etc.) attributes on any
    *         // tag.
-   *         '*' => array(
+   *         '*' => [
    *           'style' => FALSE,
    *           'on*' => FALSE,
-   *         ),
-   *       )
-   *     )
+   *         ],
+   *       ]
+   *     ]
    *     @endcode
    *
    *   The simplest example possible: a filter that doesn't allow any HTML:
    *     @code
-   *     array(
-   *       'allowed' => array()
-   *     )
+   *     [
+   *       'allowed' => []
+   *     ]
    *     @endcode
    *
    *   And for a filter that applies no restrictions, i.e. allows any HTML:
@@ -257,16 +258,9 @@ interface FilterInterface extends ConfigurableInterface, DependentPluginInterfac
    * A filter's tips should be informative and to the point. Short tips are
    * preferably one-liners.
    *
-   * @param bool $long
-   *   Whether this callback should return a short tip to display in a form
-   *   (FALSE), or whether a more elaborate filter tips should be returned for
-   *   template_preprocess_filter_tips() (TRUE).
-   *
    * @return string|null
    *   Translated text to display as a tip, or NULL if this filter has no tip.
-   *
-   * @todo Split into getSummaryItem() and buildGuidelines().
    */
-  public function tips($long = FALSE);
+  public function tips();
 
 }

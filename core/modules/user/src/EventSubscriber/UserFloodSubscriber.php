@@ -26,7 +26,7 @@ class UserFloodSubscriber implements EventSubscriberInterface {
    * @param \Psr\Log\LoggerInterface $logger
    *   A logger instance.
    */
-  public function __construct(LoggerInterface $logger = NULL) {
+  public function __construct(?LoggerInterface $logger = NULL) {
     $this->logger = $logger;
   }
 
@@ -50,7 +50,10 @@ class UserFloodSubscriber implements EventSubscriberInterface {
       $uid = $floodEvent->getUid();
       if ($floodEvent->hasIp()) {
         $ip = $floodEvent->getIp();
-        $this->logger->notice('Flood control blocked login attempt for uid %uid from %ip', ['%uid' => $uid, '%ip' => $ip]);
+        $this->logger->notice('Flood control blocked login attempt for uid %uid from %ip', [
+          '%uid' => $uid,
+          '%ip' => $ip,
+        ]);
         return;
       }
       $this->logger->notice('Flood control blocked login attempt for uid %uid', ['%uid' => $uid]);

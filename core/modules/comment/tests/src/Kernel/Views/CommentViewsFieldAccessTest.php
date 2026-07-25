@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel\Views;
 
 use Drupal\comment\Entity\Comment;
 use Drupal\entity_test\Entity\EntityTest;
-use Drupal\user\Entity\User;
 use Drupal\Tests\views\Kernel\Handler\FieldFieldAccessTestBase;
+use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests base field access in Views for the comment entity.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentViewsFieldAccessTest extends FieldFieldAccessTestBase {
 
   /**
@@ -32,7 +36,7 @@ class CommentViewsFieldAccessTest extends FieldFieldAccessTestBase {
   /**
    * Check access for comment fields.
    */
-  public function testCommentFields() {
+  public function testCommentFields(): void {
     $user = User::create([
       'name' => 'test user',
     ]);
@@ -78,7 +82,7 @@ class CommentViewsFieldAccessTest extends FieldFieldAccessTestBase {
     $this->assertFieldAccess('comment', 'homepage', 'https://example.com');
     $this->assertFieldAccess('comment', 'uid', $user->getAccountName());
     // $this->assertFieldAccess('comment', 'created', \Drupal::service('date.formatter')->format(123456));
-    // $this->assertFieldAccess('comment', 'changed', \Drupal::service('date.formatter')->format(REQUEST_TIME));
+    // $this->assertFieldAccess('comment', 'changed', \Drupal::service('date.formatter')->format(\Drupal::time()->getRequestTime()));
     $this->assertFieldAccess('comment', 'status', 'On');
   }
 

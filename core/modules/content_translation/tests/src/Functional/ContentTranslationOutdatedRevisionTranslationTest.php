@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Functional;
 
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the "Flag as outdated" functionality with revision translations.
- *
- * @group content_translation
  */
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class ContentTranslationOutdatedRevisionTranslationTest extends ContentTranslationPendingRevisionTestBase {
 
   /**
@@ -22,13 +26,14 @@ class ContentTranslationOutdatedRevisionTranslationTest extends ContentTranslati
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->doSetup();
     $this->enableContentModeration();
   }
 
   /**
    * Tests that outdated revision translations work correctly.
    */
-  public function testFlagAsOutdatedHidden() {
+  public function testFlagAsOutdatedHidden(): void {
     // Create a test node.
     $values = [
       'title' => 'Test 1.1 EN',

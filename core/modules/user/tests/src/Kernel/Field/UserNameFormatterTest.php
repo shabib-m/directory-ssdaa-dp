@@ -1,23 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Field;
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the user_name formatter.
- *
- * @group field
  */
+#[Group('field')]
+#[RunTestsInSeparateProcesses]
 class UserNameFormatterTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['field', 'user', 'system'];
 
@@ -44,7 +46,6 @@ class UserNameFormatterTest extends KernelTestBase {
 
     $this->installConfig(['field']);
     $this->installEntitySchema('user');
-    $this->installSchema('system', ['sequences']);
 
     $this->entityType = 'user';
     $this->bundle = $this->entityType;
@@ -71,7 +72,7 @@ class UserNameFormatterTest extends KernelTestBase {
   /**
    * Tests the formatter output.
    */
-  public function testFormatter() {
+  public function testFormatter(): void {
     $user = User::create([
       'name' => 'test name',
     ]);

@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel\Migrate\d6;
 
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Uploads migration.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateUploadFieldTest extends MigrateDrupal6TestBase {
 
   /**
@@ -28,7 +32,7 @@ class MigrateUploadFieldTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal 6 upload settings to Drupal 8 field migration.
    */
-  public function testUpload() {
+  public function testUpload(): void {
     $field_storage = FieldStorageConfig::load('node.upload');
     $this->assertSame('node.upload', $field_storage->id());
     $this->assertSame([['node', 'upload']], $this->getMigration('d6_upload_field')->getIdMap()->lookupDestinationIds(['']));

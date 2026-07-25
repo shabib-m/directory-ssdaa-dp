@@ -1,16 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d7;
 
-use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group taxonomy
+ * Tests Migrate Node Taxonomy.
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class MigrateNodeTaxonomyTest extends MigrateDrupal7TestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = [
     'comment',
     'datetime',
@@ -40,7 +49,7 @@ class MigrateNodeTaxonomyTest extends MigrateDrupal7TestBase {
   /**
    * Tests node migration from Drupal 7 to 8.
    */
-  public function testMigration() {
+  public function testMigration(): void {
     $node = Node::load(2);
     $this->assertInstanceOf(NodeInterface::class, $node);
     $this->assertEquals(9, $node->field_tags[0]->target_id);

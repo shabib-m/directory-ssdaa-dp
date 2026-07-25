@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Action;
 
 use Drupal\Core\Action\Plugin\Action\Derivative\EntityChangedActionDeriver;
 use Drupal\entity_test\Entity\EntityTestMulChanged;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\system\Entity\Action;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group Action
+ * Tests Save Action.
  */
+#[Group('Action')]
+#[RunTestsInSeparateProcesses]
 class SaveActionTest extends KernelTestBase {
 
   /**
@@ -26,9 +32,11 @@ class SaveActionTest extends KernelTestBase {
   }
 
   /**
-   * @covers \Drupal\Core\Action\Plugin\Action\Derivative\EntityChangedActionDeriver::getDerivativeDefinitions
+   * Tests get derivative definitions.
+   *
+   * @legacy-covers \Drupal\Core\Action\Plugin\Action\Derivative\EntityChangedActionDeriver::getDerivativeDefinitions
    */
-  public function testGetDerivativeDefinitions() {
+  public function testGetDerivativeDefinitions(): void {
     $deriver = new EntityChangedActionDeriver(\Drupal::entityTypeManager(), \Drupal::translation());
     $definitions = $deriver->getDerivativeDefinitions([
       'action_label' => 'Save',
@@ -41,9 +49,11 @@ class SaveActionTest extends KernelTestBase {
   }
 
   /**
-   * @covers \Drupal\Core\Action\Plugin\Action\SaveAction::execute
+   * Tests save action.
+   *
+   * @legacy-covers \Drupal\Core\Action\Plugin\Action\SaveAction::execute
    */
-  public function testSaveAction() {
+  public function testSaveAction(): void {
     $entity = EntityTestMulChanged::create(['name' => 'test']);
     $entity->save();
     $saved_time = $entity->getChangedTime();

@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Performs tests on the Drupal error and exception handler.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class ErrorHandlerTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['error_test'];
 
@@ -27,7 +29,7 @@ class ErrorHandlerTest extends BrowserTestBase {
   /**
    * Tests the error handler.
    */
-  public function testErrorHandler() {
+  public function testErrorHandler(): void {
     $config = $this->config('system.logging');
     $error_notice = [
       '%type' => 'Notice',
@@ -95,7 +97,7 @@ class ErrorHandlerTest extends BrowserTestBase {
   /**
    * Tests a custom error handler set in settings.php.
    */
-  public function testCustomErrorHandler() {
+  public function testCustomErrorHandler(): void {
     $settings_filename = $this->siteDirectory . '/settings.php';
     chmod($settings_filename, 0777);
     $settings_php = file_get_contents($settings_filename);
@@ -119,7 +121,7 @@ class ErrorHandlerTest extends BrowserTestBase {
   /**
    * Tests the exception handler.
    */
-  public function testExceptionHandler() {
+  public function testExceptionHandler(): void {
     $error_exception = [
       '%type' => 'Exception',
       '@message' => 'Drupal & awesome',
@@ -127,9 +129,14 @@ class ErrorHandlerTest extends BrowserTestBase {
       '%line' => 56,
       '%file' => $this->getModulePath('error_test') . '/error_test.module',
     ];
+    $select = \Drupal::database()->select('bananas_are_awesome', 'b')->fields('b');
+    $message = \Drupal::database()->prepareStatement((string) $select, [])->getQueryString();
+    $message = str_replace(["\r", "\n"], ' ', $message);
     $error_pdo_exception = [
       '%type' => 'DatabaseExceptionWrapper',
-      '@message' => 'SELECT "b".* FROM {bananas_are_awesome} "b"',
+      '@message' => PHP_VERSION_ID >= 80400 ?
+      $message :
+      'SELECT "b".* FROM {bananas_are_awesome} "b"',
       '%function' => 'Drupal\error_test\Controller\ErrorTestController->triggerPDOException()',
       '%line' => 64,
       '%file' => $this->getModulePath('error_test') . '/error_test.module',
@@ -137,7 +144,9 @@ class ErrorHandlerTest extends BrowserTestBase {
     $error_renderer_exception = [
       '%type' => 'Exception',
       '@message' => 'This is an exception that occurs during rendering',
-      '%function' => 'Drupal\error_test\Controller\ErrorTestController->Drupal\error_test\Controller\{closure}()',
+      '%function' => PHP_VERSION_ID >= 80400 ?
+      'Drupal\error_test\Controller\ErrorTestController->{closure:Drupal\error_test\Controller\ErrorTestController::triggerRendererException():104}()' :
+      'Drupal\error_test\Controller\ErrorTestController->Drupal\error_test\Controller\{closure}()',
       '%line' => 82,
       '%file' => $this->getModulePath('error_test') . '/error_test.module',
     ];
@@ -166,7 +175,7 @@ class ErrorHandlerTest extends BrowserTestBase {
       ->save();
 
     $this->drupalGet('error-test/trigger-exception');
-    $this->assertSession()->responseHeaderDoesNotExist('X-Drupal-Cache');
+    $this->assertSession()->responseHeaderEquals('X-Drupal-Cache', 'UNCACHEABLE (no cacheability)');
     $this->assertSession()->responseHeaderNotContains('Cache-Control', 'public');
     $this->assertSession()->statusCodeEquals(500);
     $this->assertNoErrorMessage($error_exception);

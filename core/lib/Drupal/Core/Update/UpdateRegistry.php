@@ -6,8 +6,11 @@ use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Extension\Extension;
 use Drupal\Core\Extension\ExtensionDiscovery;
+use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+
+// cspell:ignore updatetype
 
 /**
  * Provides all and missing update implementations.
@@ -19,20 +22,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * like EXTENSION_UPDATETYPE_NAME() with NAME being a machine name.
  */
 class UpdateRegistry implements EventSubscriberInterface {
-
-  /**
-   * The used update name.
-   *
-   * @var string
-   */
-  protected $updateType = 'post_update';
-
-  /**
-   * The app root.
-   *
-   * @var string
-   */
-  protected $root;
 
   /**
    * The filename of the log file.
@@ -47,46 +36,40 @@ class UpdateRegistry implements EventSubscriberInterface {
   protected $enabledExtensions;
 
   /**
-   * The key value storage.
+   * A static cache of all the extension updates scanned for.
    *
-   * @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface
-   */
-  protected $keyValue;
-
-  /**
-   * Should we respect update functions in tests.
+   * This array is keyed by Drupal root, site path, extension name and update
+   * type. The value if the extension has been searched for is TRUE.
    *
-   * @var bool|null
+   * @var array
    */
-  protected $includeTests = NULL;
-
-  /**
-   * The site path.
-   *
-   * @var string
-   */
-  protected $sitePath;
+  protected static array $loadedFiles = [];
 
   /**
    * Constructs a new UpdateRegistry.
    *
    * @param string $root
    *   The app root.
-   * @param string $site_path
+   * @param string $sitePath
    *   The site path.
-   * @param string[] $enabled_extensions
-   *   A list of enabled extensions.
-   * @param \Drupal\Core\KeyValueStore\KeyValueStoreInterface $key_value
+   * @param array $module_list
+   *   An associative array whose keys are the names of installed modules.
+   * @param \Drupal\Core\KeyValueStore\KeyValueStoreInterface $keyValue
    *   The key value store.
-   * @param bool|null $include_tests
-   *   (optional) A flag whether to include tests in the scanning of extensions.
+   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
+   *   The theme handler.
+   * @param string $updateType
+   *   The used update name.
    */
-  public function __construct($root, $site_path, array $enabled_extensions, KeyValueStoreInterface $key_value, $include_tests = NULL) {
-    $this->root = $root;
-    $this->sitePath = $site_path;
-    $this->enabledExtensions = $enabled_extensions;
-    $this->keyValue = $key_value;
-    $this->includeTests = $include_tests;
+  public function __construct(
+    protected $root,
+    protected $sitePath,
+    array $module_list,
+    protected KeyValueStoreInterface $keyValue,
+    ThemeHandlerInterface $theme_handler,
+    protected string $updateType = 'post_update',
+  ) {
+    $this->enabledExtensions = array_merge(array_keys($module_list), array_keys($theme_handler->listInfo()));
   }
 
   /**
@@ -108,7 +91,7 @@ class UpdateRegistry implements EventSubscriberInterface {
    * Gets all available update functions.
    *
    * @return callable[]
-   *   A list of update functions.
+   *   An alphabetical list of available update functions.
    */
   protected function getAvailableUpdateFunctions() {
     $regexp = '/^(?<extension>.+)_' . $this->updateType . '_(?<name>.+)$/';
@@ -140,7 +123,7 @@ class UpdateRegistry implements EventSubscriberInterface {
    * Find all update functions that haven't been executed.
    *
    * @return callable[]
-   *   A list of update functions.
+   *   An alphabetical list of update functions that have not been executed.
    */
   public function getPendingUpdateFunctions() {
     // We need a) the list of active extensions (we get that from the config
@@ -185,6 +168,7 @@ class UpdateRegistry implements EventSubscriberInterface {
     if (file_exists($filename)) {
       include_once $filename;
     }
+    self::$loadedFiles[$this->root][$this->sitePath][$extension->getName()][$this->updateType] = TRUE;
   }
 
   /**
@@ -247,12 +231,15 @@ class UpdateRegistry implements EventSubscriberInterface {
    */
   public function getUpdateFunctions($extension_name) {
     $this->scanExtensionsAndLoadUpdateFiles($extension_name);
-    $all_functions = $this->getAvailableUpdateFunctions();
 
-    return array_filter($all_functions, function ($function_name) use ($extension_name) {
-      [$function_extension_name] = explode("_{$this->updateType}_", $function_name);
-      return $function_extension_name === $extension_name;
-    });
+    $updates = [];
+    $functions = get_defined_functions();
+    foreach (preg_grep('/^' . $extension_name . '_' . $this->updateType . '_/', $functions['user']) as $function) {
+      $updates[] = $function;
+    }
+    // Ensure that the update order is deterministic.
+    sort($updates);
+    return $updates;
   }
 
   /**
@@ -262,7 +249,11 @@ class UpdateRegistry implements EventSubscriberInterface {
    *   (optional) Limits the extension update files loaded to the provided
    *   extension.
    */
-  protected function scanExtensionsAndLoadUpdateFiles(string $extension = NULL) {
+  protected function scanExtensionsAndLoadUpdateFiles(?string $extension = NULL) {
+    if ($extension !== NULL && isset(self::$loadedFiles[$this->root][$this->sitePath][$extension][$this->updateType])) {
+      // We've already checked for this file and, if it exists, loaded it.
+      return;
+    }
     // Scan for extensions.
     $extension_discovery = new ExtensionDiscovery($this->root, TRUE, [], $this->sitePath);
     $module_extensions = $extension_discovery->scan('module');
@@ -296,6 +287,7 @@ class UpdateRegistry implements EventSubscriberInterface {
 
   /**
    * @return bool
+   *   TRUE if themes are to be updated, FALSE otherwise.
    */
   protected function includeThemes(): bool {
     return $this->updateType === 'post_update';
@@ -351,7 +343,7 @@ class UpdateRegistry implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[ConfigEvents::SAVE][] = ['onConfigSave'];
     return $events;
   }

@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\captcha\Functional;
 
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Tests\BrowserTestBase;
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
 use Drupal\comment\Tests\CommentTestTrait;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\Tests\BrowserTestBase;
 
 /**
  * Base class for CAPTCHA tests.
@@ -259,16 +259,17 @@ abstract class CaptchaWebTestBase extends BrowserTestBase {
    *   Calculated Math solution.
    */
   protected function getMathCaptchaSolutionFromForm($form_html_id = NULL) {
-    // Get the math challenge.
+    // Get the math challenge from the label element.
+    // The math question is now in the title/label: "Math question (@x + @y =)".
     if (!$form_html_id) {
-      $elements = $this->xpath('//div[contains(@class, "form-item-captcha-response")]/span[@class="field-prefix"]');
+      $elements = $this->xpath('//div[contains(@class, "form-item-captcha-response")]//label');
     }
     else {
-      $elements = $this->xpath('//form[@id="' . $form_html_id . '"]//div[contains(@class, "form-item-captcha-response")]/span[@class="field-prefix"]');
+      $elements = $this->xpath('//form[@id="' . $form_html_id . '"]//div[contains(@class, "form-item-captcha-response")]//label');
     }
-    $this->assertTrue('pass', json_encode($elements));
-    $challenge = (string) $elements[0];
-    $this->assertTrue('pass', $challenge);
+    $this->assertNotEmpty($elements, 'Math CAPTCHA label element found');
+    $challenge = (string) $elements[0]->getText();
+    $this->assertNotEmpty($challenge, 'Math CAPTCHA challenge text found');
     // Extract terms and operator from challenge.
     $matches = [];
     preg_match('/\\s*(\\d+)\\s*(-|\\+)\\s*(\\d+)\\s*=\\s*/', $challenge, $matches);

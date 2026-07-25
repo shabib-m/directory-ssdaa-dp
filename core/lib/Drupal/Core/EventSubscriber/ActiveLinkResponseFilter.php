@@ -12,8 +12,11 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
+// cspell:ignore noemptytag
 /**
- * Subscribes to filter HTML responses, to set the 'is-active' class on links.
+ * Subscribes to filter HTML responses, to set attributes on active links.
+ *
+ * Sets the 'is-active' class and sets the aria-current attribute to 'page'.
  *
  * Only for anonymous users; for authenticated users, the active-link asset
  * library is loaded.
@@ -106,7 +109,7 @@ class ActiveLinkResponseFilter implements EventSubscriberInterface {
   }
 
   /**
-   * Sets the "is-active" class on relevant links.
+   * Sets the "is-active" class and aria-current attribute on relevant links.
    *
    * This is a PHP implementation of the drupal.active-link JavaScript library.
    *
@@ -143,7 +146,7 @@ class ActiveLinkResponseFilter implements EventSubscriberInterface {
     //    attribute.
     // 2. We are on the front page and a link has the special '<front>' value in
     //    its 'data-drupal-link-system-path' attribute.
-    while (strpos($html_markup, $search_key_current_path, $offset) !== FALSE || ($is_front && strpos($html_markup, $search_key_front, $offset) !== FALSE)) {
+    while (str_contains(substr($html_markup, $offset), $search_key_current_path) || ($is_front && str_contains(substr($html_markup, $offset), $search_key_front))) {
       $pos_current_path = strpos($html_markup, $search_key_current_path, $offset);
       // Only look for links with the special '<front>' system path if we are
       // actually on the front page.
@@ -180,7 +183,7 @@ class ActiveLinkResponseFilter implements EventSubscriberInterface {
       }
 
       // Get the HTML: this will be the opening part of a single tag, e.g.:
-      // <a href="/" data-drupal-link-system-path="&lt;front&gt;">
+      // '<a href="/" data-drupal-link-system-path="&lt;front&gt;">'.
       $tag = substr($html_markup, $pos_tag_start ?? 0, $pos_tag_end - $pos_tag_start + 1);
 
       // Parse it into a DOMDocument so we can reliably read and modify
@@ -195,7 +198,8 @@ class ActiveLinkResponseFilter implements EventSubscriberInterface {
 
       // The language of an active link is equal to the current language.
       if ($add_active && $url_language) {
-        if ($node->hasAttribute('hreflang') && $node->getAttribute('hreflang') !== $url_language) {
+        $attribute = $node->nodeName === 'a' ? 'hreflang' : 'data-drupal-language';
+        if ($node->hasAttribute($attribute) && $node->getAttribute($attribute) !== $url_language) {
           $add_active = FALSE;
         }
       }
@@ -215,13 +219,14 @@ class ActiveLinkResponseFilter implements EventSubscriberInterface {
       }
 
       // Only if the path, the language and the query match, we set the
-      // "is-active" class.
+      // "is-active" class and add aria-current="page".
       if ($add_active) {
         if (strlen($class) > 0) {
           $class .= ' ';
         }
         $class .= 'is-active';
         $node->setAttribute('class', $class);
+        $node->setAttribute('aria-current', 'page');
 
         // Get the updated tag.
         $updated_tag = $dom->saveXML($node, LIBXML_NOEMPTYTAG);

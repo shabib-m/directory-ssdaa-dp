@@ -1,20 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal_ui\Functional;
 
-use Drupal\Tests\migrate_drupal\Traits\CreateTestContentEntitiesTrait;
+use Drupal\Core\Database\Database;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore drupalmysqldriverdatabasemysql
 /**
  * Test the credential form for both Drupal 6 and Drupal 7 sources.
  *
  * The credential form is tested with incorrect credentials, correct
  * credentials, and incorrect file paths.
- *
- * @group migrate_drupal_ui
  */
+#[Group('migrate_drupal_ui')]
+#[Group('#slow')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class CredentialFormTest extends MigrateUpgradeTestBase {
-
-  use CreateTestContentEntitiesTrait;
 
   /**
    * {@inheritdoc}
@@ -23,10 +30,9 @@ class CredentialFormTest extends MigrateUpgradeTestBase {
 
   /**
    * Test the credential form.
-   *
-   * @dataProvider providerCredentialForm
    */
-  public function testCredentialFrom($path_to_database) {
+  #[DataProvider('providerCredentialForm')]
+  public function testCredentialFrom($path_to_database): void {
     $this->loadFixture($this->getModulePath('migrate_drupal') . $path_to_database);
     $session = $this->assertSession();
 
@@ -40,7 +46,15 @@ class CredentialFormTest extends MigrateUpgradeTestBase {
 
     $this->submitForm([], 'Continue');
     $session->pageTextContains('Provide credentials for the database of the Drupal site you want to upgrade.');
-    $session->fieldExists('mysql[host]');
+    $session->fieldExists('edit-drupalmysqldriverdatabasemysql-host');
+
+    // Check error message when the source database and the site database are
+    // the same.
+    $site_edit = $this->getDestinationSiteCredentials();
+    $site_edits = $this->translatePostValues($site_edit);
+    $this->submitForm($site_edits, 'Review upgrade');
+    $session->pageTextContains('Resolve all issues below to continue the upgrade.');
+    $session->pageTextContains('Enter credentials for the database of the Drupal site you want to upgrade, not the new site.');
 
     // Ensure submitting the form with invalid database credentials gives us a
     // nice warning.
@@ -75,7 +89,7 @@ class CredentialFormTest extends MigrateUpgradeTestBase {
   /**
    * Data provider for testCredentialForm.
    */
-  public function providerCredentialForm() {
+  public static function providerCredentialForm() {
     return [
       [
         'path_to_database' => '/tests/fixtures/drupal6.php',
@@ -89,7 +103,7 @@ class CredentialFormTest extends MigrateUpgradeTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getSourceBasePath() {
+  protected function getSourceBasePath(): string {
     $version = $this->getLegacyDrupalVersion($this->sourceDatabase);
     return __DIR__ . '/d' . $version . '/files';
   }
@@ -97,29 +111,62 @@ class CredentialFormTest extends MigrateUpgradeTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getAvailablePaths() {
+  protected function getAvailablePaths(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEntityCounts() {
+  protected function getEntityCounts(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEntityCountsIncremental() {
+  protected function getEntityCountsIncremental(): array {
     return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getMissingPaths() {
+  protected function getMissingPaths(): array {
     return [];
+  }
+
+  /**
+   * Creates an array of destination site credentials for the Credential form.
+   *
+   * Before submitting to the Credential form the array must be processed by
+   * BrowserTestBase::translatePostValues() before submitting.
+   *
+   * @return array
+   *   An array of values suitable for BrowserTestBase::translatePostValues().
+   *
+   * @see \Drupal\migrate_drupal_ui\Form\CredentialForm
+   */
+  protected function getDestinationSiteCredentials(): array {
+    $connection_options = \Drupal::database()->getConnectionOptions();
+    $version = $this->getLegacyDrupalVersion($this->sourceDatabase);
+    $driver = $connection_options['driver'];
+
+    // Use the driver connection form to get the correct options out of the
+    // database settings. This supports all of the databases we test against.
+    $drivers = Database::getDriverList()->getInstallableList();
+    $form = $drivers[$driver]->getInstallTasks()->getFormOptions($connection_options);
+    $connection_options = array_intersect_key($connection_options, $form + $form['advanced_options']);
+    // Remove isolation_level since that option is not configurable in the UI.
+    unset($connection_options['isolation_level']);
+    $edit = [
+      $driver => $connection_options,
+      'version' => $version,
+    ];
+    if (count($drivers) !== 1) {
+      $edit['driver'] = $driver;
+    }
+    return $edit;
   }
 
 }

@@ -44,8 +44,8 @@ use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
  * @see https://ckeditor.com/docs/ckeditor5/latest/framework/guides/architecture/editing-engine.html#element-types-and-custom-data
  *
  * @section plugins CKEditor 5 Plugins
- * CKEditor 5 plugins may use either YAML or a PHP annotation for their
- * definitions. A PHP class does not need an annotation if it is defined in yml.
+ * CKEditor 5 plugins may use either YAML or a PHP attribute for their
+ * definitions. A PHP class does not need an attribute if it is defined in yml.
  *
  * To be discovered, YAML definition files must be named
  * {module_name}.ckeditor5.yml.
@@ -71,22 +71,24 @@ use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
  *       - <marquee behavior>
  * @endcode
  *
- * Declared as an Annotation:
+ * Declared as an Attribute:
  * @code
- * # In a scr/Plugin/CKEditor5Plugin/Marquee.php file.
- * /**
- *  * @CKEditor5Plugin(
- *  *   id = "MODULE_NAME_marquee",
- *  *   ckeditor5 = @CKEditor5AspectsOfCKEditor5Plugin(
- *  *     plugins = { "PACKAGE.CLASS" },
- *  *   ),
- *  *   drupal = @DrupalAspectsOfCKEditor5Plugin(
- *  *     label = @Translation("Marquee"),
- *  *     library = "MODULE_NAME/ckeditor5.marquee"
- *  *     elements = { "<marquee>", "<marquee behavior>" },
- *  *   )
- *  * )
- *  * /
+ * use Drupal\ckeditor5\Attribute\CKEditor5AspectsOfCKEditor5Plugin;
+ * use Drupal\ckeditor5\Attribute\CKEditor5Plugin;
+ * use Drupal\ckeditor5\Attribute\DrupalAspectsOfCKEditor5Plugin;
+ * use Drupal\Core\StringTranslation\TranslatableMarkup;
+ *
+ * #[CKEditor5Plugin(
+ *   id: 'MODULE_NAME_marquee',
+ *   ckeditor5: new CKEditor5AspectsOfCKEditor5Plugin(
+ *     plugins: ['PACKAGE.CLASS'],
+ *   ),
+ *   drupal: new DrupalAspectsOfCKEditor5Plugin(
+ *     label: new TranslatableMarkup('Marquee'),
+ *     library: 'MODULE_NAME/ckeditor5.marquee',
+ *     elements: ['<marquee>', '<marquee behavior>'],
+ *   ),
+ * )]
  * @endcode
  *
  * The metadata relating strictly to the CKEditor 5 plugin's JS code is stored
@@ -95,7 +97,7 @@ use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
  * If the plugin has a dependency on another module, adding the 'provider' key
  * will prevent the plugin from being loaded if that module is not installed.
  *
- * All of these can be defined in YAML or annotations. A given plugin should
+ * All of these can be defined in YAML or attributes. A given plugin should
  * choose one or the other, as a definition can't parse both at once.
  *
  * Overview of all available plugin definition properties:
@@ -142,7 +144,7 @@ use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
  *       label: Indent
  *     outdent:
  *       label: Outdent
- *   @encode
+ *   @endcode
  * - drupal.conditions: Conditions required for the plugin to load (other than
  *   module dependencies, which are defined by the 'provider' property).
  *   Conditions can check for five different things:
@@ -158,7 +160,7 @@ use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
  *   need arises, see
  *   https://www.drupal.org/docs/drupal-apis/ckeditor-5-api/overview#conditions.
  *
- * All of these can be defined in YAML or annotations. A given plugin should
+ * All of these can be defined in YAML or attributes. A given plugin should
  * choose one or the other, as a definition can't parse both at once.
  *
  * If the CKEditor 5 plugin contains translation they can be automatically
@@ -181,30 +183,14 @@ use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
  * assets/ckeditor5/marquee/translations/* in this example.
  *
  *
- * @see \Drupal\ckeditor5\Annotation\CKEditor5Plugin
- * @see \Drupal\ckeditor5\Annotation\CKEditor5AspectsOfCKEditor5Plugin
- * @see \Drupal\ckeditor5\Annotation\DrupalAspectsOfCKEditor5Plugin
- *
- * @section upgrade_path Upgrade path
- *
- * Modules can provide upgrade paths similar to the built-in upgrade path for
- * Drupal core's CKEditor 4 to CKEditor 5, by providing a CKEditor4To5Upgrade
- * plugin. This plugin type allows:
- * - mapping a CKEditor 4 button to an equivalent CKEditor 5 toolbar item
- * - mapping CKEditor 4 plugin settings to equivalent CKEditor 5 plugin
- *   configuration.
- * The supported CKEditor 4 buttons and/or CKEditor 4 plugin settings must be
- * specified in the annotation.
- * See Drupal core's implementation for an example.
- *
- * @see \Drupal\ckeditor5\Annotation\CKEditor4To5Upgrade
- * @see \Drupal\ckeditor5\Plugin\CKEditor4To5UpgradePluginInterface
- * @see \Drupal\ckeditor5\Plugin\CKEditor4To5Upgrade\Core
+ * @see \Drupal\ckeditor5\Attribute\CKEditor5Plugin
+ * @see \Drupal\ckeditor5\Attribute\CKEditor5AspectsOfCKEditor5Plugin
+ * @see \Drupal\ckeditor5\Attribute\DrupalAspectsOfCKEditor5Plugin
  *
  * @section public_api Public API
  *
  * The CKEditor 5 module provides no public API, other than:
- * - the annotations and interfaces mentioned above;
+ * - the attributes and interfaces mentioned above;
  * - to help implement CKEditor 5 plugins:
  *   \Drupal\ckeditor5\Plugin\CKEditor5PluginConfigurableTrait and
  *   \Drupal\ckeditor5\Plugin\CKEditor5PluginDefault;
@@ -242,6 +228,7 @@ use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
  * @see \Drupal\ckeditor5\Plugin\CKEditor5PluginManager
  */
 function hook_ckeditor5_plugin_info_alter(array &$plugin_definitions): void {
+  // Add a link decorator to the link plugin.
   assert($plugin_definitions['ckeditor5_link'] instanceof CKEditor5PluginDefinition);
   $link_plugin_definition = $plugin_definitions['ckeditor5_link']->toArray();
   $link_plugin_definition['ckeditor5']['config']['link']['decorators'][] = [
@@ -252,24 +239,16 @@ function hook_ckeditor5_plugin_info_alter(array &$plugin_definitions): void {
     ],
   ];
   $plugin_definitions['ckeditor5_link'] = new CKEditor5PluginDefinition($link_plugin_definition);
-}
 
-/**
- * Modify the list of available CKEditor 4 to 5 Upgrade plugins.
- *
- * This hook may be used to modify plugin properties after they have been
- * specified by other modules. For example, to override a default upgrade path.
- *
- * @param array $plugin_definitions
- *   An array of all the existing plugin definitions, passed by reference.
- *
- * @see \Drupal\ckeditor5\Plugin\CKEditor4To5UpgradePluginManager
- */
-function hook_ckeditor4to5upgrade_plugin_info_alter(array &$plugin_definitions): void {
-  // Remove core's upgrade path for the "Maximize" button (which is: there is no
-  // equivalent). This allows a different CKEditor4To5Upgrade plugin to define
-  // this upgrade path instead.
-  unset($plugin_definitions['core']['cke4_buttons']['Maximize']);
+  // Add a custom file type to the image upload plugin. Note that 'tiff' below
+  // should be an IANA image media type Name, with the "image/" prefix omitted.
+  // In other words: a subtype of type image.
+  // @see https://www.iana.org/assignments/media-types/media-types.xhtml#image
+  // @see https://ckeditor.com/docs/ckeditor5/latest/api/module_image_imageconfig-ImageUploadConfig.html#member-types
+  assert($plugin_definitions['ckeditor5_imageUpload'] instanceof CKEditor5PluginDefinition);
+  $image_upload_plugin_definition = $plugin_definitions['ckeditor5_imageUpload']->toArray();
+  $image_upload_plugin_definition['ckeditor5']['config']['image']['upload']['types'][] = 'tiff';
+  $plugin_definitions['ckeditor5_imageUpload'] = new CKEditor5PluginDefinition($image_upload_plugin_definition);
 }
 
 /**

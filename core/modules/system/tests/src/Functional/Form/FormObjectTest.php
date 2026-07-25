@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Form;
 
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests building a form from an object.
- *
- * @group Form
  */
+#[Group('Form')]
+#[RunTestsInSeparateProcesses]
 class FormObjectTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['form_test'];
 
@@ -28,7 +30,7 @@ class FormObjectTest extends BrowserTestBase {
    *
    * @see \Drupal\form_test\EventSubscriber\FormTestEventSubscriber::onKernelRequest()
    */
-  public function testObjectFormCallback() {
+  public function testObjectFormCallback(): void {
     $config_factory = $this->container->get('config.factory');
 
     $this->drupalGet('form-test/object-builder');

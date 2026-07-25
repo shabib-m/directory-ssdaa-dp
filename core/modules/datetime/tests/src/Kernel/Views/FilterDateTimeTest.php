@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\datetime\Kernel\Views;
 
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\node\Entity\Node;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Drupal\datetime\Plugin\views\filter\Date handler.
- *
- * @group datetime
  */
+#[Group('datetime')]
+#[RunTestsInSeparateProcesses]
 class FilterDateTimeTest extends DateTimeHandlerTestBase {
 
   /**
@@ -38,7 +42,7 @@ class FilterDateTimeTest extends DateTimeHandlerTestBase {
   protected function setUp($import_test_views = TRUE): void {
     parent::setUp($import_test_views);
 
-    static::$date = REQUEST_TIME + 86400;
+    static::$date = \Drupal::time()->getRequestTime() + 86400;
 
     // Set the timezone.
     date_default_timezone_set(static::$timezone);
@@ -71,7 +75,7 @@ class FilterDateTimeTest extends DateTimeHandlerTestBase {
   /**
    * Tests filter operations.
    */
-  public function testDatetimeFilter() {
+  public function testDatetimeFilter(): void {
     $this->_testOffset();
     $this->_testBetween();
     $this->_testExact();
@@ -80,7 +84,7 @@ class FilterDateTimeTest extends DateTimeHandlerTestBase {
   /**
    * Tests offset operations.
    */
-  protected function _testOffset() {
+  protected function _testOffset(): void {
     $view = Views::getView('test_filter_datetime');
     $field = static::$fieldName . '_value';
 
@@ -115,7 +119,7 @@ class FilterDateTimeTest extends DateTimeHandlerTestBase {
   /**
    * Tests between operations.
    */
-  protected function _testBetween() {
+  protected function _testBetween(): void {
     $view = Views::getView('test_filter_datetime');
     $field = static::$fieldName . '_value';
 
@@ -178,7 +182,7 @@ class FilterDateTimeTest extends DateTimeHandlerTestBase {
   /**
    * Tests exact date matching.
    */
-  protected function _testExact() {
+  protected function _testExact(): void {
     $view = Views::getView('test_filter_datetime');
     $field = static::$fieldName . '_value';
 

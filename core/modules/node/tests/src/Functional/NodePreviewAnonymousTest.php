@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\Role;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the node entity preview functionality for anonymous user.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodePreviewAnonymousTest extends BrowserTestBase {
 
   /**
@@ -46,7 +50,7 @@ class NodePreviewAnonymousTest extends BrowserTestBase {
   /**
    * Checks the node preview functionality for anonymous users.
    */
-  public function testAnonymousPagePreview() {
+  public function testAnonymousPagePreview(): void {
 
     $title_key = 'title[0][value]';
     $body_key = 'body[0][value]';

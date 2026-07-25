@@ -4,114 +4,40 @@ namespace Drupal\views;
 
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\Config\TypedConfigManagerInterface;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Field\Plugin\Field\FieldFormatter\TimestampFormatter;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Provides a BC layer for modules providing old configurations.
  *
  * @internal
  */
-class ViewsConfigUpdater implements ContainerInjectionInterface {
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The entity field manager.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
-   */
-  protected $entityFieldManager;
-
-  /**
-   * The typed config manager.
-   *
-   * @var \Drupal\Core\Config\TypedConfigManagerInterface
-   */
-  protected $typedConfigManager;
-
-  /**
-   * The views data service.
-   *
-   * @var \Drupal\views\ViewsData
-   */
-  protected $viewsData;
-
-  /**
-   * The formatter plugin manager service.
-   *
-   * @var \Drupal\Component\Plugin\PluginManagerInterface
-   */
-  protected $formatterPluginManager;
-
-  /**
-   * An array of helper data for the multivalue base field update.
-   *
-   * @var array
-   */
-  protected $multivalueBaseFieldsUpdateTableInfo;
+class ViewsConfigUpdater {
 
   /**
    * Flag determining whether deprecations should be triggered.
-   *
-   * @var bool
    */
-  protected $deprecationsEnabled = TRUE;
+  protected bool $deprecationsEnabled = TRUE;
 
   /**
    * Stores which deprecations were triggered.
-   *
-   * @var bool
    */
-  protected $triggeredDeprecations = [];
+  protected array $triggeredDeprecations = [];
 
   /**
    * ViewsConfigUpdater constructor.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
-   *   The entity field manager.
-   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typed_config_manager
-   *   The typed config manager.
-   * @param \Drupal\views\ViewsData $views_data
-   *   The views data service.
-   * @param \Drupal\Component\Plugin\PluginManagerInterface $formatter_plugin_manager
-   *   The formatter plugin manager service.
    */
   public function __construct(
-    EntityTypeManagerInterface $entity_type_manager,
-    EntityFieldManagerInterface $entity_field_manager,
-    TypedConfigManagerInterface $typed_config_manager,
-    ViewsData $views_data,
-    PluginManagerInterface $formatter_plugin_manager
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly EntityFieldManagerInterface $entityFieldManager,
+    private readonly TypedConfigManagerInterface $typedConfigManager,
+    private readonly ViewsData $viewsData,
+    #[Autowire(service: 'plugin.manager.field.formatter')]
+    private readonly PluginManagerInterface $formatterPluginManager,
+    protected EntityDisplayRepositoryInterface $entityDisplayRepository,
   ) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityFieldManager = $entity_field_manager;
-    $this->typedConfigManager = $typed_config_manager;
-    $this->viewsData = $views_data;
-    $this->formatterPluginManager = $formatter_plugin_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.manager'),
-      $container->get('entity_field.manager'),
-      $container->get('config.typed'),
-      $container->get('views.views_data'),
-      $container->get('plugin.manager.field.formatter')
-    );
   }
 
   /**
@@ -120,8 +46,15 @@ class ViewsConfigUpdater implements ContainerInjectionInterface {
    * @param bool $enabled
    *   Whether deprecations should be enabled.
    */
-  public function setDeprecationsEnabled($enabled) {
+  public function setDeprecationsEnabled(bool $enabled): void {
     $this->deprecationsEnabled = $enabled;
+  }
+
+  /**
+   * Whether deprecations are enabled.
+   */
+  public function areDeprecationsEnabled(): bool {
+    return $this->deprecationsEnabled;
   }
 
   /**
@@ -136,61 +69,23 @@ class ViewsConfigUpdater implements ContainerInjectionInterface {
   public function updateAll(ViewEntityInterface $view) {
     return $this->processDisplayHandlers($view, FALSE, function (&$handler, $handler_type, $key, $display_id) use ($view) {
       $changed = FALSE;
-      if ($this->processResponsiveImageLazyLoadFieldHandler($handler, $handler_type, $view)) {
+      if ($this->processEntityArgumentUpdate($view)) {
         $changed = TRUE;
       }
-      if ($this->processTimestampFormatterTimeDiffUpdateHandler($handler, $handler_type)) {
+      if ($this->processRememberRolesUpdate($handler, $handler_type)) {
         $changed = TRUE;
       }
-      if ($this->processRevisionFieldHyphenFix($view)) {
+      if ($this->processTableCssClassUpdate($view)) {
+        $changed = TRUE;
+      }
+      if ($this->processBlockContentListingEmptyUpdate($view)) {
+        $changed = TRUE;
+      }
+      if ($this->processRssViewModeUpdate($view)) {
         $changed = TRUE;
       }
       return $changed;
     });
-  }
-
-  /**
-   * Add lazy load options to all responsive_image type field configurations.
-   *
-   * @param \Drupal\views\ViewEntityInterface $view
-   *   The View to update.
-   *
-   * @return bool
-   *   Whether the view was updated.
-   */
-  public function needsResponsiveImageLazyLoadFieldUpdate(ViewEntityInterface $view): bool {
-    return $this->processDisplayHandlers($view, TRUE, function (&$handler, $handler_type) use ($view) {
-      return $this->processResponsiveImageLazyLoadFieldHandler($handler, $handler_type, $view);
-    });
-  }
-
-  /**
-   * Processes responsive_image type fields.
-   *
-   * @param array $handler
-   *   A display handler.
-   * @param string $handler_type
-   *   The handler type.
-   * @param \Drupal\views\ViewEntityInterface $view
-   *   The View being updated.
-   *
-   * @return bool
-   *   Whether the handler was updated.
-   */
-  protected function processResponsiveImageLazyLoadFieldHandler(array &$handler, string $handler_type, ViewEntityInterface $view): bool {
-    $changed = FALSE;
-
-    // Add any missing settings for lazy loading.
-    if (($handler_type === 'field')
-      && isset($handler['plugin_id'], $handler['type'])
-      && $handler['plugin_id'] === 'field'
-      && $handler['type'] === 'responsive_image'
-      && !isset($handler['settings']['image_loading'])) {
-      $handler['settings']['image_loading'] = ['attribute' => 'eager'];
-      $changed = TRUE;
-    }
-
-    return $changed;
   }
 
   /**
@@ -209,14 +104,33 @@ class ViewsConfigUpdater implements ContainerInjectionInterface {
   protected function processDisplayHandlers(ViewEntityInterface $view, $return_on_changed, callable $handler_processor) {
     $changed = FALSE;
     $displays = $view->get('display');
-    $handler_types = ['field', 'argument', 'sort', 'relationship', 'filter'];
+    $handler_types = [
+      'field' => 'fields',
+      'argument' => 'arguments',
+      'sort' => 'sorts',
+      'relationship' => 'relationships',
+      'filter' => 'filters',
+      'pager' => 'pager',
+    ];
+
+    $compound_display_handlers = [
+      'pager',
+    ];
 
     foreach ($displays as $display_id => &$display) {
-      foreach ($handler_types as $handler_type) {
-        $handler_type_plural = $handler_type . 's';
-        if (!empty($display['display_options'][$handler_type_plural])) {
-          foreach ($display['display_options'][$handler_type_plural] as $key => &$handler) {
-            if ($handler_processor($handler, $handler_type, $key, $display_id)) {
+      foreach ($handler_types as $handler_type => $handler_type_lookup) {
+        if (!empty($display['display_options'][$handler_type_lookup])) {
+          if (in_array($handler_type_lookup, $compound_display_handlers)) {
+            if ($handler_processor($display['display_options'][$handler_type_lookup], $handler_type, NULL, $display_id)) {
+              $changed = TRUE;
+              if ($return_on_changed) {
+                return $changed;
+              }
+            }
+            continue;
+          }
+          foreach ($display['display_options'][$handler_type_lookup] as $key => &$handler) {
+            if (is_array($handler) && $handler_processor($handler, $handler_type, $key, $display_id)) {
               $changed = TRUE;
               if ($return_on_changed) {
                 return $changed;
@@ -235,72 +149,91 @@ class ViewsConfigUpdater implements ContainerInjectionInterface {
   }
 
   /**
-   * Add eager load option to all oembed type field configurations.
+   * Checks if 'numeric' arguments should be converted to 'entity_target_id'.
    *
    * @param \Drupal\views\ViewEntityInterface $view
-   *   The View to update.
+   *   The view entity.
    *
    * @return bool
-   *   Whether the view was updated.
+   *   TRUE if the view has any arguments that reference an entity reference
+   *   that need to be converted from 'numeric' to 'entity_target_id'.
    */
-  public function needsOembedEagerLoadFieldUpdate(ViewEntityInterface $view) {
+  public function needsEntityArgumentUpdate(ViewEntityInterface $view): bool {
     return $this->processDisplayHandlers($view, TRUE, function (&$handler, $handler_type) use ($view) {
-      return $this->processOembedEagerLoadFieldHandler($handler, $handler_type, $view);
+      return $this->processEntityArgumentUpdate($view);
     });
   }
 
   /**
-   * Processes oembed type fields.
+   * Processes arguments and convert 'numeric' to 'entity_target_id' if needed.
    *
-   * @param array $handler
-   *   A display handler.
-   * @param string $handler_type
-   *   The handler type.
+   * Note that since this update will trigger deprecations if called by
+   * views_view_presave(), we cannot rely on the usual handler-specific checking
+   * and processing. That would still hit views_view_presave(), even when
+   * invoked from post_update. We must directly update the view here, so that
+   * it's already correct by the time views_view_presave() sees it.
+   *
    * @param \Drupal\views\ViewEntityInterface $view
    *   The View being updated.
    *
    * @return bool
-   *   Whether the handler was updated.
+   *   Whether the view was updated.
    */
-  protected function processOembedEagerLoadFieldHandler(array &$handler, string $handler_type, ViewEntityInterface $view): bool {
+  public function processEntityArgumentUpdate(ViewEntityInterface $view): bool {
     $changed = FALSE;
 
-    // Add any missing settings for lazy loading.
-    if (($handler_type === 'field')
-      && isset($handler['plugin_id'], $handler['type'])
-      && $handler['plugin_id'] === 'field'
-      && $handler['type'] === 'oembed'
-      && !array_key_exists('loading', $handler['settings'])) {
-      $handler['settings']['loading'] = ['attribute' => 'eager'];
-      $changed = TRUE;
+    $displays = $view->get('display');
+    foreach ($displays as &$display) {
+      if (isset($display['display_options']['arguments'])) {
+        foreach ($display['display_options']['arguments'] as $argument_id => $argument) {
+          $plugin_id = $argument['plugin_id'] ?? '';
+          if ($plugin_id === 'numeric') {
+            $argument_table_data = $this->viewsData->get($argument['table']);
+            $argument_definition = $argument_table_data[$argument['field']]['argument'] ?? [];
+            if (isset($argument_definition['id']) && $argument_definition['id'] === 'entity_target_id') {
+              $argument['plugin_id'] = 'entity_target_id';
+              $argument['target_entity_type_id'] = $argument_definition['target_entity_type_id'];
+              $display['display_options']['arguments'][$argument_id] = $argument;
+              $changed = TRUE;
+            }
+          }
+        }
+      }
     }
 
-    $deprecations_triggered = &$this->triggeredDeprecations['3212351'][$view->id()];
-    if ($this->deprecationsEnabled && $changed && !$deprecations_triggered) {
+    if ($changed) {
+      $view->set('display', $displays);
+    }
+
+    $deprecations_triggered = &$this->triggeredDeprecations['2640994'][$view->id()];
+    if ($this->areDeprecationsEnabled() && $changed && !$deprecations_triggered) {
       $deprecations_triggered = TRUE;
-      @trigger_error(sprintf('The oEmbed loading attribute update for view "%s" is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Profile, module and theme provided configuration should be updated to accommodate the changes described at https://www.drupal.org/node/3275103.', $view->id()), E_USER_DEPRECATED);
+      @trigger_error(sprintf('The update to convert "numeric" arguments to "entity_target_id" for entity reference fields for view "%s" is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Profile, module and theme provided configuration should be updated. See https://www.drupal.org/node/3441945', $view->id()), E_USER_DEPRECATED);
     }
 
     return $changed;
   }
 
   /**
-   * Updates the timestamp fields settings by adding time diff and tooltip.
+   * Checks for fields with the format plural option set.
    *
    * @param \Drupal\views\ViewEntityInterface $view
    *   The View to update.
    *
    * @return bool
-   *   Whether the view was updated.
+   *   TRUE if view has fields with the format plural option.
    */
-  public function needsTimestampFormatterTimeDiffUpdate(ViewEntityInterface $view): bool {
-    return $this->processDisplayHandlers($view, TRUE, function (array &$handler, string $handler_type): bool {
-      return $this->processTimestampFormatterTimeDiffUpdateHandler($handler, $handler_type);
+  public function needsFormatPluralUpdate(ViewEntityInterface $view): bool {
+    return $this->processDisplayHandlers($view, FALSE, function (&$handler, $handler_type) {
+      return $this->processFieldHandlerWithFormatPlural($handler, $handler_type);
     });
   }
 
   /**
-   * Processes timestamp fields settings by adding time diff and tooltip.
+   * Processes fields with the format plural option set.
+   *
+   * This option is only set for fields using an aggregation function such as
+   * COUNT or SUM. The data type is changed so it matches the field schema.
    *
    * @param array $handler
    *   A display handler.
@@ -310,106 +243,233 @@ class ViewsConfigUpdater implements ContainerInjectionInterface {
    * @return bool
    *   Whether the handler was updated.
    */
-  protected function processTimestampFormatterTimeDiffUpdateHandler(array &$handler, string $handler_type): bool {
-    if ($handler_type === 'field' && isset($handler['type'])) {
-      $plugin_definition = $this->formatterPluginManager->getDefinition($handler['type'], FALSE);
-      // Check also potential plugins extending TimestampFormatter.
-      if (!$plugin_definition || !is_a($plugin_definition['class'], TimestampFormatter::class, TRUE)) {
-        return FALSE;
-      }
-
-      if (!isset($handler['settings']['tooltip']) || !isset($handler['settings']['time_diff'])) {
-        $handler['settings'] += $plugin_definition['class']::defaultSettings();
-        // Existing timestamp formatters don't have tooltip.
-        $handler['settings']['tooltip'] = [
-          'date_format' => '',
-          'custom_date_format' => '',
-        ];
-        return TRUE;
-      }
+  protected function processFieldHandlerWithFormatPlural(array &$handler, string $handler_type): bool {
+    // Force view re-save if the format plural option exists.
+    if ($handler_type === 'field' && isset($handler['format_plural'])) {
+      // Cast to the correct data type. This changes 1/0 to true/false.
+      $handler['format_plural'] = (bool) $handler['format_plural'];
+      return TRUE;
     }
     return FALSE;
   }
 
   /**
-   * Replaces hyphen on historical data (revision) fields.
+   * Checks if 'remember_roles' setting of an exposed filter has disabled roles.
    *
-   * This replaces hyphens with double underscores in twig assertions.
+   * @param \Drupal\views\ViewEntityInterface $view
+   *   The view entity.
+   *
+   * @return bool
+   *   TRUE if the view has any disabled roles.
+   */
+  public function needsRememberRolesUpdate(ViewEntityInterface $view): bool {
+    return $this->processDisplayHandlers($view, TRUE, function (&$handler, $handler_type) {
+      return $this->processRememberRolesUpdate($handler, $handler_type);
+    });
+  }
+
+  /**
+   * Processes filters and removes disabled remember roles.
+   *
+   * @param array $handler
+   *   A display handler.
+   * @param string $handler_type
+   *   The handler type.
+   *
+   * @return bool
+   *   Whether the handler was updated.
+   */
+  public function processRememberRolesUpdate(array &$handler, string $handler_type): bool {
+    if ($handler_type === 'filter' && !empty($handler['expose']['remember_roles'])) {
+      $needsUpdate = FALSE;
+      foreach (array_keys($handler['expose']['remember_roles'], '0', TRUE) as $role_key) {
+        unset($handler['expose']['remember_roles'][$role_key]);
+        $needsUpdate = TRUE;
+      }
+      return $needsUpdate;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Checks for table style views needing a default CSS table class value.
+   *
+   * @param \Drupal\views\ViewEntityInterface $view
+   *   The view entity.
+   *
+   * @return bool
+   *   TRUE if the view has any table styles that need to have
+   *   a default table CSS class added.
+   */
+  public function needsTableCssClassUpdate(ViewEntityInterface $view): bool {
+    return $this->processDisplayHandlers($view, TRUE, function (&$handler, $handler_type) use ($view) {
+      return $this->processTableCssClassUpdate($view);
+    });
+  }
+
+  /**
+   * Processes views and adds default CSS table class value if necessary.
+   *
+   * @param \Drupal\views\ViewEntityInterface $view
+   *   The view entity.
+   *
+   * @return bool
+   *   TRUE if the view was updated with a default table CSS class value.
+   */
+  public function processTableCssClassUpdate(ViewEntityInterface $view): bool {
+    $changed = FALSE;
+    $displays = $view->get('display');
+
+    foreach ($displays as &$display) {
+      if (
+        isset($display['display_options']['style']) &&
+        $display['display_options']['style']['type'] === 'table' &&
+        isset($display['display_options']['style']['options']) &&
+        !isset($display['display_options']['style']['options']['class'])
+      ) {
+        $display['display_options']['style']['options']['class'] = '';
+        $changed = TRUE;
+      }
+    }
+
+    if ($changed) {
+      $view->set('display', $displays);
+    }
+
+    $deprecations_triggered = &$this->triggeredDeprecations['table_css_class'][$view->id()];
+    if ($this->areDeprecationsEnabled() && $changed && !$deprecations_triggered) {
+      $deprecations_triggered = TRUE;
+      @trigger_error(sprintf('The update to add a default table CSS class for view "%s" is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. Profile, module and theme provided configuration should be updated. See https://www.drupal.org/node/3499943', $view->id()), E_USER_DEPRECATED);
+    }
+
+    return $changed;
+  }
+
+  /**
+   * Checks if 'block_content_listing_empty' needs to be removed.
+   *
+   * @param \Drupal\views\ViewEntityInterface $view
+   *   The view entity.
+   *
+   * @return bool
+   *   TRUE if the view has the plugin.
+   */
+  public function needsBlockContentListingEmptyUpdate(ViewEntityInterface $view): bool {
+    return $this->processDisplayHandlers($view, TRUE, function (&$handler, $handler_type) use ($view) {
+      return $this->processBlockContentListingEmptyUpdate($view);
+    });
+  }
+
+  /**
+   * Processes area plugins and removes block_content_listing_empty.
    *
    * @param \Drupal\views\ViewEntityInterface $view
    *   The view entity.
    *
    * @return bool
    *   Whether the handler was updated.
-   *
-   * @see https://www.drupal.org/project/drupal/issues/2831233
    */
-  public function processRevisionFieldHyphenFix(ViewEntityInterface $view): bool {
-    // Regex to search only for token with machine name '-revision_id'.
-    $old_part = '/{{([^}]+)(-revision_id)/';
-    $new_part = '{{$1__revision_id';
-    $old_field = '-revision_id';
-    $new_field = '__revision_id';
-    /** @var \Drupal\views\ViewEntityInterface $view */
-    $is_update = FALSE;
+  public function processBlockContentListingEmptyUpdate(ViewEntityInterface $view): bool {
+    $changed = FALSE;
     $displays = $view->get('display');
+
     foreach ($displays as &$display) {
-      if (isset($display['display_options']['fields'])) {
-        foreach ($display['display_options']['fields'] as $field_name => $field) {
-          if (!empty($field['alter']['text'])) {
-            // Fixes replacement token references in rewritten fields.
-            $alter_text = $field['alter']['text'];
-            if (preg_match($old_part, $alter_text) === 1) {
-              $is_update = TRUE;
-              $field['alter']['text'] = preg_replace($old_part, $new_part, $alter_text);
-            }
-          }
-
-          if (!empty($field['alter']['path'])) {
-            // Fixes replacement token references in link paths.
-            $alter_path = $field['alter']['path'];
-            if (preg_match($old_part, $alter_path) === 1) {
-              $is_update = TRUE;
-              $field['alter']['path'] = preg_replace($old_part, $new_part, $alter_path);
-            }
-          }
-
-          if (str_contains($field_name, $old_field)) {
-            // Replaces the field name and the view id.
-            $is_update = TRUE;
-            $field['id'] = str_replace($old_field, $new_field, $field['id']);
-            $field['field'] = str_replace($old_field, $new_field, $field['field']);
-
-            // Replace key with save order.
-            $field_name_update = str_replace($old_field, $new_field, $field_name);
-            $fields = $display['display_options']['fields'];
-            $keys = array_keys($fields);
-            $keys[array_search($field_name, $keys)] = $field_name_update;
-            $display['display_options']['fields'] = array_combine($keys, $fields);
-            $display['display_options']['fields'][$field_name_update] = $field;
-          }
+      foreach ($display['display_options']['empty'] ?? [] as $id => $emptyOptions) {
+        if ($emptyOptions['id'] === 'block_content_listing_empty') {
+          $changed = TRUE;
+          unset($display['display_options']['empty'][$id]);
         }
       }
     }
-    if ($is_update) {
+
+    if ($changed) {
       $view->set('display', $displays);
     }
-    return $is_update;
+
+    $deprecations_triggered = &$this->triggeredDeprecations['block_content_listing_empty'][$view->id()];
+    if ($this->deprecationsEnabled && $changed && !$deprecations_triggered) {
+      $deprecations_triggered = TRUE;
+      @trigger_error(sprintf('The update to remove the block_content_listing_empty plugin from view "%s" is deprecated in drupal:11.3.0 and is removed from drupal:13.0.0. Profile, module and theme provided configuration should be updated. See https://www.drupal.org/node/3336219', $view->id()), E_USER_DEPRECATED);
+    }
+
+    return $changed;
   }
 
   /**
-   * Checks each display in a view to see if it needs the hyphen fix.
+   * Checks for views needing a default RSS view mode.
    *
    * @param \Drupal\views\ViewEntityInterface $view
    *   The view entity.
+   * @param string|null $previous_view_mode
+   *   The previous view mode.
    *
    * @return bool
-   *   TRUE if the view has any displays that needed to be updated.
+   *   TRUE if the view has been updated.
    */
-  public function needsRevisionFieldHyphenFix(ViewEntityInterface $view): bool {
-    return $this->processDisplayHandlers($view, TRUE, function (&$handler, $handler_type) use ($view) {
-      return $this->processRevisionFieldHyphenFix($view);
-    });
+  public function needsRssViewModeUpdate(ViewEntityInterface $view, ?string $previous_view_mode = NULL): bool {
+    return $this->processRssViewModeUpdate($view, $previous_view_mode);
+  }
+
+  /**
+   * Processes views and sets the default RSS view mode if necessary.
+   *
+   * @param \Drupal\views\ViewEntityInterface $view
+   *   The view entity.
+   * @param string|null $previous_view_mode
+   *   The previous view mode.
+   *
+   * @return bool
+   *   TRUE if the view was updated with a default RSS view mode.
+   */
+  public function processRssViewModeUpdate(ViewEntityInterface $view, ?string $previous_view_mode = NULL) : bool {
+    $changed = FALSE;
+    $displays = $view->get('display');
+
+    // Row types that need updating.
+    $row_types = [
+      'comment_rss' => 'comment',
+      'node_rss' => 'node',
+    ];
+
+    foreach ($displays as &$display) {
+      if (isset($display['display_options']['row']['options']['view_mode']) &&
+        array_key_exists($display['display_options']['row']['type'], $row_types) &&
+        $display['display_options']['row']['options']['view_mode'] === 'default') {
+
+        // When system.rss is already removed but a view is saved, we still need
+        // to try and set the view_mode to something more sane. But detecting
+        // if the view mode was always default, or default because it used the
+        // system.rss setting is hard. So if there is a default mode available
+        // it will use that.
+        // It would make sense to use any RSS view_mode if available, but that
+        // would mean 'default' can never be set as a view mode. That is an
+        // issue, therefore, if we have a default view mode available, we will
+        // use that.
+        if ($previous_view_mode === NULL) {
+          $view_modes = $this->entityDisplayRepository->getViewModes($row_types[$display['display_options']['row']['type']]);
+          if (array_key_exists('default', $view_modes)) {
+            return FALSE;
+          }
+
+          // If there is no default, the most likely view mode is RSS. If that
+          // is available we use that. Otherwise, fall back to the first
+          // available.
+          $probable_view_mode = isset($view_modes['rss']) ? 'rss' : array_key_first($view_modes);
+          $display['display_options']['row']['options']['view_mode'] = $probable_view_mode;
+          $changed = TRUE;
+        }
+        else {
+          $display['display_options']['row']['options']['view_mode'] = $previous_view_mode;
+          $changed = TRUE;
+        }
+      }
+    }
+
+    if ($changed) {
+      $view->set('display', $displays);
+    }
+
+    return $changed;
   }
 
 }

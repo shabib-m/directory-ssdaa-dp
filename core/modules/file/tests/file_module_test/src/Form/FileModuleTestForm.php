@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\file_module_test\Form;
 
 use Drupal\Core\Form\FormBase;
@@ -32,7 +34,7 @@ class FileModuleTestForm extends FormBase {
    *   (optional) If the form should use #extended. Defaults to TRUE.
    * @param bool $multiple
    *   (optional) If the form should use #multiple. Defaults to FALSE.
-   * @param array $default_fids
+   * @param string $default_fids
    *   (optional) Any default file IDs to use.
    */
   public function buildForm(array $form, FormStateInterface $form_state, $tree = TRUE, $extended = TRUE, $multiple = FALSE, $default_fids = NULL) {
@@ -41,8 +43,9 @@ class FileModuleTestForm extends FormBase {
     $form['nested']['file'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Managed <em>@type</em>', ['@type' => 'file & butter']),
+      '#description' => $this->t('Upload a <em>@type</em> file', ['@type' => 'file & butter']),
       '#upload_location' => 'public://test',
-      '#progress_message' => $this->t('Please wait...'),
+      '#progress_message' => $this->t('Processing...'),
       '#extended' => (bool) $extended,
       '#size' => 13,
       '#multiple' => (bool) $multiple,

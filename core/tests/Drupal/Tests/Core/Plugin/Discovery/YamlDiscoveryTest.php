@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Plugin\Discovery;
 
+use Drupal\Core\Plugin\Discovery\YamlDiscovery;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Core\Plugin\Discovery\YamlDiscovery;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Plugin\Discovery\YamlDiscovery
- * @group Plugin
+ * Tests Drupal\Core\Plugin\Discovery\YamlDiscovery.
  */
+#[CoversClass(YamlDiscovery::class)]
+#[Group('Plugin')]
 class YamlDiscoveryTest extends UnitTestCase {
 
   /**
@@ -51,7 +56,7 @@ class YamlDiscoveryTest extends UnitTestCase {
   /**
    * Tests the getDefinitions() method.
    */
-  public function testGetDefinitions() {
+  public function testGetDefinitions(): void {
     $definitions = $this->discovery->getDefinitions();
 
     $this->assertIsArray($definitions);
@@ -71,9 +76,9 @@ class YamlDiscoveryTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getDefinitions
+   * Tests get definitions with translatable definitions.
    */
-  public function testGetDefinitionsWithTranslatableDefinitions() {
+  public function testGetDefinitionsWithTranslatableDefinitions(): void {
     vfsStream::setup('root');
 
     $file_1 = <<<'EOS'
@@ -94,7 +99,10 @@ EOS;
       ],
     ]);
 
-    $discovery = new YamlDiscovery('test', ['test_1' => vfsStream::url('root/test_1'), 'test_2' => vfsStream::url('root/test_2')]);
+    $discovery = new YamlDiscovery('test', [
+      'test_1' => vfsStream::url('root/test_1'),
+      'test_2' => vfsStream::url('root/test_2'),
+    ]);
     $discovery->addTranslatableProperty('title', 'title_context');
     $definitions = $discovery->getDefinitions();
 
@@ -111,7 +119,7 @@ EOS;
   /**
    * Tests the getDefinition() method.
    */
-  public function testGetDefinition() {
+  public function testGetDefinition(): void {
     $definitions = $this->discovery->getDefinitions();
     // Test the getDefinition() method.
     foreach ($this->expectedKeys as $expected_key) {

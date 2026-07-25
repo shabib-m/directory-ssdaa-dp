@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\pathauto\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\pathauto\PathautoGeneratorInterface;
 use Drupal\pathauto\PathautoState;
 use Drupal\Tests\BrowserTestBase;
@@ -16,7 +15,7 @@ class PathautoBulkUpdateTest extends BrowserTestBase {
 
   use PathautoTestHelperTrait;
 
- /**
+  /**
    * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
@@ -59,6 +58,8 @@ class PathautoBulkUpdateTest extends BrowserTestBase {
     $permissions = [
       'administer pathauto',
       'administer url aliases',
+      'bulk delete aliases',
+      'bulk update aliases',
       'create url aliases',
       'administer forums',
     ];
@@ -71,6 +72,9 @@ class PathautoBulkUpdateTest extends BrowserTestBase {
     $this->patterns['forum'] = $this->createPattern('forum', '/forums/[term:name]');
   }
 
+  /**
+   * Tests the bulk update functionality for URL aliases.
+   */
   public function testBulkUpdate() {
     // Create some nodes.
     $this->nodes = [];
@@ -113,7 +117,7 @@ class PathautoBulkUpdateTest extends BrowserTestBase {
 
     // Make sure existing aliases can be overridden.
     $this->drupalGet('admin/config/search/path/settings');
-    $this->submitForm(['update_action' => PathautoGeneratorInterface::UPDATE_ACTION_DELETE], 'Save configuration');
+    $this->submitForm(['update_action' => (string) PathautoGeneratorInterface::UPDATE_ACTION_DELETE], 'Save configuration');
 
     // Patterns did not change, so no aliases should be regenerated.
     $edit['action'] = 'all';
@@ -134,10 +138,7 @@ class PathautoBulkUpdateTest extends BrowserTestBase {
     // Prevent existing aliases to be overridden. The bulk generate page should
     // only offer to create an alias for paths which have none.
     $this->drupalGet('admin/config/search/path/settings');
-    $this->submitForm(
-      ['update_action' => PathautoGeneratorInterface::UPDATE_ACTION_NO_NEW],
-      'Save configuration'
-    );
+    $this->submitForm(['update_action' => (string) PathautoGeneratorInterface::UPDATE_ACTION_NO_NEW], 'Save configuration');
 
     $this->drupalGet('admin/config/search/path/update_bulk');
     $this->assertSession()->fieldValueEquals('action', 'create');

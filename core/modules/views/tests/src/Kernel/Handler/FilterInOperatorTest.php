@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -8,16 +10,16 @@ use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the core Drupal\views\Plugin\views\filter\InOperator handler.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FilterInOperatorTest extends ViewsKernelTestBase {
   use StringTranslationTrait;
-
-  protected static $modules = ['system'];
 
   /**
    * Views used by this test.
@@ -36,13 +38,19 @@ class FilterInOperatorTest extends ViewsKernelTestBase {
     'views_test_data_age' => 'age',
   ];
 
+  /**
+   * Defines Views data for the custom entity.
+   */
   public function viewsData() {
     $data = parent::viewsData();
     $data['views_test_data']['age']['filter']['id'] = 'in_operator';
     return $data;
   }
 
-  public function testFilterInOperatorSimple() {
+  /**
+   * Tests filtering using the "IN" and "NOT IN" operators on the age field.
+   */
+  public function testFilterInOperatorSimple(): void {
     $view = Views::getView('test_view');
     $view->setDisplay();
 
@@ -108,11 +116,14 @@ class FilterInOperatorTest extends ViewsKernelTestBase {
     $this->assertIdenticalResultset($view, $expected_result, $this->columnMap);
   }
 
-  public function testFilterInOperatorGroupedExposedSimple() {
+  /**
+   * Tests filtering with grouped exposed filters using the "IN" operator.
+   */
+  public function testFilterInOperatorGroupedExposedSimple(): void {
     $filters = $this->getGroupedExposedFilters();
     $view = Views::getView('test_view');
 
-    // Filter: Age, Operator: in, Value: 26, 30
+    // Filter: Age, Operator: in, Value: 26, 30.
     $filters['age']['group_info']['default_group'] = 1;
     $view->setDisplay();
     $view->displayHandlers->get('default')->overrideOption('filters', $filters);
@@ -134,11 +145,14 @@ class FilterInOperatorTest extends ViewsKernelTestBase {
     $this->assertIdenticalResultset($view, $expected_result, $this->columnMap);
   }
 
-  public function testFilterNotInOperatorGroupedExposedSimple() {
+  /**
+   * Tests filtering with grouped exposed filters using the "NOT IN" operator.
+   */
+  public function testFilterNotInOperatorGroupedExposedSimple(): void {
     $filters = $this->getGroupedExposedFilters();
     $view = Views::getView('test_view');
 
-    // Filter: Age, Operator: in, Value: 26, 30
+    // Filter: Age, Operator: in, Value: 26, 30.
     $filters['age']['group_info']['default_group'] = 2;
     $view->setDisplay();
     $view->displayHandlers->get('default')->overrideOption('filters', $filters);
@@ -167,7 +181,7 @@ class FilterInOperatorTest extends ViewsKernelTestBase {
   /**
    * Tests that we can safely change the identifier on a grouped filter.
    */
-  public function testFilterGroupedChangedIdentifier() {
+  public function testFilterGroupedChangedIdentifier(): void {
     $filters = $this->getGroupedExposedFilters();
     $view = Views::getView('test_view');
 
@@ -197,7 +211,13 @@ class FilterInOperatorTest extends ViewsKernelTestBase {
     $this->assertIdenticalResultset($view, $expected_result, $this->columnMap);
   }
 
-  protected function getGroupedExposedFilters() {
+  /**
+   * Returns grouped exposed filter definitions for Views.
+   *
+   * @return array
+   *   An array of grouped exposed filters.
+   */
+  protected function getGroupedExposedFilters(): array {
     $filters = [
       'age' => [
         'id' => 'age',
@@ -236,7 +256,7 @@ class FilterInOperatorTest extends ViewsKernelTestBase {
   /**
    * Tests that the InOperator filter can handle TranslatableMarkup.
    */
-  public function testFilterOptionAsMarkup() {
+  public function testFilterOptionAsMarkup(): void {
     $view = $this->prophesize(ViewExecutable::class);
     $display = $this->prophesize(DisplayPluginBase::class);
     $display->getOption('relationships')->willReturn(FALSE);
@@ -252,7 +272,7 @@ class FilterInOperatorTest extends ViewsKernelTestBase {
     $input_options = [
       'foo' => 'bar',
       'baz' => $this->t('qux'),
-      'quux' => (object) ['option' => ['quux' => 'corge']],
+      'foobar' => (object) ['option' => ['foobar' => 'dog']],
     ];
     $reduced_values = $operator->reduceValueOptions($input_options);
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Entity;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
@@ -14,13 +16,18 @@ use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use Prophecy\Argument;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * @coversDefaultClass \Drupal\Core\Entity\EntityTypeBundleInfo
- * @group Entity
+ * Tests Drupal\Core\Entity\EntityTypeBundleInfo.
  */
+#[CoversClass(EntityTypeBundleInfo::class)]
+#[Group('Entity')]
 class EntityTypeBundleInfoTest extends UnitTestCase {
 
   /**
@@ -110,11 +117,11 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
    * @param \Drupal\Core\Entity\EntityTypeInterface[]|\Prophecy\Prophecy\ProphecyInterface[] $definitions
    *   (optional) An array of entity type definitions.
    */
-  protected function setUpEntityTypeDefinitions($definitions = []) {
+  protected function setUpEntityTypeDefinitions($definitions = []): void {
     foreach ($definitions as $key => $entity_type) {
       // \Drupal\Core\Entity\EntityTypeInterface::getLinkTemplates() is called
-      // by \Drupal\Core\Entity\EntitTypeManager::processDefinition() so it must
-      // always be mocked.
+      // by \Drupal\Core\Entity\EntityTypeManager::processDefinition() so it
+      // must always be mocked.
       $entity_type->getLinkTemplates()->willReturn([]);
 
       $definitions[$key] = $entity_type->reveal();
@@ -140,10 +147,8 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
 
   /**
    * Tests the clearCachedBundles() method.
-   *
-   * @covers ::clearCachedBundles
    */
-  public function testClearCachedBundles() {
+  public function testClearCachedBundles(): void {
     $this->setUpEntityTypeDefinitions();
 
     $this->typedDataManager->clearCachedDefinitions()->shouldBeCalled();
@@ -155,22 +160,21 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
 
   /**
    * Tests the getBundleInfo() method.
-   *
-   * @covers ::getBundleInfo
-   *
-   * @dataProvider providerTestGetBundleInfo
    */
-  public function testGetBundleInfo($entity_type_id, $expected) {
+  #[DataProvider('providerTestGetBundleInfo')]
+  public function testGetBundleInfo($entity_type_id, $expected): void {
     $this->moduleHandler->invokeAll('entity_bundle_info')->willReturn([]);
     $this->moduleHandler->alter('entity_bundle_info', Argument::type('array'))->willReturn(NULL);
 
     $apple = $this->prophesize(EntityTypeInterface::class);
     $apple->getLabel()->willReturn('Apple');
     $apple->getBundleEntityType()->willReturn(NULL);
+    $apple->get('entity_type_bundle_info')->willReturn(NULL);
 
     $banana = $this->prophesize(EntityTypeInterface::class);
     $banana->getLabel()->willReturn('Banana');
     $banana->getBundleEntityType()->willReturn(NULL);
+    $banana->get('entity_type_bundle_info')->willReturn(NULL);
 
     $this->setUpEntityTypeDefinitions([
       'apple' => $apple,
@@ -187,7 +191,7 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
    * @return array
    *   Test data.
    */
-  public function providerTestGetBundleInfo() {
+  public static function providerTestGetBundleInfo(): array {
     return [
       [
         'apple',
@@ -207,20 +211,20 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
 
   /**
    * Tests the getAllBundleInfo() method.
-   *
-   * @covers ::getAllBundleInfo
    */
-  public function testGetAllBundleInfo() {
+  public function testGetAllBundleInfo(): void {
     $this->moduleHandler->invokeAll('entity_bundle_info')->willReturn([]);
     $this->moduleHandler->alter('entity_bundle_info', Argument::type('array'))->willReturn(NULL);
 
     $apple = $this->prophesize(EntityTypeInterface::class);
     $apple->getLabel()->willReturn('Apple');
     $apple->getBundleEntityType()->willReturn(NULL);
+    $apple->get('entity_type_bundle_info')->willReturn(NULL);
 
     $banana = $this->prophesize(EntityTypeInterface::class);
     $banana->getLabel()->willReturn('Banana');
     $banana->getBundleEntityType()->willReturn(NULL);
+    $banana->get('entity_type_bundle_info')->willReturn(NULL);
 
     $this->setUpEntityTypeDefinitions([
       'apple' => $apple,
@@ -229,8 +233,11 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
 
     $cacheBackend = $this->cacheBackend;
     $this->cacheBackend->get('entity_bundle_info:en')->willReturn(FALSE);
-    $this->cacheBackend->set('entity_bundle_info:en', Argument::any(), Cache::PERMANENT, ['entity_types', 'entity_bundles'])
-      ->will(function () use ($cacheBackend) {
+    $this->cacheBackend->set('entity_bundle_info:en', Argument::any(), Cache::PERMANENT, [
+      'entity_types',
+      'entity_bundles',
+    ])
+      ->will(function () use ($cacheBackend): void {
         $cacheBackend->get('entity_bundle_info:en')
           ->willReturn((object) ['data' => 'cached data'])
           ->shouldBeCalled();
@@ -266,9 +273,9 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getAllBundleInfo
+   * Tests get all bundle info with entity bundle info.
    */
-  public function testGetAllBundleInfoWithEntityBundleInfo() {
+  public function testGetAllBundleInfoWithEntityBundleInfo(): void {
     // Ensure that EntityTypeBundleInfo::getAllBundleInfo() does not add
     // additional bundles if hook_entity_bundle_info() defines some and the
     // entity_type does not define a bundle entity type.
@@ -284,10 +291,12 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
     $apple = $this->prophesize(EntityTypeInterface::class);
     $apple->getLabel()->willReturn('Apple');
     $apple->getBundleEntityType()->willReturn(NULL);
+    $apple->get('entity_type_bundle_info')->willReturn(NULL);
 
     $banana = $this->prophesize(EntityTypeInterface::class);
     $banana->getLabel()->willReturn('Banana');
     $banana->getBundleEntityType()->willReturn(NULL);
+    $banana->get('entity_type_bundle_info')->willReturn(NULL);
 
     $this->setUpEntityTypeDefinitions([
       'apple' => $apple,
@@ -308,6 +317,62 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
     ];
     $bundle_info = $this->entityTypeBundleInfo->getAllBundleInfo();
     $this->assertSame($expected, $bundle_info);
+  }
+
+  /**
+   * Tests the getBundleLabels() method.
+   */
+  #[DataProvider('providerTestGetBundleLabels')]
+  public function testGetBundleLabels(string $entity_type_id, array $expected): void {
+    $this->moduleHandler->invokeAll('entity_bundle_info')->willReturn([]);
+    $this->moduleHandler->alter('entity_bundle_info', Argument::type('array'))->willReturn(NULL);
+
+    $apple = $this->prophesize(EntityTypeInterface::class);
+    $apple->getLabel()->willReturn('Apple');
+    $apple->getBundleEntityType()->willReturn(NULL);
+    $apple->get('entity_type_bundle_info')->willReturn(NULL);
+
+    $banana = $this->prophesize(EntityTypeInterface::class);
+    $banana->getLabel()->willReturn('Banana');
+    $banana->getBundleEntityType()->willReturn(NULL);
+    $banana->get('entity_type_bundle_info')->willReturn(NULL);
+
+    $this->setUpEntityTypeDefinitions([
+      'apple' => $apple,
+      'banana' => $banana,
+    ]);
+
+    $this->assertSame($expected, $this->entityTypeBundleInfo->getBundleLabels($entity_type_id));
+  }
+
+  /**
+   * Tests calling getBundleInfo() method with a NULL.
+   */
+  #[IgnoreDeprecations]
+  public function testGetBundleInfoWithNull(): void {
+    $this->expectUserDeprecationMessage('Calling Drupal\Core\Entity\EntityTypeBundleInfo::getBundleInfo() with a non-string $entity_type_id is deprecated in drupal:11.3.0 and throws an exception in drupal:12.0.0. See https://www.drupal.org/node/3557136');
+    $bundle_info = $this->entityTypeBundleInfo->getBundleInfo(NULL);
+    $this->assertSame([], $bundle_info);
+  }
+
+  /**
+   * Provides test data for testGetBundleLabels().
+   *
+   * @return array
+   *   Test data.
+   */
+  public static function providerTestGetBundleLabels(): array {
+    return [
+      [
+        'apple',
+        ['apple' => 'Apple'],
+      ],
+      [
+        'banana',
+        ['banana' => 'Banana'],
+      ],
+      ['pear', []],
+    ];
   }
 
 }

@@ -3,8 +3,10 @@
 namespace Drupal\views\Plugin\views\field;
 
 use Drupal\Core\Datetime\TimeZoneFormHelper;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\ResultRow;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
@@ -13,9 +15,8 @@ use Drupal\Core\Datetime\DateFormatterInterface;
  * A handler to provide proper displays for dates.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsField("date")
  */
+#[ViewsField("date")]
 class Date extends FieldPluginBase {
 
   /**
@@ -45,8 +46,17 @@ class Date extends FieldPluginBase {
    *   The date formatter service.
    * @param \Drupal\Core\Entity\EntityStorageInterface $date_format_storage
    *   The date format storage.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, DateFormatterInterface $date_formatter, EntityStorageInterface $date_format_storage) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    DateFormatterInterface $date_formatter,
+    EntityStorageInterface $date_format_storage,
+    protected TimeInterface $time,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->dateFormatter = $date_formatter;
@@ -62,7 +72,8 @@ class Date extends FieldPluginBase {
       $plugin_id,
       $plugin_definition,
       $container->get('date.formatter'),
-      $container->get('entity_type.manager')->getStorage('date_format')
+      $container->get('entity_type.manager')->getStorage('date_format'),
+      $container->get('datetime.time'),
     );
   }
 
@@ -86,7 +97,10 @@ class Date extends FieldPluginBase {
 
     $date_formats = [];
     foreach ($this->dateFormatStorage->loadMultiple() as $machine_name => $value) {
-      $date_formats[$machine_name] = $this->t('@name format: @date', ['@name' => $value->label(), '@date' => $this->dateFormatter->format(REQUEST_TIME, $machine_name)]);
+      $date_formats[$machine_name] = $this->t('@name format: @date', [
+        '@name' => $value->label(),
+        '@date' => $this->dateFormatter->format($this->time->getRequestTime(), $machine_name),
+      ]);
     }
 
     $form['date_format'] = [
@@ -110,8 +124,20 @@ class Date extends FieldPluginBase {
       '#description' => $this->t('If "Custom", see <a href="https://www.php.net/manual/datetime.format.php#refsect1-datetime.format-parameters" target="_blank">the PHP docs</a> for date formats. Otherwise, enter the number of different time units to display, which defaults to 2.'),
       '#default_value' => $this->options['custom_date_format'] ?? '',
     ];
-    // Setup #states for all possible date_formats on the custom_date_format form element.
-    foreach (['custom', 'raw time ago', 'time ago', 'raw time hence', 'time hence', 'raw time span', 'time span', 'raw time span', 'inverse time span', 'time span'] as $custom_date_possible) {
+    // Setup #states for all possible date_formats on the custom_date_format
+    // form element.
+    foreach ([
+      'custom',
+      'raw time ago',
+      'time ago',
+      'raw time hence',
+      'time hence',
+      'raw time span',
+      'time span',
+      'raw time span',
+      'inverse time span',
+      'time span',
+    ] as $custom_date_possible) {
       $form['custom_date_format']['#states']['visible'][] = [
         ':input[name="options[date_format]"]' => ['value' => $custom_date_possible],
       ];
@@ -138,7 +164,18 @@ class Date extends FieldPluginBase {
   public function render(ResultRow $values) {
     $value = $this->getValue($values);
     $format = $this->options['date_format'];
-    if (in_array($format, ['custom', 'raw time ago', 'time ago', 'raw time hence', 'time hence', 'raw time span', 'time span', 'raw time span', 'inverse time span', 'time span'])) {
+    if (in_array($format, [
+      'custom',
+      'raw time ago',
+      'time ago',
+      'raw time hence',
+      'time hence',
+      'raw time span',
+      'time span',
+      'raw time span',
+      'inverse time span',
+      'time span',
+    ])) {
       $custom_format = $this->options['custom_date_format'];
     }
 
@@ -146,7 +183,7 @@ class Date extends FieldPluginBase {
       $timezone = !empty($this->options['timezone']) ? $this->options['timezone'] : NULL;
       // Will be positive for a datetime in the past (ago), and negative for a
       // datetime in the future (hence).
-      $time_diff = REQUEST_TIME - $value;
+      $time_diff = $this->time->getRequestTime() - $value;
       switch ($format) {
         case 'raw time ago':
           return $this->dateFormatter->formatTimeDiffSince($value, ['granularity' => is_numeric($custom_format) ? $custom_format : 2]);
@@ -161,13 +198,22 @@ class Date extends FieldPluginBase {
           return $this->t('%time hence', ['%time' => $this->dateFormatter->formatTimeDiffUntil($value, ['granularity' => is_numeric($custom_format) ? $custom_format : 2])]);
 
         case 'raw time span':
-          return ($time_diff < 0 ? '-' : '') . $this->dateFormatter->formatTimeDiffSince($value, ['strict' => FALSE, 'granularity' => is_numeric($custom_format) ? $custom_format : 2]);
+          return ($time_diff < 0 ? '-' : '') . $this->dateFormatter->formatTimeDiffSince($value, [
+            'strict' => FALSE,
+            'granularity' => is_numeric($custom_format) ? $custom_format : 2,
+          ]);
 
         case 'inverse time span':
-          return ($time_diff > 0 ? '-' : '') . $this->dateFormatter->formatTimeDiffSince($value, ['strict' => FALSE, 'granularity' => is_numeric($custom_format) ? $custom_format : 2]);
+          return ($time_diff > 0 ? '-' : '') . $this->dateFormatter->formatTimeDiffSince($value, [
+            'strict' => FALSE,
+            'granularity' => is_numeric($custom_format) ? $custom_format : 2,
+          ]);
 
         case 'time span':
-          $time = $this->dateFormatter->formatTimeDiffSince($value, ['strict' => FALSE, 'granularity' => is_numeric($custom_format) ? $custom_format : 2]);
+          $time = $this->dateFormatter->formatTimeDiffSince($value, [
+            'strict' => FALSE,
+            'granularity' => is_numeric($custom_format) ? $custom_format : 2,
+          ]);
           return ($time_diff < 0) ? $this->t('%time hence', ['%time' => $time]) : $this->t('%time ago', ['%time' => $time]);
 
         case 'custom':

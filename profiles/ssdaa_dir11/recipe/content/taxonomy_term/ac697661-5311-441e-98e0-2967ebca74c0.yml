@@ -1,0 +1,28 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: ac697661-5311-441e-98e0-2967ebca74c0
+  bundle: main
+  default_langcode: ar
+  depends:
+    b1f7ef4d-3a7a-4b5b-a6ab-45f53ed4ec29: taxonomy_term
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'الصحف الكويتيه'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      entity: b1f7ef4d-3a7a-4b5b-a6ab-45f53ed4ec29
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

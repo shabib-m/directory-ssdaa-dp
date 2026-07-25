@@ -1,11 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Functional\Rest;
 
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 
+/**
+ * Resource test base for the ContentLanguageSettings entity.
+ */
 abstract class ContentLanguageSettingsResourceTestBase extends ConfigEntityResourceTestBase {
 
   /**

@@ -18,7 +18,10 @@ interface EntityDisplayRepositoryInterface {
    * Gets the entity view mode info for all entity types.
    *
    * @return array
-   *   The view mode info for all entity types.
+   *   An associative array containing information about view modes for all
+   *   entity types. The array is keyed by the entity type ID, and each value
+   *   is an array of view mode details. View mode details typically include
+   *   keys like 'id', 'label', 'custom_settings', etc.
    */
   public function getAllViewModes();
 
@@ -29,7 +32,10 @@ interface EntityDisplayRepositoryInterface {
    *   The entity type whose view mode info should be returned.
    *
    * @return array
-   *   The view mode info for a specific entity type.
+   *   An associative array containing information about view modes for the
+   *   specified entity type. The array is keyed by the display mode ID, and
+   *   each value is an array of view mode details. View mode details typically
+   *   include keys like 'id', 'label', 'custom_settings', etc.
    */
   public function getViewModes($entity_type_id);
 
@@ -37,7 +43,10 @@ interface EntityDisplayRepositoryInterface {
    * Gets the entity form mode info for all entity types.
    *
    * @return array
-   *   The form mode info for all entity types.
+   *   An associative array containing information about form modes for all
+   *   entity types. The array is keyed by the entity type ID, and each value
+   *   is an array of form mode details. Form mode details typically include
+   *   keys like 'id', 'label', 'custom_settings', etc.
    */
   public function getAllFormModes();
 
@@ -48,7 +57,10 @@ interface EntityDisplayRepositoryInterface {
    *   The entity type whose form mode info should be returned.
    *
    * @return array
-   *   The form mode info for a specific entity type.
+   *   An associative array containing information about form modes for the
+   *   specified entity type. The array is keyed by the display mode ID, and
+   *   each value is an array of form mode details. Form mode details typically
+   *   include keys like 'id', 'label', 'custom_settings', etc.
    */
   public function getFormModes($entity_type_id);
 
@@ -59,7 +71,9 @@ interface EntityDisplayRepositoryInterface {
    *   The entity type whose view mode options should be returned.
    *
    * @return array
-   *   An array of view mode labels, keyed by the display mode ID.
+   *   An associative array containing view mode options for the specified
+   *   entity type. The array is keyed by the display mode ID, and each value
+   *   is a view mode label.
    */
   public function getViewModeOptions($entity_type_id);
 
@@ -70,7 +84,9 @@ interface EntityDisplayRepositoryInterface {
    *   The entity type whose form mode options should be returned.
    *
    * @return array
-   *   An array of form mode labels, keyed by the display mode ID.
+   *   An associative array containing form mode options for the specified
+   *   entity type. The array is keyed by the display mode ID, and each value
+   *   is a form mode label.
    */
   public function getFormModeOptions($entity_type_id);
 
@@ -83,7 +99,9 @@ interface EntityDisplayRepositoryInterface {
    *   The name of the bundle.
    *
    * @return array
-   *   An array of view mode labels, keyed by the display mode ID.
+   *   An associative array containing enabled view mode options for the
+   *   specified entity type and bundle. The array is keyed by the display
+   *   mode ID, and each value is a view mode label.
    */
   public function getViewModeOptionsByBundle($entity_type_id, $bundle);
 
@@ -96,7 +114,9 @@ interface EntityDisplayRepositoryInterface {
    *   The name of the bundle.
    *
    * @return array
-   *   An array of form mode labels, keyed by the display mode ID.
+   *   An associative array containing enabled form mode options for the
+   *   specified entity type and bundle. The array is keyed by the display
+   *   mode ID, and each value is a form mode label.
    */
   public function getFormModeOptionsByBundle($entity_type_id, $bundle);
 
@@ -127,11 +147,11 @@ interface EntityDisplayRepositoryInterface {
    * @code
    * \Drupal::service('entity_display.repository')
    *   ->getViewDisplay('node', 'article', 'default')
-   *   ->setComponent('body', array(
+   *   ->setComponent('body', [
    *     'type' => 'text_summary_or_trimmed',
-   *     'settings' => array('trim_length' => '200')
+   *     'settings' => ['trim_length' => '200'],
    *     'weight' => 1,
-   *   ))
+   *   ])
    *   ->removeComponent('field_image')
    *   ->save();
    * @endcode
@@ -164,13 +184,13 @@ interface EntityDisplayRepositoryInterface {
    * @code
    * \Drupal::service('entity_display.repository')
    *   ->getFormDisplay('node', 'article', 'default')
-   *   ->setComponent('body', array(
+   *   ->setComponent('body', [
    *     'type' => 'text_textarea_with_summary',
    *     'weight' => 1,
-   *   ))
-   *   ->setComponent('field_image', array(
+   *   ])
+   *   ->setComponent('field_image', [
    *     'region' => 'hidden',
-   *   ))
+   *   ])
    *   ->save();
    * @endcode
    *

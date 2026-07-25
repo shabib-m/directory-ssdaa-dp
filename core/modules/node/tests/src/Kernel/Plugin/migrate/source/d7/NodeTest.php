@@ -1,16 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Plugin\migrate\source\d7;
 
+use Drupal\node\Plugin\migrate\source\d7\Node;
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
+// cspell:ignore tnid
 /**
  * Tests D7 node source plugin.
- *
- * @covers \Drupal\node\Plugin\migrate\source\d7\Node
- *
- * @group node
  */
+#[CoversClass(Node::class)]
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -21,7 +27,7 @@ class NodeTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // Test retrieval of article and page content types when configuration

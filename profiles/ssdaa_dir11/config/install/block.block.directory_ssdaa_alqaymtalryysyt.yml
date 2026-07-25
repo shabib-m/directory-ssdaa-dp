@@ -1,0 +1,25 @@
+uuid: e03029f8-31a7-4ece-a91b-ea53a7aff3e6
+langcode: ar
+status: true
+dependencies:
+  config:
+    - system.menu.main
+  module:
+    - system
+  theme:
+    - directory_ssdaa
+id: directory_ssdaa_alqaymtalryysyt
+theme: directory_ssdaa
+region: primary_menu
+weight: -1
+provider: null
+plugin: 'system_menu_block:main'
+settings:
+  id: 'system_menu_block:main'
+  label: 'القائمة الرئيسية'
+  label_display: '0'
+  provider: system
+  level: 1
+  depth: null
+  expand_all_items: false
+visibility: {  }

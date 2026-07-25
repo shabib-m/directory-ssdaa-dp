@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\FunctionalJavascript;
 
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * Tests validation functions such as min/max resolution.
- *
- * @group image
+ * Tests validation functions such as min/max dimensions.
  */
+#[Group('image')]
+#[RunTestsInSeparateProcesses]
 class ImageFieldValidateTest extends ImageFieldTestBase {
 
   /**
@@ -20,9 +24,9 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
   /**
    * Tests the validation message is displayed only once for ajax uploads.
    */
-  public function testAJAXValidationMessage() {
-    $field_name = strtolower($this->randomMachineName());
-    $this->createImageField($field_name, 'article', ['cardinality' => -1]);
+  public function testAJAXValidationMessage(): void {
+    $field_name = $this->randomMachineName();
+    $this->createImageField($field_name, 'node', 'article', ['cardinality' => -1]);
 
     $this->drupalGet('node/add/article');
     /** @var \Drupal\file\FileInterface[] $text_files */
@@ -40,7 +44,7 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
   /**
    * Tests that image field validation works with other form submit handlers.
    */
-  public function testFriendlyAjaxValidation() {
+  public function testFriendlyAjaxValidation(): void {
     // Add a custom field to the Article content type that contains an AJAX
     // handler on a select field.
     $field_storage = FieldStorageConfig::create([
@@ -71,7 +75,7 @@ class ImageFieldValidateTest extends ImageFieldTestBase {
       ->save();
 
     // Then, add an image field.
-    $this->createImageField('field_dummy_image', 'article');
+    $this->createImageField('field_dummy_image', 'node', 'article');
 
     // Open an article and trigger the AJAX handler.
     $this->drupalGet('node/add/article');

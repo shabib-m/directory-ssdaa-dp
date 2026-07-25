@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel;
 
 use Drupal\filter\Entity\FilterFormat;
@@ -7,18 +9,18 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\NodeType;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the handling of user_role entity from the user module.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserRoleDeleteTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system', 'user', 'field'];
 
@@ -35,7 +37,7 @@ class UserRoleDeleteTest extends KernelTestBase {
    *
    * @see user_user_role_delete()
    */
-  public function testRoleDeleteUserRoleReferenceDelete() {
+  public function testRoleDeleteUserRoleReferenceDelete(): void {
     // Create two test roles.
     $role_storage = $this->container->get('entity_type.manager')->getStorage('user_role');
     $role_storage->create(['id' => 'test_role_one', 'label' => 'Test role 1'])->save();
@@ -80,7 +82,7 @@ class UserRoleDeleteTest extends KernelTestBase {
   /**
    * Tests the removal of user role dependencies.
    */
-  public function testDependenciesRemoval() {
+  public function testDependenciesRemoval(): void {
     $this->enableModules(['node', 'filter']);
     /** @var \Drupal\user\RoleStorage $role_storage */
     $role_storage = $this->container->get('entity_type.manager')->getStorage('user_role');
@@ -94,13 +96,13 @@ class UserRoleDeleteTest extends KernelTestBase {
 
     /** @var \Drupal\node\NodeTypeInterface $node_type */
     $node_type = NodeType::create([
-      'type' => mb_strtolower($this->randomMachineName()),
+      'type' => $this->randomMachineName(),
       'name' => $this->randomString(),
     ]);
     $node_type->save();
     // Create a new text format to be used by role $role.
     $format = FilterFormat::create([
-      'format' => mb_strtolower($this->randomMachineName()),
+      'format' => $this->randomMachineName(),
       'name' => $this->randomString(),
     ]);
     $format->save();

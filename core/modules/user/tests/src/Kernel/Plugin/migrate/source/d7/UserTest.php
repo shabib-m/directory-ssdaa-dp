@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Plugin\migrate\source\d7;
 
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+use Drupal\user\Plugin\migrate\source\d7\User;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the d7_user source plugin.
- *
- * @covers \Drupal\user\Plugin\migrate\source\d7\User
- * @group user
  */
+#[CoversClass(User::class)]
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserTest extends MigrateSqlSourceTestBase {
 
   /**
@@ -20,7 +26,7 @@ class UserTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.

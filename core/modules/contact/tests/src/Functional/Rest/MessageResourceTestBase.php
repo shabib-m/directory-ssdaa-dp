@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\contact\Functional\Rest;
 
 use Drupal\contact\Entity\ContactForm;
@@ -8,6 +10,9 @@ use Drupal\Core\Url;
 use Drupal\Tests\rest\Functional\EntityResource\EntityResourceTestBase;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
+/**
+ * Resource test base for the ContactMessage entity.
+ */
 abstract class MessageResourceTestBase extends EntityResourceTestBase {
 
   /**
@@ -74,7 +79,7 @@ abstract class MessageResourceTestBase extends EntityResourceTestBase {
     return [
       'subject' => [
         [
-          'value' => 'Dramallama',
+          'value' => 'Drama llama',
         ],
       ],
       'contact_form' => [
@@ -110,7 +115,7 @@ abstract class MessageResourceTestBase extends EntityResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function testGet() {
+  protected function doTestGet(): void {
     // Contact Message entities are not stored, so they cannot be retrieved.
     $this->expectException(RouteNotFoundException::class);
     $this->expectExceptionMessage('Route "rest.entity.contact_message.GET" does not exist.');
@@ -122,7 +127,7 @@ abstract class MessageResourceTestBase extends EntityResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function testPatch() {
+  protected function doTestPatch(): void {
     // Contact Message entities are not stored, so they cannot be modified.
     $this->expectException(RouteNotFoundException::class);
     $this->expectExceptionMessage('Route "rest.entity.contact_message.PATCH" does not exist.');
@@ -134,7 +139,7 @@ abstract class MessageResourceTestBase extends EntityResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function testDelete() {
+  protected function doTestDelete(): void {
     // Contact Message entities are not stored, so they cannot be deleted.
     $this->expectException(RouteNotFoundException::class);
     $this->expectExceptionMessage('Route "rest.entity.contact_message.DELETE" does not exist.');

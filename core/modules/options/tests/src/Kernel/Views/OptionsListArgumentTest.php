@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\options\Kernel\Views;
 
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests options list argument for views.
  *
  * @see \Drupal\options\Plugin\views\argument\NumberListField.
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class OptionsListArgumentTest extends OptionsTestBase {
 
   /**
@@ -22,7 +27,7 @@ class OptionsListArgumentTest extends OptionsTestBase {
   /**
    * Tests the options field argument.
    */
-  public function testViewsTestOptionsListArgument() {
+  public function testViewsTestOptionsListArgument(): void {
     $view = Views::getView('test_options_list_argument_numeric');
     $this->executeView($view, [1]);
 

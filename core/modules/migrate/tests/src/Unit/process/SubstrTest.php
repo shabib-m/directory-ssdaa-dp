@@ -1,34 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit\process;
 
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\Plugin\migrate\process\Substr;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 // cspell:ignore aptain Janeway
-
 /**
  * Tests the substr plugin.
- *
- * @coversDefaultClass \Drupal\migrate\Plugin\migrate\process\Substr
- *
- * @group migrate
  */
+#[CoversClass(Substr::class)]
+#[Group('migrate')]
 class SubstrTest extends MigrateProcessTestCase {
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-  }
-
-  /**
    * Tests Substr plugin based on providerTestSubstr() values.
-   *
-   * @dataProvider providerTestSubstr
    */
-  public function testSubstr($start = NULL, $length = NULL, $expected = NULL) {
+  #[DataProvider('providerTestSubstr')]
+  public function testSubstr($start = NULL, $length = NULL, $expected = NULL): void {
     $configuration['start'] = $start;
     $configuration['length'] = $length;
     $this->plugin = new Substr($configuration, 'map', []);
@@ -39,7 +33,7 @@ class SubstrTest extends MigrateProcessTestCase {
   /**
    * Data provider for testSubstr().
    */
-  public function providerTestSubstr() {
+  public static function providerTestSubstr() {
     return [
       // Tests with valid start and length values.
       [0, 7, 'Captain'],
@@ -59,7 +53,7 @@ class SubstrTest extends MigrateProcessTestCase {
   /**
    * Tests invalid input type.
    */
-  public function testSubstrFail() {
+  public function testSubstrFail(): void {
     $configuration = [];
     $this->plugin = new Substr($configuration, 'map', []);
     $this->expectException(MigrateException::class);
@@ -70,7 +64,7 @@ class SubstrTest extends MigrateProcessTestCase {
   /**
    * Tests that the start parameter is an integer.
    */
-  public function testStartIsString() {
+  public function testStartIsString(): void {
     $configuration['start'] = '2';
     $this->plugin = new Substr($configuration, 'map', []);
     $this->expectException(MigrateException::class);
@@ -81,7 +75,7 @@ class SubstrTest extends MigrateProcessTestCase {
   /**
    * Tests that the length parameter is an integer.
    */
-  public function testLengthIsString() {
+  public function testLengthIsString(): void {
     $configuration['length'] = '1';
     $this->plugin = new Substr($configuration, 'map', []);
     $this->expectException(MigrateException::class);

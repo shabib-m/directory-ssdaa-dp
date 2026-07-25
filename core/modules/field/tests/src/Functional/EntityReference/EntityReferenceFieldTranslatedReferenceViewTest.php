@@ -1,19 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Functional\EntityReference;
 
-use Drupal\field\Entity\FieldConfig;
-use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\Tests\BrowserTestBase;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\content_translation\Traits\ContentTranslationTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the translation of entity reference field display on nodes.
- *
- * @group entity_reference
  */
+#[Group('entity_reference')]
+#[RunTestsInSeparateProcesses]
 class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
+
+  use ContentTranslationTestTrait;
 
   /**
    * Flag indicating whether the field is translatable.
@@ -114,9 +121,7 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
   protected $webUser;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'language',
@@ -158,17 +163,14 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
   /**
    * Tests if the entity is displayed in an entity reference field.
    */
-  public function testEntityReferenceDisplay() {
+  public function testEntityReferenceDisplay(): void {
     // Create a translated referrer entity.
     $this->referrerEntity = $this->createReferrerEntity();
     $this->assertEntityReferenceDisplay();
     $this->assertEntityReferenceFormDisplay();
 
     // Disable translation for referrer content type.
-    $this->drupalLogin($this->rootUser);
-    $this->drupalGet('admin/config/regional/content-language');
-    $this->submitForm(['settings[node][referrer][translatable]' => FALSE], 'Save configuration');
-    $this->drupalLogout();
+    static::disableBundleTranslation('node', 'referrer');
 
     // Create a referrer entity without translation.
     $this->referrerEntity = $this->createReferrerEntity(FALSE);
@@ -217,14 +219,14 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
   /**
    * Adds additional languages.
    */
-  protected function setUpLanguages() {
-    ConfigurableLanguage::createFromLangcode($this->translateToLangcode)->save();
+  protected function setUpLanguages(): void {
+    static::createLanguageFromLangcode($this->translateToLangcode);
   }
 
   /**
    * Creates a test subject contents, with translation.
    */
-  protected function createContent() {
+  protected function createContent(): void {
     $this->referencedEntityWithTranslation = $this->createReferencedEntityWithTranslation();
     $this->referencedEntityWithoutTranslation = $this->createNotTranslatedReferencedEntity();
   }
@@ -232,17 +234,16 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
   /**
    * Enables translations where it needed.
    */
-  protected function enableTranslation() {
-    // Enable translation for the entity types and ensure the change is picked
-    // up.
-    \Drupal::service('content_translation.manager')->setEnabled($this->testEntityTypeName, $this->referrerType->id(), TRUE);
-    \Drupal::service('content_translation.manager')->setEnabled($this->testEntityTypeName, $this->referencedType->id(), TRUE);
+  protected function enableTranslation(): void {
+    // Enable translation for the entity types.
+    $this->enableContentTranslation($this->testEntityTypeName, $this->referrerType->id());
+    $this->enableContentTranslation($this->testEntityTypeName, $this->referencedType->id());
   }
 
   /**
    * Adds term reference field for the article content type.
    */
-  protected function setUpEntityReferenceField() {
+  protected function setUpEntityReferenceField(): void {
     FieldStorageConfig::create([
       'field_name' => $this->referenceFieldName,
       'entity_type' => $this->testEntityTypeName,
@@ -283,7 +284,7 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
   /**
    * Create content types.
    */
-  protected function setUpContentTypes() {
+  protected function setUpContentTypes(): void {
     $this->referrerType = $this->drupalCreateContentType([
       'type' => 'referrer',
       'name' => 'Referrer',

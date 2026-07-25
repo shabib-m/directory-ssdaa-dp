@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Views;
 
 use Drupal\node\Entity\Node;
@@ -7,12 +9,14 @@ use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the node_vid handler.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class ArgumentNodeRevisionIdTest extends ViewsKernelTestBase {
 
   /**
@@ -41,11 +45,10 @@ class ArgumentNodeRevisionIdTest extends ViewsKernelTestBase {
   /**
    * Tests the node revision id argument via the node_vid handler.
    */
-  public function testNodeRevisionRelationship() {
+  public function testNodeRevisionRelationship(): void {
     NodeType::create(['type' => 'page', 'name' => 'page'])->save();
     $node = Node::create(['type' => 'page', 'title' => 'test1', 'uid' => 1]);
     $node->save();
-    $first_revision_id = $node->getRevisionId();
     $node->setNewRevision();
     $node->setTitle('test2');
     $node->save();

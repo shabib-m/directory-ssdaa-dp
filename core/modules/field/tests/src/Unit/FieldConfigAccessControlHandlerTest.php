@@ -1,17 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Unit;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\FieldConfigAccessControlHandler;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the field config access controller.
- *
- * @group field
- *
- * @coversDefaultClass \Drupal\field\FieldConfigAccessControlHandler
  */
+#[CoversClass(FieldConfigAccessControlHandler::class)]
+#[Group('field')]
 class FieldConfigAccessControlHandlerTest extends FieldStorageConfigAccessControlHandlerTest {
 
   /**
@@ -35,7 +37,7 @@ class FieldConfigAccessControlHandlerTest extends FieldStorageConfigAccessContro
   /**
    * Ensures field config access is working properly.
    */
-  public function testAccess() {
+  public function testAccess(): void {
     $this->assertAllowOperations([], $this->anon);
     $this->assertAllowOperations(['view', 'update', 'delete'], $this->member);
   }

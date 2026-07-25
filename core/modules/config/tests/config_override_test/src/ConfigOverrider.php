@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\config_override_test;
 
 use Drupal\Core\Cache\CacheableMetadata;
@@ -18,7 +20,7 @@ class ConfigOverrider implements ConfigFactoryOverrideInterface {
     $overrides = [];
     if (!empty($GLOBALS['config_test_run_module_overrides'])) {
       if (in_array('system.site', $names)) {
-        $overrides = $overrides + ['system.site' => ['name' => 'ZOMG overridden site name']];
+        $overrides = $overrides + ['system.site' => ['name' => 'Wow overridden site name']];
       }
       if (in_array('config_override_test.new', $names)) {
         $overrides = $overrides + ['config_override_test.new' => ['module' => 'override']];

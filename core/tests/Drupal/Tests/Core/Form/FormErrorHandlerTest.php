@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Form;
 
+use Drupal\Core\Form\FormErrorHandler;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Form\FormErrorHandler
- * @group Form
+ * Tests Drupal\Core\Form\FormErrorHandler.
  */
+#[CoversClass(FormErrorHandler::class)]
+#[Group('Form')]
 class FormErrorHandlerTest extends UnitTestCase {
 
   /**
@@ -44,19 +50,28 @@ class FormErrorHandlerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::handleFormErrors
-   * @covers ::displayErrorMessages
+   * Tests display error messages.
+   *
+   * @legacy-covers ::handleFormErrors
+   * @legacy-covers ::displayErrorMessages
    */
-  public function testDisplayErrorMessages() {
-    $this->messenger->expects($this->exactly(6))
+  public function testDisplayErrorMessages(): void {
+    $messages = [
+      'invalid',
+      'invalid',
+      'invalid',
+      'no title given',
+      'element is invisible',
+      'this missing element is invalid',
+    ];
+
+    $this->messenger->expects($this->exactly(count($messages)))
       ->method('addMessage')
-      ->withConsecutive(
-        ['invalid', 'error'],
-        ['invalid', 'error'],
-        ['invalid', 'error'],
-        ['no title given', 'error'],
-        ['element is invisible', 'error'],
-        ['this missing element is invalid', 'error'],
+      ->with(
+        $this->callback(function (string $message) use (&$messages): bool {
+          return array_shift($messages) === $message;
+        }),
+        'error',
       );
 
     $form = [
@@ -113,10 +128,12 @@ class FormErrorHandlerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::handleFormErrors
-   * @covers ::setElementErrorsFromFormState
+   * Tests set element errors from form state.
+   *
+   * @legacy-covers ::handleFormErrors
+   * @legacy-covers ::setElementErrorsFromFormState
    */
-  public function testSetElementErrorsFromFormState() {
+  public function testSetElementErrorsFromFormState(): void {
     $form = [
       '#parents' => [],
       '#array_parents' => [],

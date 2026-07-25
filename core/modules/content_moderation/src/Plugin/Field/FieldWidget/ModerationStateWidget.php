@@ -4,6 +4,7 @@ namespace Drupal\content_moderation\Plugin\Field\FieldWidget;
 
 use Drupal\content_moderation\Plugin\Field\ModerationStateFieldItemList;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsSelectWidget;
@@ -11,19 +12,17 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\content_moderation\ModerationInformation;
 use Drupal\content_moderation\StateTransitionValidationInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Plugin implementation of the 'moderation_state_default' widget.
- *
- * @FieldWidget(
- *   id = "moderation_state_default",
- *   label = @Translation("Moderation state"),
- *   field_types = {
- *     "string"
- *   }
- * )
  */
+#[FieldWidget(
+  id: 'moderation_state_default',
+  label: new TranslatableMarkup('Moderation state'),
+  field_types: ['string'],
+)]
 class ModerationStateWidget extends OptionsSelectWidget {
 
   /**
@@ -76,29 +75,23 @@ class ModerationStateWidget extends OptionsSelectWidget {
    * @param \Drupal\content_moderation\StateTransitionValidationInterface $validator
    *   Moderation state transition validation service.
    */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, AccountInterface $current_user, EntityTypeManagerInterface $entity_type_manager, ModerationInformation $moderation_information, StateTransitionValidationInterface $validator) {
+  public function __construct(
+    $plugin_id,
+    $plugin_definition,
+    FieldDefinitionInterface $field_definition,
+    array $settings,
+    array $third_party_settings,
+    AccountInterface $current_user,
+    EntityTypeManagerInterface $entity_type_manager,
+    #[Autowire(service: 'content_moderation.moderation_information')]
+    ModerationInformation $moderation_information,
+    StateTransitionValidationInterface $validator,
+  ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
     $this->entityTypeManager = $entity_type_manager;
     $this->currentUser = $current_user;
     $this->moderationInformation = $moderation_information;
     $this->validator = $validator;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $plugin_id,
-      $plugin_definition,
-      $configuration['field_definition'],
-      $configuration['settings'],
-      $configuration['third_party_settings'],
-      $container->get('current_user'),
-      $container->get('entity_type.manager'),
-      $container->get('content_moderation.moderation_information'),
-      $container->get('content_moderation.state_transition_validation')
-    );
   }
 
   /**
@@ -125,8 +118,10 @@ class ModerationStateWidget extends OptionsSelectWidget {
     // The moderation state of the saved revision will be used to display the
     // current state as well determine the appropriate transitions.
     if (!$entity->isNew()) {
+      /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+      $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
       /** @var \Drupal\Core\Entity\ContentEntityInterface $original_entity */
-      $original_entity = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->loadRevision($entity->getLoadedRevisionId());
+      $original_entity = $storage->loadRevision($entity->getLoadedRevisionId());
       if (!$entity->isDefaultTranslation() && $original_entity->hasTranslation($entity->language()->getId())) {
         $original_entity = $original_entity->getTranslation($entity->language()->getId());
       }

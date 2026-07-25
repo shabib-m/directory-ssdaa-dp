@@ -1,20 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Unit\Query;
 
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\Container;
 use Drupal\jsonapi\Query\Sort;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
- * @coversDefaultClass \Drupal\jsonapi\Query\Sort
- * @group jsonapi
+ * Tests Drupal\jsonapi\Query\Sort.
  *
  * @internal
  */
+#[CoversClass(Sort::class)]
+#[Group('jsonapi')]
 class SortTest extends UnitTestCase {
 
   /**
@@ -32,10 +38,10 @@ class SortTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::createFromQueryParameter
-   * @dataProvider parameterProvider
+   * Tests create from query parameter.
    */
-  public function testCreateFromQueryParameter($input, $expected) {
+  #[DataProvider('parameterProvider')]
+  public function testCreateFromQueryParameter($input, $expected): void {
     $sort = Sort::createFromQueryParameter($input);
     foreach ($sort->fields() as $index => $sort_field) {
       $this->assertEquals($expected[$index]['path'], $sort_field['path']);
@@ -47,7 +53,7 @@ class SortTest extends UnitTestCase {
   /**
    * Provides a suite of shortcut sort parameters and their expected expansions.
    */
-  public function parameterProvider() {
+  public static function parameterProvider() {
     return [
       ['lorem', [['path' => 'lorem', 'direction' => 'ASC', 'langcode' => NULL]]],
       [
@@ -80,10 +86,10 @@ class SortTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::createFromQueryParameter
-   * @dataProvider badParameterProvider
+   * Tests create from query parameter fail.
    */
-  public function testCreateFromQueryParameterFail($input) {
+  #[DataProvider('badParameterProvider')]
+  public function testCreateFromQueryParameterFail($input): void {
     $this->expectException(BadRequestHttpException::class);
     Sort::createFromQueryParameter($input);
   }
@@ -91,7 +97,7 @@ class SortTest extends UnitTestCase {
   /**
    * Data provider for testCreateFromQueryParameterFail.
    */
-  public function badParameterProvider() {
+  public static function badParameterProvider() {
     return [
       [[['lorem']]],
       [''],

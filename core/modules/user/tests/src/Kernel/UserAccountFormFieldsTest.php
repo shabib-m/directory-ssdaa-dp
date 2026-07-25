@@ -1,23 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel;
 
 use Drupal\Core\Form\FormState;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Verifies the field order in user account forms.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserAccountFormFieldsTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system', 'user', 'field'];
 
@@ -29,7 +31,7 @@ class UserAccountFormFieldsTest extends KernelTestBase {
   /**
    * Tests the root user account form section in the "Configure site" form.
    */
-  public function testInstallConfigureForm() {
+  public function testInstallConfigureForm(): void {
     require_once $this->root . '/core/includes/install.core.inc';
     require_once $this->root . '/core/includes/install.inc';
     $install_state = install_state_defaults();
@@ -51,7 +53,7 @@ class UserAccountFormFieldsTest extends KernelTestBase {
   /**
    * Tests the user registration form.
    */
-  public function testUserRegistrationForm() {
+  public function testUserRegistrationForm(): void {
     // Install default configuration; required for AccountFormController.
     $this->installConfig(['user']);
 
@@ -75,7 +77,7 @@ class UserAccountFormFieldsTest extends KernelTestBase {
   /**
    * Tests the user edit form.
    */
-  public function testUserEditForm() {
+  public function testUserEditForm(): void {
     // Install default configuration; required for AccountFormController.
     $this->installConfig(['user']);
     $this->installEntitySchema('user');

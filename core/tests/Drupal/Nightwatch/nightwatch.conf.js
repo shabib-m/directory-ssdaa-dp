@@ -1,5 +1,6 @@
-const path = require('path');
-const glob = require('glob');
+// cspell:ignore testcases
+const path = require('node:path');
+const { globSync } = require('glob');
 
 // Find directories which have Nightwatch tests in them.
 const regex = /(.*\/?tests\/?.*\/Nightwatch)\/.*/g;
@@ -12,15 +13,16 @@ const collectedFolders = {
 const searchDirectory = process.env.DRUPAL_NIGHTWATCH_SEARCH_DIRECTORY || '';
 const defaultIgnore = ['vendor/**'];
 
-glob
-  .sync('**/tests/**/Nightwatch/**/*.js', {
-    cwd: path.resolve(process.cwd(), `../${searchDirectory}`),
-    ignore: process.env.DRUPAL_NIGHTWATCH_IGNORE_DIRECTORIES
-      ? process.env.DRUPAL_NIGHTWATCH_IGNORE_DIRECTORIES.split(',').concat(
-          defaultIgnore,
-        )
-      : defaultIgnore,
-  })
+globSync('**/tests/**/Nightwatch/**/*.js', {
+  cwd: path.resolve(process.cwd(), `../${searchDirectory}`),
+  follow: true,
+  ignore: process.env.DRUPAL_NIGHTWATCH_IGNORE_DIRECTORIES
+    ? process.env.DRUPAL_NIGHTWATCH_IGNORE_DIRECTORIES.split(',').concat(
+        defaultIgnore,
+      )
+    : defaultIgnore,
+})
+  .sort()
   .forEach((file) => {
     let m = regex.exec(file);
     while (m !== null) {
@@ -67,7 +69,7 @@ module.exports = {
         browserName: 'chrome',
         acceptSslCerts: true,
         'goog:chromeOptions': {
-          w3c: false,
+          w3c: !!process.env.DRUPAL_TEST_WEBDRIVER_W3C,
           args: process.env.DRUPAL_TEST_WEBDRIVER_CHROME_ARGS
             ? process.env.DRUPAL_TEST_WEBDRIVER_CHROME_ARGS.split(' ')
             : [],
@@ -94,7 +96,7 @@ module.exports = {
         browserName: 'chrome',
         acceptSslCerts: true,
         'goog:chromeOptions': {
-          w3c: false,
+          w3c: !!process.env.DRUPAL_TEST_WEBDRIVER_W3C,
           args: process.env.DRUPAL_TEST_WEBDRIVER_CHROME_ARGS
             ? process.env.DRUPAL_TEST_WEBDRIVER_CHROME_ARGS.split(' ')
             : [],

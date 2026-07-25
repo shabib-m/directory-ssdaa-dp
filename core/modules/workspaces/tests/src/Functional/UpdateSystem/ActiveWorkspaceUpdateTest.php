@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workspaces\Functional\UpdateSystem;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\UpdatePathTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use Drupal\workspaces\Entity\Workspace;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that there is no active workspace during database updates.
- *
- * @group workspaces
- * @group Update
  */
+#[Group('workspaces')]
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
 class ActiveWorkspaceUpdateTest extends BrowserTestBase {
 
   use UpdatePathTestTrait;
@@ -43,12 +48,15 @@ class ActiveWorkspaceUpdateTest extends BrowserTestBase {
     $index = array_search('workspace_update_test_post_update_check_active_workspace', $existing_updates);
     unset($existing_updates[$index]);
     \Drupal::keyValue('post_update')->set('existing_updates', $existing_updates);
+
+    // Create a valid workspace that can be used for testing.
+    Workspace::create(['id' => 'test', 'label' => 'Test'])->save();
   }
 
   /**
    * Tests that there is no active workspace during database updates.
    */
-  public function testActiveWorkspaceDuringUpdate() {
+  public function testActiveWorkspaceDuringUpdate(): void {
     /** @var \Drupal\workspaces\WorkspaceManagerInterface $workspace_manager */
     $workspace_manager = \Drupal::service('workspaces.manager');
 

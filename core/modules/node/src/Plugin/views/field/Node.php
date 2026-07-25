@@ -4,6 +4,7 @@ namespace Drupal\node\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
@@ -17,18 +18,17 @@ use Drupal\views\Plugin\views\field\FieldPluginBase;
  *   enabled by default.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsField("node")
  */
+#[ViewsField("node")]
 class Node extends FieldPluginBase {
 
   /**
    * {@inheritdoc}
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
 
-    // Don't add the additional fields to groupby
+    // Don't add the additional fields to group by.
     if (!empty($this->options['link_to_node'])) {
       $this->additional_fields['nid'] = ['table' => 'node_field_data', 'field' => 'nid'];
     }

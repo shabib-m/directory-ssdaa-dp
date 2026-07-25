@@ -1,12 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Rest;
 
 use Drupal\Tests\rest\Functional\CookieResourceTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @group rest
+ * Tests Date Format Json Cookie.
  */
+#[Group('rest')]
+#[RunTestsInSeparateProcesses]
 class DateFormatJsonCookieTest extends DateFormatResourceTestBase {
 
   use CookieResourceTestTrait;

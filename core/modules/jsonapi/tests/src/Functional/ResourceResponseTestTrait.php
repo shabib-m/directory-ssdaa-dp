@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
+use Drupal\jsonapi\JsonApiSpec;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Access\AccessResultInterface;
@@ -77,10 +80,10 @@ trait ResourceResponseTestTrait {
     $merged_document['jsonapi'] = [
       'meta' => [
         'links' => [
-          'self' => ['href' => 'http://jsonapi.org/format/1.0/'],
+          'self' => ['href' => JsonApiSpec::SUPPORTED_SPECIFICATION_PERMALINK],
         ],
       ],
-      'version' => '1.0',
+      'version' => JsonApiSpec::SUPPORTED_SPECIFICATION_VERSION,
     ];
     // Until we can reasonably know what caused an error, we shouldn't include
     // 'self' links in error documents. For example, a 404 shouldn't have a
@@ -216,7 +219,7 @@ trait ResourceResponseTestTrait {
    * @return \Drupal\jsonapi\ResourceResponse[]
    *   The ResourceResponses.
    */
-  protected static function toResourceResponses(array $responses) {
+  protected static function toResourceResponses(array $responses): array {
     return array_map([self::class, 'toResourceResponse'], $responses);
   }
 
@@ -242,7 +245,7 @@ trait ResourceResponseTestTrait {
       $cacheability->addCacheContexts(explode(' ', $response->getHeader('X-Drupal-Cache-Contexts')[0]));
     }
     if ($dynamic_cache = $response->getHeader('X-Drupal-Dynamic-Cache')) {
-      $cacheability->setCacheMaxAge(($dynamic_cache[0] === 'UNCACHEABLE' && $response->getStatusCode() < 400) ? 0 : Cache::PERMANENT);
+      $cacheability->setCacheMaxAge((str_contains($dynamic_cache[0], 'UNCACHEABLE') && $response->getStatusCode() < 400) ? 0 : Cache::PERMANENT);
     }
     $related_document = Json::decode($response->getBody());
     $resource_response = new CacheableResourceResponse($related_document, $response->getStatusCode());
@@ -258,7 +261,7 @@ trait ResourceResponseTestTrait {
    * @return array
    *   A resource identifier for the given entity.
    */
-  protected static function toResourceIdentifier(EntityInterface $entity) {
+  protected static function toResourceIdentifier(EntityInterface $entity): array {
     return [
       'type' => $entity->getEntityTypeId() . '--' . $entity->bundle(),
       'id' => $entity->uuid(),
@@ -274,7 +277,7 @@ trait ResourceResponseTestTrait {
    * @return bool
    *   TRUE if the array has a type and ID, FALSE otherwise.
    */
-  protected static function isResourceIdentifier(array $data) {
+  protected static function isResourceIdentifier(array $data): bool {
     return array_key_exists('type', $data) && array_key_exists('id', $data);
   }
 
@@ -304,7 +307,7 @@ trait ResourceResponseTestTrait {
    * @return bool
    *   TRUE if the needle exists is present in the haystack, FALSE otherwise.
    */
-  protected static function collectionHasResourceIdentifier(array $needle, array $haystack) {
+  protected static function collectionHasResourceIdentifier(array $needle, array $haystack): bool {
     foreach ($haystack as $resource) {
       if ($resource['type'] == $needle['type'] && $resource['id'] == $needle['id']) {
         return TRUE;
@@ -344,7 +347,7 @@ trait ResourceResponseTestTrait {
    * @return array
    *   The extracted links, keyed by the original associated key name.
    */
-  protected static function extractLinks(array $link_paths, array $document) {
+  protected static function extractLinks(array $link_paths, array $document): array {
     return array_map(function ($link_path) use ($document) {
       $link = array_reduce(
         explode('.', $link_path),
@@ -364,7 +367,7 @@ trait ResourceResponseTestTrait {
    * @return string[]
    *   The resource links.
    */
-  protected static function getResourceLinks(array $resource_identifiers) {
+  protected static function getResourceLinks(array $resource_identifiers): array {
     return array_map([static::class, 'getResourceLink'], $resource_identifiers);
   }
 
@@ -396,7 +399,7 @@ trait ResourceResponseTestTrait {
    * @return string
    *   The relationship link.
    */
-  protected static function getRelationshipLink(array $resource_identifier, $relationship_field_name) {
+  protected static function getRelationshipLink(array $resource_identifier, $relationship_field_name): string {
     return static::getResourceLink($resource_identifier) . "/relationships/$relationship_field_name";
   }
 
@@ -411,7 +414,7 @@ trait ResourceResponseTestTrait {
    * @return string
    *   The related resource link.
    */
-  protected static function getRelatedLink(array $resource_identifier, $relationship_field_name) {
+  protected static function getRelatedLink(array $resource_identifier, $relationship_field_name): string {
     return static::getResourceLink($resource_identifier) . "/$relationship_field_name";
   }
 
@@ -430,7 +433,7 @@ trait ResourceResponseTestTrait {
    *
    * @see \GuzzleHttp\ClientInterface::request()
    */
-  protected function getRelatedResponses(array $relationship_field_names, array $request_options, EntityInterface $entity = NULL) {
+  protected function getRelatedResponses(array $relationship_field_names, array $request_options, ?EntityInterface $entity = NULL) {
     $entity = $entity ?: $this->entity;
     $links = array_map(function ($relationship_field_name) use ($entity) {
       return static::getRelatedLink(static::toResourceIdentifier($entity), $relationship_field_name);
@@ -492,7 +495,7 @@ trait ResourceResponseTestTrait {
    *   for testing related/relationship routes and includes.
    * @param string|null $detail
    *   (optional) Details for the JSON:API error object.
-   * @param string|bool|null $pointer
+   * @param string|false|null $pointer
    *   (optional) Document pointer for the JSON:API error object. FALSE to omit
    *   the pointer.
    *
@@ -523,7 +526,9 @@ trait ResourceResponseTestTrait {
       'jsonapi' => static::$jsonApiMember,
       'errors' => [$error],
     ], 403))
-      ->addCacheableDependency((new CacheableMetadata())->addCacheTags(['4xx-response', 'http_response'])->addCacheContexts(['url.site']))
+      ->addCacheableDependency((new CacheableMetadata())
+        ->addCacheTags(['4xx-response', 'http_response'])
+        ->addCacheContexts(['url.query_args', 'url.site']))
       ->addCacheableDependency($access);
   }
 
@@ -543,8 +548,7 @@ trait ResourceResponseTestTrait {
     // If the entity type is revisionable, add a resource version cache context.
     $cache_contexts = Cache::mergeContexts([
       // Cache contexts for JSON:API URL query parameters.
-      'url.query_args:fields',
-      'url.query_args:include',
+      'url.query_args',
       // Drupal defaults.
       'url.site',
     ], $this->entity->getEntityType()->isRevisionable() ? ['url.query_args:resourceVersion'] : []);
@@ -584,7 +588,7 @@ trait ResourceResponseTestTrait {
    * @return array
    *   A new omitted object.
    */
-  protected static function errorsToOmittedObject(array $errors) {
+  protected static function errorsToOmittedObject(array $errors): array {
     $omitted = [
       'detail' => 'Some resources have been omitted because of insufficient authorization.',
       'links' => [

@@ -1,18 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Functional\Views;
 
-use Drupal\Tests\content_translation\Functional\ContentTranslationTestBase;
-use Drupal\views\Tests\ViewTestData;
 use Drupal\Core\Language\Language;
+use Drupal\Tests\content_translation\Functional\ContentTranslationTestBase;
 use Drupal\user\Entity\User;
+use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the content translation overview link field handler.
  *
- * @group content_translation
  * @see \Drupal\content_translation\Plugin\views\field\TranslationLink
  */
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class TranslationLinkTest extends ContentTranslationTestBase {
 
   /**
@@ -23,9 +28,7 @@ class TranslationLinkTest extends ContentTranslationTestBase {
   public static $testViews = ['test_entity_translations_link'];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['content_translation_test_views'];
 
@@ -42,6 +45,7 @@ class TranslationLinkTest extends ContentTranslationTestBase {
     $this->entityTypeId = 'user';
 
     parent::setUp();
+    $this->doSetup();
 
     // Assign user 1  a language code so that the entity can be translated.
     $user = User::load(1);
@@ -68,10 +72,10 @@ class TranslationLinkTest extends ContentTranslationTestBase {
   /**
    * Tests the content translation overview link field handler.
    */
-  public function testTranslationLink() {
+  public function testTranslationLink(): void {
     $this->drupalGet('test-entity-translations-link');
     $this->assertSession()->linkByHrefExists('user/1/translations');
-    $this->assertSession()->linkByHrefNotExists('user/2/translations', 'The translations link is not present when content_translation_translate_access() is FALSE.');
+    $this->assertSession()->linkByHrefNotExists('user/2/translations', 'The translations link is not present when \Drupal::service("content_translation.manager")->access() is FALSE.');
   }
 
 }

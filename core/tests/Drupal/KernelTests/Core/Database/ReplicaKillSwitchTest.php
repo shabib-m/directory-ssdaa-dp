@@ -1,26 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\Site\Settings;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * Tests that ReplicaKillSwitch functions correctly.
- *
- * @group system
  */
+#[Group('system')]
+#[RunTestsInSeparateProcesses]
 class ReplicaKillSwitchTest extends KernelTestBase {
 
   /**
    * Tests database.replica_kill_switch service.
    */
-  public function testSystemInitIgnoresSecondaries() {
+  public function testSystemInitIgnoresSecondaries(): void {
     // Clone the master credentials to a replica connection.
     // Note this will result in two independent connection objects that happen
     // to point to the same place.

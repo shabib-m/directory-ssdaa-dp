@@ -4,8 +4,10 @@ description: 'Provides site-wide contact forms and forms to contact individual u
 package: Core
 # version: VERSION
 configure: entity.contact_form.collection
+lifecycle: deprecated
+lifecycle_link: https://www.drupal.org/node/3223395#s-contact
 
-# Information added by Drupal.org packaging script on 2023-11-01
-version: '10.1.6'
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
 project: 'drupal'
-datestamp: 1698841355
+datestamp: 1784141322

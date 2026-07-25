@@ -1,35 +1,35 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\views_ui\Unit\ViewListBuilderTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\views_ui\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Menu\MenuParentFormSelector;
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Entity\View;
 use Drupal\views\ViewExecutableFactory;
 use Drupal\views_ui\ViewListBuilder;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * @coversDefaultClass \Drupal\views_ui\ViewListBuilder
- * @group views_ui
+ * Tests Drupal\views_ui\ViewListBuilder.
  */
+#[CoversClass(ViewListBuilder::class)]
+#[Group('views_ui')]
 class ViewListBuilderTest extends UnitTestCase {
 
   /**
    * Tests the listing of displays on a views list builder.
    *
    * @see \Drupal\views_ui\ViewListBuilder::getDisplaysList()
-   * @covers ::buildRow
    */
-  public function testBuildRowEntityList() {
+  public function testBuildRowEntityList(): void {
     $storage = $this->getMockBuilder('Drupal\Core\Config\Entity\ConfigEntityStorage')
       ->disableOriginalConstructor()
       ->getMock();
@@ -86,7 +86,15 @@ class ViewListBuilderTest extends UnitTestCase {
     $parent_form_selector = $this->createMock(MenuParentFormSelector::class);
     $page_display = $this->getMockBuilder('Drupal\views\Plugin\views\display\Page')
       ->onlyMethods(['initDisplay', 'getPath'])
-      ->setConstructorArgs([[], 'default', $display_manager->getDefinition('page'), $route_provider, $state, $menu_storage, $parent_form_selector])
+      ->setConstructorArgs([
+        [],
+        'default',
+        $display_manager->getDefinition('page'),
+        $route_provider,
+        $state,
+        $menu_storage,
+        $parent_form_selector,
+      ])
       ->getMock();
     $page_display->expects($this->any())
       ->method('getPath')
@@ -102,6 +110,7 @@ class ViewListBuilderTest extends UnitTestCase {
       ->getMock();
 
     $values = [];
+    $values['label'] = 'Test';
     $values['status'] = FALSE;
     $values['display']['default']['id'] = 'default';
     $values['display']['default']['display_title'] = 'Display';
@@ -144,14 +153,17 @@ class ViewListBuilderTest extends UnitTestCase {
       ->disableOriginalConstructor()
       ->getMock();
     $route_provider = $this->createMock('Drupal\Core\Routing\RouteProviderInterface');
-    $executable_factory = new ViewExecutableFactory($user, $request_stack, $views_data, $route_provider);
+    $executable_factory = new ViewExecutableFactory($user, $request_stack, $views_data, $route_provider, $display_manager);
+    $entity_type_manager = $this->prophesize(EntityTypeManagerInterface::class);
     $container->set('views.executable', $executable_factory);
     $container->set('plugin.manager.views.display', $display_manager);
+    $container->set('entity_type.manager', $entity_type_manager->reveal());
     \Drupal::setContainer($container);
 
     // Setup a view list builder with a mocked buildOperations method,
     // because t() is called on there.
     $entity_type = $this->createMock('Drupal\Core\Entity\EntityTypeInterface');
+    $entity_type_manager->getDefinition('view')->willReturn($entity_type);
     $view_list_builder = new TestViewListBuilder($entity_type, $storage, $display_manager);
     $view_list_builder->setStringTranslation($this->getStringTranslationStub());
 
@@ -187,8 +199,14 @@ class ViewListBuilderTest extends UnitTestCase {
 
 }
 
+/**
+ * Stub class for testing ViewListBuilder methods.
+ */
 class TestViewListBuilder extends ViewListBuilder {
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildOperations(EntityInterface $entity) {
     return [];
   }

@@ -47,9 +47,10 @@ trait AssertMailTrait {
    *   Value of the field to assert.
    * @param string $message
    *   (optional) A message to display with the assertion. Do not translate
-   *   messages: use \Drupal\Component\Render\FormattableMarkup to embed
-   *   variables in the message text, not t(). If left blank, a default message
-   *   will be displayed.
+   *   messages with t(). Use double quotes and embed variables directly in
+   *   message text, or use sprintf() if necessary. Avoid the use of
+   *   \Drupal\Component\Render\FormattableMarkup unless you cast the object to
+   *   a string. If left blank, a default message will be displayed.
    *
    * @return bool
    *   TRUE on pass.
@@ -74,9 +75,10 @@ trait AssertMailTrait {
    *   Number of emails to search for string, starting with most recent.
    * @param string $message
    *   (optional) A message to display with the assertion. Do not translate
-   *   messages: use \Drupal\Component\Render\FormattableMarkup to embed
-   *   variables in the message text, not t(). If left blank, a default message
-   *   will be displayed.
+   *   messages with t(). Use double quotes and embed variables directly in
+   *   message text, or use sprintf() if necessary. Avoid the use of
+   *   \Drupal\Component\Render\FormattableMarkup unless you cast the object to
+   *   a string. If left blank, a default message will be displayed.
    */
   protected function assertMailString($field_name, $string, $email_depth, $message = '') {
     $mails = $this->getMails();
@@ -95,7 +97,10 @@ trait AssertMailTrait {
       }
     }
     if (!$message) {
-      $message = new FormattableMarkup('Expected text found in @field of email message: "@expected".', ['@field' => $field_name, '@expected' => $string]);
+      $message = new FormattableMarkup('Expected text found in @field of email message: "@expected".', [
+        '@field' => $field_name,
+        '@expected' => $string,
+      ]);
     }
     $this->assertTrue($string_found, $message);
   }
@@ -109,16 +114,20 @@ trait AssertMailTrait {
    *   Pattern to search for.
    * @param string $message
    *   (optional) A message to display with the assertion. Do not translate
-   *   messages: use \Drupal\Component\Render\FormattableMarkup to embed
-   *   variables in the message text, not t(). If left blank, a default message
-   *   will be displayed.
+   *   messages with t(). Use double quotes and embed variables directly in
+   *   message text, or use sprintf() if necessary. Avoid the use of
+   *   \Drupal\Component\Render\FormattableMarkup unless you cast the object to
+   *   a string. If left blank, a default message will be displayed.
    */
   protected function assertMailPattern($field_name, $regex, $message = '') {
     $mails = $this->getMails();
     $mail = end($mails);
     $regex_found = preg_match("/$regex/", $mail[$field_name]);
     if (!$message) {
-      $message = new FormattableMarkup('Expected text found in @field of email message: "@expected".', ['@field' => $field_name, '@expected' => $regex]);
+      $message = new FormattableMarkup('Expected text found in @field of email message: "@expected".', [
+        '@field' => $field_name,
+        '@expected' => $regex,
+      ]);
     }
     $this->assertTrue((bool) $regex_found, $message);
   }

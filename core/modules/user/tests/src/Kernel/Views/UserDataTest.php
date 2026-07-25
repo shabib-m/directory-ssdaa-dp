@@ -1,19 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Views;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\user\Entity\User;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the user data service field handler.
  *
- * @group user
- *
  * @see \Drupal\user\Plugin\views\field\UserData
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserDataTest extends ViewsKernelTestBase {
 
   /**
@@ -29,7 +33,7 @@ class UserDataTest extends ViewsKernelTestBase {
   /**
    * Tests field handler.
    */
-  public function testDataField() {
+  public function testDataField(): void {
     ViewTestData::createTestViews(static::class, ['user_test_views']);
 
     $this->installEntitySchema('user');

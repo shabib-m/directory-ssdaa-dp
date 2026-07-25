@@ -1,24 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Functional\FunctionalString;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the creation of string fields.
- *
- * @group text
  */
+#[Group('text')]
+#[RunTestsInSeparateProcesses]
 class StringFieldTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['entity_test', 'file'];
 
@@ -53,7 +54,7 @@ class StringFieldTest extends BrowserTestBase {
   /**
    * Tests widgets.
    */
-  public function testTextfieldWidgets() {
+  public function testTextfieldWidgets(): void {
     $this->_testTextfieldWidgets('string', 'string_textfield');
     $this->_testTextfieldWidgets('string_long', 'string_textarea');
   }
@@ -61,9 +62,9 @@ class StringFieldTest extends BrowserTestBase {
   /**
    * Helper function for testTextfieldWidgets().
    */
-  public function _testTextfieldWidgets($field_type, $widget_type) {
+  public function _testTextfieldWidgets($field_type, $widget_type): void {
     // Create a field.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $field_storage = FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'entity_test',
@@ -95,7 +96,7 @@ class StringFieldTest extends BrowserTestBase {
     $this->drupalGet('entity_test/add');
     $this->assertSession()->fieldValueEquals("{$field_name}[0][value]", '');
     $this->assertSession()->fieldNotExists("{$field_name}[0][format]");
-    $this->assertSession()->responseContains(new FormattableMarkup('placeholder="A placeholder on @widget_type"', ['@widget_type' => $widget_type]));
+    $this->assertSession()->responseContains('placeholder="A placeholder on ' . $widget_type . '"');
 
     // Submit with some value.
     $value = $this->randomMachineName();

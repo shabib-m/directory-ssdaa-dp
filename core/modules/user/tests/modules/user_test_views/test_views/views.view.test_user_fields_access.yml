@@ -4,7 +4,7 @@ dependencies:
   module:
     - user
 id: test_user_fields_access
-label: ''
+label: test_user_fields_access
 module: views
 description: ''
 tag: ''
@@ -63,6 +63,7 @@ display:
         type: table
         options:
           grouping: {  }
+          class: ''
           row_class: ''
           default_row_class: true
           override: true

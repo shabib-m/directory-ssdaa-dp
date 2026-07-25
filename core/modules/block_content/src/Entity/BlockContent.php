@@ -2,88 +2,106 @@
 
 namespace Drupal\block_content\Entity;
 
-use Drupal\block_content\Access\RefinableDependentAccessTrait;
+use Drupal\block_content\BlockContentAccessControlHandler;
+use Drupal\block_content\BlockContentForm;
+use Drupal\block_content\BlockContentListBuilder;
+use Drupal\block_content\BlockContentStorageSchema;
+use Drupal\block_content\BlockContentTranslationHandler;
+use Drupal\block_content\BlockContentViewBuilder;
+use Drupal\block_content\BlockContentViewsData;
+use Drupal\block_content\Form\BlockContentDeleteForm;
+use Drupal\block_content\Routing\BlockContentRouteProvider;
+use Drupal\Core\Access\RefinableDependentAccessTrait;
+use Drupal\Core\Entity\Attribute\ContentEntityType;
+use Drupal\Core\Entity\Routing\RevisionHtmlRouteProvider;
+use Drupal\Core\Entity\Form\RevisionRevertForm;
+use Drupal\Core\Entity\Form\RevisionDeleteForm;
+use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Entity\EditorialContentEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\block_content\BlockContentInterface;
-use Drupal\user\UserInterface;
 
 /**
  * Defines the content block entity class.
- *
- * @ContentEntityType(
- *   id = "block_content",
- *   label = @Translation("Content block"),
- *   label_collection = @Translation("Content blocks"),
- *   label_singular = @Translation("content block"),
- *   label_plural = @Translation("content blocks"),
- *   label_count = @PluralTranslation(
- *     singular = "@count content block",
- *     plural = "@count content blocks",
- *   ),
- *   bundle_label = @Translation("Block type"),
- *   handlers = {
- *     "storage" = "Drupal\Core\Entity\Sql\SqlContentEntityStorage",
- *     "access" = "Drupal\block_content\BlockContentAccessControlHandler",
- *     "list_builder" = "Drupal\block_content\BlockContentListBuilder",
- *     "view_builder" = "Drupal\block_content\BlockContentViewBuilder",
- *     "views_data" = "Drupal\block_content\BlockContentViewsData",
- *     "form" = {
- *       "add" = "Drupal\block_content\BlockContentForm",
- *       "edit" = "Drupal\block_content\BlockContentForm",
- *       "delete" = "Drupal\block_content\Form\BlockContentDeleteForm",
- *       "default" = "Drupal\block_content\BlockContentForm",
- *       "revision-delete" = \Drupal\Core\Entity\Form\RevisionDeleteForm::class,
- *       "revision-revert" = \Drupal\Core\Entity\Form\RevisionRevertForm::class,
- *     },
- *     "route_provider" = {
- *       "revision" = \Drupal\Core\Entity\Routing\RevisionHtmlRouteProvider::class,
- *     },
- *     "translation" = "Drupal\block_content\BlockContentTranslationHandler"
- *   },
- *   admin_permission = "administer block content",
- *   base_table = "block_content",
- *   revision_table = "block_content_revision",
- *   data_table = "block_content_field_data",
- *   revision_data_table = "block_content_field_revision",
- *   show_revision_ui = TRUE,
- *   links = {
- *     "canonical" = "/admin/content/block/{block_content}",
- *     "delete-form" = "/admin/content/block/{block_content}/delete",
- *     "edit-form" = "/admin/content/block/{block_content}",
- *     "collection" = "/admin/content/block",
- *     "create" = "/block",
- *     "revision-delete-form" = "/admin/content/block/{block_content}/revision/{block_content_revision}/delete",
- *     "revision-revert-form" = "/admin/content/block/{block_content}/revision/{block_content_revision}/revert",
- *     "version-history" = "/admin/content/block/{block_content}/revisions",
- *   },
- *   translatable = TRUE,
- *   entity_keys = {
- *     "id" = "id",
- *     "revision" = "revision_id",
- *     "bundle" = "type",
- *     "label" = "info",
- *     "langcode" = "langcode",
- *     "uuid" = "uuid",
- *     "published" = "status",
- *   },
- *   revision_metadata_keys = {
- *     "revision_user" = "revision_user",
- *     "revision_created" = "revision_created",
- *     "revision_log_message" = "revision_log"
- *   },
- *   bundle_entity_type = "block_content_type",
- *   field_ui_base_route = "entity.block_content_type.edit_form",
- *   render_cache = FALSE,
- * )
  *
  * Note that render caching of block_content entities is disabled because they
  * are always rendered as blocks, and blocks already have their own render
  * caching.
  * See https://www.drupal.org/node/2284917#comment-9132521 for more information.
  */
+#[ContentEntityType(
+  id: 'block_content',
+  label: new TranslatableMarkup('Content block'),
+  label_collection: new TranslatableMarkup('Content blocks'),
+  label_singular: new TranslatableMarkup('content block'),
+  label_plural: new TranslatableMarkup('content blocks'),
+  render_cache: FALSE,
+  entity_keys: [
+    'id' => 'id',
+    'revision' => 'revision_id',
+    'bundle' => 'type',
+    'label' => 'info',
+    'langcode' => 'langcode',
+    'uuid' => 'uuid',
+    'published' => 'status',
+  ],
+  handlers: [
+    'storage' => SqlContentEntityStorage::class,
+    'storage_schema' => BlockContentStorageSchema::class,
+    'access' => BlockContentAccessControlHandler::class,
+    'list_builder' => BlockContentListBuilder::class,
+    'view_builder' => BlockContentViewBuilder::class,
+    'views_data' => BlockContentViewsData::class,
+    'form' => [
+      'add' => BlockContentForm::class,
+      'edit' => BlockContentForm::class,
+      'delete' => BlockContentDeleteForm::class,
+      'default' => BlockContentForm::class,
+      'revision-delete' => RevisionDeleteForm::class,
+      'revision-revert' => RevisionRevertForm::class,
+    ],
+    'route_provider' => [
+      'html' => BlockContentRouteProvider::class,
+      'revision' => RevisionHtmlRouteProvider::class,
+    ],
+    'translation' => BlockContentTranslationHandler::class,
+  ],
+  links: [
+    'add-page' => '/block/add',
+    'add-form' => '/block/add/{block_content_type}',
+    'canonical' => '/admin/content/block/{block_content}',
+    'delete-form' => '/admin/content/block/{block_content}/delete',
+    'edit-form' => '/admin/content/block/{block_content}',
+    'collection' => '/admin/content/block',
+    'create' => '/block',
+    'revision-delete-form' => '/admin/content/block/{block_content}/revision/{block_content_revision}/delete',
+    'revision-revert-form' => '/admin/content/block/{block_content}/revision/{block_content_revision}/revert',
+    'version-history' => '/admin/content/block/{block_content}/revisions',
+  ],
+  admin_permission: 'administer block content',
+  collection_permission: 'access block library',
+  bundle_entity_type: 'block_content_type',
+  bundle_label: new TranslatableMarkup('Block type'),
+  base_table: 'block_content',
+  data_table: 'block_content_field_data',
+  revision_table: 'block_content_revision',
+  revision_data_table: 'block_content_field_revision',
+  translatable: TRUE,
+  show_revision_ui: TRUE,
+  label_count: [
+    'singular' => '@count content block',
+    'plural' => '@count content blocks',
+  ],
+  field_ui_base_route: 'entity.block_content_type.edit_form',
+  revision_metadata_keys: [
+    'revision_user' => 'revision_user',
+    'revision_created' => 'revision_created',
+    'revision_log_message' => 'revision_log',
+  ],
+)]
 class BlockContent extends EditorialContentEntityBase implements BlockContentInterface {
 
   use RefinableDependentAccessTrait;
@@ -129,7 +147,7 @@ class BlockContent extends EditorialContentEntityBase implements BlockContentInt
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
-    if ($this->isReusable() || (isset($this->original) && $this->original->isReusable())) {
+    if ($this->isReusable() || $this->getOriginal()?->isReusable()) {
       static::invalidateBlockPluginCache();
     }
   }
@@ -176,11 +194,11 @@ class BlockContent extends EditorialContentEntityBase implements BlockContentInt
   public function preSaveRevision(EntityStorageInterface $storage, \stdClass $record) {
     parent::preSaveRevision($storage, $record);
 
-    if (!$this->isNewRevision() && isset($this->original) && (!isset($record->revision_log) || $record->revision_log === '')) {
+    if (!$this->isNewRevision() && $this->getOriginal() && empty($record->revision_log_message)) {
       // If we are updating an existing block_content without adding a new
       // revision and the user did not supply a revision log, keep the existing
       // one.
-      $record->revision_log = $this->original->getRevisionLogMessage();
+      $record->revision_log = $this->getOriginal()->getRevisionLogMessage();
     }
   }
 
@@ -238,63 +256,6 @@ class BlockContent extends EditorialContentEntityBase implements BlockContentInt
    */
   public function setInfo($info) {
     $this->set('info', $info);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRevisionCreationTime() {
-    return $this->get('revision_created')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRevisionCreationTime($timestamp) {
-    $this->set('revision_created', $timestamp);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRevisionUser() {
-    return $this->get('revision_user')->entity;
-  }
-
-  public function setRevisionUser(UserInterface $account) {
-    $this->set('revision_user', $account);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRevisionUserId() {
-    return $this->get('revision_user')->entity->id();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRevisionUserId($user_id) {
-    $this->set('revision_user', $user_id);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRevisionLogMessage() {
-    return $this->get('revision_log')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRevisionLogMessage($revision_log_message) {
-    $this->set('revision_log', $revision_log_message);
     return $this;
   }
 

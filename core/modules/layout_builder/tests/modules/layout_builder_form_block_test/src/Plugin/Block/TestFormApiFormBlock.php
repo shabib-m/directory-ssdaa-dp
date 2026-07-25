@@ -1,23 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\layout_builder_form_block_test\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides a block containing a Form API form for use in Layout Builder tests.
- *
- * @Block(
- *   id = "layout_builder_form_block_test_form_api_form_block",
- *   admin_label = @Translation("Layout Builder form block test form api form block"),
- *   category = @Translation("Layout Builder form block test")
- * )
  */
+#[Block(
+  id: "layout_builder_form_block_test_form_api_form_block",
+  admin_label: new TranslatableMarkup("Layout Builder form block test form api form block"),
+  category: new TranslatableMarkup("Layout Builder form block test")
+)]
 class TestFormApiFormBlock extends BlockBase implements ContainerFactoryPluginInterface, FormInterface {
 
   /**
@@ -45,17 +47,6 @@ class TestFormApiFormBlock extends BlockBase implements ContainerFactoryPluginIn
   public function __construct(array $configuration, $plugin_id, $plugin_definition, FormBuilderInterface $form_builder) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->formBuilder = $form_builder;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('form_builder'));
   }
 
   /**

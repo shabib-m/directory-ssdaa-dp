@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Kernel\Views;
 
 use Drupal\block_content\Entity\BlockContent;
@@ -9,12 +11,14 @@ use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Tests\ViewResultAssertionTrait;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the block_content_revision_user field.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class RevisionUserTest extends ViewsKernelTestBase {
 
   use UserCreationTrait;
@@ -26,9 +30,6 @@ class RevisionUserTest extends ViewsKernelTestBase {
   protected static $modules = [
     'block_content',
     'block_content_test_views',
-    'system',
-    'user',
-    'views',
   ];
 
   /**
@@ -66,7 +67,7 @@ class RevisionUserTest extends ViewsKernelTestBase {
   /**
    * Tests the block_content_revision_user relationship.
    */
-  public function testRevisionUser() {
+  public function testRevisionUser(): void {
     $primary_author = $this->createUser();
     $secondary_author = $this->createUser();
 

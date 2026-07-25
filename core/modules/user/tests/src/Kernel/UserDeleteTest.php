@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel;
 
 use Drupal\Core\Database\Database;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests deleting of user accounts.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserDeleteTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -27,8 +31,7 @@ class UserDeleteTest extends KernelTestBase {
   /**
    * Tests deleting multiple users.
    */
-  public function testUserDeleteMultiple() {
-    $this->installSchema('system', ['sequences']);
+  public function testUserDeleteMultiple(): void {
     $this->installSchema('user', ['users_data']);
     $this->installEntitySchema('user');
 
@@ -39,7 +42,7 @@ class UserDeleteTest extends KernelTestBase {
 
     $uids = [$user_a->id(), $user_b->id(), $user_c->id()];
 
-    // These users should have a role
+    // These users should have a role.
     $connection = Database::getConnection();
     $query = $connection->select('user__roles', 'r');
     $roles_created = $query

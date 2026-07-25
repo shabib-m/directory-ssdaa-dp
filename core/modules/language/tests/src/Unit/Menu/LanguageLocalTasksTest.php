@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Unit\Menu;
 
 use Drupal\Tests\Core\Menu\LocalTaskIntegrationTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests existence of language local tasks.
- *
- * @group language
  */
+#[Group('language')]
 class LanguageLocalTasksTest extends LocalTaskIntegrationTestBase {
 
   /**
@@ -23,17 +26,16 @@ class LanguageLocalTasksTest extends LocalTaskIntegrationTestBase {
 
   /**
    * Tests language admin overview local tasks existence.
-   *
-   * @dataProvider getLanguageAdminOverviewRoutes
    */
-  public function testLanguageAdminLocalTasks($route, $expected) {
+  #[DataProvider('getLanguageAdminOverviewRoutes')]
+  public function testLanguageAdminLocalTasks($route, $expected): void {
     $this->assertLocalTasks($route, $expected);
   }
 
   /**
    * Provides a list of routes to test.
    */
-  public function getLanguageAdminOverviewRoutes() {
+  public static function getLanguageAdminOverviewRoutes() {
     return [
       ['entity.configurable_language.collection', [['entity.configurable_language.collection', 'language.negotiation']]],
       ['language.negotiation', [['entity.configurable_language.collection', 'language.negotiation']]],
@@ -43,7 +45,7 @@ class LanguageLocalTasksTest extends LocalTaskIntegrationTestBase {
   /**
    * Tests language edit local tasks existence.
    */
-  public function testLanguageEditLocalTasks() {
+  public function testLanguageEditLocalTasks(): void {
     $this->assertLocalTasks('entity.configurable_language.edit_form', [
       0 => ['entity.configurable_language.edit_form'],
     ]);

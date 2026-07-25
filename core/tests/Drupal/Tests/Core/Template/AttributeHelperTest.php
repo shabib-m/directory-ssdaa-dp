@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Template;
 
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Template\AttributeHelper;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Template\AttributeHelper
- * @group Template
+ * Tests Drupal\Core\Template\AttributeHelper.
  */
+#[CoversClass(AttributeHelper::class)]
+#[Group('Template')]
 class AttributeHelperTest extends UnitTestCase {
 
   /**
@@ -19,7 +25,7 @@ class AttributeHelperTest extends UnitTestCase {
    *   An array of test data each containing an array of attributes, the name
    *   of the attribute to check existence of, and the expected result.
    */
-  public function providerTestAttributeExists() {
+  public static function providerTestAttributeExists(): array {
     return [
       [['class' => ['example-class']], 'class', TRUE],
       [[], 'class', FALSE],
@@ -30,10 +36,10 @@ class AttributeHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::attributeExists
-   * @dataProvider providerTestAttributeExists
+   * Tests attribute exists.
    */
-  public function testAttributeExists(array $test_data, $test_attribute, $expected) {
+  #[DataProvider('providerTestAttributeExists')]
+  public function testAttributeExists(array $test_data, $test_attribute, $expected): void {
     $this->assertSame($expected, AttributeHelper::attributeExists($test_attribute, $test_data));
     $attributes = new Attribute($test_data);
     $this->assertSame($expected, AttributeHelper::attributeExists($test_attribute, $attributes));
@@ -46,30 +52,46 @@ class AttributeHelperTest extends UnitTestCase {
    *   An array of test data each containing an initial attribute collection, an
    *   Attribute object or array to be merged, and the expected result.
    */
-  public function providerTestMergeCollections() {
+  public static function providerTestMergeCollections(): array {
     return [
       [[], ['class' => ['class1']], ['class' => ['class1']]],
       [[], new Attribute(['class' => ['class1']]), ['class' => ['class1']]],
-      [['class' => ['example-class']], ['class' => ['class1']], ['class' => ['example-class', 'class1']]],
-      [['class' => ['example-class']], new Attribute(['class' => ['class1']]), ['class' => ['example-class', 'class1']]],
-      [['class' => ['example-class']], ['id' => 'foo', 'href' => 'bar'], ['class' => ['example-class'], 'id' => 'foo', 'href' => 'bar']],
-      [['class' => ['example-class']], new Attribute(['id' => 'foo', 'href' => 'bar']), ['class' => ['example-class'], 'id' => 'foo', 'href' => 'bar']],
+      [
+        ['class' => ['example-class']],
+        ['class' => ['class1']],
+        ['class' => ['example-class', 'class1']],
+      ],
+      [
+        ['class' => ['example-class']],
+        new Attribute(['class' => ['class1']]),
+        ['class' => ['example-class', 'class1']],
+      ],
+      [
+        ['class' => ['example-class']],
+        ['id' => 'foo', 'href' => 'bar'],
+        ['class' => ['example-class'], 'id' => 'foo', 'href' => 'bar'],
+      ],
+      [
+        ['class' => ['example-class']],
+        new Attribute(['id' => 'foo', 'href' => 'bar']),
+        ['class' => ['example-class'], 'id' => 'foo', 'href' => 'bar'],
+      ],
     ];
   }
 
   /**
-   * @covers ::mergeCollections
-   * @dataProvider providerTestMergeCollections
+   * Tests merge collections.
    */
-  public function testMergeCollections($original, $merge, $expected) {
+  #[DataProvider('providerTestMergeCollections')]
+  public function testMergeCollections($original, $merge, $expected): void {
     $this->assertEquals($expected, AttributeHelper::mergeCollections($original, $merge));
     $this->assertEquals(new Attribute($expected), AttributeHelper::mergeCollections(new Attribute($original), $merge));
   }
 
   /**
-   * @covers ::mergeCollections
+   * Tests merge collections argument exception.
    */
-  public function testMergeCollectionsArgumentException() {
+  public function testMergeCollectionsArgumentException(): void {
     $attributes = new Attribute(['class' => ['example-class']]);
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('Invalid collection argument');

@@ -2,15 +2,14 @@
 
 namespace Drupal\Core\Logger;
 
+use Drupal\Core\Session\AccountInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Defines a factory for logging channels.
  */
-class LoggerChannelFactory implements LoggerChannelFactoryInterface, ContainerAwareInterface {
-  use ContainerAwareTrait;
+class LoggerChannelFactory implements LoggerChannelFactoryInterface {
 
   /**
    * Array of all instantiated logger channels keyed by channel name.
@@ -27,19 +26,30 @@ class LoggerChannelFactory implements LoggerChannelFactoryInterface, ContainerAw
   protected $loggers = [];
 
   /**
+   * Constructs a LoggerChannelFactory.
+   *
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
+   *   (optional) The request stack.
+   * @param \Drupal\Core\Session\AccountInterface $currentUser
+   *   (optional) The current user.
+   */
+  public function __construct(
+    protected RequestStack $requestStack,
+    protected AccountInterface $currentUser,
+  ) {
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function get($channel) {
     if (!isset($this->channels[$channel])) {
       $instance = new LoggerChannel($channel);
 
-      // If we have a container set the request_stack and current_user services
-      // on the channel. It is up to the channel to determine if there is a
-      // current request.
-      if ($this->container) {
-        $instance->setRequestStack($this->container->get('request_stack'));
-        $instance->setCurrentUser($this->container->get('current_user'));
-      }
+      // Set the request_stack and current_user services on the channel.
+      // It is up to the channel to determine if there is a current request.
+      $instance->setRequestStack($this->requestStack);
+      $instance->setCurrentUser($this->currentUser);
 
       // Pass the loggers to the channel.
       $instance->setLoggers($this->loggers);

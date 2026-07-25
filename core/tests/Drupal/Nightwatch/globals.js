@@ -1,6 +1,5 @@
-const { spawn } = require('child_process');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 const mkdirp = require('mkdirp');
 const nightwatchSettings = require('./nightwatch.conf');
 

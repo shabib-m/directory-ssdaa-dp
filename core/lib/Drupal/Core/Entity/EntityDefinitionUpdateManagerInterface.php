@@ -19,9 +19,9 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
  * specified by the current codebase. It also has create/update/delete methods
  * to bring the former up to date with the latter.
  *
- * However, it is not the responsibility of entity last installed schema repository
- * to decide how to report the differences or when to apply each update. This
- * interface is for managing that.
+ * However, it is not the responsibility of entity last installed schema
+ * repository to decide how to report the differences or when to apply each
+ * update. This interface is for managing that.
  *
  * This interface also provides methods to retrieve instances of the definitions
  * to be updated ready to be manipulated. In fact when definitions change in
@@ -170,7 +170,7 @@ interface EntityDefinitionUpdateManagerInterface {
    *   or a Batch API callback. If the entity schema update requires a data
    *   migration, this parameter is mandatory. Defaults to NULL.
    */
-  public function updateFieldableEntityType(EntityTypeInterface $entity_type, array $field_storage_definitions, array &$sandbox = NULL);
+  public function updateFieldableEntityType(EntityTypeInterface $entity_type, array $field_storage_definitions, ?array &$sandbox = NULL);
 
   /**
    * Returns a field storage definition ready to be manipulated.

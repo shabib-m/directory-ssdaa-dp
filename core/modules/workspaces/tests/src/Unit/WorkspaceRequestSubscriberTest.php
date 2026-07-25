@@ -1,35 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workspaces\Unit;
 
-use Drupal\path_alias\AliasManagerInterface;
-use Drupal\Core\Path\CurrentPathStack;
 use Drupal\Core\Routing\CacheableRouteProviderInterface;
 use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\workspaces\EventSubscriber\WorkspaceRequestSubscriber;
 use Drupal\workspaces\WorkspaceInterface;
 use Drupal\workspaces\WorkspaceManagerInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 
 /**
- * @coversDefaultClass \Drupal\workspaces\EventSubscriber\WorkspaceRequestSubscriber
- *
- * @group workspace
+ * Tests Drupal\workspaces\EventSubscriber\WorkspaceRequestSubscriber.
  */
+#[CoversClass(WorkspaceRequestSubscriber::class)]
+#[Group('workspaces')]
 class WorkspaceRequestSubscriberTest extends UnitTestCase {
 
   /**
-   * @var \Drupal\path_alias\AliasManagerInterface
-   */
-  protected $aliasManager;
-
-  /**
-   * @var \Drupal\Core\Path\CurrentPathStack
-   */
-  protected $currentPath;
-
-  /**
+   * The workspace manager.
+   *
    * @var \Drupal\workspaces\WorkspaceManagerInterface
    */
   protected $workspaceManager;
@@ -40,8 +34,6 @@ class WorkspaceRequestSubscriberTest extends UnitTestCase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->aliasManager = $this->prophesize(AliasManagerInterface::class)->reveal();
-    $this->currentPath = $this->prophesize(CurrentPathStack::class)->reveal();
     $this->workspaceManager = $this->prophesize(WorkspaceManagerInterface::class);
 
     $active_workspace = $this->prophesize(WorkspaceInterface::class);
@@ -51,30 +43,30 @@ class WorkspaceRequestSubscriberTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::onKernelRequest
+   * Tests on kernel request with cacheable route provider.
    */
-  public function testOnKernelRequestWithCacheableRouteProvider() {
+  public function testOnKernelRequestWithCacheableRouteProvider(): void {
     $route_provider = $this->prophesize(CacheableRouteProviderInterface::class);
     $route_provider->addExtraCacheKeyPart('workspace', 'test')->shouldBeCalled();
 
     // Check that WorkspaceRequestSubscriber::onKernelRequest() calls
     // addExtraCacheKeyPart() on a route provider that implements
     // CacheableRouteProviderInterface.
-    $workspace_request_subscriber = new WorkspaceRequestSubscriber($this->aliasManager, $this->currentPath, $route_provider->reveal(), $this->workspaceManager->reveal());
+    $workspace_request_subscriber = new WorkspaceRequestSubscriber($route_provider->reveal(), $this->workspaceManager->reveal());
     $event = $this->prophesize(RequestEvent::class)->reveal();
     $this->assertNull($workspace_request_subscriber->onKernelRequest($event));
   }
 
   /**
-   * @covers ::onKernelRequest
+   * Tests on kernel request without cacheable route provider.
    */
-  public function testOnKernelRequestWithoutCacheableRouteProvider() {
+  public function testOnKernelRequestWithoutCacheableRouteProvider(): void {
     $route_provider = $this->prophesize(RouteProviderInterface::class);
 
     // Check that WorkspaceRequestSubscriber::onKernelRequest() doesn't call
     // addExtraCacheKeyPart() on a route provider that does not implement
     // CacheableRouteProviderInterface.
-    $workspace_request_subscriber = new WorkspaceRequestSubscriber($this->aliasManager, $this->currentPath, $route_provider->reveal(), $this->workspaceManager->reveal());
+    $workspace_request_subscriber = new WorkspaceRequestSubscriber($route_provider->reveal(), $this->workspaceManager->reveal());
     $event = $this->prophesize(RequestEvent::class)->reveal();
     $this->assertNull($workspace_request_subscriber->onKernelRequest($event));
   }

@@ -27,9 +27,9 @@ interface FormSubmitterInterface {
    * Button-specific handlers are checked first. If none exist, the function
    * falls back to form-level handlers.
    *
-   * @param $form
+   * @param array $form
    *   An associative array containing the structure of the form.
-   * @param $form_state
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form. If the user submitted the form by clicking
    *   a button with custom handler functions defined, those handlers will be
    *   stored here.
@@ -55,13 +55,13 @@ interface FormSubmitterInterface {
    * And here is an example of how to redirect to 'node/123?foo=bar#baz':
    * @code
    * $form_state->setRedirect('entity.node.canonical',
-   *   array('node' => 123),
-   *   array(
-   *     'query' => array(
+   *   ['node' => 123],
+   *   [
+   *     'query' => [
    *       'foo' => 'bar',
-   *     ),
+   *     ],
    *     'fragment' => 'baz',
-   *   ),
+   *   ],
    * );
    * @endcode
    *
@@ -69,6 +69,8 @@ interface FormSubmitterInterface {
    *   The current state of the form.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse|null
+   *   The HTTP response if the form submission results in a redirect, otherwise
+   *   NULL.
    *
    * @see \Drupal\Core\Form\FormBuilderInterface::processForm()
    * @see \Drupal\Core\Form\FormBuilderInterface::buildForm()

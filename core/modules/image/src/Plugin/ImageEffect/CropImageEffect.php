@@ -2,18 +2,20 @@
 
 namespace Drupal\image\Plugin\ImageEffect;
 
+use Drupal\Component\Utility\Image;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 
 /**
  * Crops an image resource.
- *
- * @ImageEffect(
- *   id = "image_crop",
- *   label = @Translation("Crop"),
- *   description = @Translation("Resizing will make images an exact set of dimensions. This may cause images to be stretched or shrunk disproportionately.")
- * )
  */
+#[ImageEffect(
+  id: "image_crop",
+  label: new TranslatableMarkup("Crop"),
+  description: new TranslatableMarkup("Resizing will make images an exact set of dimensions. This may cause images to be stretched or shrunk disproportionately."),
+)]
 class CropImageEffect extends ResizeImageEffect {
 
   /**
@@ -21,10 +23,15 @@ class CropImageEffect extends ResizeImageEffect {
    */
   public function applyEffect(ImageInterface $image) {
     [$x, $y] = explode('-', $this->configuration['anchor']);
-    $x = image_filter_keyword($x, $image->getWidth(), $this->configuration['width']);
-    $y = image_filter_keyword($y, $image->getHeight(), $this->configuration['height']);
+    $x = Image::getKeywordOffset($x, $image->getWidth(), (int) $this->configuration['width']);
+    $y = Image::getKeywordOffset($y, $image->getHeight(), (int) $this->configuration['height']);
     if (!$image->crop($x, $y, $this->configuration['width'], $this->configuration['height'])) {
-      $this->logger->error('Image crop failed using the %toolkit toolkit on %path (%mimetype, %dimensions)', ['%toolkit' => $image->getToolkitId(), '%path' => $image->getSource(), '%mimetype' => $image->getMimeType(), '%dimensions' => $image->getWidth() . 'x' . $image->getHeight()]);
+      $this->logger->error('Image crop failed using the %toolkit toolkit on %path (%mimetype, %dimensions)', [
+        '%toolkit' => $image->getToolkitId(),
+        '%path' => $image->getSource(),
+        '%mimetype' => $image->getMimeType(),
+        '%dimensions' => $image->getWidth() . 'x' . $image->getHeight(),
+      ]);
       return FALSE;
     }
     return TRUE;

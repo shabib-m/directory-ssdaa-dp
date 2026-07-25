@@ -2,34 +2,57 @@
 
 namespace Drupal\file\Plugin\Field\FieldType;
 
-use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Render\PlainTextOutput;
+use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Utility\Environment;
 use Drupal\Component\Utility\Random;
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\file\Validation\FileValidatorSettingsTrait;
 
 /**
  * Plugin implementation of the 'file' field type.
- *
- * @FieldType(
- *   id = "file",
- *   label = @Translation("File"),
- *   description = @Translation("This field stores the ID of a file as an integer value."),
- *   category = @Translation("Reference"),
- *   default_widget = "file_generic",
- *   default_formatter = "file_default",
- *   list_class = "\Drupal\file\Plugin\Field\FieldType\FileFieldItemList",
- *   constraints = {"ReferenceAccess" = {}, "FileValidation" = {}}
- * )
  */
+#[FieldType(
+  id: "file",
+  label: new TranslatableMarkup("File"),
+  description: [
+    new TranslatableMarkup("Downloadable files"),
+    new TranslatableMarkup("Configure allowed file extensions, maximum upload size, and storage location"),
+    new TranslatableMarkup("Examples: document (pdf, txt), audio (mp3), video (avi, mov), downloadable image (jpeg, png, webp, gif), etc."),
+  ],
+  category: "file_upload",
+  default_widget: "file_generic",
+  default_formatter: "file_default",
+  list_class: FileFieldItemList::class,
+  constraints: ["ReferenceAccess" => [], "FileValidation" => []],
+  column_groups: [
+    'target_id' => [
+      'label' => new TranslatableMarkup('File'),
+      'translatable' => TRUE,
+    ],
+    'display' => [
+      'label' => new TranslatableMarkup('Display'),
+      'translatable' => TRUE,
+    ],
+    'description' => [
+      'label' => new TranslatableMarkup('Description'),
+      'translatable' => TRUE,
+    ],
+  ],
+)]
 class FileItem extends EntityReferenceItem {
+
+  use FileValidatorSettingsTrait;
 
   /**
    * {@inheritdoc}
@@ -135,7 +158,7 @@ class FileItem extends EntityReferenceItem {
       '#description' => $this->t('This setting only has an effect if the display option is enabled.'),
       '#states' => [
         'visible' => [
-          ':input[name="settings[display_field]"]' => ['checked' => TRUE],
+          ':input[name="field_storage[subform][settings][display_field]"]' => ['checked' => TRUE],
         ],
       ],
     ];
@@ -188,7 +211,9 @@ class FileItem extends EntityReferenceItem {
       '#type' => 'textfield',
       '#title' => $this->t('Maximum upload size'),
       '#default_value' => $settings['max_filesize'],
-      '#description' => $this->t('Enter a value like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes) in order to restrict the allowed file size. If left empty the file sizes could be limited only by PHP\'s maximum post and file upload sizes (current limit <strong>%limit</strong>).', ['%limit' => format_size(Environment::getUploadMaxSize())]),
+      '#description' => $this->t('Enter a value like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes) in order to restrict the allowed file size. If left empty the file sizes could be limited only by PHP\'s maximum post and file upload sizes (current limit <strong>%limit</strong>).', [
+        '%limit' => ByteSizeMarkup::create(Environment::getUploadMaxSize()),
+      ]),
       '#size' => 10,
       '#element_validate' => [[static::class, 'validateMaxFilesize']],
       '#weight' => 5,
@@ -209,8 +234,8 @@ class FileItem extends EntityReferenceItem {
    * Form API callback.
    *
    * Removes slashes from the beginning and end of the destination value and
-   * ensures that the file directory path is not included at the beginning of the
-   * value.
+   * ensures that the file directory path is not included at the beginning of
+   * the value.
    *
    * This function is assigned as an #element_validate callback in
    * fieldSettingsForm().
@@ -229,7 +254,8 @@ class FileItem extends EntityReferenceItem {
    *
    * This doubles as a convenience clean-up function and a validation routine.
    * Commas are allowed by the end-user, but ultimately the value will be stored
-   * as a space-separated list for compatibility with file_validate_extensions().
+   * as a space-separated list for compatibility with the 'FileExtension'
+   * constraint.
    */
   public static function validateExtensions($element, FormStateInterface $form_state) {
     if (!empty($element['#value'])) {
@@ -248,7 +274,10 @@ class FileItem extends EntityReferenceItem {
       if (!in_array('txt', $extension_array, TRUE) && !\Drupal::config('system.file')->get('allow_insecure_uploads')) {
         foreach ($extension_array as $extension) {
           if (preg_match(FileSystemInterface::INSECURE_EXTENSION_REGEX, 'test.' . $extension)) {
-            $form_state->setError($element, new TranslatableMarkup('Add %txt_extension to the list of allowed extensions to securely upload files with a %extension extension. The %txt_extension extension will then be added automatically.', ['%extension' => $extension, '%txt_extension' => 'txt']));
+            $form_state->setError($element, new TranslatableMarkup('Add %txt_extension to the list of allowed extensions to securely upload files with a %extension extension. The %txt_extension extension will then be added automatically.', [
+              '%extension' => $extension,
+              '%txt_extension' => 'txt',
+            ]));
 
             break;
           }
@@ -321,24 +350,7 @@ class FileItem extends EntityReferenceItem {
    *   element's '#upload_validators' property.
    */
   public function getUploadValidators() {
-    $validators = [];
-    $settings = $this->getSettings();
-
-    // Cap the upload size according to the PHP limit.
-    $max_filesize = Bytes::toNumber(Environment::getUploadMaxSize());
-    if (!empty($settings['max_filesize'])) {
-      $max_filesize = min($max_filesize, Bytes::toNumber($settings['max_filesize']));
-    }
-
-    // There is always a file size limit due to the PHP server limit.
-    $validators['file_validate_size'] = [$max_filesize];
-
-    // Add the extension check if necessary.
-    if (!empty($settings['file_extensions'])) {
-      $validators['file_validate_extensions'] = [$settings['file_extensions']];
-    }
-
-    return $validators;
+    return $this->getFileUploadValidators($this->getSettings());
   }
 
   /**
@@ -352,12 +364,22 @@ class FileItem extends EntityReferenceItem {
     $dirname = static::doGetUploadLocation($settings);
     \Drupal::service('file_system')->prepareDirectory($dirname, FileSystemInterface::CREATE_DIRECTORY);
 
+    // Ensure directory ends with a slash.
+    $dirname .= str_ends_with($dirname, '/') ? '' : '/';
+
+    // Determine which extension to use when generating.
+    $extension = 'txt';
+    if (!empty($settings['file_extensions'])) {
+      $extensions = explode(' ', $settings['file_extensions']);
+      $extension = array_rand(array_flip($extensions), 1);
+    }
+
     // Generate a file entity.
-    $destination = $dirname . '/' . $random->name(10, TRUE) . '.txt';
+    $destination = $dirname . $random->name(10, TRUE) . '.' . $extension;
     $data = $random->paragraphs(3);
     /** @var \Drupal\file\FileRepositoryInterface $file_repository */
     $file_repository = \Drupal::service('file.repository');
-    $file = $file_repository->writeData($data, $destination, FileSystemInterface::EXISTS_ERROR);
+    $file = $file_repository->writeData($data, $destination, FileExists::Error);
     $values = [
       'target_id' => $file->id(),
       'display' => (int) $settings['display_default'],

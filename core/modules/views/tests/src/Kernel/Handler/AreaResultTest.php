@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the result area handler.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\area\Result
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class AreaResultTest extends ViewsKernelTestBase {
 
   /**
@@ -21,7 +26,7 @@ class AreaResultTest extends ViewsKernelTestBase {
   /**
    * Tests the results area handler.
    */
-  public function testResult() {
+  public function testResult(): void {
     $view = Views::getView('test_area_result');
     $view->setDisplay('default');
     $this->executeView($view);
@@ -37,7 +42,7 @@ class AreaResultTest extends ViewsKernelTestBase {
   /**
    * Tests the results area handler.
    */
-  public function testResultEmpty() {
+  public function testResultEmpty(): void {
     $view = Views::getView('test_area_result');
 
     // Test that the area is displayed if we have checked the empty checkbox.

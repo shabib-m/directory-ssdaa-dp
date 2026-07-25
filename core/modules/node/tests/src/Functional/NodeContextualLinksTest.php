@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\node\Entity\Node;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests views contextual links on nodes.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeContextualLinksTest extends NodeTestBase {
 
   /**
@@ -26,7 +30,7 @@ class NodeContextualLinksTest extends NodeTestBase {
   /**
    * Tests contextual links.
    */
-  public function testNodeContextualLinks() {
+  public function testNodeContextualLinks(): void {
     // Create a node item.
     $node = Node::create([
       'type' => 'article',

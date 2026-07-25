@@ -1,16 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config_translation\Kernel\Migrate\d6;
 
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Upgrade i18n maintenance variables to system.*.yml.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateSystemMaintenanceTranslationTest extends MigrateDrupal6TestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = [
     'language',
     'config_translation',
@@ -31,7 +38,7 @@ class MigrateSystemMaintenanceTranslationTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of system variables to system.maintenance.yml.
    */
-  public function testSystemMaintenance() {
+  public function testSystemMaintenance(): void {
     $config = \Drupal::service('language_manager')->getLanguageConfigOverride('fr', 'system.maintenance');
     $this->assertSame('fr - Drupal is currently under maintenance. We should be back shortly. Thank you for your patience.', $config->get('message'));
   }

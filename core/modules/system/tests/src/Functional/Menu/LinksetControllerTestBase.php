@@ -26,8 +26,6 @@ use GuzzleHttp\RequestOptions;
  *
  * For a full list, refer to the methods of this class.
  *
- * @group decoupled_menus
- *
  * @see https://tools.ietf.org/html/draft-ietf-httpapi-linkset-00
  */
 abstract class LinksetControllerTestBase extends BrowserTestBase {
@@ -69,7 +67,7 @@ abstract class LinksetControllerTestBase extends BrowserTestBase {
    * @return \GuzzleHttp\Psr7\Response
    *   The response object.
    */
-  protected function doRequest(string $method, Url $url, $expected_status = 200, UserInterface $account = NULL): Response {
+  protected function doRequest(string $method, Url $url, $expected_status = 200, ?UserInterface $account = NULL): Response {
     $request_options = [];
     if (!is_null($account)) {
       $credentials = $account->name->value . ':' . $account->passRaw;
@@ -95,7 +93,7 @@ abstract class LinksetControllerTestBase extends BrowserTestBase {
    */
   protected function assertDrupalResponseCacheability($expect_cache, CacheableDependencyInterface $expected_metadata, Response $response) {
     $this->assertTrue(in_array($expect_cache, ['HIT', 'MISS', FALSE], TRUE), 'Cache is HIT, MISS, FALSE.');
-    $this->assertSame($expected_metadata->getCacheContexts(), explode(' ', $response->getHeaderLine('X-Drupal-Cache-Contexts')));
+    $this->assertSame(\Drupal::service('cache_contexts_manager')->optimizeTokens($expected_metadata->getCacheContexts()), explode(' ', $response->getHeaderLine('X-Drupal-Cache-Contexts')));
     $this->assertSame($expected_metadata->getCacheTags(), explode(' ', $response->getHeaderLine('X-Drupal-Cache-Tags')));
     $max_age_message = $expected_metadata->getCacheMaxAge();
     if ($max_age_message === 0) {
@@ -144,7 +142,7 @@ abstract class LinksetControllerTestBase extends BrowserTestBase {
   protected function enableEndpoint(bool $enabled) {
     $this->config('system.feature_flags')
       ->set('linkset_endpoint', $enabled)
-      ->save(TRUE);
+      ->save();
     // Using rebuildIfNeeded here to implicitly test that router is only rebuilt
     // when necessary.
     \Drupal::service('router.builder')->rebuildIfNeeded();

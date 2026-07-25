@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Plugin;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the HTML list style plugin.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\style\HtmlList
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class StyleHtmlListTest extends ViewsKernelTestBase {
 
   /**
@@ -23,10 +28,10 @@ class StyleHtmlListTest extends ViewsKernelTestBase {
   /**
    * Make sure that the HTML list style markup is correct.
    */
-  public function testDefaultRowClasses() {
+  public function testDefaultRowClasses(): void {
     $view = Views::getView('test_style_html_list');
     $output = $view->preview();
-    $output = \Drupal::service('renderer')->renderRoot($output);
+    $output = (string) \Drupal::service('renderer')->renderRoot($output);
 
     // Check that an empty class attribute is not added if the wrapper class is
     // not set.
@@ -41,7 +46,7 @@ class StyleHtmlListTest extends ViewsKernelTestBase {
     $view->style_plugin->options['wrapper_class'] = 'wrapper-class';
 
     $output = $view->preview();
-    $output = \Drupal::service('renderer')->renderRoot($output);
+    $output = (string) \Drupal::service('renderer')->renderRoot($output);
 
     // Check that class attribute is present if the wrapper class is set.
     $this->assertStringContainsString('<div class="wrapper-class">', $output, 'Class is added to DIV');

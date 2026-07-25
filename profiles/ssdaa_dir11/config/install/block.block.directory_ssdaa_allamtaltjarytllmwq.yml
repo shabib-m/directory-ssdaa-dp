@@ -1,0 +1,23 @@
+uuid: f948dc24-dc42-4acb-a893-e711214bba17
+langcode: ar
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - directory_ssdaa
+id: directory_ssdaa_allamtaltjarytllmwq
+theme: directory_ssdaa
+region: header
+weight: -2
+provider: null
+plugin: system_branding_block
+settings:
+  id: system_branding_block
+  label: 'العلامة التجارية للموقع'
+  label_display: '0'
+  provider: system
+  use_site_logo: true
+  use_site_name: true
+  use_site_slogan: true
+visibility: {  }

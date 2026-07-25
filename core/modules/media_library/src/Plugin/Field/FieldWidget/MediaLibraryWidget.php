@@ -12,6 +12,7 @@ use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -31,19 +32,16 @@ use Symfony\Component\Validator\ConstraintViolationInterface;
 /**
  * Plugin implementation of the 'media_library_widget' widget.
  *
- * @FieldWidget(
- *   id = "media_library_widget",
- *   label = @Translation("Media library"),
- *   description = @Translation("Allows you to select items from the media library."),
- *   field_types = {
- *     "entity_reference"
- *   },
- *   multiple_values = TRUE,
- * )
- *
  * @internal
  *   Plugin classes are internal.
  */
+#[FieldWidget(
+  id: 'media_library_widget',
+  label: new TranslatableMarkup('Media library'),
+  description: new TranslatableMarkup('Allows you to select items from the media library.'),
+  field_types: ['entity_reference'],
+  multiple_values: TRUE,
+)]
 class MediaLibraryWidget extends WidgetBase implements TrustedCallbackInterface {
 
   /**
@@ -71,7 +69,7 @@ class MediaLibraryWidget extends WidgetBase implements TrustedCallbackInterface 
    * Constructs a MediaLibraryWidget widget.
    *
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
@@ -527,9 +525,6 @@ class MediaLibraryWidget extends WidgetBase implements TrustedCallbackInterface 
           'type' => 'throbber',
           'message' => $this->t('Opening media library.'),
         ],
-        // The AJAX system automatically moves focus to the first tabbable
-        // element of the modal, so we need to disable refocus on the button.
-        'disable-refocus' => TRUE,
       ],
       // Allow the media library to be opened even if there are form errors.
       '#limit_validation_errors' => [],
@@ -632,7 +627,7 @@ class MediaLibraryWidget extends WidgetBase implements TrustedCallbackInterface 
   protected function getNoMediaTypesAvailableMessage() {
     $entity_type_id = $this->fieldDefinition->getTargetEntityTypeId();
 
-    $default_message = $this->t('There are no allowed media types configured for this field. Please contact the site administrator.');
+    $default_message = $this->t('There are no allowed media types configured for this field. Contact the site administrator.');
 
     // Show the default message if the user does not have the permissions to
     // configure the fields for the entity type.
@@ -857,10 +852,7 @@ class MediaLibraryWidget extends WidgetBase implements TrustedCallbackInterface 
     }
 
     // Validate that each selected media is of an allowed bundle.
-    $all_bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo('media');
-    $bundle_labels = array_map(function ($bundle) use ($all_bundles) {
-      return $all_bundles[$bundle]['label'];
-    }, $element['#target_bundles']);
+    $bundle_labels = array_intersect_key(\Drupal::service('entity_type.bundle.info')->getBundleLabels('media'), $element['#target_bundles']);
     foreach ($media as $media_item) {
       if ($element['#target_bundles'] && !in_array($media_item->bundle(), $element['#target_bundles'], TRUE)) {
         $form_state->setError($element, new TranslatableMarkup('The media item "@label" is not of an accepted type. Allowed types: @types', [
@@ -928,8 +920,8 @@ class MediaLibraryWidget extends WidgetBase implements TrustedCallbackInterface 
    */
   protected static function getNewMediaItems(array $element, FormStateInterface $form_state) {
     // Get the new media IDs passed to our hidden button. We need to use the
-    // actual user input, since when #limit_validation_errors is used, the
-    // unvalidated user input is not added to the form state.
+    // actual user input, since when #limit_validation_errors is used, any
+    // non validated user input is not added to the form state.
     // @see FormValidator::handleErrorsWithLimitedValidation()
     $values = $form_state->getUserInput();
     $path = $element['#parents'];
@@ -939,7 +931,6 @@ class MediaLibraryWidget extends WidgetBase implements TrustedCallbackInterface 
       $ids = explode(',', $value['media_library_selection']);
       $ids = array_filter($ids, 'is_numeric');
       if (!empty($ids)) {
-        /** @var \Drupal\media\MediaInterface[] $media */
         return Media::loadMultiple($ids);
       }
     }
@@ -964,7 +955,7 @@ class MediaLibraryWidget extends WidgetBase implements TrustedCallbackInterface 
     // Default to using the current selection if the form is new.
     $path = $element['#parents'];
     // We need to use the actual user input, since when #limit_validation_errors
-    // is used, the unvalidated user input is not added to the form state.
+    // is used, the non validated user input is not added to the form state.
     // @see FormValidator::handleErrorsWithLimitedValidation()
     $values = NestedArray::getValue($form_state->getUserInput(), $path);
     $selection = $values['selection'] ?? [];

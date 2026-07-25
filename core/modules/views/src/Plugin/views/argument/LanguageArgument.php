@@ -2,31 +2,32 @@
 
 namespace Drupal\views\Plugin\views\argument;
 
+use Drupal\views\Attribute\ViewsArgument;
+
 /**
  * Defines an argument handler to accept a language.
  *
  * @ingroup views_argument_handlers
- *
- * @ViewsArgument("language")
- */
+  */
+#[ViewsArgument(
+  id: 'language',
+)]
 class LanguageArgument extends ArgumentPluginBase {
 
   /**
-   * Overrides \Drupal\views\Plugin\views\argument\ArgumentPluginBase::summaryName().
-   *
-   * Gets the user-friendly version of the language name.
+   * {@inheritdoc}
    */
   public function summaryName($data) {
+    // Gets the user-friendly version of the language name.
     return $this->language($data->{$this->name_alias});
   }
 
   /**
-   * Overrides \Drupal\views\Plugin\views\argument\ArgumentPluginBase::title().
-   *
-   * Gets the user friendly version of the language name for display as a
-   * title placeholder.
+   * {@inheritdoc}
    */
   public function title() {
+    // Gets the user friendly version of the language name for display as a
+    // title placeholder.
     return $this->language($this->argument);
   }
 

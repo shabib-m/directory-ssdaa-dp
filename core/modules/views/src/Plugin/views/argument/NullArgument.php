@@ -3,16 +3,21 @@
 namespace Drupal\views\Plugin\views\argument;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsArgument;
 
 /**
  * Argument handler that ignores the argument.
  *
  * @ingroup views_argument_handlers
- *
- * @ViewsArgument("null")
- */
+  */
+#[ViewsArgument(
+  id: 'null',
+)]
 class NullArgument extends ArgumentPluginBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
     $options['must_not_be'] = ['default' => FALSE];

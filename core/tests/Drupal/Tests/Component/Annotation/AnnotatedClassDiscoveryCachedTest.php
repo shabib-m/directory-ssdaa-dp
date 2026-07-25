@@ -1,16 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Annotation;
 
 use Drupal\Component\Annotation\Plugin\Discovery\AnnotatedClassDiscovery;
 use Drupal\Component\FileCache\FileCacheFactory;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @coversDefaultClass \Drupal\Component\Annotation\Plugin\Discovery\AnnotatedClassDiscovery
- * @group Annotation
- * @runTestsInSeparateProcesses
+ * Tests Drupal\Component\Annotation\Plugin\Discovery\AnnotatedClassDiscovery.
  */
+#[CoversClass(AnnotatedClassDiscovery::class)]
+#[Group('Annotation')]
+#[RunTestsInSeparateProcesses]
 class AnnotatedClassDiscoveryCachedTest extends TestCase {
 
   /**
@@ -27,10 +33,8 @@ class AnnotatedClassDiscoveryCachedTest extends TestCase {
 
   /**
    * Tests that getDefinitions() retrieves the file cache correctly.
-   *
-   * @covers ::getDefinitions
    */
-  public function testGetDefinitions() {
+  public function testGetDefinitions(): void {
     // Path to the classes which we'll discover and parse annotation.
     $discovery_path = __DIR__ . '/Fixtures';
     // File path that should be discovered within that directory.

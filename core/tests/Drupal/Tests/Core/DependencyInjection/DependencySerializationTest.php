@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\DependencyInjection\DependencySerializationTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\Core\DependencyInjection;
 
@@ -11,20 +8,24 @@ use Drupal\Component\DependencyInjection\ReverseContainer;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Test\TestKernel;
 use Drupal\Tests\UnitTestCase;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * @coversDefaultClass \Drupal\Core\DependencyInjection\DependencySerializationTrait
- * @group DependencyInjection
+ * Tests Drupal\Core\DependencyInjection\DependencySerializationTrait.
  */
+#[CoversClass(DependencySerializationTrait::class)]
+#[Group('DependencyInjection')]
 class DependencySerializationTest extends UnitTestCase {
 
   /**
-   * @covers ::__sleep
-   * @covers ::__wakeup
+   * Tests serialization.
+   *
+   * @legacy-covers ::__sleep
+   * @legacy-covers ::__wakeup
    */
-  public function testSerialization() {
+  public function testSerialization(): void {
     // Create a pseudo service and dependency injected object.
     $service = new \stdClass();
     $container = TestKernel::setContainerWithKernel();
@@ -49,7 +50,7 @@ class DependencySerializationTest extends UnitTestCase {
 /**
  * Defines a test class which has a single service as dependency.
  */
-class DependencySerializationTestDummy implements ContainerAwareInterface {
+class DependencySerializationTestDummy {
 
   use DependencySerializationTrait;
 
@@ -79,11 +80,8 @@ class DependencySerializationTestDummy implements ContainerAwareInterface {
 
   /**
    * {@inheritdoc}
-   *
-   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
-   * @return void
    */
-  public function setContainer(ContainerInterface $container = NULL) {
+  public function setContainer(?ContainerInterface $container): void {
     $this->container = $container;
   }
 

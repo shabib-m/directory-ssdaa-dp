@@ -1,12 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\redirect\Plugin\migrate\process\d7\PathRedirect.
- */
-
 namespace Drupal\redirect\Plugin\migrate\process\d7;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
@@ -16,6 +12,7 @@ use Drupal\migrate\Row;
  *   id = "d7_path_redirect"
  * )
  */
+#[MigrateProcess(id: 'd7_path_redirect')]
 class PathRedirect extends ProcessPluginBase {
 
   /**

@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Render;
 
+use Drupal\Core\Render\Renderer;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+
 /**
- * @coversDefaultClass \Drupal\Core\Render\Renderer
- * @group Render
+ * Tests Drupal\Core\Render\Renderer.
  */
+#[CoversClass(Renderer::class)]
+#[Group('Render')]
 class RendererRecursionTest extends RendererTestBase {
 
-  protected function setUpRenderRecursionComplexElements() {
-    $complex_child_markup = '<p>Imagine this is a render array for an entity.</p>';
+  protected function setUpRenderRecursionComplexElements(): array {
     $parent_markup = '<p>Rendered!</p>';
 
     $complex_child_template = [
@@ -18,27 +24,30 @@ class RendererRecursionTest extends RendererTestBase {
           'test:complex_child',
         ],
       ],
-      '#lazy_builder' => ['Drupal\Tests\Core\Render\PlaceholdersTest::callback', [$this->getRandomGenerator()->string()]],
+      '#lazy_builder' => [
+        'Drupal\Tests\Core\Render\PlaceholdersTest::callback',
+        [$this->getRandomGenerator()->string()],
+      ],
       '#create_placeholder' => TRUE,
     ];
 
-    return [$complex_child_markup, $parent_markup, $complex_child_template];
+    return [$parent_markup, $complex_child_template];
   }
 
   /**
-   * ::renderRoot() may not be called inside of another ::renderRoot() call.
+   * Tests that renderRoot() may not be called recursively.
    *
-   * @covers ::renderRoot
-   * @covers ::render
-   * @covers ::doRender
+   * @legacy-covers ::renderRoot
+   * @legacy-covers ::render
+   * @legacy-covers ::doRender
    */
-  public function testRenderRecursionWithNestedRenderRoot() {
-    [$complex_child_markup, $parent_markup, $complex_child_template] = $this->setUpRenderRecursionComplexElements();
+  public function testRenderRecursionWithNestedRenderRoot(): void {
+    [$parent_markup, $complex_child_template] = $this->setUpRenderRecursionComplexElements();
     $renderer = $this->renderer;
     $this->setUpRequest();
 
     $complex_child = $complex_child_template;
-    $callable = function () use ($renderer, $complex_child) {
+    $callable = function () use ($renderer, $complex_child): void {
       $this->expectException(\LogicException::class);
       $renderer->renderRoot($complex_child);
     };
@@ -55,22 +64,22 @@ class RendererRecursionTest extends RendererTestBase {
   }
 
   /**
-   * ::render() may be called from anywhere.
+   * Tests that render() may be called from anywhere.
    *
    * Including from inside of another ::renderRoot() call. Bubbling must be
    * performed.
    *
-   * @covers ::renderRoot
-   * @covers ::render
-   * @covers ::doRender
+   * @legacy-covers ::renderRoot
+   * @legacy-covers ::render
+   * @legacy-covers ::doRender
    */
-  public function testRenderRecursionWithNestedRender() {
-    [$complex_child_markup, $parent_markup, $complex_child_template] = $this->setUpRenderRecursionComplexElements();
+  public function testRenderRecursionWithNestedRender(): void {
+    [$parent_markup, $complex_child_template] = $this->setUpRenderRecursionComplexElements();
     $renderer = $this->renderer;
     $this->setUpRequest();
 
     $callable = function ($markup) {
-      $this->assertStringStartsWith('<drupal-render-placeholder', $markup, 'Rendered complex child output as expected, without the placeholder replaced, i.e. with just the placeholder.');
+      $this->assertStringStartsWith('<drupal-render-placeholder', (string) $markup, 'Rendered complex child output as expected, without the placeholder replaced, i.e. with just the placeholder.');
       return $markup;
     };
 
@@ -91,22 +100,20 @@ class RendererRecursionTest extends RendererTestBase {
   }
 
   /**
-   * ::renderPlain() may be called from anywhere.
+   * Tests that renderRoot() can be called from anywhere including recursively.
    *
-   * Including from inside of another ::renderRoot() call.
-   *
-   * @covers ::renderRoot
-   * @covers ::renderPlain
+   * @legacy-covers ::renderRoot
+   * @legacy-covers ::renderInIsolation
    */
-  public function testRenderRecursionWithNestedRenderPlain() {
-    [$complex_child_markup, $parent_markup, $complex_child_template] = $this->setUpRenderRecursionComplexElements();
+  public function testRenderRecursionWithNestedRenderInIsolation(): void {
+    [$parent_markup, $complex_child_template] = $this->setUpRenderRecursionComplexElements();
     $renderer = $this->renderer;
     $this->setUpRequest();
 
     $complex_child = $complex_child_template;
 
     $callable = function ($elements) use ($renderer, $complex_child) {
-      $elements['#markup'] = $renderer->renderPlain($complex_child);
+      $elements['#markup'] = $renderer->renderInIsolation($complex_child);
       $this->assertEquals('<p>This is a rendered placeholder!</p>', $elements['#markup'], 'Rendered complex child output as expected, with the placeholder replaced.');
       return $elements;
     };

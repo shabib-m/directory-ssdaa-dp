@@ -1,25 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Common;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Performs integration tests on \Drupal::service('renderer')->render().
- *
- * @group Common
  */
+#[Group('Common')]
+#[RunTestsInSeparateProcesses]
 class RenderWebTest extends BrowserTestBase {
 
   use AssertPageCacheContextsAndTagsTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['common_test'];
 
@@ -31,10 +33,10 @@ class RenderWebTest extends BrowserTestBase {
   /**
    * Asserts the cache context for the wrapper format is always present.
    */
-  public function testWrapperFormatCacheContext() {
+  public function testWrapperFormatCacheContext(): void {
     $this->drupalGet('common-test/type-link-active-class');
     $this->assertStringStartsWith("<!DOCTYPE html>\n<html", $this->getSession()->getPage()->getContent());
-    $this->assertSession()->responseHeaderEquals('Content-Type', 'text/html; charset=UTF-8');
+    $this->assertSession()->responseHeaderEquals('Content-Type', 'text/html; charset=utf-8');
     $this->assertSession()->titleEquals('Test active link class | Drupal');
     $this->assertCacheContext('url.query_args:' . MainContentViewSubscriber::WRAPPER_FORMAT);
 

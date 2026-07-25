@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\responsive_image\Functional;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\responsive_image\Entity\ResponsiveImageStyle;
 use Drupal\Tests\views\Functional\ViewTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the integration of responsive image with Views.
- *
- * @group responsive_image
  */
+#[Group('responsive_image')]
+#[RunTestsInSeparateProcesses]
 class ViewsIntegrationTest extends ViewTestBase {
 
   /**
@@ -41,6 +45,8 @@ class ViewsIntegrationTest extends ViewTestBase {
 
   /**
    * The test views to enable.
+   *
+   * @var string[]
    */
   public static $testViews = ['entity_test_row'];
 
@@ -93,7 +99,7 @@ class ViewsIntegrationTest extends ViewTestBase {
   /**
    * Tests integration with Views.
    */
-  public function testViewsAddResponsiveImageField() {
+  public function testViewsAddResponsiveImageField(): void {
     // Add the image field to the View.
     $this->drupalGet('admin/structure/views/nojs/add-handler/entity_test_row/default/field');
     $this->drupalGet('admin/structure/views/nojs/add-handler/entity_test_row/default/field');

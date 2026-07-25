@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Unit;
 
-use Drupal\views\ViewExecutable;
 use Drupal\Tests\UnitTestCase;
+use Drupal\views\ViewExecutable;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests that list of plugin is correct.
- *
- * @group views
  */
+#[Group('views')]
 class PluginTypeListTest extends UnitTestCase {
 
   /**
    * Tests the plugins list is correct.
    */
-  public function testPluginList() {
+  public function testPluginList(): void {
     $plugin_list = [
       'access',
       'area',

@@ -1,20 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 use Drupal\KernelTests\KernelTestBase;
 
-// cSpell:ignore mymodule mydriver
-
 /**
  * Base class for driver specific kernel tests.
  *
  * Driver specific tests should be created in the
- * \Drupal\Tests\mymodule\Kernel\mydriver namespace, and their execution will
- * only occur when the database driver of the SUT is provided by 'mymodule' and
- * named 'mydriver'.
+ * \Drupal\Tests\my_module\Kernel\my_driver namespace, and their execution will
+ * only occur when the database driver of the SUT is provided by 'my_module' and
+ * named 'my_driver'.
  */
 abstract class DriverSpecificKernelTestBase extends KernelTestBase {
 
@@ -30,7 +30,7 @@ abstract class DriverSpecificKernelTestBase extends KernelTestBase {
     // Find the current SUT database driver from the connection info. If that
     // is not the one the test requires, skip before test database
     // initialization so to save cycles.
-    $this->root = static::getDrupalRoot();
+    chdir($this->root);
     $connectionInfo = $this->getDatabaseConnectionInfo();
     $test_class_parts = explode('\\', get_class($this));
     $expected_provider = $test_class_parts[2] ?? '';

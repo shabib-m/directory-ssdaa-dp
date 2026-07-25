@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media_library\FunctionalJavascript;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the views in the media library widget.
- *
- * @group media_library
  */
+#[Group('media_library')]
+#[RunTestsInSeparateProcesses]
 class WidgetViewsTest extends MediaLibraryTestBase {
 
   /**
@@ -70,7 +75,7 @@ class WidgetViewsTest extends MediaLibraryTestBase {
   /**
    * Tests that the views in the Media library's widget work as expected.
    */
-  public function testWidgetViews() {
+  public function testWidgetViews(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -114,7 +119,25 @@ class WidgetViewsTest extends MediaLibraryTestBase {
     $assert_session->pageTextContains('Bear');
     $assert_session->pageTextNotContains('Turtle');
 
-    // Assert the exposed filters can be applied.
+    // Assert the exposed filters can be applied and page is reset from second
+    // page.
+    $page->clickLink('Next page');
+    $this->waitForElementTextContains('.js-media-library-view .js-pager__items > li:nth-of-type(2)', 'Page 2');
+    $page->fillField('Name', 'Bear');
+    $page->pressButton('Apply filters');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->pageTextNotContains('Dog');
+    $assert_session->pageTextContains('Bear');
+    $assert_session->pageTextNotContains('Turtle');
+
+    // Test clearing the filters.
+    $page->fillField('Name', '');
+    $page->pressButton('Apply filters');
+    $assert_session->waitForLink('Next page');
+    $page->clickLink('Next page');
+    $this->waitForElementTextContains('.js-media-library-view .js-pager__items > li:nth-of-type(2)', 'Page 2');
+
+    // Assert the exposed filters are persisted when changing display.
     $page->fillField('Name', 'Dog');
     $page->pressButton('Apply filters');
     $assert_session->assertWaitOnAjaxRequest();
@@ -125,7 +148,6 @@ class WidgetViewsTest extends MediaLibraryTestBase {
     $assert_session->linkExists('Table');
     $this->switchToMediaLibraryGrid();
 
-    // Assert the exposed filters are persisted when changing display.
     $this->assertSame('Dog', $page->findField('Name')->getValue());
     $assert_session->pageTextContains('Dog');
     $assert_session->pageTextNotContains('Crocodile');

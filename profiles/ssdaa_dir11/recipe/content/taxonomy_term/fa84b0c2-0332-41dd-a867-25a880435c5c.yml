@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: fa84b0c2-0332-41dd-a867-25a880435c5c
+  bundle: country
+  default_langcode: ar
+  depends:
+    941f2e14-2b79-44a2-9da1-6fa14b7001e4: file
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: قطر
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      target_id: 0
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field__lm_aldwlt:
+    -
+      entity: 941f2e14-2b79-44a2-9da1-6fa14b7001e4
+      alt: ''
+      title: ''
+      width: 96
+      height: 96
+  field_sndwq_aldwl:
+    -
+      value: false

@@ -1,18 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Functional;
 
-use Drupal\Core\Url;
-use Drupal\Tests\BrowserTestBase;
-use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\content_translation_test\Entity\EntityTestTranslatableNoUISkip;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
+use Drupal\entity_test\Entity\EntityTestMul;
+use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests whether canonical link tags are present for content entities.
- *
- * @group content_translation
  */
+#[Group('content_translation')]
+#[RunTestsInSeparateProcesses]
 class ContentTranslationLinkTagTest extends BrowserTestBase {
 
   /**
@@ -68,7 +73,7 @@ class ContentTranslationLinkTagTest extends BrowserTestBase {
    * @return \Drupal\Core\Entity\EntityInterface
    *   An entity with translations.
    */
-  protected function createTranslatableEntity() {
+  protected function createTranslatableEntity(): EntityInterface {
     $entity = EntityTestMul::create(['label' => $this->randomString()]);
 
     // Create translations for non default languages.
@@ -83,7 +88,7 @@ class ContentTranslationLinkTagTest extends BrowserTestBase {
   /**
    * Tests alternate link tag found for entity types with canonical links.
    */
-  public function testCanonicalAlternateTags() {
+  public function testCanonicalAlternateTags(): void {
     /** @var \Drupal\Core\Language\LanguageManagerInterface $languageManager */
     $languageManager = $this->container->get('language_manager');
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager */
@@ -113,7 +118,7 @@ class ContentTranslationLinkTagTest extends BrowserTestBase {
 
     // Ensure link tags for all languages are found on each language variation
     // page of an entity.
-    foreach ($urls as $langcode => $url) {
+    foreach ($urls as $url) {
       $this->drupalGet($url);
       foreach ($urls as $langcode_alternate => $url_alternate) {
         $this->assertSession()->elementAttributeContains('xpath', "head/link[@rel='alternate' and @hreflang='$langcode_alternate']", 'href', $url_alternate->toString());
@@ -125,7 +130,7 @@ class ContentTranslationLinkTagTest extends BrowserTestBase {
     $this->config('system.site')->set('page.front', $entity_canonical)->save();
 
     // Tests hreflang when using entities as a front page.
-    foreach ($urls as $langcode => $url) {
+    foreach ($urls as $url) {
       $this->drupalGet($url);
       foreach ($entity->getTranslationLanguages() as $language) {
         $frontpage_path = Url::fromRoute('<front>', [], [
@@ -140,7 +145,7 @@ class ContentTranslationLinkTagTest extends BrowserTestBase {
   /**
    * Tests alternate link tag missing for entity types without canonical links.
    */
-  public function testCanonicalAlternateTagsMissing() {
+  public function testCanonicalAlternateTagsMissing(): void {
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager */
     $entityTypeManager = $this->container->get('entity_type.manager');
 

@@ -1,21 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\BuildTests\Composer\Component;
 
 use Drupal\BuildTests\Composer\ComposerBuildTestBase;
 use Drupal\Composer\Composer;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Demonstrate that the Component generator responds to release tagging.
- *
- * @group #slow
- * @group Composer
- * @group Component
- *
- * @coversNothing
- *
- * @requires externalCommand composer
  */
+#[CoversNothing]
+#[Group('Composer')]
+#[Group('Component')]
 class ComponentsTaggedReleaseTest extends ComposerBuildTestBase {
 
   /**
@@ -26,7 +26,7 @@ class ComponentsTaggedReleaseTest extends ComposerBuildTestBase {
    *   - Second element is the resulting constraint which should be present in
    *     the component core dependencies.
    */
-  public function providerVersionConstraint(): array {
+  public static function providerVersionConstraint(): array {
     return [
       // [Tag, constraint]
       '1.0.x-dev' => ['1.0.x-dev', '1.0.x-dev'],
@@ -38,9 +38,8 @@ class ComponentsTaggedReleaseTest extends ComposerBuildTestBase {
 
   /**
    * Validate release tagging and regeneration of dependencies.
-   *
-   * @dataProvider providerVersionConstraint
    */
+  #[DataProvider('providerVersionConstraint')]
   public function testReleaseTagging(string $tag, string $constraint): void {
     $this->copyCodebase();
     $drupal_root = $this->getWorkspaceDirectory();
@@ -51,7 +50,7 @@ class ComponentsTaggedReleaseTest extends ComposerBuildTestBase {
 
     // Emulate the release script.
     // @see https://github.com/xjm/drupal_core_release/blob/main/tag.sh
-    $this->executeCommand("COMPOSER_ROOT_VERSION=\"$tag\" composer update drupal/core*");
+    $this->executeCommand("COMPOSER_ROOT_VERSION=\"$tag\" COMPOSER_NO_SECURITY_BLOCKING=1 composer update drupal/core*");
     $this->assertCommandSuccessful();
     $this->assertErrorOutputContains('generateComponentPackages');
 

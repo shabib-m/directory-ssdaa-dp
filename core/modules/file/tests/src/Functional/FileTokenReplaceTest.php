@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\file\Entity\File;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests file token replacement.
- *
- * @group file
  */
+#[Group('file')]
+#[RunTestsInSeparateProcesses]
 class FileTokenReplaceTest extends FileFieldTestBase {
 
   /**
@@ -22,7 +26,7 @@ class FileTokenReplaceTest extends FileFieldTestBase {
   /**
    * Creates a file, then tests the tokens generated from it.
    */
-  public function testFileTokenReplacement() {
+  public function testFileTokenReplacement(): void {
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
     $token_service = \Drupal::token();
     $language_interface = \Drupal::languageManager()->getCurrentLanguage();
@@ -31,7 +35,7 @@ class FileTokenReplaceTest extends FileFieldTestBase {
 
     // Create file field.
     $type_name = 'article';
-    $field_name = 'field_' . strtolower($this->randomMachineName());
+    $field_name = 'field_' . $this->randomMachineName();
     $this->createFileField($field_name, 'node', $type_name);
 
     $test_file = $this->getTestFile('text');
@@ -44,17 +48,17 @@ class FileTokenReplaceTest extends FileFieldTestBase {
     $nid = $this->uploadNodeFile($test_file, $field_name, $type_name);
 
     // Load the node and the file.
-    $node_storage->resetCache([$nid]);
     $node = $node_storage->load($nid);
     $file = File::load($node->{$field_name}->target_id);
 
     // Generate and test sanitized tokens.
     $tests = [];
     $tests['[file:fid]'] = $file->id();
+    $tests['[file:uuid]'] = $file->uuid();
     $tests['[file:name]'] = Html::escape($file->getFilename());
     $tests['[file:path]'] = Html::escape($file->getFileUri());
     $tests['[file:mime]'] = Html::escape($file->getMimeType());
-    $tests['[file:size]'] = format_size($file->getSize());
+    $tests['[file:size]'] = ByteSizeMarkup::create($file->getSize());
     $tests['[file:url]'] = Html::escape($file->createFileUrl(FALSE));
     $tests['[file:created]'] = $date_formatter->format($file->getCreatedTime(), 'medium', '', NULL, $language_interface->getId());
     $tests['[file:created:short]'] = $date_formatter->format($file->getCreatedTime(), 'short', '', NULL, $language_interface->getId());
@@ -66,6 +70,7 @@ class FileTokenReplaceTest extends FileFieldTestBase {
     $base_bubbleable_metadata = BubbleableMetadata::createFromObject($file);
     $metadata_tests = [];
     $metadata_tests['[file:fid]'] = $base_bubbleable_metadata;
+    $metadata_tests['[file:uuid]'] = $base_bubbleable_metadata;
     $metadata_tests['[file:name]'] = $base_bubbleable_metadata;
     $metadata_tests['[file:path]'] = $base_bubbleable_metadata;
     $metadata_tests['[file:mime]'] = $base_bubbleable_metadata;
@@ -87,7 +92,7 @@ class FileTokenReplaceTest extends FileFieldTestBase {
     foreach ($tests as $input => $expected) {
       $bubbleable_metadata = new BubbleableMetadata();
       $output = $token_service->replace($input, ['file' => $file], ['langcode' => $language_interface->getId()], $bubbleable_metadata);
-      $this->assertEquals($expected, $output, new FormattableMarkup('Sanitized file token %token replaced.', ['%token' => $input]));
+      $this->assertEquals($expected, $output, "Sanitized file token $input replaced.");
       $this->assertEquals($metadata_tests[$input], $bubbleable_metadata);
     }
 
@@ -95,11 +100,14 @@ class FileTokenReplaceTest extends FileFieldTestBase {
     $tests['[file:name]'] = $file->getFilename();
     $tests['[file:path]'] = $file->getFileUri();
     $tests['[file:mime]'] = $file->getMimeType();
-    $tests['[file:size]'] = format_size($file->getSize());
+    $tests['[file:size]'] = ByteSizeMarkup::create($file->getSize());
 
     foreach ($tests as $input => $expected) {
-      $output = $token_service->replace($input, ['file' => $file], ['langcode' => $language_interface->getId(), 'sanitize' => FALSE]);
-      $this->assertEquals($expected, $output, new FormattableMarkup('Unsanitized file token %token replaced.', ['%token' => $input]));
+      $output = $token_service->replace($input, ['file' => $file], [
+        'langcode' => $language_interface->getId(),
+        'sanitize' => FALSE,
+      ]);
+      $this->assertEquals($expected, $output, "Unsanitized file token $input replaced.");
     }
   }
 

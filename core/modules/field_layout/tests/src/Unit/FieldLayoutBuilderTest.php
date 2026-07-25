@@ -1,44 +1,61 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_layout\Unit;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\field_layout\Display\EntityDisplayWithLayoutInterface;
-use Drupal\field_layout\FieldLayoutBuilder;
-use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Layout\LayoutDefault;
 use Drupal\Core\Layout\LayoutDefinition;
+use Drupal\Core\Layout\LayoutPluginManagerInterface;
+use Drupal\field_layout\Display\EntityDisplayWithLayoutInterface;
+use Drupal\field_layout\FieldLayoutBuilder;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\field_layout\FieldLayoutBuilder
- * @group field_layout
+ * Tests Drupal\field_layout\FieldLayoutBuilder.
  */
+#[CoversClass(FieldLayoutBuilder::class)]
+#[Group('field_layout')]
+#[IgnoreDeprecations]
 class FieldLayoutBuilderTest extends UnitTestCase {
 
   /**
+   * The layout plugin manager.
+   *
    * @var \Drupal\Core\Layout\LayoutPluginManager|\Prophecy\Prophecy\ProphecyInterface
    */
   protected $layoutPluginManager;
 
   /**
+   * The entity field manager.
+   *
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface|\Prophecy\Prophecy\ProphecyInterface
    */
   protected $entityFieldManager;
 
   /**
+   * The field layout builder.
+   *
    * @var \Drupal\field_layout\FieldLayoutBuilder
    */
   protected $fieldLayoutBuilder;
 
   /**
+   * The layout plugin.
+   *
    * @var \Drupal\Core\Layout\LayoutInterface
    */
   protected $layoutPlugin;
 
   /**
+   * The layout plugin definition.
+   *
    * @var \Drupal\Core\Layout\LayoutDefinition
    */
   protected $pluginDefinition;
@@ -73,10 +90,12 @@ class FieldLayoutBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::buildView
-   * @covers ::getFields
+   * Tests build view.
+   *
+   * @legacy-covers ::buildView
+   * @legacy-covers ::getFields
    */
-  public function testBuildView() {
+  public function testBuildView(): void {
     $definitions = [];
     $non_configurable_field_definition = $this->prophesize(FieldDefinitionInterface::class);
     $non_configurable_field_definition->isDisplayConfigurable('view')->willReturn(FALSE);
@@ -162,10 +181,12 @@ class FieldLayoutBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::buildForm
-   * @covers ::getFields
+   * Tests build form.
+   *
+   * @legacy-covers ::buildForm
+   * @legacy-covers ::getFields
    */
-  public function testBuildForm() {
+  public function testBuildForm(): void {
     $definitions = [];
     $non_configurable_field_definition = $this->prophesize(FieldDefinitionInterface::class);
     $non_configurable_field_definition->isDisplayConfigurable('form')->willReturn(FALSE);
@@ -237,12 +258,12 @@ class FieldLayoutBuilderTest extends UnitTestCase {
       ],
       '_field_layout' => [
         'left' => [
-          '#process' => ['\Drupal\Core\Render\Element\RenderElement::processGroup'],
-          '#pre_render' => ['\Drupal\Core\Render\Element\RenderElement::preRenderGroup'],
+          '#process' => ['\Drupal\Core\Render\Element\RenderElementBase::processGroup'],
+          '#pre_render' => ['\Drupal\Core\Render\Element\RenderElementBase::preRenderGroup'],
         ],
         'right' => [
-          '#process' => ['\Drupal\Core\Render\Element\RenderElement::processGroup'],
-          '#pre_render' => ['\Drupal\Core\Render\Element\RenderElement::preRenderGroup'],
+          '#process' => ['\Drupal\Core\Render\Element\RenderElementBase::processGroup'],
+          '#pre_render' => ['\Drupal\Core\Render\Element\RenderElementBase::preRenderGroup'],
         ],
         '#in_preview' => FALSE,
         '#settings' => [
@@ -263,9 +284,9 @@ class FieldLayoutBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::buildForm
+   * Tests build form empty.
    */
-  public function testBuildFormEmpty() {
+  public function testBuildFormEmpty(): void {
     $definitions = [];
     $non_configurable_field_definition = $this->prophesize(FieldDefinitionInterface::class);
     $non_configurable_field_definition->isDisplayConfigurable('form')->willReturn(FALSE);
@@ -304,9 +325,9 @@ class FieldLayoutBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::buildForm
+   * Tests build form no layout.
    */
-  public function testBuildFormNoLayout() {
+  public function testBuildFormNoLayout(): void {
     $this->entityFieldManager->getFieldDefinitions(Argument::any(), Argument::any())->shouldNotBeCalled();
 
     $build = [

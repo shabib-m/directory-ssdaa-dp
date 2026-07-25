@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests;
 
 use Behat\Mink\Element\Element;
@@ -13,7 +15,7 @@ use PHPUnit\Framework\Constraint\IsNull;
 use PHPUnit\Framework\Constraint\LogicalNot;
 use WebDriver\Exception;
 
-// cspell:ignore interactable
+// cspell:ignore interactable xmlhttprequest
 
 /**
  * Defines a class with methods for asserting presence of elements during tests.
@@ -32,7 +34,25 @@ class JSWebAssert extends WebAssert {
    *   When the request is not completed. If left blank, a default message will
    *   be displayed.
    */
-  public function assertWaitOnAjaxRequest($timeout = 10000, $message = 'Unable to complete AJAX request.') {
+  public function assertWaitOnAjaxRequest($timeout = 10000, $message = 'Unable to complete AJAX request.'): void {
+    $this->assertExpectedAjaxRequest(NULL, $timeout, $message);
+  }
+
+  /**
+   * Asserts that an AJAX request has been completed.
+   *
+   * @param int|null $count
+   *   (Optional) The number of completed AJAX requests expected.
+   * @param int $timeout
+   *   (Optional) Timeout in milliseconds, defaults to 10000.
+   * @param string $message
+   *   (optional) A message for exception.
+   *
+   * @throws \RuntimeException
+   *   When the request is not completed. If left blank, a default message will
+   *   be displayed.
+   */
+  public function assertExpectedAjaxRequest(?int $count = NULL, $timeout = 10000, $message = 'Unable to complete AJAX request.'): void {
     // Wait for a very short time to allow page state to update after clicking.
     usleep(5000);
     $condition = <<<JS
@@ -41,6 +61,11 @@ class JSWebAssert extends WebAssert {
           return instance && instance.ajaxing === true;
         }
         return (
+          // Assert at least one AJAX request was started and completed.
+          // For example, the machine name UI component does not use the Drupal
+          // AJAX system, which means the other two checks below are inadequate.
+          // @see Drupal.behaviors.machineName
+          window.drupalActiveXhrCount === 0 && window.drupalCumulativeXhrCount >= 1 &&
           // Assert no AJAX request is running (via jQuery or Drupal) and no
           // animation is running.
           (typeof jQuery === 'undefined' || (jQuery.active === 0 && jQuery(':animated').length === 0)) &&
@@ -48,9 +73,56 @@ class JSWebAssert extends WebAssert {
         );
       }())
 JS;
-    $result = $this->session->wait($timeout, $condition);
-    if (!$result) {
+    $completed = $this->session->wait($timeout, $condition);
+
+    // Now that there definitely is no more AJAX request in progress, count the
+    // number of AJAX responses.
+    // @see core/modules/system/tests/modules/js_testing_ajax_request_test/js/js_testing_ajax_request_test.js
+    // @see https://developer.mozilla.org/en-US/docs/Web/API/Performance/timeOrigin
+    [$drupal_ajax_request_count, $browser_xhr_request_count, $page_hash] = $this->session->evaluateScript(<<<JS
+(function(){
+  return [
+    window.drupalCumulativeXhrCount,
+    window.performance
+      .getEntries()
+      .filter(({initiatorType}) => initiatorType === 'xmlhttprequest' || initiatorType === 'fetch')
+      .length,
+    window.performance.timeOrigin
+  ];
+})()
+JS);
+
+    // First invocation of ::assertWaitOnAjaxRequest() on this page: initialize.
+    static $current_page_hash;
+    static $current_page_ajax_response_count;
+    if ($current_page_hash !== $page_hash) {
+      $current_page_hash = $page_hash;
+      $current_page_ajax_response_count = 0;
+    }
+
+    // Detect unnecessary AJAX request waits.
+    if ($drupal_ajax_request_count === $current_page_ajax_response_count) {
+      throw new \RuntimeException('There are no AJAX requests to wait for.');
+    }
+
+    // Detect untracked AJAX requests. This will alert if the detection is
+    // failing to provide an accurate count of requests.
+    // @see core/modules/system/tests/modules/js_testing_ajax_request_test/js/js_testing_ajax_request_test.js
+    if (!is_null($count) && $drupal_ajax_request_count !== $browser_xhr_request_count) {
+      throw new \RuntimeException(sprintf('%d XHR requests through jQuery, but %d observed in the browser — this requires js_testing_ajax_request_test.js to be updated.', $drupal_ajax_request_count, $browser_xhr_request_count));
+    }
+
+    // Detect incomplete AJAX request.
+    if (!$completed) {
       throw new \RuntimeException($message);
+    }
+
+    // Update the static variable for the next invocation, to allow detecting
+    // unnecessary invocations.
+    $current_page_ajax_response_count = $drupal_ajax_request_count;
+
+    if (!is_null($count)) {
+      Assert::assertSame($count, $drupal_ajax_request_count);
     }
   }
 
@@ -92,7 +164,7 @@ JS;
    *
    * @see \Behat\Mink\Element\ElementInterface::findAll()
    */
-  public function waitForElementRemoved($selector, $locator, $timeout = 10000) {
+  public function waitForElementRemoved($selector, $locator, $timeout = 10000): bool {
     return (bool) $this->waitForHelper($timeout, function (Element $page) use ($selector, $locator) {
       return !$page->find($selector, $locator);
     });
@@ -135,7 +207,7 @@ JS;
    * @return bool
    *   TRUE if found, FALSE if not found.
    */
-  public function waitForText($text, $timeout = 10000) {
+  public function waitForText($text, $timeout = 10000): bool {
     return (bool) $this->waitForHelper($timeout, function (Element $page) use ($text) {
       $actual = preg_replace('/\s+/u', ' ', $page->getText());
       $regex = '/' . preg_quote($text, '/') . '/ui';
@@ -232,8 +304,8 @@ JS;
    * Tests that a node, or its specific corner, is visible in the viewport.
    *
    * Note: Always set the viewport size. This can be done in your test with
-   * \Behat\Mink\Session->resizeWindow(). Drupal CI JavaScript tests by default
-   * use a viewport of 1024x768px.
+   * \Behat\Mink\Session->resizeWindow(). JavaScript tests in the default CI
+   * environment use a viewport of 1024x768px.
    *
    * @param string $selector_type
    *   The element selector type (css, xpath).
@@ -251,7 +323,7 @@ JS;
    * @throws \Behat\Mink\Exception\ElementNotFoundException
    *   When the element is not visible in the viewport.
    */
-  public function assertVisibleInViewport($selector_type, $selector, $corner = FALSE, $message = 'Element is not visible in the viewport.') {
+  public function assertVisibleInViewport($selector_type, $selector, $corner = FALSE, $message = 'Element is not visible in the viewport.'): void {
     $node = $this->session->getPage()->find($selector_type, $selector);
     if ($node === NULL) {
       if (is_array($selector)) {
@@ -295,7 +367,7 @@ JS;
    *
    * @see \Drupal\FunctionalJavascriptTests\JSWebAssert::assertVisibleInViewport()
    */
-  public function assertNotVisibleInViewport($selector_type, $selector, $corner = FALSE, $message = 'Element is visible in the viewport.') {
+  public function assertNotVisibleInViewport($selector_type, $selector, $corner = FALSE, $message = 'Element is visible in the viewport.'): void {
     $node = $this->session->getPage()->find($selector_type, $selector);
     if ($node === NULL) {
       if (is_array($selector)) {
@@ -326,7 +398,7 @@ JS;
    * @throws \Behat\Mink\Exception\UnsupportedDriverActionException
    *   When an invalid corner specification is given.
    */
-  private function checkNodeVisibilityInViewport(NodeElement $node, $corner = FALSE) {
+  private function checkNodeVisibilityInViewport(NodeElement $node, $corner = FALSE): bool {
     $xpath = $node->getXpath();
 
     // Build the JavaScript to test if the complete element or a specific corner
@@ -431,7 +503,7 @@ JS;
    * @param string $raw
    *   Raw (HTML) string to look for.
    */
-  public function assertNoEscaped($raw) {
+  public function assertNoEscaped($raw): void {
     $this->responseNotContains($this->escapeHtml($raw));
   }
 
@@ -443,7 +515,7 @@ JS;
    * @param string $raw
    *   Raw (HTML) string to look for.
    */
-  public function assertEscaped($raw) {
+  public function assertEscaped($raw): void {
     $this->responseContains($this->escapeHtml($raw));
   }
 
@@ -456,7 +528,7 @@ JS;
    * quotes respectively therefore we can not escape them when testing for
    * escaped HTML.
    *
-   * @param $raw
+   * @param string $raw
    *   The raw string to escape.
    *
    * @return string
@@ -464,7 +536,7 @@ JS;
    *
    * @see Drupal\Component\Utility\Html::escape()
    */
-  protected function escapeHtml($raw) {
+  protected function escapeHtml($raw): string {
     return htmlspecialchars($raw, ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8');
   }
 
@@ -483,7 +555,7 @@ JS;
    * @throws \Behat\Mink\Exception\ElementHtmlException
    *   When an element still exists on the page.
    */
-  public function assertNoElementAfterWait($selector_type, $selector, $timeout = 10000, $message = 'Element exists on the page.') {
+  public function assertNoElementAfterWait($selector_type, $selector, $timeout = 10000, $message = 'Element exists on the page.'): void {
     $start = microtime(TRUE);
     $end = $start + ($timeout / 1000);
     $page = $this->session->getPage();
@@ -521,7 +593,7 @@ JS;
    * @param int $timeout
    *   Optional timeout in milliseconds, defaults to 10000.
    */
-  public function statusMessageExistsAfterWait(string $type = NULL, int $timeout = 10000): void {
+  public function statusMessageExistsAfterWait(?string $type = NULL, int $timeout = 10000): void {
     $selector = $this->buildJavascriptStatusMessageSelector(NULL, $type);
     $status_message_element = $this->waitForElement('xpath', $selector, $timeout);
     if ($type) {
@@ -543,7 +615,7 @@ JS;
    * @param int $timeout
    *   Optional timeout in milliseconds, defaults to 10000.
    */
-  public function statusMessageNotExistsAfterWait(string $type = NULL, int $timeout = 10000): void {
+  public function statusMessageNotExistsAfterWait(?string $type = NULL, int $timeout = 10000): void {
     $selector = $this->buildJavascriptStatusMessageSelector(NULL, $type);
     $status_message_element = $this->waitForElement('xpath', $selector, $timeout);
     if ($type) {
@@ -565,7 +637,7 @@ JS;
    * @param int $timeout
    *   Optional timeout in milliseconds, defaults to 10000.
    */
-  public function statusMessageContainsAfterWait(string $message, string $type = NULL, int $timeout = 10000): void {
+  public function statusMessageContainsAfterWait(string $message, ?string $type = NULL, int $timeout = 10000): void {
     $selector = $this->buildJavascriptStatusMessageSelector($message, $type);
     $status_message_element = $this->waitForElement('xpath', $selector, $timeout);
     if ($type) {
@@ -589,7 +661,7 @@ JS;
    * @param int $timeout
    *   Optional timeout in milliseconds, defaults to 10000.
    */
-  public function statusMessageNotContainsAfterWait(string $message, string $type = NULL, int $timeout = 10000): void {
+  public function statusMessageNotContainsAfterWait(string $message, ?string $type = NULL, int $timeout = 10000): void {
     $selector = $this->buildJavascriptStatusMessageSelector($message, $type);
     $status_message_element = $this->waitForElement('xpath', $selector, $timeout);
     if ($type) {
@@ -619,7 +691,7 @@ JS;
    * @throws \InvalidArgumentException
    *   Thrown when $type is not an allowed type.
    */
-  private function buildJavascriptStatusMessageSelector(string $message = NULL, string $type = NULL): string {
+  private function buildJavascriptStatusMessageSelector(?string $message = NULL, ?string $type = NULL): string {
     $allowed_types = [
       'status',
       'error',
@@ -652,6 +724,27 @@ JS;
     // We select based on WebAssert::buildStatusMessageSelector() or the
     // js_selector we have just built.
     return $this->buildStatusMessageSelector($message, $type) . ' | ' . $js_selector;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function statusMessageContains(string $message, ?string $type = NULL): void {
+    $selector = $this->buildStatusMessageSelector($message, $type);
+    $this->waitForElement('xpath', $selector);
+    parent::statusMessageContains($message, $type);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function statusMessageNotContains(string $message, ?string $type = NULL): void {
+    $selector = $this->buildStatusMessageSelector($message, $type);
+    // Wait for a second for the message to not exist.
+    $this->waitForHelper(1000, function (Element $page) use ($selector) {
+      return !$page->find('xpath', $selector);
+    });
+    parent::statusMessageNotContains($message, $type);
   }
 
 }

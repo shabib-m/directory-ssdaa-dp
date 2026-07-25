@@ -150,13 +150,14 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
    *   If the URI is not yet set.
    */
   public function open() {
-    if (!empty($this->uri)) {
-      $this->fd = fopen($this->uri, 'rb');
-      $this->readHeader();
-    }
-    else {
+    if (empty($this->uri)) {
       throw new \Exception('Cannot open stream without URI set.');
     }
+    $this->fd = @fopen($this->uri, 'rb');
+    if (!$this->fd) {
+      throw new \RuntimeException('Cannot open stream for uri ' . $this->uri);
+    }
+    $this->readHeader();
   }
 
   /**
@@ -337,7 +338,8 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
           $this->currentItem = [];
         }
         elseif ($this->context == 'MSGID') {
-          // We are currently already in the context, meaning we passed an id with no data.
+          // We are currently already in the context, meaning we passed an id
+          // with no data.
           $this->errors[] = new FormattableMarkup('The translation stream %uri contains an error: "msgid" is unexpected on line %line.', $log_vars);
           return FALSE;
         }
@@ -407,8 +409,8 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
         }
 
         // Extract the plurality.
-        $frombracket = strstr($line, '[');
-        $this->currentPluralIndex = substr($frombracket, 1, strpos($frombracket, ']') - 1);
+        $from_bracket = strstr($line, '[');
+        $this->currentPluralIndex = substr($from_bracket, 1, strpos($from_bracket, ']') - 1);
 
         // Skip to the next whitespace and trim away any further whitespace,
         // bringing $line to the message text only.
@@ -455,7 +457,8 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
         return;
       }
       elseif ($line != '') {
-        // Anything that is not a token may be a continuation of a previous token.
+        // Anything that is not a token may be a continuation of a previous
+        // token.
 
         $quoted = $this->parseQuoted($line);
         if ($quoted === FALSE) {
@@ -541,7 +544,7 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
   /**
    * Parses a string in quotes.
    *
-   * @param $string
+   * @param string $string
    *   A string specified with enclosing quotes.
    *
    * @return bool|string
@@ -572,7 +575,7 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
   /**
    * Generates a short, one-string version of the passed comment array.
    *
-   * @param $comment
+   * @param string[] $comment
    *   An array of strings containing a comment.
    *
    * @return string

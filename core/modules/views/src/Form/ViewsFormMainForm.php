@@ -6,11 +6,16 @@ use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceDynamicSafeFormInterface;
+use Drupal\Core\Form\WorkspaceSafeFormInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\views\Render\ViewsRenderPipelineMarkup;
 use Drupal\views\ViewExecutable;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
+/**
+ * Provides a default main form class for Views forms.
+ */
 class ViewsFormMainForm implements FormInterface, TrustedCallbackInterface {
 
   use StringTranslationTrait;
@@ -19,6 +24,7 @@ class ViewsFormMainForm implements FormInterface, TrustedCallbackInterface {
    * {@inheritdoc}
    */
   public function getFormId() {
+    return '';
   }
 
   /**
@@ -73,14 +79,14 @@ class ViewsFormMainForm implements FormInterface, TrustedCallbackInterface {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ViewExecutable $view = NULL, $output = []) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?ViewExecutable $view = NULL, $output = []) {
     $form['#prefix'] = '<div class="views-form">';
     $form['#suffix'] = '</div>';
 
     $form['#pre_render'][] = [static::class, 'preRenderViewsForm'];
 
-    // Add the output markup to the form array so that it's included when the form
-    // array is passed to the theme function.
+    // Add the output markup to the form array so that it's included when the
+    // form array is passed to the theme function.
     $form['output'] = $output;
     // This way any additional form elements will go before the view
     // (below the exposed widgets).
@@ -109,6 +115,13 @@ class ViewsFormMainForm implements FormInterface, TrustedCallbackInterface {
       $has_form = FALSE;
       if (method_exists($field, 'viewsForm')) {
         $field->viewsForm($form, $form_state);
+
+        // Allow the views form to determine whether it's safe to be submitted
+        // in a workspace.
+        $workspace_safe = $field instanceof WorkspaceSafeFormInterface
+          || ($field instanceof WorkspaceDynamicSafeFormInterface && $field->isWorkspaceSafeForm($form, $form_state));
+        $form_state->set('workspace_safe', $workspace_safe);
+
         $has_form = TRUE;
       }
 

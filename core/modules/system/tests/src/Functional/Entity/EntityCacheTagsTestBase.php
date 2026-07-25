@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Entity;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Tests\system\Functional\Cache\PageCacheTagsTestBase;
+use Drupal\Tests\system\Traits\CacheTestTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
 
@@ -18,11 +23,10 @@ use Drupal\user\RoleInterface;
  * Provides helper methods for Entity cache tags tests.
  */
 abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
+  use CacheTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['entity_test', 'field_test'];
 
@@ -218,7 +222,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
 
     // Create a "foo" bundle for the given entity type.
     $bundle = 'foo';
-    entity_test_create_bundle($bundle, NULL, $entity_type);
+    EntityTestHelper::createBundle($bundle, NULL, $entity_type);
 
     // Add a field of the given type to the given entity type's "foo" bundle.
     $field_name = $referenced_entity->getEntityTypeId() . '_reference';
@@ -303,9 +307,10 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
    * - entity cache tag: "<entity type>:<entity ID>"
    * - entity type list cache tag: "<entity type>_list"
    * - referencing entity type view cache tag: "<referencing entity type>_view"
-   * - referencing entity type cache tag: "<referencing entity type>:<referencing entity ID>"
+   * - referencing entity type cache tag: "
+   *   <referencing entity type>:<referencing entity ID>"
    */
-  public function testReferencedEntity() {
+  public function testReferencedEntity(): void {
     $entity_type = $this->entity->getEntityTypeId();
     $referencing_entity_url = $this->referencingEntity->toUrl('canonical');
     $non_referencing_entity_url = $this->nonReferencingEntity->toUrl('canonical');
@@ -320,7 +325,10 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
     // The default cache contexts for rendered entities.
     $default_cache_contexts = ['languages:' . LanguageInterface::TYPE_INTERFACE, 'theme', 'user.permissions'];
     $entity_cache_contexts = Cache::mergeContexts($default_cache_contexts, ['url.site']);
-    $page_cache_contexts = Cache::mergeContexts($default_cache_contexts, ['url.query_args:' . MainContentViewSubscriber::WRAPPER_FORMAT]);
+    $page_cache_contexts = Cache::mergeContexts(
+      $default_cache_contexts,
+      ['url.query_args:' . MainContentViewSubscriber::WRAPPER_FORMAT, 'user.roles:authenticated'],
+    );
 
     // Cache tags present on every rendered page.
     // 'user.permissions' is a required cache context, and responses that vary
@@ -372,26 +380,22 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
 
     // Also verify the existence of an entity render cache entry.
     $cache_keys = ['entity_view', 'entity_test', $this->referencingEntity->id(), 'full'];
-    $cid = $this->createCacheId($cache_keys, $entity_cache_contexts);
     $access_cache_contexts = $this->getAccessCacheContextsForEntity($this->entity);
     $additional_cache_contexts = $this->getAdditionalCacheContextsForEntity($this->referencingEntity);
-    $redirected_cid = NULL;
     if (count($access_cache_contexts) || count($additional_cache_contexts)) {
       $cache_contexts = Cache::mergeContexts($entity_cache_contexts, $additional_cache_contexts);
       $cache_contexts = Cache::mergeContexts($cache_contexts, $access_cache_contexts);
-      $redirected_cid = $this->createCacheId($cache_keys, $cache_contexts);
       $context_metadata = \Drupal::service('cache_contexts_manager')->convertTokensToKeys($cache_contexts);
       $referencing_entity_cache_tags = Cache::mergeTags($referencing_entity_cache_tags, $context_metadata->getCacheTags());
     }
-    $this->verifyRenderCache($cid, $referencing_entity_cache_tags, $redirected_cid);
+    $this->verifyRenderCache($cache_keys, $referencing_entity_cache_tags, (new CacheableMetadata())->setCacheContexts($entity_cache_contexts));
 
     $this->verifyPageCache($non_referencing_entity_url, 'MISS');
     // Verify a cache hit, but also the presence of the correct cache tags.
     $this->verifyPageCache($non_referencing_entity_url, 'HIT', Cache::mergeTags($non_referencing_entity_cache_tags, $page_cache_tags));
     // Also verify the existence of an entity render cache entry.
     $cache_keys = ['entity_view', 'entity_test', $this->nonReferencingEntity->id(), 'full'];
-    $cid = $this->createCacheId($cache_keys, $entity_cache_contexts);
-    $this->verifyRenderCache($cid, $non_referencing_entity_cache_tags);
+    $this->verifyRenderCache($cache_keys, $non_referencing_entity_cache_tags, (new CacheableMetadata())->setCacheContexts($entity_cache_contexts));
 
     // Prime the page cache for the listing of referencing entities.
     $this->verifyPageCache($listing_url, 'MISS');
@@ -611,60 +615,21 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
   }
 
   /**
-   * Creates a cache ID from a list of cache keys and a set of cache contexts.
+   * Retrieves the render cache backend as a variation cache.
    *
-   * @param string[] $keys
-   *   A list of cache keys.
-   * @param string[] $contexts
-   *   A set of cache contexts.
+   * This is how Drupal\Core\Render\RenderCache uses the render cache backend.
    *
-   * @return string
-   *   The cache ID string.
+   * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0.
+   * Use ::getRenderVariationCache() instead, which is inherited
+   * from CacheTestTrait.
+   *
+   * @see https://www.drupal.org/project/drupal/issues/3085475
+   *
+   * @return \Drupal\Core\Cache\VariationCacheInterface
+   *   The render cache backend as a variation cache.
    */
-  protected function createCacheId(array $keys, array $contexts) {
-    $cid_parts = $keys;
-
-    $contexts = \Drupal::service('cache_contexts_manager')->convertTokensToKeys($contexts);
-    $cid_parts = array_merge($cid_parts, $contexts->getKeys());
-
-    return implode(':', $cid_parts);
-  }
-
-  /**
-   * Verify that a given render cache entry exists, with the correct cache tags.
-   *
-   * @param string $cid
-   *   The render cache item ID.
-   * @param array $tags
-   *   An array of expected cache tags.
-   * @param string|null $redirected_cid
-   *   (optional) The redirected render cache item ID.
-   */
-  protected function verifyRenderCache($cid, array $tags, $redirected_cid = NULL) {
-    // Also verify the existence of an entity render cache entry.
-    $cache_entry = \Drupal::cache('render')->get($cid);
-    $this->assertInstanceOf(\stdClass::class, $cache_entry);
-    sort($cache_entry->tags);
-    sort($tags);
-    $this->assertSame($cache_entry->tags, $tags);
-    $is_redirecting_cache_item = isset($cache_entry->data['#cache_redirect']);
-    if ($redirected_cid === NULL) {
-      $this->assertFalse($is_redirecting_cache_item, 'Render cache entry is not a redirect.');
-    }
-    else {
-      // Verify that $cid contains a cache redirect.
-      $this->assertTrue($is_redirecting_cache_item, 'Render cache entry is a redirect.');
-      // Verify that the cache redirect points to the expected CID.
-      $redirect_cache_metadata = $cache_entry->data['#cache'];
-      $actual_redirection_cid = $this->createCacheId(
-        $redirect_cache_metadata['keys'],
-        $redirect_cache_metadata['contexts']
-      );
-      $this->assertSame($redirected_cid, $actual_redirection_cid);
-      // Finally, verify that the redirected CID exists and has the same cache
-      // tags.
-      $this->verifyRenderCache($redirected_cid, $tags);
-    }
+  protected function getRenderCacheBackend() {
+    return $this->getRenderVariationCache();
   }
 
 }

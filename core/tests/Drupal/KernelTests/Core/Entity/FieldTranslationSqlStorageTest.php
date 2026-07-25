@@ -1,22 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Field translation SQL Storage.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class FieldTranslationSqlStorageTest extends EntityLanguageTestBase {
 
   /**
    * Tests field SQL storage.
    */
-  public function testFieldSqlStorage() {
+  public function testFieldSqlStorage(): void {
     $entity_type = 'entity_test_mul';
 
     $controller = $this->entityTypeManager->getStorage($entity_type);
@@ -24,6 +28,7 @@ class FieldTranslationSqlStorageTest extends EntityLanguageTestBase {
       $this->fieldName => $this->randomMachineName(),
       $this->untranslatableFieldName => $this->randomMachineName(),
     ];
+    /** @var \Drupal\entity_test\Entity\EntityTestMul $entity */
     $entity = $controller->create($values);
     $entity->save();
 

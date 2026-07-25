@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 
 /**
@@ -9,34 +10,32 @@ use Drupal\Core\Render\Element;
  *
  * Usage example:
  * @code
- * $form['search'] = array(
+ * $form['search'] = [
  *   '#type' => 'search',
  *   '#title' => $this->t('Search'),
- * );
+ * ];
  * @endcode
  *
  * @see \Drupal\Core\Render\Element\Textfield
- *
- * @FormElement("search")
  */
-class Search extends FormElement {
+#[FormElement('search')]
+class Search extends FormElementBase {
 
   /**
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = static::class;
     return [
       '#input' => TRUE,
       '#size' => 60,
       '#maxlength' => 128,
       '#autocomplete_route_name' => FALSE,
       '#process' => [
-        [$class, 'processAutocomplete'],
-        [$class, 'processAjaxForm'],
+        [static::class, 'processAutocomplete'],
+        [static::class, 'processAjaxForm'],
       ],
       '#pre_render' => [
-        [$class, 'preRenderSearch'],
+        [static::class, 'preRenderSearch'],
       ],
       '#theme' => 'input__search',
       '#theme_wrappers' => ['form_element'],

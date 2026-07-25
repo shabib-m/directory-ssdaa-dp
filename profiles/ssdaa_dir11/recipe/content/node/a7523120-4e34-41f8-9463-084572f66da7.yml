@@ -1,0 +1,56 @@
+_meta:
+  version: '1.0'
+  entity_type: node
+  uuid: a7523120-4e34-41f8-9463-084572f66da7
+  bundle: directory
+  default_langcode: ar
+  depends:
+    2ad0bcbc-6fef-4fff-8846-7085d2db7e61: taxonomy_term
+    7f5dab35-5920-4e59-97c1-bfdd8825e3b0: file
+default:
+  revision_uid:
+    -
+      target_id: 0
+  status:
+    -
+      value: true
+  uid:
+    -
+      target_id: 0
+  title:
+    -
+      value: 'ﻣﻮﻗﻊ ﺍﻟﺸﻴﺦ ﻣﺤﻤﺪ ﻧﺎﺻﺮ ﺍﻟﺪﻳﻦ ﺍﻷﻟﺒﺎﻧﻲ'
+  created:
+    -
+      value: 1784748879
+  promote:
+    -
+      value: true
+  sticky:
+    -
+      value: false
+  path:
+    -
+      alias: /website/alalbany
+      langcode: ar
+  body:
+    -
+      value: |
+        <p>موقع الشيخ محمد ناصر الدين الالباني رحمة الله رحمه واسعة ورفع درجاته ونفع بعلمة</p>
+      format: full_html
+      summary: ''
+  field_aldwlh:
+    -
+      entity: 2ad0bcbc-6fef-4fff-8846-7085d2db7e61
+  field_image:
+    -
+      entity: 7f5dab35-5920-4e59-97c1-bfdd8825e3b0
+      alt: ''
+      title: ''
+      width: 600
+      height: 398
+  field_url_website:
+    -
+      uri: 'https://alalbany.net'
+      title: ''
+      options: {  }

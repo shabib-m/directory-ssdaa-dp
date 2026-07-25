@@ -31,7 +31,7 @@ class Number {
    * @see http://opensource.apple.com/source/WebCore/WebCore-1298/html/NumberInputType.cpp
    */
   public static function validStep($value, $step, $offset = 0.0) {
-    $double_value = (double) abs($value - $offset);
+    $double_value = (float) abs($value - $offset);
 
     // The fractional part of a double has 53 bits. The greatest number that
     // could be represented with that is 2^53. If the given value is even bigger
@@ -44,13 +44,13 @@ class Number {
     }
 
     // Now compute that remainder of a division by $step.
-    $remainder = (double) abs($double_value - $step * round($double_value / $step));
+    $remainder = (float) abs($double_value - $step * round($double_value / $step));
 
     // $remainder is a double precision floating point number. Remainders that
     // can't be represented with single precision floats are acceptable. The
-    // fractional part of a float has 24 bits. That means remainders smaller than
-    // $step * 2^-24 are acceptable.
-    $computed_acceptable_error = (double) ($step / pow(2.0, 24));
+    // fractional part of a float has 24 bits. That means remainders smaller
+    // than $step * 2^-24 are acceptable.
+    $computed_acceptable_error = (float) ($step / pow(2.0, 24));
 
     return $computed_acceptable_error >= $remainder || $remainder >= ($step - $computed_acceptable_error);
   }
@@ -66,7 +66,7 @@ class Number {
    * 00, 01, 02, ..., 0y, 0z,
    * 110, 111, ... , 1zy, 1zz,
    * 2100, 2101, ..., 2zzy, 2zzz,
-   * 31000, 31001, ...
+   * 31000, 31001, and so on.
    *
    * @param int $i
    *   The integer value to convert.
@@ -77,7 +77,7 @@ class Number {
    * @see \Drupal\Component\Utility\Number::alphadecimalToInt
    */
   public static function intToAlphadecimal($i = 0) {
-    $num = base_convert((int) $i, 10, 36);
+    $num = base_convert((string) $i, 10, 36);
     $length = strlen($num);
 
     return chr($length + ord('0') - 1) . $num;
@@ -87,15 +87,29 @@ class Number {
    * Decodes a sorting code back to an integer.
    *
    * @param string $string
-   *   The alpha decimal value to convert
+   *   The alpha decimal value to convert.
    *
    * @return int
    *   The integer value.
    *
+   * @throws \InvalidArgumentException
+   *   If $string contains invalid characters, throw an exception.
+   *
    * @see \Drupal\Component\Utility\Number::intToAlphadecimal
    */
   public static function alphadecimalToInt($string = '00') {
-    return (int) base_convert(substr($string, 1), 36, 10);
+    // For backwards compatibility, we must accept NULL
+    // and the empty string, returning 0,
+    // like (int) base_convert(substr($string, 1), 36, 10) always did.
+    if ('' === $string || NULL === $string) {
+      @trigger_error('Passing NULL or an empty string to ' . __METHOD__ . '() is deprecated in drupal:11.2.0 and will be removed in drupal:12.0.0. See https://www.drupal.org/node/3494472', E_USER_DEPRECATED);
+      return 0;
+    }
+    $alpha_decimal_substring = substr($string, 1);
+    if (!ctype_alnum($alpha_decimal_substring)) {
+      throw new \InvalidArgumentException("Invalid characters passed for attempted conversion: $string");
+    }
+    return (int) base_convert($alpha_decimal_substring, 36, 10);
   }
 
 }

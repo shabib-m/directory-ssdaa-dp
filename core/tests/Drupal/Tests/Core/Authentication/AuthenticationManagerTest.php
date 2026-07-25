@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\Authentication\AuthenticationManagerTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Authentication;
 
@@ -11,24 +8,29 @@ use Drupal\Core\Authentication\AuthenticationCollector;
 use Drupal\Core\Authentication\AuthenticationManager;
 use Drupal\Core\Authentication\AuthenticationProviderFilterInterface;
 use Drupal\Core\Authentication\AuthenticationProviderInterface;
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Routing\RouteObjectInterface;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
 
 /**
- * @coversDefaultClass \Drupal\Core\Authentication\AuthenticationManager
- * @group Authentication
+ * Tests Drupal\Core\Authentication\AuthenticationManager.
  */
+#[CoversClass(AuthenticationManager::class)]
+#[Group('Authentication')]
 class AuthenticationManagerTest extends UnitTestCase {
 
   /**
-   * @covers ::defaultFilter
-   * @covers ::applyFilter
+   * Tests default filter.
    *
-   * @dataProvider providerTestDefaultFilter
+   * @legacy-covers ::defaultFilter
+   * @legacy-covers ::applyFilter
    */
-  public function testDefaultFilter($applies, $has_route, $auth_option, $provider_id, $global) {
+  #[DataProvider('providerTestDefaultFilter')]
+  public function testDefaultFilter($applies, $has_route, $auth_option, $provider_id, $global): void {
     $auth_provider = $this->createMock('Drupal\Core\Authentication\AuthenticationProviderInterface');
     $auth_collector = new AuthenticationCollector();
     $auth_collector->addProvider($auth_provider, $provider_id, 0, $global);
@@ -47,9 +49,9 @@ class AuthenticationManagerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applyFilter
+   * Tests apply filter with filter provider.
    */
-  public function testApplyFilterWithFilterProvider() {
+  public function testApplyFilterWithFilterProvider(): void {
     $auth_provider = $this->createMock('Drupal\Tests\Core\Authentication\TestAuthenticationProviderInterface');
     $auth_provider->expects($this->once())
       ->method('appliesToRoutedRequest')
@@ -67,7 +69,7 @@ class AuthenticationManagerTest extends UnitTestCase {
   /**
    * Provides data to self::testDefaultFilter().
    */
-  public function providerTestDefaultFilter() {
+  public static function providerTestDefaultFilter(): array {
     $data = [];
     // No route, cookie is global, should apply.
     $data[] = [TRUE, FALSE, [], 'cookie', TRUE];

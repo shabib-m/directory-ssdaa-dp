@@ -2,8 +2,10 @@
 
 namespace Drupal\layout_builder\Form;
 
+use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceDynamicSafeFormInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\OverridesSectionStorageInterface;
@@ -16,7 +18,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @internal
  *   Form classes are internal.
  */
-class RevertOverridesForm extends ConfirmFormBase {
+class RevertOverridesForm extends ConfirmFormBase implements WorkspaceDynamicSafeFormInterface {
+
+  use WorkspaceSafeFormTrait;
 
   /**
    * The layout tempstore repository.
@@ -73,7 +77,23 @@ class RevertOverridesForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to revert this to defaults?');
+    return $this->t('Revert to the default layout');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription() {
+    try {
+      $entity = $this->sectionStorage->getContextValue('entity');
+      return $this->t("The layout for %label will be reverted to its default state. All layout modifications and inline blocks wil be reset.", [
+        '%label' => $entity->label(),
+      ]);
+    }
+    catch (ContextException) {
+      // If the entity is not available, just return a generic message.
+      return $this->t('The layout will be reverted to its default state. All layout modifications and inline blocks will be reset.');
+    }
   }
 
   /**
@@ -93,7 +113,7 @@ class RevertOverridesForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL) {
     if (!$section_storage instanceof OverridesSectionStorageInterface) {
       throw new \InvalidArgumentException(sprintf('The section storage with type "%s" and ID "%s" does not provide overrides', $section_storage->getStorageType(), $section_storage->getStorageId()));
     }

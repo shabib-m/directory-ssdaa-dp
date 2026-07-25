@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\inline_form_errors\Functional;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
@@ -8,12 +10,14 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests file upload scenario's with Inline Form Errors.
- *
- * @group inline_form_errors
  */
+#[Group('inline_form_errors')]
+#[RunTestsInSeparateProcesses]
 class FormErrorHandlerFileUploadTest extends BrowserTestBase {
 
   /**
@@ -54,7 +58,7 @@ class FormErrorHandlerFileUploadTest extends BrowserTestBase {
       'entity_type' => 'node',
       'bundle' => 'page',
       'required' => TRUE,
-      'settings' => ['file_extensions' => 'png gif jpg jpeg'],
+      'settings' => ['file_extensions' => 'png gif jpg jpeg webp'],
     ])->save();
 
     EntityFormDisplay::create([
@@ -89,7 +93,7 @@ class FormErrorHandlerFileUploadTest extends BrowserTestBase {
   /**
    * Tests that the required field error is displayed as inline error message.
    */
-  public function testFileUploadErrors() {
+  public function testFileUploadErrors(): void {
     $this->drupalGet('node/add/page');
     $edit = [
       'edit-title-0-value' => $this->randomString(),

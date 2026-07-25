@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\block_test\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
@@ -22,7 +24,7 @@ class TestMultipleFormController extends ControllerBase {
     // see if there's only one in the tests.
     $post_render_callable = function ($elements) {
       $matches = [];
-      preg_match_all('<form\s(.*?)action="(.*?)"(.*)>', $elements, $matches);
+      preg_match_all('<form\s(.*?)action="(.*?)"(.*)>', (string) $elements, $matches);
 
       $action_values = $matches[2];
 

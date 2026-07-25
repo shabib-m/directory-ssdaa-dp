@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel;
 
 use Drupal\Core\Datetime\Entity\DateFormat;
@@ -9,12 +11,14 @@ use Drupal\Tests\EntityViewTrait;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests summary length.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class SummaryLengthTest extends KernelTestBase {
 
   use NodeCreationTrait {
@@ -38,7 +42,6 @@ class SummaryLengthTest extends KernelTestBase {
    */
   protected static $modules = [
     'node',
-    'datetime',
     'user',
     'system',
     'filter',
@@ -51,7 +54,6 @@ class SummaryLengthTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', 'sequences');
     $this->installSchema('node', 'node_access');
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
@@ -75,7 +77,7 @@ class SummaryLengthTest extends KernelTestBase {
   /**
    * Tests the node summary length functionality.
    */
-  public function testSummaryLength() {
+  public function testSummaryLength(): void {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $this->container->get('renderer');
 

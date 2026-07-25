@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\menu_test\Plugin\Menu\LocalAction;
 
 use Drupal\Core\Menu\LocalActionDefault;
@@ -13,7 +15,7 @@ class TestLocalAction5 extends LocalActionDefault {
   /**
    * {@inheritdoc}
    */
-  public function getTitle(Request $request = NULL) {
+  public function getTitle(?Request $request = NULL) {
     return "<script>alert('Welcome to the jungle!')</script>";
   }
 

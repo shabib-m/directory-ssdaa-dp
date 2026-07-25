@@ -1,24 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Wizard;
 
 use Drupal\Core\Form\FormState;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views_ui\ViewUI;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the wizard base plugin class.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\wizard\WizardPluginBase
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class WizardPluginBaseKernelTest extends ViewsKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['language', 'system', 'user', 'views_ui'];
 
@@ -45,11 +48,11 @@ class WizardPluginBaseKernelTest extends ViewsKernelTestBase {
    *
    * @see \Drupal\views\Plugin\views\wizard\WizardPluginBase
    */
-  public function testCreateView() {
+  public function testCreateView(): void {
     $form = [];
     $form_state = new FormState();
     $form = $this->wizard->buildForm($form, $form_state);
-    $random_id = strtolower($this->randomMachineName());
+    $random_id = $this->randomMachineName();
     $random_label = $this->randomMachineName();
     $random_description = $this->randomMachineName();
 

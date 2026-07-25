@@ -7,64 +7,41 @@ use Drupal\Component\Utility\Variable;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Datetime\Entity\DateFormat;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Security\DoTrustedCallbackTrait;
 use Drupal\Core\Security\StaticTrustedCallbackHelper;
 
 /**
  * Provides a datetime element.
- *
- * @FormElement("datetime")
  */
+#[FormElement('datetime')]
 class Datetime extends DateElementBase {
 
   use DoTrustedCallbackTrait;
 
   /**
-   * @var \DateTimeInterface
-   */
-  protected static $dateExample;
-
-  /**
    * {@inheritdoc}
    */
   public function getInfo() {
-    $date_format = '';
-    $time_format = '';
-    // Date formats cannot be loaded during install or update.
-    if (!defined('MAINTENANCE_MODE')) {
-      if ($date_format_entity = DateFormat::load('html_date')) {
-        /** @var \Drupal\Core\Datetime\DateFormatInterface $date_format_entity */
-        $date_format = $date_format_entity->getPattern();
-      }
-      if ($time_format_entity = DateFormat::load('html_time')) {
-        /** @var \Drupal\Core\Datetime\DateFormatInterface $time_format_entity */
-        $time_format = $time_format_entity->getPattern();
-      }
-    }
-
-    $class = static::class;
-
     // Note that since this information is cached, the #date_timezone property
     // is not set here, as this needs to vary potentially by-user.
     return [
       '#input' => TRUE,
       '#element_validate' => [
-        [$class, 'validateDatetime'],
+        [static::class, 'validateDatetime'],
       ],
       '#process' => [
-        [$class, 'processDatetime'],
-        [$class, 'processAjaxForm'],
-        [$class, 'processGroup'],
+        [static::class, 'processDatetime'],
+        [static::class, 'processAjaxForm'],
+        [static::class, 'processGroup'],
       ],
       '#pre_render' => [
-        [$class, 'preRenderGroup'],
+        [static::class, 'preRenderGroup'],
       ],
       '#theme' => 'datetime_form',
       '#theme_wrappers' => ['datetime_wrapper'],
-      '#date_date_format' => $date_format,
       '#date_date_element' => 'date',
       '#date_date_callbacks' => [],
-      '#date_time_format' => $time_format,
       '#date_time_element' => 'time',
       '#date_time_callbacks' => [],
       '#date_year_range' => '1900:2050',
@@ -76,13 +53,30 @@ class Datetime extends DateElementBase {
    * {@inheritdoc}
    */
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
-    $element += ['#date_timezone' => date_default_timezone_get()];
+    $formats = DateFormat::loadMultiple(['html_date', 'html_time']);
+    $date_format = $formats['html_date']->getPattern();
+    $time_format = $formats['html_time']->getPattern();
+    $element += [
+      '#date_timezone' => date_default_timezone_get(),
+      '#date_date_format' => $date_format,
+      '#date_time_format' => $time_format,
+    ];
 
     if ($input !== FALSE) {
-      $date_input = $element['#date_date_element'] != 'none' && !empty($input['date']) ? $input['date'] : '';
-      $time_input = $element['#date_time_element'] != 'none' && !empty($input['time']) ? $input['time'] : '';
-      $date_format = $element['#date_date_element'] != 'none' ? static::getHtml5DateFormat($element) : '';
-      $time_format = $element['#date_time_element'] != 'none' ? static::getHtml5TimeFormat($element) : '';
+      if ($element['#date_date_element'] === 'datetime-local' && !empty($input['date'])) {
+        // With a datetime-local input, the date value is always normalized to
+        // the format Y-m-d\TH:i
+        // @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local
+        // 'html_datetime' is not a valid format to pass to
+        // DrupalDateTime::createFromFormat()
+        [$date_input, $time_input] = explode('T', $input['date']);
+      }
+      else {
+        $date_input = $element['#date_date_element'] != 'none' && !empty($input['date']) ? $input['date'] : '';
+        $time_input = $element['#date_time_element'] != 'none' && !empty($input['time']) ? $input['time'] : '';
+        $date_format = $element['#date_date_element'] != 'none' && $element['#date_date_format'] != 'none' ? static::getHtml5DateFormat($element) : '';
+        $time_format = $element['#date_time_element'] != 'none' && $element['#date_time_format'] != 'none' ? static::getHtml5TimeFormat($element) : '';
+      }
 
       // Seconds will be omitted in a post in case there's no entry.
       if (!empty($time_input) && strlen($time_input) == 5) {
@@ -94,7 +88,7 @@ class Datetime extends DateElementBase {
         $date_time_input = trim($date_input . ' ' . $time_input);
         $date = DrupalDateTime::createFromFormat($date_time_format, $date_time_input, $element['#date_timezone']);
       }
-      catch (\Exception $e) {
+      catch (\Exception) {
         $date = NULL;
       }
       $input = [
@@ -147,11 +141,11 @@ class Datetime extends DateElementBase {
    *
    * Required settings:
    *   - #default_value: A DrupalDateTime object, adjusted to the proper local
-   *     timezone. Converting a date stored in the database from UTC to the local
-   *     zone and converting it back to UTC before storing it is not handled here.
-   *     This element accepts a date as the default value, and then converts the
-   *     user input strings back into a new date object on submission. No timezone
-   *     adjustment is performed.
+   *     timezone. Converting a date stored in the database from UTC to the
+   *     local zone and converting it back to UTC before storing it is not
+   *     handled here. This element accepts a date as the default value, and
+   *     then converts the user input strings back into a new date object on
+   *     submission. No timezone adjustment is performed.
    * Optional properties include:
    *   - #date_date_format: A date format string that describes the format that
    *     should be displayed to the end user for the date. When using HTML5
@@ -181,7 +175,8 @@ class Datetime extends DateElementBase {
    *     right HTML5 format for the chosen element if an HTML5 element is used,
    *     otherwise defaults to DateFormat::load('html_time')->getPattern().
    *   - #date_time_callbacks: An array of optional callbacks for the time
-   *     element. Can be used to add a jQuery timepicker or an 'All day' checkbox.
+   *     element. Can be used to add a jQuery timepicker or an 'All day'
+   *     checkbox.
    *   - #date_year_range: A description of the range of years to allow, like
    *     '1900:2050', '-3:+3' or '2000:+3', where the first value describes the
    *     earliest year and the second the latest year in the range. A year
@@ -201,14 +196,14 @@ class Datetime extends DateElementBase {
    *
    * Example usage:
    * @code
-   *   $form = array(
+   *   $form = [
    *     '#type' => 'datetime',
    *     '#default_value' => new DrupalDateTime('2000-01-01 00:00:00'),
    *     '#date_date_element' => 'date',
    *     '#date_time_element' => 'none',
    *     '#date_year_range' => '2010:+3',
    *     '#date_timezone' => 'Asia/Kolkata',
-   *   );
+   *   ];
    * @endcode
    *
    * @param array $element
@@ -224,6 +219,14 @@ class Datetime extends DateElementBase {
    * @see \Drupal\Core\Datetime\DateFormatterInterface::format()
    */
   public static function processDatetime(&$element, FormStateInterface $form_state, &$complete_form) {
+    $formats = DateFormat::loadMultiple(['html_date', 'html_time']);
+    $date_format = $formats['html_date']->getPattern();
+    $time_format = $formats['html_time']->getPattern();
+
+    $element += [
+      '#date_date_format' => $date_format,
+      '#date_time_format' => $time_format,
+    ];
     $format_settings = [];
     // The value callback has populated the #value array.
     $date = !empty($element['#value']['object']) ? $element['#value']['object'] : NULL;
@@ -233,13 +236,18 @@ class Datetime extends DateElementBase {
     if ($element['#date_date_element'] != 'none') {
 
       $date_format = $element['#date_date_element'] != 'none' ? static::getHtml5DateFormat($element) : '';
+      // With a datetime-local input, the date value is always normalized to
+      // the format Y-m-d\TH:i
+      // @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local
+      // 'html_datetime' returned by static::getHtml5DateFormat($element) is not
+      // a valid format.
+      // @see https://www.drupal.org/project/drupal/issues/3505318
+      if ($element['#date_date_element'] === 'datetime-local') {
+        $date_format = $formats['html_date']->getPattern() . '\T' . $formats['html_time']->getPattern();
+      }
       $date_value = !empty($date) ? $date->format($date_format, $format_settings) : $element['#value']['date'];
 
-      // Creating format examples on every individual date item is messy, and
-      // placeholders are invalid for HTML5 date and datetime, so an example
-      // format is appended to the title to appear in tooltips.
       $extra_attributes = [
-        'title' => t('Date (e.g. @format)', ['@format' => static::formatExample($date_format)]),
         'type' => $element['#date_date_element'],
       ];
 
@@ -285,7 +293,6 @@ class Datetime extends DateElementBase {
 
       // Adds the HTML5 attributes.
       $extra_attributes = [
-        'title' => t('Time (e.g. @format)', ['@format' => static::formatExample($time_format)]),
         'type' => $element['#date_time_element'],
         'step' => $element['#date_increment'],
       ];
@@ -352,9 +359,6 @@ class Datetime extends DateElementBase {
     if ($input_exists) {
 
       $title = static::getElementTitle($element, $complete_form);
-      $date_format = $element['#date_date_element'] != 'none' ? static::getHtml5DateFormat($element) : '';
-      $time_format = $element['#date_time_element'] != 'none' ? static::getHtml5TimeFormat($element) : '';
-      $format = trim($date_format . ' ' . $time_format);
 
       // If there's empty input and the field is not required, set it to empty.
       if (empty($input['date']) && empty($input['time']) && !$element['#required']) {
@@ -363,38 +367,40 @@ class Datetime extends DateElementBase {
       // If there's empty input and the field is required, set an error. A
       // reminder of the required format in the message provides a good UX.
       elseif (empty($input['date']) && empty($input['time']) && $element['#required']) {
-        $form_state->setError($element, t('The %field date is required. Please enter a date in the format %format.', ['%field' => $title, '%format' => static::formatExample($format)]));
+        if (isset($element['#required_error'])) {
+          $form_state->setError($element, $element['#required_error']);
+        }
+        else {
+          $form_state->setError($element, t('The %field date is required.', ['%field' => $title]));
+        }
       }
       else {
         // If the date is valid, set it.
         $date = $input['object'];
         if ($date instanceof DrupalDateTime && !$date->hasErrors()) {
-          $form_state->setValueForElement($element, $date);
+          $range = static::datetimeRangeYears($element['#date_year_range']);
+          $min = DrupalDateTime::createFromArray(['year' => $range[0]], $date->getTimezone());
+          $max = DrupalDateTime::createFromArray(['year' => $range[1] + 1], $date->getTimezone());
+
+          // Validate the date. It's valid if it's within the valid year range.
+          if ($date->getTimestamp() < $min->getTimestamp() || $date->getTimestamp() >= $max->getTimestamp()) {
+            $form_state->setError(
+              $element,
+              t('The %field date is invalid. Date should be in the %min-%max year range.',
+                ['%field' => $title, '%min' => $range[0], '%max' => $range[1]])
+            );
+          }
+          else {
+            $form_state->setValueForElement($element, $date);
+          }
         }
         // If the date is invalid, set an error. A reminder of the required
         // format in the message provides a good UX.
         else {
-          $form_state->setError($element, t('The %field date is invalid. Please enter a date in the format %format.', ['%field' => $title, '%format' => static::formatExample($format)]));
+          $form_state->setError($element, t('The %field date is invalid. Enter a date in the correct format.', ['%field' => $title]));
         }
       }
     }
-  }
-
-  /**
-   * Creates an example for a date format.
-   *
-   * This is centralized for a consistent method of creating these examples.
-   *
-   * @param string $format
-   *   The date format.
-   *
-   * @return string
-   */
-  public static function formatExample($format) {
-    if (!static::$dateExample) {
-      static::$dateExample = new DrupalDateTime();
-    }
-    return static::$dateExample->format($format);
   }
 
   /**

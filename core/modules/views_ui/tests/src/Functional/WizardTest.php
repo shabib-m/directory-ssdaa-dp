@@ -1,17 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Tests\views\Functional\Wizard\WizardTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the wizard.
  *
- * @group views_ui
  * @see \Drupal\views\Plugin\views\display\DisplayPluginBase
  * @see \Drupal\views\Plugin\views\display\PathPluginBase
  * @see \Drupal\views\Plugin\views\wizard\WizardPluginBase
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class WizardTest extends WizardTestBase {
 
   /**
@@ -22,10 +28,10 @@ class WizardTest extends WizardTestBase {
   /**
    * Tests filling in the wizard with really long strings.
    */
-  public function testWizardFieldLength() {
+  public function testWizardFieldLength(): void {
     $view = [];
     $view['label'] = $this->randomMachineName(256);
-    $view['id'] = strtolower($this->randomMachineName(129));
+    $view['id'] = $this->randomMachineName(129);
     $view['page[create]'] = TRUE;
     $view['page[path]'] = $this->randomMachineName(255);
     $view['page[title]'] = $this->randomMachineName(256);
@@ -48,7 +54,7 @@ class WizardTest extends WizardTestBase {
     $this->assertSession()->pageTextContains('REST export path cannot be longer than 254 characters but is currently 255 characters long.');
 
     $view['label'] = $this->randomMachineName(255);
-    $view['id'] = strtolower($this->randomMachineName(128));
+    $view['id'] = $this->randomMachineName(128);
     $view['page[create]'] = TRUE;
     $view['page[path]'] = $this->randomMachineName(254);
     $view['page[title]'] = $this->randomMachineName(255);
@@ -65,7 +71,7 @@ class WizardTest extends WizardTestBase {
     $this->submitForm($view, 'Save and edit');
     $this->assertSession()->addressEquals('admin/structure/views/view/' . $view['id']);
     // Assert that the page title is correctly truncated.
-    $this->assertSession()->pageTextContains(views_ui_truncate($view['page[title]'], 32));
+    $this->assertSession()->pageTextContains(Unicode::truncate($view['page[title]'], 32, FALSE, TRUE));
   }
 
 }

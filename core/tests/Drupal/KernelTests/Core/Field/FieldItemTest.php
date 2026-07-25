@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Field;
 
 use Drupal\entity_test\Entity\EntityTest;
@@ -7,15 +9,19 @@ use Drupal\entity_test\Entity\EntityTestMulRev;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test field item methods.
- *
- * @group Field
  */
+#[Group('Field')]
+#[RunTestsInSeparateProcesses]
 class FieldItemTest extends EntityKernelTestBase {
 
   /**
+   * The field name.
+   *
    * @var string
    */
   protected $fieldName;
@@ -32,9 +38,8 @@ class FieldItemTest extends EntityKernelTestBase {
     $entity_type_id = 'entity_test_mulrev';
     $this->installEntitySchema($entity_type_id);
 
-    $this->fieldName = mb_strtolower($this->randomMachineName());
+    $this->fieldName = $this->randomMachineName();
 
-    /** @var \Drupal\field\Entity\FieldStorageConfig $field_storage */
     FieldStorageConfig::create([
       'field_name' => $this->fieldName,
       'type' => 'field_test',
@@ -57,7 +62,7 @@ class FieldItemTest extends EntityKernelTestBase {
   /**
    * Tests the field item save workflow.
    */
-  public function testSaveWorkflow() {
+  public function testSaveWorkflow(): void {
     $entity = EntityTestMulRev::create([
       'name' => $this->randomString(),
       'field_test_item' => $this->randomString(),
@@ -97,6 +102,18 @@ class FieldItemTest extends EntityKernelTestBase {
     $entity = $this->reloadEntity($entity);
     $this->assertEquals($base_field_expected_value, $entity->field_test_item->value);
     $this->assertEquals($expected_value, $entity->{$this->fieldName}->value);
+  }
+
+  /**
+   * Tests \Drupal\Core\Field\TypedData\FieldItemDataDefinition::getLabel().
+   */
+  public function testGetLabel(): void {
+    $data_definition = \Drupal::service('typed_data_manager')->createDataDefinition('field_item:string');
+    $this->assertEquals('Short text', $data_definition->getLabel());
+
+    $label = 'Foo bar';
+    $data_definition->setLabel($label);
+    $this->assertEquals($label, $data_definition->getLabel());
   }
 
 }

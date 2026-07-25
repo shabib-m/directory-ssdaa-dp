@@ -2,9 +2,10 @@
 
 namespace Drupal\Core\Flood;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\DatabaseException;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Drupal\Core\Database\Connection;
 
 /**
  * Defines the database flood backend. This is the default Drupal backend.
@@ -17,31 +18,21 @@ class DatabaseBackend implements FloodInterface, PrefixFloodInterface {
   const TABLE_NAME = 'flood';
 
   /**
-   * The database connection used to store flood event information.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
-
-  /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
-
-  /**
    * Construct the DatabaseBackend.
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection which will be used to store the flood event
    *   information.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack used to retrieve the current request.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    */
-  public function __construct(Connection $connection, RequestStack $request_stack) {
-    $this->connection = $connection;
-    $this->requestStack = $request_stack;
+  public function __construct(
+    protected Connection $connection,
+    protected RequestStack $requestStack,
+    protected TimeInterface $time,
+  ) {
   }
 
   /**
@@ -83,8 +74,8 @@ class DatabaseBackend implements FloodInterface, PrefixFloodInterface {
       ->fields([
         'event' => $name,
         'identifier' => $identifier,
-        'timestamp' => REQUEST_TIME,
-        'expiration' => REQUEST_TIME + $window,
+        'timestamp' => $this->time->getRequestTime(),
+        'expiration' => $this->time->getRequestTime() + $window,
       ])
       ->execute();
   }
@@ -133,14 +124,16 @@ class DatabaseBackend implements FloodInterface, PrefixFloodInterface {
       $number = $this->connection->select(static::TABLE_NAME, 'f')
         ->condition('event', $name)
         ->condition('identifier', $identifier)
-        ->condition('timestamp', REQUEST_TIME - $window, '>')
+        ->condition('timestamp', $this->time->getRequestTime() - $window, '>')
         ->countQuery()
         ->execute()
         ->fetchField();
       return ($number < $threshold);
     }
     catch (\Exception $e) {
-      $this->catchException($e);
+      if (!$this->ensureTableExists()) {
+        throw $e;
+      }
       return TRUE;
     }
   }
@@ -151,7 +144,7 @@ class DatabaseBackend implements FloodInterface, PrefixFloodInterface {
   public function garbageCollection() {
     try {
       $this->connection->delete(static::TABLE_NAME)
-        ->condition('expiration', REQUEST_TIME, '<')
+        ->condition('expiration', $this->time->getRequestTime(), '<')
         ->execute();
     }
     catch (\Exception $e) {
@@ -171,9 +164,9 @@ class DatabaseBackend implements FloodInterface, PrefixFloodInterface {
     // If another process has already created the table, attempting to create
     // it will throw an exception. In this case just catch the exception and do
     // nothing.
-    catch (DatabaseException $e) {
+    catch (DatabaseException) {
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       return FALSE;
     }
     return TRUE;
@@ -186,7 +179,7 @@ class DatabaseBackend implements FloodInterface, PrefixFloodInterface {
    * yet the query failed, then the flood is stale and the exception needs to
    * propagate.
    *
-   * @param $e
+   * @param \Exception $e
    *   The exception.
    *
    * @throws \Exception

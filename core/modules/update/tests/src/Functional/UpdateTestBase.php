@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\update\Functional;
 
+use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 
@@ -23,6 +26,12 @@ use Drupal\Tests\BrowserTestBase;
  * initial state and availability scenario.
  */
 abstract class UpdateTestBase extends BrowserTestBase {
+  use UpdateTestTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = ['update', 'update_test'];
 
   /**
    * Denotes a security update will be required in the test case.
@@ -56,21 +65,21 @@ abstract class UpdateTestBase extends BrowserTestBase {
   /**
    * Refreshes the update status based on the desired available update scenario.
    *
-   * @param $xml_map
+   * @param array $xml_map
    *   Array that maps project names to availability scenarios to fetch. The key
    *   '#all' is used if a project-specific mapping is not defined.
-   * @param $url
+   * @param string $url
    *   (optional) A string containing the URL to fetch update data from.
    *   Defaults to 'update-test'.
    *
    * @see \Drupal\update_test\Controller\UpdateTestController::updateTest()
    */
   protected function refreshUpdateStatus($xml_map, $url = 'update-test') {
-    // Tell the Update Manager module to fetch from the URL provided by
+    // Tell the Update Status module to fetch from the URL provided by
     // update_test module.
     $this->config('update.settings')->set('fetch.url', Url::fromUri('base:' . $url, ['absolute' => TRUE])->toString())->save();
     // Save the map for UpdateTestController::updateTest() to use.
-    $this->config('update_test.settings')->set('xml_map', $xml_map)->save();
+    $this->mockReleaseHistory($xml_map);
     // Manually check the update status.
     $this->drupalGet('admin/reports/updates');
     $this->clickLink('Check manually');
@@ -84,7 +93,7 @@ abstract class UpdateTestBase extends BrowserTestBase {
     $this->assertSession()->responseContains('<h3>Drupal core</h3>');
     // Verify that the link to the Drupal project appears.
     $this->assertSession()->linkExists('Drupal');
-    $this->assertSession()->linkByHrefExists('http://example.com/project/drupal');
+    $this->assertSession()->linkByHrefExists('https://example.com/project/drupal');
     $this->assertSession()->pageTextNotContains('No available releases found');
     $this->assertSession()->pageTextContains('Last checked:');
     // No download URLs should be present.
@@ -126,8 +135,8 @@ abstract class UpdateTestBase extends BrowserTestBase {
       $assert_session->elementTextNotContains('css', $update_element_css_locator, 'Up to date');
       foreach ($expected_security_releases as $expected_security_release) {
         $expected_url_version = str_replace('.', '-', $expected_security_release);
-        $release_url = "http://example.com/$project_path_part-$expected_url_version-release";
-        $assert_session->responseNotContains("http://example.com/$project_path_part-$expected_url_version.tar.gz");
+        $release_url = "https://example.com/$project_path_part-$expected_url_version-release";
+        $assert_session->responseNotContains("https://example.com/$project_path_part-$expected_url_version.tar.gz");
         $expected_release_urls[] = $release_url;
         // Ensure the expected links are security links.
         $this->assertContains($release_url, $all_security_release_urls, "Release $release_url is a security release link.");
@@ -161,15 +170,17 @@ abstract class UpdateTestBase extends BrowserTestBase {
    *   The label for the update.
    * @param string $version
    *   The project version.
+   * @param int $index
+   *   (optional) The index of the link.
    */
-  protected function assertVersionUpdateLinks($label, $version) {
-    $update_element = $this->findUpdateElementByLabel($label);
+  protected function assertVersionUpdateLinks($label, $version, int $index = 0) {
+    $update_element = $this->findUpdateElementByLabel($label, $index);
     // In the release notes URL the periods are replaced with dashes.
     $url_version = str_replace('.', '-', $version);
 
-    $this->assertEquals($update_element->findLink($version)->getAttribute('href'), "http://example.com/{$this->updateProject}-$url_version-release");
-    $this->assertStringNotContainsString("http://example.com/{$this->updateProject}-$version.tar.gz", $update_element->getOuterHtml());
-    $this->assertEquals($update_element->findLink('Release notes')->getAttribute('href'), "http://example.com/{$this->updateProject}-$url_version-release");
+    $this->assertEquals($update_element->findLink($version)->getAttribute('href'), "https://example.com/{$this->updateProject}-$url_version-release");
+    $this->assertStringNotContainsString("https://example.com/{$this->updateProject}-$version.tar.gz", $update_element->getOuterHtml());
+    $this->assertEquals($update_element->findLink('Release notes')->getAttribute('href'), "https://example.com/{$this->updateProject}-$url_version-release");
   }
 
   /**
@@ -190,7 +201,7 @@ abstract class UpdateTestBase extends BrowserTestBase {
     $this->assertUpdateTableTextContains('Revoked!');
     $this->assertUpdateTableTextContains($revoked_version);
     $this->assertUpdateTableElementContains('error.svg');
-    $this->assertUpdateTableTextContains('Release revoked: Your currently installed release has been revoked, and is no longer available for download. Disabling everything included in this release or upgrading is strongly recommended!');
+    $this->assertUpdateTableTextContains('Release revoked: Your currently installed release has been revoked, and is no longer available for download. Uninstalling everything included in this release or upgrading is strongly recommended!');
     $this->assertVersionUpdateLinks($new_version_label, $newer_version);
   }
 
@@ -199,21 +210,28 @@ abstract class UpdateTestBase extends BrowserTestBase {
    *
    * @param string $unsupported_version
    *   The unsupported version that is currently installed.
-   * @param string $newer_version
-   *   The expected newer version to recommend.
-   * @param string $new_version_label
-   *   The expected label for the newer version (for example 'Recommended
-   *   version:' or 'Also available:').
+   * @param string|null $newer_version
+   *   (optional) The expected newer version to recommend.
+   * @param string|null $new_version_label
+   *   (optional) The expected label for the newer version. For example
+   *   'Recommended version:' or 'Also available:'.
    */
-  protected function confirmUnsupportedStatus($unsupported_version, $newer_version, $new_version_label) {
+  protected function confirmUnsupportedStatus(string $unsupported_version, ?string $newer_version = NULL, ?string $new_version_label = NULL) {
     $this->drupalGet('admin/reports/updates');
     $this->clickLink('Check manually');
     $this->checkForMetaRefresh();
     $this->assertUpdateTableTextContains('Not supported!');
     $this->assertUpdateTableTextContains($unsupported_version);
     $this->assertUpdateTableElementContains('error.svg');
-    $this->assertUpdateTableTextContains('Release not supported: Your currently installed release is now unsupported, and is no longer available for download. Disabling everything included in this release or upgrading is strongly recommended!');
-    $this->assertVersionUpdateLinks($new_version_label, $newer_version);
+    if ($newer_version === NULL) {
+      $this->assertUpdateTableTextContains('Release not supported: Your currently installed release is now unsupported, is no longer available for download and no update is available. Uninstalling everything included in this release is strongly recommended!');
+      $this->assertUpdateTableTextNotContains('Recommended version');
+    }
+    else {
+      $this->assertNotEmpty($newer_version);
+      $this->assertUpdateTableTextContains('Release not supported: Your currently installed release is now unsupported, and is no longer available for download. Uninstalling everything included in this release or upgrading is strongly recommended!');
+      $this->assertVersionUpdateLinks($new_version_label, $newer_version);
+    }
   }
 
   /**
@@ -271,15 +289,17 @@ abstract class UpdateTestBase extends BrowserTestBase {
    * @param string $label
    *   The label for the update, for example "Recommended version:" or
    *   "Latest version:".
+   * @param int $index
+   *   (optional) The index of the element.
    *
    * @return \Behat\Mink\Element\NodeElement
    *   The update element.
    */
-  protected function findUpdateElementByLabel($label) {
+  protected function findUpdateElementByLabel($label, int $index = 0): NodeElement {
     $update_elements = $this->getSession()->getPage()
       ->findAll('css', $this->updateTableLocator . " .project-update__version:contains(\"$label\")");
-    $this->assertCount(1, $update_elements);
-    return $update_elements[0];
+    $this->assertGreaterThanOrEqual($index, count($update_elements));
+    return $update_elements[$index];
   }
 
 }

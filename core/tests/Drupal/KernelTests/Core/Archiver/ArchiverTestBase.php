@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Archiver;
 
 use Drupal\KernelTests\Core\File\FileTestBase;
@@ -48,6 +50,7 @@ abstract class ArchiverTestBase extends FileTestBase {
     $configuration['filepath'] = $path;
     /** @var \Drupal\Core\Archiver\ArchiverManager $manager */
     $manager = $this->container->get('plugin.manager.archiver');
+    // @phpstan-ignore method.deprecatedClass
     $archive = $manager->createInstance($this->archiverPluginId, $configuration);
     $this->assertContains($file, $archive->listContents(), sprintf('The "%s" archive contains the "%s" file.', $path, $file));
   }
@@ -66,6 +69,7 @@ abstract class ArchiverTestBase extends FileTestBase {
     $configuration['filepath'] = $path;
     /** @var \Drupal\Core\Archiver\ArchiverManager $manager */
     $manager = $this->container->get('plugin.manager.archiver');
+    // @phpstan-ignore method.deprecatedClass
     $archive = $manager->createInstance($this->archiverPluginId, $configuration);
     $this->assertNotContains($file, $archive->listContents(), sprintf('The "%s" archive does not contain the "%s" file.', $path, $file));
   }

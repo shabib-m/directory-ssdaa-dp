@@ -1,14 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests JavaScript functionality specific to delete operations.
- *
- * @group node
  */
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeDeleteConfirmTest extends WebDriverTestBase {
 
   /**
@@ -43,7 +48,7 @@ class NodeDeleteConfirmTest extends WebDriverTestBase {
   /**
    * Tests that the node delete operation opens in a modal.
    */
-  public function testNodeDelete() {
+  public function testNodeDelete(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 
@@ -63,10 +68,10 @@ class NodeDeleteConfirmTest extends WebDriverTestBase {
     $this->assertEquals('Are you sure you want to delete the content item Delete article from content list?', $assert_session->waitForElement('css', '.ui-dialog-title')->getText());
     $page->find('css', '.ui-dialog-buttonset')->pressButton('Delete');
 
-    $assert_session->waitForText('The Article Delete article from content list has been deleted.');
+    $assert_session->pageTextContains('The Article Delete article from content list has been deleted.');
     // Assert that the node is deleted in above operation.
-    $this->drupalGet('/admin/content');
-    $assert_session->waitForText('There are no content items yet.');
+    $this->drupalGet('admin/content');
+    $assert_session->pageTextContains('There are no content items yet.');
 
     $node = $this->createNode([
       'type' => 'article',
@@ -80,17 +85,34 @@ class NodeDeleteConfirmTest extends WebDriverTestBase {
     $this->assertEquals('Are you sure you want to delete the content item Delete article from entity form?', $assert_session->waitForElement('css', '.ui-dialog-title')->getText());
 
     $page->find('css', '.ui-dialog-buttonset')->pressButton('Delete');
-    $this->assertSession()->pageTextContains('The Article Delete article from entity form has been deleted.');
+    $assert_session->pageTextContains('The Article Delete article from entity form has been deleted.');
 
-    // Assert that the node is deleted in above operation.
-    $this->drupalGet('/admin/content');
-    $assert_session->waitForText('There are no content items yet.');
+    $node = $this->createNode([
+      'type' => 'article',
+      'title' => 'Delete article from views entity operations',
+    ]);
+    $node->save();
+
+    \Drupal::service('module_installer')->install(['views']);
+    $view = Views::getView('content');
+    $view->storage->enable()->save();
+    \Drupal::service('router.builder')->rebuildIfNeeded();
+
+    $this->drupalGet('admin/content');
+    $page->find('css', '.dropbutton-toggle button')->click();
+    $page->clickLink('Delete');
+    // Asserts a dialog opens with the expected text.
+    $this->assertEquals('Are you sure you want to delete the content item Delete article from views entity operations?', $assert_session->waitForElement('css', '.ui-dialog-title')->getText());
+    $page->find('css', '.ui-dialog-buttonset')->pressButton('Delete');
+
+    $assert_session->pageTextContains('The Article Delete article from views entity operations has been deleted.');
+    $assert_session->pageTextContains('No content available.');
   }
 
   /**
    * Tests that the node type delete operation opens in a modal.
    */
-  public function testNodeTypeDelete() {
+  public function testNodeTypeDelete(): void {
     $page = $this->getSession()->getPage();
 
     // Delete node type using link on the content type list.

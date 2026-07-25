@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Functional;
 
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\Tests\system\Functional\Menu\AssertBreadcrumbTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Create a block and test block edit functionality.
- *
- * @group block_content
  */
+#[Group('block_content')]
+#[RunTestsInSeparateProcesses]
 class PageEditTest extends BlockContentTestBase {
 
   use AssertBreadcrumbTrait;
@@ -32,14 +36,14 @@ class PageEditTest extends BlockContentTestBase {
   /**
    * Checks block edit functionality.
    */
-  public function testPageEdit() {
+  public function testPageEdit(): void {
     $this->drupalLogin($this->adminUser);
 
     $title_key = 'info[0][value]';
     $body_key = 'body[0][value]';
     // Create block to edit.
     $edit = [];
-    $edit['info[0][value]'] = mb_strtolower($this->randomMachineName(8));
+    $edit['info[0][value]'] = $this->randomMachineName(8);
     $edit[$body_key] = $this->randomMachineName(16);
     $this->drupalGet('block/add/basic');
     $this->submitForm($edit, 'Save');
@@ -73,7 +77,6 @@ class PageEditTest extends BlockContentTestBase {
     $this->submitForm($edit, 'Save');
 
     // Ensure that the block revision has been created.
-    \Drupal::entityTypeManager()->getStorage('block_content')->resetCache([$block->id()]);
     $revised_block = BlockContent::load($block->id());
     $this->assertNotSame($block->getRevisionId(), $revised_block->getRevisionId(), 'A new revision has been created.');
 
@@ -86,11 +89,9 @@ class PageEditTest extends BlockContentTestBase {
     $trail = [
       '' => 'Home',
       'admin/content/block' => 'Content blocks',
-      'admin/content/block/' . $revised_block->id() => $revised_block->label(),
+      'admin/content/block/' . $revised_block->id() => 'Edit ' . $revised_block->label(),
     ];
-    $this->assertBreadcrumb(
-      'admin/content/block/' . $revised_block->id() . '/delete', $trail
-    );
+    $this->assertBreadcrumb('admin/content/block/' . $revised_block->id() . '/delete', $trail);
   }
 
 }

@@ -4,6 +4,7 @@ namespace Drupal\field\Plugin\migrate\process;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -37,10 +38,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @see \Drupal\migrate\Plugin\MigrateProcessInterface
  * @see \Drupal\migrate_drupal\Plugin\MigrateFieldInterface;
  *
- * @MigrateProcessPlugin(
- *   id = "process_field"
- * )
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no
+ * replacement.
+ *
+ * @see https://www.drupal.org/node/3533566
  */
+#[MigrateProcess('process_field')]
 class ProcessField extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -71,20 +74,22 @@ class ProcessField extends ProcessPluginBase implements ContainerFactoryPluginIn
    * @param \Drupal\migrate\Plugin\MigrationInterface $migration
    *   The migration being run.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrateFieldPluginManagerInterface $field_plugin_manager, MigrationInterface $migration = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrateFieldPluginManagerInterface $field_plugin_manager, ?MigrationInterface $migration = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->fieldPluginManager = $field_plugin_manager;
     $this->migration = $migration;
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3533566', E_USER_DEPRECATED);
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,
       $plugin_definition,
+      // @phpstan-ignore getDeprecatedService.deprecated
       $container->get('plugin.manager.migrate.field'),
       $migration
     );
@@ -106,7 +111,7 @@ class ProcessField extends ProcessPluginBase implements ContainerFactoryPluginIn
     try {
       return $this->callMethodOnFieldPlugin($this->fieldPluginManager, $value, $method, $row);
     }
-    catch (PluginNotFoundException $e) {
+    catch (PluginNotFoundException) {
       return NULL;
     }
   }

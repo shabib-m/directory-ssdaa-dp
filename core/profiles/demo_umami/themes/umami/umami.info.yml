@@ -6,9 +6,8 @@ description: 'The theme used for the Umami food magazine demonstration site.'
 libraries:
   - umami/classy.base
   - core/normalize
+  - core/drupal.message
   - umami/global
-dependencies:
-  - drupal:sdc
 
 libraries-override:
   layout_builder/twocol_section:
@@ -27,8 +26,6 @@ libraries-override:
 libraries-extend:
   core/drupal.message:
     - umami/messages
-  tour/tour-styling:
-    - umami/demo-umami-tour
   core/drupal.dialog:
     - umami/classy.dialog
   core/drupal.dropbutton:
@@ -68,7 +65,7 @@ regions:
   page_top: 'Page top' # Needed by Drupal Core
   page_bottom: 'Page bottom' # Needed by Drupal Core
 
-# Information added by Drupal.org packaging script on 2023-11-01
-version: '10.1.6'
+# Information added by Drupal.org packaging script on 2026-07-15
+version: '11.4.4'
 project: 'drupal'
-datestamp: 1698841355
+datestamp: 1784141321

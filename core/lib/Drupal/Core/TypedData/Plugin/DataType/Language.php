@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\TypedData\Plugin\DataType;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\TypedData\Attribute\DataType;
 use Drupal\Core\TypedData\TypedData;
 
 /**
@@ -10,13 +12,12 @@ use Drupal\Core\TypedData\TypedData;
  * The plain value of a language is the language object, i.e. an instance of
  * \Drupal\Core\Language\Language. For setting the value the language object or
  * the language code as string may be passed.
- *
- * @DataType(
- *   id = "language",
- *   label = @Translation("Language"),
- *   description = @Translation("A language object.")
- * )
  */
+#[DataType(
+  id: "language",
+  label: new TranslatableMarkup("Language"),
+  description: new TranslatableMarkup("A language object.")
+)]
 class Language extends TypedData {
 
   /**
@@ -32,9 +33,10 @@ class Language extends TypedData {
   protected $language;
 
   /**
-   * Overrides TypedData::getValue().
+   * {@inheritdoc}
    *
    * @return \Drupal\Core\Language\LanguageInterface|null
+   *   The language object, or NULL if the language is not set.
    */
   public function getValue() {
     if (!isset($this->language) && $this->id) {

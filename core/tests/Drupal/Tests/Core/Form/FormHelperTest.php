@@ -1,23 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Form;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormHelper;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Form\FormHelper
- * @group Form
+ * Tests Drupal\Core\Form\FormHelper.
  */
+#[CoversClass(FormHelper::class)]
+#[Group('Form')]
 class FormHelperTest extends UnitTestCase {
 
   /**
    * Tests rewriting the #states selectors.
-   *
-   * @covers ::rewriteStatesSelector
    */
-  public function testRewriteStatesSelector() {
+  public function testRewriteStatesSelector(): void {
 
     // Simple selectors.
     $value = ['value' => 'medium'];
@@ -84,10 +88,10 @@ class FormHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::processStates
-   * @dataProvider providerElements
+   * Tests process states.
    */
-  public function testProcessStates($elements, $key) {
+  #[DataProvider('providerElements')]
+  public function testProcessStates($elements, $key): void {
     $json = Json::encode($elements['#states']);
     FormHelper::processStates($elements);
     $this->assertEquals(['core/drupal.states'], $elements['#attached']['library']);
@@ -97,7 +101,7 @@ class FormHelperTest extends UnitTestCase {
   /**
    * Provides a list of elements to test.
    */
-  public function providerElements() {
+  public static function providerElements(): array {
     return [
       [
         [
@@ -118,6 +122,8 @@ class FormHelperTest extends UnitTestCase {
               ':input[name="foo"]' => ['value' => 'bar'],
             ],
           ],
+          '#markup' => '',
+          '#input' => TRUE,
         ],
         '#wrapper_attributes',
       ],

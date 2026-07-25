@@ -1,8 +1,8 @@
 <?php
 
-namespace Drupal\driver_test\Driver\Database\DrivertestPgsql;
+declare(strict_types=1);
 
-include_once dirname(__DIR__, 8) . '/pgsql/src/Driver/Database/pgsql/Connection.php';
+namespace Drupal\driver_test\Driver\Database\DriverTestPgsql;
 
 use Drupal\pgsql\Driver\Database\pgsql\Connection as CoreConnection;
 
@@ -15,7 +15,7 @@ class Connection extends CoreConnection {
    * {@inheritdoc}
    */
   public function driver() {
-    return 'DrivertestPgsql';
+    return 'DriverTestPgsql';
   }
 
 }

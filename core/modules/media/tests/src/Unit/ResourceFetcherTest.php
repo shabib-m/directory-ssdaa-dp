@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Unit;
 
 use Drupal\Component\Serialization\Json;
@@ -12,12 +14,14 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @group media
- *
- * @coversDefaultClass \Drupal\media\OEmbed\ResourceFetcher
+ * Tests Drupal\media\OEmbed\ResourceFetcher.
  */
+#[CoversClass(ResourceFetcher::class)]
+#[Group('media')]
 class ResourceFetcherTest extends UnitTestCase {
 
   /**
@@ -35,15 +39,17 @@ class ResourceFetcherTest extends UnitTestCase {
     ]);
     $response = new Response(200, $headers, $body);
 
+    $non_default_timeout = 10;
     $client = $this->prophesize(Client::class);
-    $client->request('GET', $url, [RequestOptions::TIMEOUT => 5])
+    $client->request('GET', $url, [RequestOptions::TIMEOUT => $non_default_timeout])
       ->shouldBeCalled()
       ->willReturn($response);
 
     $fetcher = new ResourceFetcher(
       $client->reveal(),
       $this->createMock('\Drupal\media\OEmbed\ProviderRepositoryInterface'),
-      new NullBackend('default')
+      new NullBackend('default'),
+      $non_default_timeout
     );
     $fetcher->fetchResource($url);
   }
@@ -51,7 +57,7 @@ class ResourceFetcherTest extends UnitTestCase {
   /**
    * Tests how the resource fetcher handles unknown Content-Type headers.
    *
-   * @covers ::fetchResource
+   * @legacy-covers ::fetchResource
    */
   public function testUnknownContentTypeHeader(): void {
     $headers = [

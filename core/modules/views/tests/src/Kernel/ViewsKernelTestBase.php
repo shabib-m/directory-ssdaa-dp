@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel;
 
 use Drupal\Core\Database\Database;
@@ -28,7 +30,7 @@ abstract class ViewsKernelTestBase extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'path_alias',
+    'filter',
     'system',
     'views',
     'views_test_config',
@@ -47,7 +49,6 @@ abstract class ViewsKernelTestBase extends KernelTestBase {
   protected function setUp($import_test_views = TRUE): void {
     parent::setUp();
 
-    $this->installSchema('system', ['sequences']);
     $this->setUpFixtures();
 
     if ($import_test_views) {
@@ -68,7 +69,8 @@ abstract class ViewsKernelTestBase extends KernelTestBase {
 
     /** @var \Drupal\Core\State\StateInterface $state */
     $state = $this->container->get('state');
-    // Define the schema and views data variable before enabling the test module.
+    // Define the schema and views data variable before enabling the test
+    // module.
     $state->set('views_test_data_schema', $this->schemaDefinition());
     $state->set('views_test_data_views_data', $this->viewsData());
     $this->container->get('views.views_data')->clear();

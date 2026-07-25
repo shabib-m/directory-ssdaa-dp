@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_layout\FunctionalJavascript;
 
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests using field layout for entity displays.
- *
- * @group field_layout
  */
+#[Group('field_layout')]
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class FieldLayoutTest extends WebDriverTestBase {
 
   /**
@@ -54,7 +60,7 @@ class FieldLayoutTest extends WebDriverTestBase {
   /**
    * Tests that layouts are unique per view mode.
    */
-  public function testEntityViewModes() {
+  public function testEntityViewModes(): void {
     // By default, the field is not visible.
     $this->drupalGet('entity_test/1/test');
     $this->assertSession()->elementNotExists('css', '.layout__region--content ');
@@ -64,13 +70,14 @@ class FieldLayoutTest extends WebDriverTestBase {
     // Change the layout for the "test" view mode. See
     // core.entity_view_mode.entity_test.test.yml.
     $this->drupalGet('entity_test/structure/entity_test/display');
-    $this->click('#edit-modes');
-    $this->getSession()->getPage()->checkField('display_modes_custom[test]');
-    $this->submitForm([], 'Save');
-    $this->clickLink('configure them');
+    $page = $this->getSession()->getPage();
+    $enable_link = $page->find('xpath', "//tr[@id='display-mode-entity-test-entity-test-test']//a[contains(., 'Enable')]");
+    if ($enable_link) {
+      $enable_link->click();
+    }
+    $this->drupalGet('entity_test/structure/entity_test/display/test');
     $this->getSession()->getPage()->pressButton('Show row weights');
     $this->getSession()->getPage()->selectFieldOption('fields[field_test_text][region]', 'content');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->submitForm([], 'Save');
 
     // Each view mode has a different layout.
@@ -83,7 +90,7 @@ class FieldLayoutTest extends WebDriverTestBase {
   /**
    * Tests the use of field layout for entity form displays.
    */
-  public function testEntityForm() {
+  public function testEntityForm(): void {
     // By default, the one-column layout is used.
     $this->drupalGet('entity_test/manage/1/edit');
     $this->assertFieldInRegion('field_test_text[0][value]', 'content');
@@ -136,7 +143,6 @@ class FieldLayoutTest extends WebDriverTestBase {
     $this->drupalGet('entity_test/structure/entity_test/form-display');
     $this->getSession()->getPage()->pressButton('Show row weights');
     $this->getSession()->getPage()->selectFieldOption('fields[field_test_text][region]', 'second');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->submitForm([], 'Save');
     $this->assertSession()->pageTextContains('Your settings have been saved.');
 
@@ -153,9 +159,9 @@ class FieldLayoutTest extends WebDriverTestBase {
   /**
    * Tests the use of field layout for entity view displays.
    */
-  public function testEntityView() {
+  public function testEntityView(): void {
     // The one-column layout is in use.
-    $this->drupalGet('entity_test/structure/entity_test/display');
+    $this->drupalGet('entity_test/structure/entity_test/display/default');
     $this->assertEquals(['Content', 'Disabled'], $this->getRegionTitles());
 
     // Switch the layout to two columns.
@@ -174,7 +180,7 @@ class FieldLayoutTest extends WebDriverTestBase {
     $this->assertSession()->pageTextNotContains('The field test text value');
 
     // After a refresh the new regions are still there.
-    $this->drupalGet('entity_test/structure/entity_test/display');
+    $this->drupalGet('entity_test/structure/entity_test/display/default');
     $this->assertEquals(['Top', 'First', 'Second', 'Bottom', 'Disabled'], $this->getRegionTitles());
     $this->assertSession()->waitForElement('css', '.tabledrag-handle');
     $id = $this->getSession()->getPage()->find('css', '[name="form_build_id"]')->getValue();
@@ -196,10 +202,9 @@ class FieldLayoutTest extends WebDriverTestBase {
     $this->assertSession()->elementTextContains('css', '.layout__region--first', 'The field test text value');
 
     // Move the field to the second region without tabledrag.
-    $this->drupalGet('entity_test/structure/entity_test/display');
+    $this->drupalGet('entity_test/structure/entity_test/display/default');
     $this->getSession()->getPage()->pressButton('Show row weights');
     $this->getSession()->getPage()->selectFieldOption('fields[field_test_text][region]', 'second');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->submitForm([], 'Save');
     $this->assertSession()->pageTextContains('Your settings have been saved.');
 
@@ -217,35 +222,34 @@ class FieldLayoutTest extends WebDriverTestBase {
   /**
    * Tests layout plugins with forms.
    */
-  public function testLayoutForms() {
-    $this->drupalGet('entity_test/structure/entity_test/display');
+  public function testLayoutForms(): void {
+    $this->drupalGet('entity_test/structure/entity_test/display/default');
     // Switch to a field layout with settings.
     $this->click('#edit-field-layouts');
 
     // Test switching between layouts with and without forms.
     $this->getSession()->getPage()->selectFieldOption('field_layout', 'layout_test_plugin');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->assertExpectedAjaxRequest(1);
     $this->assertSession()->fieldExists('settings_wrapper[layout_settings][setting_1]');
 
     $this->getSession()->getPage()->selectFieldOption('field_layout', 'layout_test_2col');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->assertExpectedAjaxRequest(2);
     $this->assertSession()->fieldNotExists('settings_wrapper[layout_settings][setting_1]');
 
     $this->getSession()->getPage()->selectFieldOption('field_layout', 'layout_test_plugin');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->assertExpectedAjaxRequest(3);
     $this->assertSession()->fieldExists('settings_wrapper[layout_settings][setting_1]');
 
     // Move the test field to the content region.
     $this->getSession()->getPage()->pressButton('Show row weights');
     $this->getSession()->getPage()->selectFieldOption('fields[field_test_text][region]', 'content');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->submitForm([], 'Save');
 
     $this->drupalGet('entity_test/1');
     $this->assertSession()->pageTextContains('Blah: Default');
 
     // Update the field layout settings.
-    $this->drupalGet('entity_test/structure/entity_test/display');
+    $this->drupalGet('entity_test/structure/entity_test/display/default');
     $this->click('#edit-field-layouts');
     $this->getSession()->getPage()->fillField('settings_wrapper[layout_settings][setting_1]', 'Test text');
     $this->submitForm([], 'Save');
@@ -257,12 +261,12 @@ class FieldLayoutTest extends WebDriverTestBase {
   /**
    * Tests changing the formatter and region at the same time.
    */
-  public function testChangingFormatterAndRegion() {
+  public function testChangingFormatterAndRegion(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
     // Add the test field to the content region.
-    $this->drupalGet('entity_test/structure/entity_test/display');
+    $this->drupalGet('entity_test/structure/entity_test/display/default');
     $page->find('css', '#field-test-text .handle')->dragTo($page->find('css', '.region-content-message'));
     $assert_session->assertWaitOnAjaxRequest();
     $page->pressButton('Save');
@@ -294,7 +298,7 @@ class FieldLayoutTest extends WebDriverTestBase {
    * @return string[]
    *   An array of region titles.
    */
-  protected function getRegionTitles() {
+  protected function getRegionTitles(): array {
     $region_titles = [];
     $region_title_elements = $this->getSession()->getPage()->findAll('css', '.region-title td');
     /** @var \Behat\Mink\Element\NodeElement[] $region_title_elements */

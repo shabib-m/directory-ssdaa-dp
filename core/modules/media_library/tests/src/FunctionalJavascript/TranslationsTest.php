@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media_library\FunctionalJavascript;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -7,18 +9,20 @@ use Drupal\file\Entity\File;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\media\Entity\Media;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests media library for translatable media.
- *
- * @group media_library
  */
+#[Group('media_library')]
+#[RunTestsInSeparateProcesses]
 class TranslationsTest extends WebDriverTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
   use MediaTypeCreationTrait;
   use TestFileCreationTrait;
 
@@ -119,7 +123,7 @@ class TranslationsTest extends WebDriverTestBase {
   /**
    * Tests the media library widget shows all media only once.
    */
-  public function testMediaLibraryTranslations() {
+  public function testMediaLibraryTranslations(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 

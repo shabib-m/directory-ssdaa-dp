@@ -1,23 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Unit\Access;
 
 use Drupal\content_translation\Access\ContentTranslationManageAccessCheck;
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\Language;
+use Drupal\Tests\Core\Entity\ContentEntityBaseMockableClass;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Routing\Route;
 
 /**
  * Tests for content translation manage check.
- *
- * @coversDefaultClass \Drupal\content_translation\Access\ContentTranslationManageAccessCheck
- * @group Access
- * @group content_translation
  */
+#[CoversClass(ContentTranslationManageAccessCheck::class)]
+#[Group('Access')]
+#[Group('content_translation')]
 class ContentTranslationManageAccessCheckTest extends UnitTestCase {
 
   /**
@@ -46,9 +50,9 @@ class ContentTranslationManageAccessCheckTest extends UnitTestCase {
   /**
    * Tests the create access method.
    *
-   * @covers ::access
+   * @legacy-covers ::access
    */
-  public function testCreateAccess() {
+  public function testCreateAccess(): void {
     // Set the mock translation handler.
     $translation_handler = $this->createMock('\Drupal\content_translation\ContentTranslationHandlerInterface');
     $translation_handler->expects($this->once())
@@ -79,7 +83,7 @@ class ContentTranslationManageAccessCheckTest extends UnitTestCase {
 
     // Set the mock entity. We need to use ContentEntityBase for mocking due to
     // issues with phpunit and multiple interfaces.
-    $entity = $this->getMockBuilder('Drupal\Core\Entity\ContentEntityBase')
+    $entity = $this->getMockBuilder(ContentEntityBaseMockableClass::class)
       ->disableOriginalConstructor()
       ->getMock();
     $entity->expects($this->once())

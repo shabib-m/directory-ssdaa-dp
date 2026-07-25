@@ -2,12 +2,12 @@
 
 namespace Drupal\captcha\Element;
 
-use Drupal\captcha\Constants\CaptchaConstants;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element\FormElement;
+use Drupal\captcha\Constants\CaptchaConstants;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -286,6 +286,21 @@ class Captcha extends FormElement implements ContainerFactoryPluginInterface {
       // Update captcha_sessions table: store the solution
       // of the generated CAPTCHA.
       _captcha_update_captcha_session($captcha_sid, $captcha_info['solution']);
+
+      // For "show always" persistence, regenerate the token after validation
+      // since it may have been invalidated to prevent replay attacks. This
+      // ensures the rendered form has a valid token for the next submission.
+      // @see https://www.drupal.org/project/captcha/issues/3558256
+      $captcha_persistence = \Drupal::config('captcha.settings')
+        ->get('persistence');
+      if ($captcha_persistence == CaptchaConstants::CAPTCHA_PERSISTENCE_SHOW_ALWAYS) {
+        $new_token = Crypt::randomBytesBase64();
+        \Drupal::database()->update('captcha_sessions')
+          ->fields(['token' => $new_token])
+          ->condition('csid', $captcha_sid)
+          ->execute();
+        $element['captcha_token']['#value'] = $new_token;
+      }
 
       // Handle the response field if it is available and if it is a textfield.
       if (isset($element['captcha_widgets']['captcha_response']['#type']) && $element['captcha_widgets']['captcha_response']['#type'] == 'textfield') {

@@ -8,7 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Menu\MenuLinkBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\menu_link_content\MenuLinkContentInterface;
 
 /**
  * Provides the menu link plugin for content menu links.
@@ -82,7 +82,7 @@ class MenuLinkContent extends MenuLinkBase implements ContainerFactoryPluginInte
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -108,20 +108,6 @@ class MenuLinkContent extends MenuLinkBase implements ContainerFactoryPluginInte
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('language_manager'),
-      $container->get('entity.repository')
-    );
-  }
-
-  /**
    * Loads the entity associated with this menu link.
    *
    * @return \Drupal\menu_link_content\MenuLinkContentInterface
@@ -130,7 +116,7 @@ class MenuLinkContent extends MenuLinkBase implements ContainerFactoryPluginInte
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    *   If the entity ID and UUID are both invalid or missing.
    */
-  protected function getEntity() {
+  public function getEntity(): MenuLinkContentInterface {
     if (empty($this->entity)) {
       $entity = NULL;
       $storage = $this->entityTypeManager->getStorage('menu_link_content');

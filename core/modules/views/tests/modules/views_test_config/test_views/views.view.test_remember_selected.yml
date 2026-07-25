@@ -6,7 +6,7 @@ dependencies:
   module:
     - node
 id: test_remember_selected
-label: ''
+label: test_remember_selected
 module: views
 description: ''
 tag: ''
@@ -60,8 +60,6 @@ display:
             remember_roles:
               anonymous: anonymous
               authenticated: authenticated
-              content_editor: '0'
-              administrator: '0'
             reduce: false
           is_grouped: false
           group_info:

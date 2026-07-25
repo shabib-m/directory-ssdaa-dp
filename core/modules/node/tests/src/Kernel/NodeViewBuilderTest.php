@@ -1,19 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel;
 
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
+use Drupal\node\NodeViewBuilder;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the node view builder.
- *
- * @group node
- *
- * @coversDefaultClass \Drupal\node\NodeViewBuilder
  */
+#[CoversClass(NodeViewBuilder::class)]
+#[Group('node')]
+#[RunTestsInSeparateProcesses]
 class NodeViewBuilderTest extends EntityKernelTestBase {
 
   /**
@@ -65,11 +70,11 @@ class NodeViewBuilderTest extends EntityKernelTestBase {
   /**
    * Tests that node links are displayed correctly in pending revisions.
    *
-   * @covers ::buildComponents
-   * @covers ::renderLinks
-   * @covers ::buildLinks
+   * @legacy-covers ::buildComponents
+   * @legacy-covers ::renderLinks
+   * @legacy-covers ::buildLinks
    */
-  public function testPendingRevisionLinks() {
+  public function testPendingRevisionLinks(): void {
     $account = User::create([
       'name' => $this->randomString(),
     ]);
@@ -90,11 +95,11 @@ class NodeViewBuilderTest extends EntityKernelTestBase {
     $pending_revision->save();
 
     $build = $this->viewBuilder->view($node, 'teaser');
-    $output = (string) $this->renderer->renderPlain($build);
+    $output = (string) $this->renderer->renderInIsolation($build);
     $this->assertStringContainsString("title=\"$title\"", $output);
 
     $build = $this->viewBuilder->view($pending_revision, 'teaser');
-    $output = (string) $this->renderer->renderPlain($build);
+    $output = (string) $this->renderer->renderInIsolation($build);
     $this->assertStringContainsString("title=\"$draft_title\"", $output);
   }
 

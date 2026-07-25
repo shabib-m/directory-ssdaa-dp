@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Unit\process;
 
 use Drupal\language\Plugin\migrate\process\LanguageDomains;
 use Drupal\Tests\migrate\Unit\process\MigrateProcessTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 
 /**
- * @coversDefaultClass \Drupal\language\Plugin\migrate\process\LanguageDomains
- * @group language
+ * Tests Drupal\language\Plugin\migrate\process\LanguageDomains.
  */
+#[CoversClass(LanguageDomains::class)]
+#[Group('language')]
+#[IgnoreDeprecations]
 class LanguageDomainsTest extends MigrateProcessTestCase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected $backupGlobalsBlacklist = ['base_url'];
 
   /**
    * {@inheritdoc}
@@ -40,9 +42,9 @@ class LanguageDomainsTest extends MigrateProcessTestCase {
   }
 
   /**
-   * @covers ::transform
+   * Tests transform.
    */
-  public function testTransform() {
+  public function testTransform(): void {
     $source = [
       ['language' => 'en', 'domain' => ''],
       ['language' => 'fr', 'domain' => 'fr.example.com'],

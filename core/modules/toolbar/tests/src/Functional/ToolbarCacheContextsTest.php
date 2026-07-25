@@ -1,25 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\toolbar\Functional;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
-use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the cache contexts for toolbar.
- *
- * @group toolbar
  */
+#[Group('toolbar')]
+#[RunTestsInSeparateProcesses]
 class ToolbarCacheContextsTest extends BrowserTestBase {
 
   use AssertPageCacheContextsAndTagsTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['toolbar', 'test_page_test'];
 
@@ -66,7 +68,7 @@ class ToolbarCacheContextsTest extends BrowserTestBase {
   /**
    * Tests toolbar cache integration.
    */
-  public function testCacheIntegration() {
+  public function testCacheIntegration(): void {
     $this->installExtraModules(['csrf_test', 'dynamic_page_cache']);
     $this->drupalLogin($this->adminUser);
     $this->drupalGet('test-page');
@@ -80,12 +82,12 @@ class ToolbarCacheContextsTest extends BrowserTestBase {
   /**
    * Tests toolbar cache contexts.
    */
-  public function testToolbarCacheContextsCaller() {
+  public function testToolbarCacheContextsCaller(): void {
     // Test with default combination and permission to see toolbar.
-    $this->assertToolbarCacheContexts(['user'], 'Expected cache contexts found for default combination and permission to see toolbar.');
+    $this->assertToolbarCacheContexts(['user', 'session'], 'Expected cache contexts found for default combination and permission to see toolbar.');
 
-    // Test without user toolbar tab. User module is a required module so we have to
-    // manually remove the user toolbar tab.
+    // Test without user toolbar tab. User module is a required module so we
+    // have to manually remove the user toolbar tab.
     $this->installExtraModules(['toolbar_disable_user_toolbar']);
     $this->assertToolbarCacheContexts(['user.permissions'], 'Expected cache contexts found without user toolbar tab.');
 
@@ -95,11 +97,11 @@ class ToolbarCacheContextsTest extends BrowserTestBase {
     $this->assertToolbarCacheContexts(['user.permissions'], 'Expected cache contexts found with contextual module enabled.');
     \Drupal::service('module_installer')->uninstall(['contextual']);
 
-    // Test with the tour module enabled.
-    $this->installExtraModules(['tour']);
-    $this->adminUser2 = $this->drupalCreateUser(array_merge($this->perms, ['access tour']));
-    $this->assertToolbarCacheContexts(['user.permissions'], 'Expected cache contexts found with tour module enabled.');
-    \Drupal::service('module_installer')->uninstall(['tour']);
+    // Test with the comment module enabled.
+    $this->installExtraModules(['comment']);
+    $this->adminUser2 = $this->drupalCreateUser(array_merge($this->perms, ['access comments']));
+    $this->assertToolbarCacheContexts(['user.permissions'], 'Expected cache contexts found with comment module enabled.');
+    \Drupal::service('module_installer')->uninstall(['comment']);
   }
 
   /**
@@ -112,7 +114,7 @@ class ToolbarCacheContextsTest extends BrowserTestBase {
    *
    * @internal
    */
-  protected function assertToolbarCacheContexts(array $cache_contexts, string $message = NULL): void {
+  protected function assertToolbarCacheContexts(array $cache_contexts, ?string $message = NULL): void {
     // Default cache contexts that should exist on all test cases.
     $default_cache_contexts = [
       'languages:language_interface',
@@ -139,7 +141,7 @@ class ToolbarCacheContextsTest extends BrowserTestBase {
    * @param string[] $module_list
    *   An array of module names.
    */
-  protected function installExtraModules(array $module_list) {
+  protected function installExtraModules(array $module_list): void {
     \Drupal::service('module_installer')->install($module_list);
 
     // Installing modules updates the container and needs a router rebuild.

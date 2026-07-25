@@ -1,0 +1,28 @@
+_meta:
+  version: '1.0'
+  entity_type: taxonomy_term
+  uuid: 845214ac-044f-423a-bf3b-529ae1048a8c
+  bundle: main
+  default_langcode: ar
+  depends:
+    3cdfdc2f-e7c2-49fe-b8de-4171a44926f8: taxonomy_term
+default:
+  status:
+    -
+      value: true
+  name:
+    -
+      value: 'القرآن الكريم'
+  weight:
+    -
+      value: 0
+  parent:
+    -
+      entity: 3cdfdc2f-e7c2-49fe-b8de-4171a44926f8
+  path:
+    -
+      alias: ''
+      langcode: ar
+  field_sndwq_alaqsam:
+    -
+      value: false

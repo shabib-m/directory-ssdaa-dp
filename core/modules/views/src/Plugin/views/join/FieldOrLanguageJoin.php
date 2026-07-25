@@ -3,6 +3,7 @@
 namespace Drupal\views\Plugin\views\join;
 
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\views\Attribute\ViewsJoin;
 
 /**
  * Implementation for the "field OR language" join.
@@ -55,12 +56,11 @@ use Drupal\Core\Database\Query\SelectInterface;
  *     )
  * @endcode
  *
- * @see views_field_default_views_data()
+ * @see FieldViewsDataProvider::defaultFieldImplementation()
  *
  * @ingroup views_join_handlers
- *
- * @ViewsJoin("field_or_language_join")
  */
+#[ViewsJoin("field_or_language_join")]
 class FieldOrLanguageJoin extends JoinPluginBase {
 
   /**

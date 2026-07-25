@@ -1,22 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
-use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\jsonapi\Traits\GetDocumentFromResponseTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use GuzzleHttp\RequestOptions;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Makes assertions about the JSON:API behavior for internal entities.
  *
- * @group jsonapi
- *
  * @internal
  */
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class EntryPointTest extends BrowserTestBase {
 
+  use GetDocumentFromResponseTrait;
   use JsonApiRequestTestTrait;
   use UserCreationTrait;
 
@@ -37,12 +42,13 @@ class EntryPointTest extends BrowserTestBase {
   /**
    * Test GET to the entry point.
    */
-  public function testEntryPoint() {
+  public function testEntryPoint(): void {
     $request_options = [];
     $request_options[RequestOptions::HEADERS]['Accept'] = 'application/vnd.api+json';
     $response = $this->request('GET', Url::fromUri('base://jsonapi'), $request_options);
-    $document = Json::decode((string) $response->getBody());
+    $document = $this->getDocumentFromResponse($response);
     $expected_cache_contexts = [
+      'url.query_args',
       'url.site',
       'user.roles:authenticated',
     ];
@@ -59,7 +65,7 @@ class EntryPointTest extends BrowserTestBase {
     $user = $this->createUser();
     $request_options[RequestOptions::HEADERS]['Authorization'] = 'Basic ' . base64_encode($user->name->value . ':' . $user->passRaw);
     $response = $this->request('GET', Url::fromUri('base://jsonapi'), $request_options);
-    $document = Json::decode((string) $response->getBody());
+    $document = $this->getDocumentFromResponse($response);
     $this->assertArrayHasKey('meta', $document);
     $this->assertStringEndsWith('/jsonapi/user/user/' . $user->uuid(), $document['meta']['links']['me']['href']);
   }

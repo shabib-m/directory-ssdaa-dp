@@ -7,69 +7,77 @@ namespace Drupal\Tests\ckeditor5\Unit;
 use Drupal\ckeditor5\Plugin\CKEditor5Plugin\ListPlugin;
 use Drupal\editor\Entity\Editor;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Yaml\Yaml;
 
 /**
- * @coversDefaultClass \Drupal\ckeditor5\Plugin\CKEditor5Plugin\ListPlugin
- * @group ckeditor5
+ * Tests Drupal\ckeditor5\Plugin\CKEditor5Plugin\ListPlugin.
+ *
  * @internal
  */
+#[CoversClass(ListPlugin::class)]
+#[Group('ckeditor5')]
 class ListPluginTest extends UnitTestCase {
 
   /**
    * Provides a list of configs to test.
    */
-  public function providerGetDynamicPluginConfig(): array {
+  public static function providerGetDynamicPluginConfig(): array {
     return [
       'startIndex is false' => [
         [
-          'reversed' => TRUE,
-          'startIndex' => FALSE,
+          'properties' => [
+            'reversed' => TRUE,
+            'startIndex' => FALSE,
+            'styles' => TRUE,
+          ],
+          'multiBlock' => TRUE,
         ],
         [
           'list' => [
             'properties' => [
               'reversed' => TRUE,
               'startIndex' => FALSE,
-              'styles' => FALSE,
+              'styles' => [
+                'useAttribute' => TRUE,
+              ],
             ],
+            'multiBlock' => TRUE,
           ],
         ],
       ],
       'reversed is false' => [
         [
-          'reversed' => FALSE,
-          'startIndex' => TRUE,
+          'properties' => [
+            'reversed' => FALSE,
+            'startIndex' => TRUE,
+            'styles' => TRUE,
+          ],
+          'multiBlock' => TRUE,
         ],
         [
           'list' => [
             'properties' => [
               'reversed' => FALSE,
               'startIndex' => TRUE,
-              'styles' => FALSE,
+              'styles' => [
+                'useAttribute' => TRUE,
+              ],
             ],
+            'multiBlock' => TRUE,
           ],
         ],
       ],
-      'both disabled' => [
+      'styles is false' => [
         [
-          'reversed' => FALSE,
-          'startIndex' => FALSE,
-        ],
-        [
-          'list' => [
-            'properties' => [
-              'reversed' => FALSE,
-              'startIndex' => FALSE,
-              'styles' => FALSE,
-            ],
+          'properties' => [
+            'reversed' => TRUE,
+            'startIndex' => TRUE,
+            'styles' => FALSE,
           ],
-        ],
-      ],
-      'both enabled' => [
-        [
-          'reversed' => TRUE,
-          'startIndex' => TRUE,
+          'multiBlock' => TRUE,
         ],
         [
           'list' => [
@@ -78,6 +86,49 @@ class ListPluginTest extends UnitTestCase {
               'startIndex' => TRUE,
               'styles' => FALSE,
             ],
+            'multiBlock' => TRUE,
+          ],
+        ],
+      ],
+      'all disabled' => [
+        [
+          'properties' => [
+            'reversed' => FALSE,
+            'startIndex' => FALSE,
+            'styles' => FALSE,
+          ],
+          'multiBlock' => TRUE,
+        ],
+        [
+          'list' => [
+            'properties' => [
+              'reversed' => FALSE,
+              'startIndex' => FALSE,
+              'styles' => FALSE,
+            ],
+            'multiBlock' => TRUE,
+          ],
+        ],
+      ],
+      'all enabled' => [
+        [
+          'properties' => [
+            'reversed' => TRUE,
+            'startIndex' => TRUE,
+            'styles' => TRUE,
+          ],
+          'multiBlock' => TRUE,
+        ],
+        [
+          'list' => [
+            'properties' => [
+              'reversed' => TRUE,
+              'startIndex' => TRUE,
+              'styles' => [
+                'useAttribute' => TRUE,
+              ],
+            ],
+            'multiBlock' => TRUE,
           ],
         ],
       ],
@@ -85,10 +136,9 @@ class ListPluginTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getDynamicPluginConfig
-   *
-   * @dataProvider providerGetDynamicPluginConfig
+   * Tests get dynamic plugin config.
    */
+  #[DataProvider('providerGetDynamicPluginConfig')]
   public function testGetDynamicPluginConfig(array $configuration, array $expected_dynamic_config): void {
     // Read the CKEditor 5 plugin's static configuration from YAML.
     $ckeditor5_plugin_definitions = Yaml::parseFile(__DIR__ . '/../../../ckeditor5.ckeditor5.yml');

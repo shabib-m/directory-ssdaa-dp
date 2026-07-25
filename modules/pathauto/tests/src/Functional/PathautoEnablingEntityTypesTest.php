@@ -47,6 +47,8 @@ class PathautoEnablingEntityTypesTest extends BrowserTestBase {
     $permissions = [
       'administer pathauto',
       'administer url aliases',
+      'bulk delete aliases',
+      'bulk update aliases',
       'create url aliases',
       'administer nodes',
       'post comments',
@@ -56,6 +58,8 @@ class PathautoEnablingEntityTypesTest extends BrowserTestBase {
   }
 
   /**
+   * Test enable/disable alias patterns per entity type.
+   *
    * A suite of tests to verify if the feature to enable and disable the
    * ability to define alias patterns for a given entity type works. Test with
    * the comment module, as it is not enabled by default.
@@ -72,7 +76,7 @@ class PathautoEnablingEntityTypesTest extends BrowserTestBase {
     $edit = [
       'enabled_entity_types[comment]' => TRUE,
     ];
-    $this->submitForm($edit, "Save configuration" );
+    $this->submitForm($edit, "Save configuration");
     $this->createPattern('comment', '/comment/[comment:body]');
 
     // Create a node, a comment type and a comment entity.

@@ -1,13 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional\Views;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the comment rss row plugin.
  *
- * @group comment
  * @see \Drupal\comment\Plugin\views\row\Rss
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class RowRssTest extends CommentTestBase {
 
   /**
@@ -25,7 +31,7 @@ class RowRssTest extends CommentTestBase {
   /**
    * Tests comment rss output.
    */
-  public function testRssRow() {
+  public function testRssRow(): void {
     $this->drupalGet('test-comment-rss');
 
     // Because the response is XML we can't use the page which depends on an

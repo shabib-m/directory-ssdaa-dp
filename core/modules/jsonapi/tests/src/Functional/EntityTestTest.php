@@ -1,18 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\entity_test\Entity\EntityTest;
+use Drupal\jsonapi\JsonApiSpec;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * JSON:API integration test for the "EntityTest" content entity type.
- *
- * @group jsonapi
  */
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class EntityTestTest extends ResourceTestBase {
 
   /**
@@ -50,7 +55,7 @@ class EntityTestTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUpAuthorization($method) {
+  protected function setUpAuthorization($method): void {
     switch ($method) {
       case 'GET':
         $this->grantPermissionsToTestedRole(['view test entity']);
@@ -98,17 +103,17 @@ class EntityTestTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedDocument() {
+  protected function getExpectedDocument(): array {
     $self_url = Url::fromUri('base:/jsonapi/entity_test/entity_test/' . $this->entity->uuid())->setAbsolute()->toString(TRUE)->getGeneratedUrl();
     $author = User::load(0);
     return [
       'jsonapi' => [
         'meta' => [
           'links' => [
-            'self' => ['href' => 'http://jsonapi.org/format/1.0/'],
+            'self' => ['href' => JsonApiSpec::SUPPORTED_SPECIFICATION_PERMALINK],
           ],
         ],
-        'version' => '1.0',
+        'version' => JsonApiSpec::SUPPORTED_SPECIFICATION_VERSION,
       ],
       'links' => [
         'self' => ['href' => $self_url],
@@ -120,7 +125,7 @@ class EntityTestTest extends ResourceTestBase {
           'self' => ['href' => $self_url],
         ],
         'attributes' => [
-          'created' => (new \DateTime())->setTimestamp($this->entity->get('created')->value)->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
+          'created' => (new \DateTime())->setTimestamp((int) $this->entity->get('created')->value)->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
           'field_test_text' => NULL,
           'langcode' => 'en',
           'name' => 'Llama',
@@ -149,12 +154,12 @@ class EntityTestTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getPostDocument() {
+  protected function getPostDocument(): array {
     return [
       'data' => [
         'type' => 'entity_test--entity_test',
         'attributes' => [
-          'name' => 'Dramallama',
+          'name' => 'Drama llama',
         ],
       ],
     ];
@@ -179,7 +184,7 @@ class EntityTestTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getSparseFieldSets() {
+  protected function getSparseFieldSets(): array {
     // EntityTest's owner field name is `user_id`, not `uid`, which breaks
     // nested sparse fieldset tests.
     return array_diff_key(parent::getSparseFieldSets(), array_flip([
@@ -191,10 +196,10 @@ class EntityTestTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static function getExpectedCollectionCacheability(AccountInterface $account, array $collection, array $sparse_fieldset = NULL, $filtered = FALSE) {
+  protected static function getExpectedCollectionCacheability(AccountInterface $account, array $collection, ?array $sparse_fieldset = NULL, $filtered = FALSE) {
     $cacheability = parent::getExpectedCollectionCacheability($account, $collection, $sparse_fieldset, $filtered);
     if ($filtered) {
-      $cacheability->addCacheTags(['state:jsonapi__entity_test_filter_access_blacklist']);
+      $cacheability->addCacheTags(['state:jsonapi__entity_test_filter_access_deny_list']);
     }
     return $cacheability;
   }

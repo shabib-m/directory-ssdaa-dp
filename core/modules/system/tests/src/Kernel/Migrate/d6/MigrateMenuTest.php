@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Migrate\d6;
 
 use Drupal\Core\Database\Database;
-use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 use Drupal\system\Entity\Menu;
+use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Upgrade menus to system.menu.*.yml.
- *
- * @group migrate_drupal_6
  */
+#[Group('migrate_drupal_6')]
+#[RunTestsInSeparateProcesses]
 class MigrateMenuTest extends MigrateDrupal6TestBase {
 
   /**
@@ -24,7 +28,7 @@ class MigrateMenuTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal 6 menu to Drupal 8 migration.
    */
-  public function testMenu() {
+  public function testMenu(): void {
     $navigation_menu = Menu::load('navigation');
     $this->assertSame('navigation', $navigation_menu->id());
     $this->assertSame('Navigation', $navigation_menu->label());

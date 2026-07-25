@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional;
 
 use Drupal\comment\Tests\CommentTestTrait;
@@ -10,12 +12,14 @@ use Drupal\file\Entity\File;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\TestFileCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests user picture functionality.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserPictureTest extends BrowserTestBase {
 
   use TestFileCreationTrait {
@@ -67,7 +71,7 @@ class UserPictureTest extends BrowserTestBase {
   /**
    * Tests creation, display, and deletion of user pictures.
    */
-  public function testCreateDeletePicture() {
+  public function testCreateDeletePicture(): void {
     $this->drupalLogin($this->webUser);
 
     // Save a new picture.
@@ -90,7 +94,7 @@ class UserPictureTest extends BrowserTestBase {
     // would set the timestamp.
     Database::getConnection()->update('file_managed')
       ->fields([
-        'changed' => REQUEST_TIME - ($this->config('system.file')->get('temporary_maximum_age') + 1),
+        'changed' => \Drupal::time()->getRequestTime() - ($this->config('system.file')->get('temporary_maximum_age') + 1),
       ])
       ->condition('fid', $file->id())
       ->execute();
@@ -106,7 +110,7 @@ class UserPictureTest extends BrowserTestBase {
   /**
    * Tests embedded users on node pages.
    */
-  public function testPictureOnNodeComment() {
+  public function testPictureOnNodeComment(): void {
     $this->drupalLogin($this->webUser);
 
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
@@ -165,7 +169,6 @@ class UserPictureTest extends BrowserTestBase {
 
     // Load actual user data from database.
     $user_storage = $this->container->get('entity_type.manager')->getStorage('user');
-    $user_storage->resetCache([$this->webUser->id()]);
     $account = $user_storage->load($this->webUser->id());
     return File::load($account->user_picture->target_id);
   }
@@ -175,7 +178,7 @@ class UserPictureTest extends BrowserTestBase {
    *
    * @see user_user_view_alter()
    */
-  public function testUserViewAlter() {
+  public function testUserViewAlter(): void {
     \Drupal::service('module_installer')->install(['image_module_test']);
     // Set dummy_image_formatter to the default view mode of user entity.
     EntityViewDisplay::load('user.user.default')->setComponent('user_picture', [

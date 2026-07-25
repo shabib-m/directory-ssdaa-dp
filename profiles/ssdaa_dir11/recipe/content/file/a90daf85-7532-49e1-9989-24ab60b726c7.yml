@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: a90daf85-7532-49e1-9989-24ab60b726c7
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: SO.png
+  uri:
+    -
+      value: 'public://term-country/2026-07/SO.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 3754
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

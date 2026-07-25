@@ -1,0 +1,27 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 2cae2af5-834a-4da5-9afa-9b7335740bd3
+  default_langcode: ar
+default:
+  uid:
+    -
+      target_id: 0
+  filename:
+    -
+      value: eljame.png
+  uri:
+    -
+      value: 'public://website-images/2026-07/eljame.png'
+  filemime:
+    -
+      value: image/png
+  filesize:
+    -
+      value: 96209
+  status:
+    -
+      value: true
+  created:
+    -
+      value: 1784748879

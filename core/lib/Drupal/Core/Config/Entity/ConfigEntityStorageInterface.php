@@ -73,13 +73,13 @@ interface ConfigEntityStorageInterface extends EntityStorageInterface {
   /**
    * Loads one or more entities in their original form without overrides.
    *
-   * @param $ids
+   * @param string[]|null $ids
    *   An array of entity IDs, or NULL to load all entities.
    *
    * @return \Drupal\Core\Entity\EntityInterface[]
    *   An array of entity objects indexed by their IDs. Returns an empty array
    *   if no matching entities are found.
    */
-  public function loadMultipleOverrideFree(array $ids = NULL);
+  public function loadMultipleOverrideFree(?array $ids = NULL);
 
 }

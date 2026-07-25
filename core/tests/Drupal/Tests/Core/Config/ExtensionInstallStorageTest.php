@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Config;
 
 use Drupal\Core\Config\ExtensionInstallStorage;
@@ -7,17 +9,20 @@ use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Config\MemoryStorage;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Config\ExtensionInstallStorage
- * @group Config
+ * Tests Drupal\Core\Config\ExtensionInstallStorage.
  */
+#[CoversClass(ExtensionInstallStorage::class)]
+#[Group('Config')]
 class ExtensionInstallStorageTest extends UnitTestCase {
 
   /**
-   * @covers ::createCollection
+   * Tests create collection.
    */
-  public function testCreateCollection() {
+  public function testCreateCollection(): void {
     $memory = new MemoryStorage();
     $include_profile = FALSE;
     $profile = $this->randomMachineName();

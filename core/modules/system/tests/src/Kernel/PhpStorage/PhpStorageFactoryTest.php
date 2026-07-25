@@ -1,20 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\PhpStorage;
 
 use Drupal\Component\PhpStorage\MTimeProtectedFileStorage;
 use Drupal\Core\PhpStorage\PhpStorageFactory;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StreamWrapper\PublicStream;
-use Drupal\system\PhpStorage\MockPhpStorage;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\system\PhpStorage\MockPhpStorage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the PHP storage factory.
  *
- * @group PhpStorage
  * @see \Drupal\Core\PhpStorage\PhpStorageFactory
  */
+#[Group('PhpStorage')]
+#[RunTestsInSeparateProcesses]
 class PhpStorageFactoryTest extends KernelTestBase {
 
   /**
@@ -32,7 +37,7 @@ class PhpStorageFactoryTest extends KernelTestBase {
   /**
    * Tests the get() method with no settings.
    */
-  public function testGetNoSettings() {
+  public function testGetNoSettings(): void {
     $php = PhpStorageFactory::get('test');
     // This should be the default class used.
     $this->assertInstanceOf(MTimeProtectedFileStorage::class, $php);
@@ -41,7 +46,7 @@ class PhpStorageFactoryTest extends KernelTestBase {
   /**
    * Tests the get() method using the 'default' settings.
    */
-  public function testGetDefault() {
+  public function testGetDefault(): void {
     $this->setSettings();
     $php = PhpStorageFactory::get('test');
     $this->assertInstanceOf(MockPhpStorage::class, $php);
@@ -50,7 +55,7 @@ class PhpStorageFactoryTest extends KernelTestBase {
   /**
    * Tests the get() method with overridden settings.
    */
-  public function testGetOverride() {
+  public function testGetOverride(): void {
     $this->setSettings('test');
     $php = PhpStorageFactory::get('test');
     // The FileReadOnlyStorage should be used from settings.
@@ -92,7 +97,7 @@ class PhpStorageFactoryTest extends KernelTestBase {
    * @param array $configuration
    *   An array of configuration to set. Will be merged with default values.
    */
-  protected function setSettings($name = 'default', array $configuration = []) {
+  protected function setSettings($name = 'default', array $configuration = []): void {
     $settings['php_storage'][$name] = $configuration + [
       'class' => 'Drupal\system\PhpStorage\MockPhpStorage',
       'directory' => 'tmp://',

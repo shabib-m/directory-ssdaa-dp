@@ -6,13 +6,14 @@
  */
 
 use Drupal\Core\Config\Entity\ConfigEntityUpdater;
-use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
-use Drupal\Core\Field\Plugin\Field\FieldFormatter\TimestampFormatter;
+use Drupal\Core\Entity\EntityFormModeInterface;
+use Drupal\views\ViewEntityInterface;
+use Drupal\views\ViewsConfigUpdater;
 
 /**
  * Implements hook_removed_post_updates().
  */
-function system_removed_post_updates() {
+function system_removed_post_updates(): array {
   return [
     'system_post_update_recalculate_configuration_entity_dependencies' => '9.0.0',
     'system_post_update_add_region_to_entity_displays' => '9.0.0',
@@ -45,58 +46,124 @@ function system_removed_post_updates() {
     'system_post_update_delete_authorize_settings' => '10.0.0',
     'system_post_update_sort_all_config' => '10.0.0',
     'system_post_update_enable_provider_database_driver' => '10.0.0',
+    'system_post_update_linkset_settings' => '11.0.0',
+    'system_post_update_enable_password_compatibility' => '11.0.0',
+    'system_post_update_remove_asset_entries' => '11.0.0',
+    'system_post_update_remove_asset_query_string' => '11.0.0',
+    'system_post_update_add_description_to_entity_view_mode' => '11.0.0',
+    'system_post_update_add_description_to_entity_form_mode' => '11.0.0',
+    'system_post_update_set_blank_log_url_to_null' => '11.0.0',
+    'system_post_update_mailer_dsn_settings' => '11.0.0',
+    'system_post_update_mailer_structured_dsn_settings' => '11.0.0',
+    'system_post_update_amend_config_sync_readme_url' => '11.0.0',
+    'system_post_update_mail_notification_setting' => '11.0.0',
+    'system_post_update_set_cron_logging_setting_to_boolean' => '11.0.0',
+    'system_post_update_move_development_settings_to_keyvalue' => '11.0.0',
+    'system_post_update_add_langcode_to_all_translatable_config' => '11.0.0',
   ];
 }
 
 /**
- * Add new menu linkset endpoint setting.
+ * Updates system.date config to NULL for empty country and timezone defaults.
  */
-function system_post_update_linkset_settings() {
-  $config = \Drupal::configFactory()->getEditable('system.feature_flags');
-  $config->set('linkset_endpoint', FALSE)->save();
+function system_post_update_convert_empty_country_and_timezone_settings_to_null(): void {
+  $system_date_settings = \Drupal::configFactory()->getEditable('system.date');
+  $changed = FALSE;
+  if ($system_date_settings->get('country.default') === '') {
+    $system_date_settings->set('country.default', NULL);
+    $changed = TRUE;
+  }
+  if ($system_date_settings->get('timezone.default') === '') {
+    $system_date_settings->set('timezone.default', NULL);
+    $changed = TRUE;
+  }
+  if ($changed) {
+    $system_date_settings->save();
+  }
 }
 
 /**
- * Update timestamp formatter settings for entity view displays.
+ * Uninstall the sdc module if installed.
  */
-function system_post_update_timestamp_formatter(array &$sandbox = NULL): void {
-  /** @var \Drupal\Core\Field\FormatterPluginManager $field_formatter_manager */
-  $field_formatter_manager = \Drupal::service('plugin.manager.field.formatter');
-
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'entity_view_display', function (EntityViewDisplayInterface $entity_view_display) use ($field_formatter_manager): bool {
-    $update = FALSE;
-    foreach ($entity_view_display->getComponents() as $name => $component) {
-      if (empty($component['type'])) {
-        continue;
-      }
-
-      $plugin_definition = $field_formatter_manager->getDefinition($component['type'], FALSE);
-      // Check also potential plugins extending TimestampFormatter.
-      if (!is_a($plugin_definition['class'], TimestampFormatter::class, TRUE)) {
-        continue;
-      }
-
-      // The 'tooltip' and 'time_diff' settings might have been set, with their
-      // default values, if this entity has been already saved in a previous
-      // (post)update, such as layout_builder_post_update_timestamp_formatter().
-      // Ensure that existing timestamp formatters doesn't show any tooltip.
-      if (!isset($component['settings']['tooltip']) || !isset($component['settings']['time_diff']) || $component['settings']['tooltip']['date_format'] !== '') {
-        // Existing timestamp formatters don't have tooltip.
-        $component['settings']['tooltip'] = [
-          'date_format' => '',
-          'custom_date_format' => '',
-        ];
-        $entity_view_display->setComponent($name, $component);
-        $update = TRUE;
-      }
-    }
-    return $update;
-  });
+function system_post_update_sdc_uninstall(): void {
+  if (\Drupal::moduleHandler()->moduleExists('sdc')) {
+    \Drupal::service('module_installer')->uninstall(['sdc'], FALSE);
+  }
 }
 
 /**
- * Enable the password compatibility module.
+ * Rebuild the container to fix HTML in RSS feeds.
  */
-function system_post_update_enable_password_compatibility() {
-  \Drupal::service('module_installer')->install(['phpass']);
+function system_post_update_remove_rss_cdata_subscriber(): void {
+  // Empty update to trigger container rebuild.
+}
+
+/**
+ * Remove path key in system.file.
+ */
+function system_post_update_remove_path_key(): void {
+  if (\Drupal::config('system.file')->get('path') !== NULL) {
+    \Drupal::configFactory()->getEditable('system.file')
+      ->clear('path')
+      ->save();
+  }
+}
+
+/**
+ * Updates entity_form_mode descriptions from empty string to null.
+ */
+function system_post_update_convert_empty_description_entity_form_modes_to_null(array &$sandbox): void {
+  \Drupal::classResolver(ConfigEntityUpdater::class)
+    ->update($sandbox, 'entity_form_mode', function (EntityFormModeInterface $form_mode): bool {
+      // Entity form mode's `description` field must be stored as NULL at the
+      // config level if they are empty.
+      if ($form_mode->get('description') !== NULL && trim($form_mode->get('description')) === '') {
+        $form_mode->set('description', NULL);
+        return TRUE;
+      }
+      return FALSE;
+    });
+
+}
+
+/**
+ * Delete obsolete system.rss configuration.
+ */
+function system_post_update_delete_rss_config(array &$sandbox): void {
+  if (!isset($sandbox['#system_post_update_delete_rss_config__previous_view_mode'])) {
+    $sandbox['#system_post_update_delete_rss_config__previous_view_mode'] = \Drupal::configFactory()->getEditable('system.rss')->get('items.view_mode');
+  }
+
+  if (\Drupal::moduleHandler()->moduleExists('views')) {
+    /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
+    $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
+    $view_config_updater->setDeprecationsEnabled(FALSE);
+    \Drupal::classResolver(ConfigEntityUpdater::class)
+      ->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater, $sandbox): bool {
+        return $view_config_updater->needsRssViewModeUpdate($view, $sandbox['#system_post_update_delete_rss_config__previous_view_mode']);
+      });
+  }
+
+  if (!isset($sandbox['#finished']) || $sandbox['#finished'] >= 1) {
+    \Drupal::configFactory()->getEditable('system.rss')->delete();
+  }
+}
+
+/**
+ * Migrate to new compress setting.
+ */
+function system_post_update_migrate_compress_setting(): void {
+  $performanceConfig = \Drupal::configFactory()->getEditable('system.performance');
+  $performanceConfig->set('css.compress', (bool) $performanceConfig->get('css.gzip'));
+  $performanceConfig->set('js.compress', (bool) $performanceConfig->get('js.gzip'));
+  $performanceConfig->clear('css.gzip');
+  $performanceConfig->clear('js.gzip');
+  $performanceConfig->save();
+}
+
+/**
+ * Remove non-admin routes state key.
+ */
+function system_post_update_remove_non_admin_routes_state(): void {
+  \Drupal::state()->delete('routing.non_admin_routes');
 }

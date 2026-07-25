@@ -1,0 +1,56 @@
+_meta:
+  version: '1.0'
+  entity_type: node
+  uuid: 0966d2a4-5ad2-4d7f-b483-13ba0c6e822a
+  bundle: directory
+  default_langcode: ar
+  depends:
+    2ad0bcbc-6fef-4fff-8846-7085d2db7e61: taxonomy_term
+    653ec967-9758-4c81-9b5e-088598c89f15: file
+default:
+  revision_uid:
+    -
+      target_id: 0
+  status:
+    -
+      value: true
+  uid:
+    -
+      target_id: 0
+  title:
+    -
+      value: 'ﻣﻮﻗﻊ ﺍﻟﺸﻴﺦ ﻣﺤﻤﺪ ﺑﻦ ﺻﺎﻟﺢ ﺍﻟﻌﺜﻴﻤﻴﻦ'
+  created:
+    -
+      value: 1784748879
+  promote:
+    -
+      value: true
+  sticky:
+    -
+      value: false
+  path:
+    -
+      alias: /website/binothaimeen
+      langcode: ar
+  body:
+    -
+      value: |
+        <p>موقع الشيخ العلامة محمد بن صالح العثيمين رحمة الله رحمة واسعة ورفع درجاته</p>
+      format: full_html
+      summary: ''
+  field_aldwlh:
+    -
+      entity: 2ad0bcbc-6fef-4fff-8846-7085d2db7e61
+  field_image:
+    -
+      entity: 653ec967-9758-4c81-9b5e-088598c89f15
+      alt: ''
+      title: ''
+      width: 600
+      height: 379
+  field_url_website:
+    -
+      uri: 'https://binothaimeen.net/index.php'
+      title: ''
+      options: {  }

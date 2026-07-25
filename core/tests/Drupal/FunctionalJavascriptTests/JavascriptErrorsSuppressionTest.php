@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests;
+
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that Drupal.throwError can be suppressed to allow a test to pass.
- *
- * @group javascript
  */
+#[Group('javascript')]
+#[RunTestsInSeparateProcesses]
 class JavascriptErrorsSuppressionTest extends WebDriverTestBase {
 
   /**

@@ -3,8 +3,10 @@
 namespace Drupal\Core\DependencyInjection\Compiler;
 
 use Drupal\Component\Utility\Reflection;
+use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Reference;
 
@@ -101,10 +103,8 @@ class TaggedHandlersPass implements CompilerPassInterface {
    *   If a tagged handler does not implement the required interface.
    * @throws \Symfony\Component\DependencyInjection\Exception\LogicException
    *   If at least one tagged service is required but none are found.
-   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
-   * @return void
    */
-  public function process(ContainerBuilder $container) {
+  public function process(ContainerBuilder $container): void {
     // Avoid using ContainerBuilder::findTaggedServiceIds() as that results in
     // additional iterations around all the service definitions.
     foreach ($container->getDefinitions() as $id => $definition) {
@@ -180,7 +180,8 @@ class TaggedHandlersPass implements CompilerPassInterface {
     foreach ($this->tagCache[$tag] ?? [] as $id => $attributes) {
       // Validate the interface.
       $handler = $container->getDefinition($id);
-      if (!is_subclass_of($handler->getClass(), $interface)) {
+      $class = $this->resolveDefinitionClass($handler, $container);
+      if (!is_a($class, $interface, TRUE)) {
         throw new LogicException("Service '$id' for consumer '$consumer_id' does not implement $interface.");
       }
       $handlers[$id] = $attributes[0]['priority'] ?? 0;
@@ -249,6 +250,35 @@ class TaggedHandlersPass implements CompilerPassInterface {
     arsort($handlers, SORT_NUMERIC);
 
     $consumer->addArgument(array_keys($handlers));
+  }
+
+  /**
+   * Resolves the definition class.
+   *
+   * @param \Symfony\Component\DependencyInjection\Definition $definition
+   *   The service definition.
+   * @param \Symfony\Component\DependencyInjection\ContainerBuilder $container
+   *   The service container.
+   *
+   * @return class-string|null
+   *   The resolved class-string or null if the class cannot be resolved.
+   */
+  protected function resolveDefinitionClass(Definition $definition, ContainerBuilder $container): ?string {
+    $class = $definition->getClass();
+    if ($class) {
+      return $class;
+    }
+
+    if (!$definition instanceof ChildDefinition) {
+      return NULL;
+    }
+
+    if (!$container->hasDefinition($definition->getParent())) {
+      return NULL;
+    }
+
+    $parent = $container->getDefinition($definition->getParent());
+    return $this->resolveDefinitionClass($parent, $container);
   }
 
 }

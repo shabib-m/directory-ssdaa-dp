@@ -37,7 +37,7 @@
           'Show table cells that were hidden to make the table fit within a small screen.',
         ),
       )
-      .on('click', $.proxy(this, 'eventhandlerToggleColumns'));
+      .on('click', this.eventhandlerToggleColumns.bind(this));
 
     this.$table.before(
       $('<div class="tableresponsive-toggle-columns"></div>').append(
@@ -46,12 +46,10 @@
     );
 
     // Attach a resize handler to the window.
-    $(window)
-      .on(
-        'resize.tableresponsive',
-        $.proxy(this, 'eventhandlerEvaluateColumnVisibility'),
-      )
-      .trigger('resize.tableresponsive');
+    $(window).on(
+      'resize.tableresponsive',
+      this.eventhandlerEvaluateColumnVisibility.bind(this),
+    );
   }
 
   /**
@@ -69,6 +67,9 @@
           TableResponsive.tables.push(new TableResponsive(table));
         },
       );
+      if (TableResponsive.tables.length) {
+        $(window).trigger('resize.tableresponsive');
+      }
     },
   };
 

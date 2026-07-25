@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Views;
 
-use Drupal\views\Views;
 use Drupal\Core\Session\AnonymousUserSession;
+use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the current user filter handler.
  *
- * @group user
  * @see \Drupal\user\Plugin\views\filter\Current
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class HandlerFilterCurrentUserTest extends UserKernelTestBase {
 
   /**
@@ -39,7 +44,7 @@ class HandlerFilterCurrentUserTest extends UserKernelTestBase {
   /**
    * Tests the current user filter handler with anonymous user.
    */
-  public function testFilterCurrentUserAsAnonymous() {
+  public function testFilterCurrentUserAsAnonymous(): void {
     $column_map = ['uid' => 'uid'];
     $this->currentUser->setAccount(new AnonymousUserSession());
 
@@ -66,7 +71,7 @@ class HandlerFilterCurrentUserTest extends UserKernelTestBase {
   /**
    * Tests the current user filter handler with logged-in user.
    */
-  public function testFilterCurrentUserAsUser() {
+  public function testFilterCurrentUserAsUser(): void {
     $column_map = ['uid' => 'uid'];
     $user = reset($this->users);
     $this->currentUser->setAccount($user);

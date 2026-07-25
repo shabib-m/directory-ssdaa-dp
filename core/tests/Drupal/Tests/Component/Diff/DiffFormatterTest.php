@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Diff;
 
 use Drupal\Component\Diff\Diff;
 use Drupal\Component\Diff\DiffFormatter;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Test DiffFormatter classes.
- *
- * @coversDefaultClass \Drupal\Component\Diff\DiffFormatter
- *
- * @group Diff
  */
+#[CoversClass(DiffFormatter::class)]
+#[Group('Diff')]
 class DiffFormatterTest extends TestCase {
 
   /**
@@ -21,7 +24,7 @@ class DiffFormatterTest extends TestCase {
    *   - First array of text to diff.
    *   - Second array of text to diff.
    */
-  public function provideTestDiff() {
+  public static function provideTestDiff(): array {
     return [
       'empty' => ['', [], []],
       'add' => [
@@ -45,10 +48,10 @@ class DiffFormatterTest extends TestCase {
   /**
    * Tests whether op classes returned by DiffEngine::diff() match expectations.
    *
-   * @covers ::format
-   * @dataProvider provideTestDiff
+   * @legacy-covers ::format
    */
-  public function testDiff($expected, $from, $to) {
+  #[DataProvider('provideTestDiff')]
+  public function testDiff($expected, $from, $to): void {
     $diff = new Diff($from, $to);
     $formatter = new DiffFormatter();
     $output = $formatter->format($diff);

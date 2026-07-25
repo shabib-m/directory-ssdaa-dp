@@ -1,12 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Composer\Plugin\Scaffold\Functional;
 
 use Composer\Util\Filesystem;
 use Drupal\BuildTests\Framework\BuildTestBase;
+use Drupal\Tests\Composer\Plugin\ExecTrait;
 use Drupal\Tests\Composer\Plugin\Scaffold\AssertUtilsTrait;
-use Drupal\Tests\Composer\Plugin\Scaffold\ExecTrait;
 use Drupal\Tests\Composer\Plugin\Scaffold\Fixtures;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests Composer Hooks that run scaffold operations.
@@ -19,9 +22,9 @@ use Drupal\Tests\Composer\Plugin\Scaffold\Fixtures;
  * test. Other functional test files invoke Composer commands directly via the
  * Composer Application object, in order to get more accurate test coverage
  * information.
- *
- * @group Scaffold
  */
+#[Group('Scaffold')]
+#[Group('#slow')]
 class ComposerHookTest extends BuildTestBase {
 
   use ExecTrait;
@@ -57,7 +60,7 @@ class ComposerHookTest extends BuildTestBase {
     $this->fileSystem = new Filesystem();
     $this->fixtures = new Fixtures();
     $this->fixtures->createIsolatedComposerCacheDir();
-    $this->fixturesDir = $this->fixtures->tmpDir($this->getName());
+    $this->fixturesDir = $this->fixtures->tmpDir($this->name());
     $replacements = ['SYMLINK' => 'false', 'PROJECT_ROOT' => $this->fixtures->projectRoot()];
     $this->fixtures->cloneFixtureProjects($this->fixturesDir, $replacements);
   }
@@ -75,7 +78,7 @@ class ComposerHookTest extends BuildTestBase {
   /**
    * Tests to see if scaffold operation runs at the correct times.
    */
-  public function testComposerHooks() {
+  public function testComposerHooks(): void {
     $topLevelProjectDir = 'composer-hooks-fixture';
     $sut = $this->fixturesDir . '/' . $topLevelProjectDir;
     // First test: run composer install. This is the same as composer update
@@ -124,7 +127,7 @@ class ComposerHookTest extends BuildTestBase {
   /**
    * Tests to see if scaffold messages are omitted when running scaffold twice.
    */
-  public function testScaffoldMessagesDoNotPrintTwice() {
+  public function testScaffoldMessagesDoNotPrintTwice(): void {
     $topLevelProjectDir = 'drupal-drupal';
     $sut = $this->fixturesDir . '/' . $topLevelProjectDir;
     // First test: run composer install. This is the same as composer update
@@ -144,6 +147,17 @@ class ComposerHookTest extends BuildTestBase {
     $stdout = $this->mustExec("composer scaffold --no-ansi", $sut);
     $this->assertStringContainsString('- Copy [web-root]/index.php from assets/index.php', $stdout);
     $this->assertStringNotContainsString('- Copy [web-root]/update.php from assets/update.php', $stdout);
+  }
+
+  /**
+   * Tests to see if scaffold events are dispatched and picked up by the plugin.
+   */
+  public function testScaffoldEvents(): void {
+    $topLevelProjectDir = 'scaffold-events-fixture';
+    $sut = $this->fixturesDir . '/' . $topLevelProjectDir;
+    $output = $this->mustExec("composer install --no-ansi", $sut);
+    $this->assertStringContainsString('Hello preDrupalScaffoldCmd', $output);
+    $this->assertStringContainsString('Hello postDrupalScaffoldCmd', $output);
   }
 
 }

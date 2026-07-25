@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Routing;
 
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\Traits\Core\PathAliasTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests URL generation and routing for route paths with encoded characters.
- *
- * @group path
- * @group routing
  */
+#[Group('path')]
+#[Group('routing')]
+#[RunTestsInSeparateProcesses]
 class PathEncodedTest extends BrowserTestBase {
 
   use PathAliasTestTrait;
@@ -26,11 +30,11 @@ class PathEncodedTest extends BrowserTestBase {
    */
   protected $defaultTheme = 'stark';
 
-  public function testGetEncoded() {
+  public function testGetEncoded(): void {
     $route_paths = [
-      'path_encoded_test.colon' => '/hi/llamma:party',
-      'path_encoded_test.atsign' => '/bloggy/@Dries',
-      'path_encoded_test.parens' => '/cat(box)',
+      'path_encoded_test.colon' => '/hi/llama:party',
+      'path_encoded_test.at_sign' => '/blog/@Dries',
+      'path_encoded_test.parentheses' => '/cat(box)',
     ];
     foreach ($route_paths as $route_name => $path) {
       $this->drupalGet(Url::fromRoute($route_name));
@@ -38,11 +42,11 @@ class PathEncodedTest extends BrowserTestBase {
     }
   }
 
-  public function testAliasToEncoded() {
+  public function testAliasToEncoded(): void {
     $route_paths = [
-      'path_encoded_test.colon' => '/hi/llamma:party',
-      'path_encoded_test.atsign' => '/bloggy/@Dries',
-      'path_encoded_test.parens' => '/cat(box)',
+      'path_encoded_test.colon' => '/hi/llama:party',
+      'path_encoded_test.at_sign' => '/blog/@Dries',
+      'path_encoded_test.parentheses' => '/cat(box)',
     ];
     $aliases = [];
     foreach ($route_paths as $route_name => $path) {

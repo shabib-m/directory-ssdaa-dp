@@ -1,24 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\EntityReference\Views;
 
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Html;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\NodeType;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests entity reference selection handler.
- *
- * @group entity_reference
  */
+#[Group('entity_reference')]
+#[RunTestsInSeparateProcesses]
 class SelectionTest extends KernelTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
   use NodeCreationTrait;
 
   /**
@@ -58,10 +63,14 @@ class SelectionTest extends KernelTestBase {
     $this->installConfig(['entity_reference_test', 'filter']);
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
+    $this->installEntitySchema('entity_test');
 
     // Create test nodes.
-    $type = strtolower($this->randomMachineName());
-    NodeType::create(['type' => $type])->save();
+    $type = $this->randomMachineName();
+    NodeType::create([
+      'type' => $type,
+      'name' => $this->randomString(),
+    ])->save();
     $node1 = $this->createNode(['type' => $type]);
     $node2 = $this->createNode(['type' => $type]);
     $node3 = $this->createNode();
@@ -69,6 +78,10 @@ class SelectionTest extends KernelTestBase {
     foreach ([$node1, $node2, $node3] as $node) {
       $this->nodes[$node->id()] = $node;
     }
+
+    // Ensure the bundle to which the field is attached actually exists, or we
+    // will get config validation errors.
+    EntityTestHelper::createBundle('test_bundle');
 
     // Create an entity reference field.
     $handler_settings = [
@@ -85,7 +98,7 @@ class SelectionTest extends KernelTestBase {
   /**
    * Tests the selection handler.
    */
-  public function testSelectionHandler() {
+  public function testSelectionHandler(): void {
     // Tests the selection handler.
     $this->assertResults($this->selectionHandler->getReferenceableEntities());
 
@@ -124,13 +137,15 @@ class SelectionTest extends KernelTestBase {
    * Tests the anchor tag stripping.
    *
    * Unstripped results based on the data above will result in output like so:
+   * @code
    *   ...<a href="/node/1" hreflang="en">Test first node</a>...
    *   ...<a href="/node/2" hreflang="en">Test second node</a>...
    *   ...<a href="/node/3" hreflang="en">Test third node</a>...
+   * @endcode
    * If we expect our output to not have the <a> tags, and this matches what's
    * produced by the tag-stripping method, we'll know that it's working.
    */
-  public function testAnchorTagStripping() {
+  public function testAnchorTagStripping(): void {
     $filtered_rendered_results_formatted = [];
     foreach ($this->selectionHandler->getReferenceableEntities() as $subresults) {
       $filtered_rendered_results_formatted += array_map(fn(MarkupInterface $markup): string => (string) $markup, $subresults);
@@ -158,7 +173,7 @@ class SelectionTest extends KernelTestBase {
     foreach ($result as $node_type => $values) {
       foreach ($values as $nid => $label) {
         $this->assertSame($node_type, $this->nodes[$nid]->bundle());
-        $this->assertSame(trim(strip_tags($label)), Html::escape($this->nodes[$nid]->label()));
+        $this->assertSame(trim(strip_tags((string) $label)), Html::escape($this->nodes[$nid]->label()));
       }
     }
   }

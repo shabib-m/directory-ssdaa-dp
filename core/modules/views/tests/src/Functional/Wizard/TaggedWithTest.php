@@ -1,26 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Wizard;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the ability of the views wizard to create views filtered by taxonomy.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class TaggedWithTest extends WizardTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['taxonomy'];
 
@@ -98,7 +100,7 @@ class TaggedWithTest extends WizardTestBase {
       ],
       'auto_create' => TRUE,
     ];
-    $this->createEntityReferenceField('node', $this->nodeTypeWithTags->id(), $this->tagFieldName, NULL, 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+    $this->createEntityReferenceField('node', $this->nodeTypeWithTags->id(), $this->tagFieldName, '', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
     $display_repository = \Drupal::service('entity_display.repository');
@@ -125,7 +127,7 @@ class TaggedWithTest extends WizardTestBase {
   /**
    * Tests the "tagged with" functionality.
    */
-  public function testTaggedWith() {
+  public function testTaggedWith(): void {
     // In this test we will only create nodes that have an instance of the tag
     // field.
     $node_add_path = 'node/add/' . $this->nodeTypeWithTags->id();
@@ -156,7 +158,7 @@ class TaggedWithTest extends WizardTestBase {
     $this->submitForm($view1, 'Update "of type" choice');
     // Now resubmit the entire form to the same URL.
     $view1['label'] = $this->randomMachineName(16);
-    $view1['id'] = strtolower($this->randomMachineName(16));
+    $view1['id'] = $this->randomMachineName(16);
     $view1['description'] = $this->randomMachineName(16);
     $view1['show[tagged_with]'] = 'tag1';
     $view1['page[create]'] = 1;
@@ -179,7 +181,7 @@ class TaggedWithTest extends WizardTestBase {
     $this->submitForm($view2, 'Update "of type" choice');
     $this->assertSession()->statusCodeEquals(200);
     $view2['label'] = $this->randomMachineName(16);
-    $view2['id'] = strtolower($this->randomMachineName(16));
+    $view2['id'] = $this->randomMachineName(16);
     $view2['description'] = $this->randomMachineName(16);
     $view2['show[tagged_with]'] = 'tag2';
     $view2['page[create]'] = 1;
@@ -194,9 +196,11 @@ class TaggedWithTest extends WizardTestBase {
   }
 
   /**
-   * Tests that the "tagged with" form element only shows for node types that support it.
+   * Tests the "tagged with" form element.
+   *
+   * Confirm that the element only shows for node types that support it.
    */
-  public function testTaggedWithByNodeType() {
+  public function testTaggedWithByNodeType(): void {
     // The tagging field is associated with one of our node types only. So the
     // "tagged with" form element on the view wizard should appear on the form
     // by default (when the wizard is configured to display all content) and
@@ -247,7 +251,7 @@ class TaggedWithTest extends WizardTestBase {
   /**
    * Tests that "tagged with" works with views entity reference.
    */
-  public function testTaggedWithByViewReference() {
+  public function testTaggedWithByViewReference(): void {
     Term::create(['name' => 'term1', 'vid' => 'views_testing_tags']);
     $tags_xpath = '//input[@name="show[tagged_with]"]';
 

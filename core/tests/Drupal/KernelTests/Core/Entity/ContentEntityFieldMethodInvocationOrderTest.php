@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests correct field method invocation order.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class ContentEntityFieldMethodInvocationOrderTest extends EntityKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['language', 'system', 'entity_test'];
 
@@ -43,7 +45,7 @@ class ContentEntityFieldMethodInvocationOrderTest extends EntityKernelTestBase {
   /**
    * Tests correct field method invocation order.
    */
-  public function testFieldMethodInvocationOrder() {
+  public function testFieldMethodInvocationOrder(): void {
 
     // Create a test entity.
     $entity = $this->entityTestFieldMethodsStorage->create([

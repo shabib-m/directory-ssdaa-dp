@@ -1,24 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Test;
 
 use Drupal\Core\Test\AssertMailTrait;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests \Drupal\Core\Test\AssertMailTrait works.
- *
- * @group Test
- *
- * @coversDefaultClass \Drupal\Core\Test\AssertMailTrait
  */
+#[CoversClass(AssertMailTrait::class)]
+#[Group('Test')]
+#[RunTestsInSeparateProcesses]
 class AssertMailTraitTest extends KernelTestBase {
   use AssertMailTrait;
 
   /**
    * Tests that the maintenance theme initializes the theme and its base themes.
    */
-  public function testAssertMailTrait() {
+  public function testAssertMailTrait(): void {
     /** @var \Drupal\Core\Mail\MailManagerInterface $mail_service */
     $mail_service = \Drupal::service('plugin.manager.mail');
 
